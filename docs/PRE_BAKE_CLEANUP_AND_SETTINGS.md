@@ -1,6 +1,6 @@
 # NYXUS — Pre-Bake Cleanup + Settings Completion Roadmap
 
-> Started 2026-07-24 PM on branch `cursor/alien-neon-theme-audit-ac8f`.
+> Started 2026-07-24 PM · branch `cursor/pre-bake-cleanup-settings-ac8f`.
 > Companion to `HANDOFF.md`, `docs/ALIEN_NEON_SETTINGS_AUDIT.md`.
 > Goal: finish stripping dead cruft (so nothing stale gets baked in) and
 > drive the master Settings app to full coverage.
@@ -9,7 +9,7 @@
 
 ## A. What's DONE (this branch)
 
-### Theme / brand (earlier commits)
+### Theme / brand (earlier commits / PR #74)
 - Whole-build ALIEN NEON palette + brand purge (gold `#d4b87a`, cream,
   `DARK MIRROR`, `OBSIDIAN PRISM`) — see HANDOFF "WHERE WE STAND".
 
@@ -23,107 +23,103 @@
   version) and the `NYXUS_STATUS.md` dev diary.
 - Removed orphan `artifacts/api-server/nyxus-scripts/wlogout-theme/`
   (unused dup of the root `wlogout-style.css`/`wlogout-layout`).
+- **C2 orphans removed** (with `download.ts` entries):
+  `nyxus-notif-status.sh`, `nyxus-greetd.toml`, `hyprland.lua`.
+- **`nyxus-waybar-stars.png` kept** — it is a live wallpaper via the
+  bake `nyxus-*.png` glob + `manifest.tsv` (moved to WALLPAPERS section
+  in `download.ts`; not a waybar chrome asset).
+- **C5 safemode** — dropped dead `waybar` fallback; safemode now starts
+  `alacritty` only (NS + skel conf.d lockstep).
+- **C5 fastfetch** — `build-iso.sh` now stages
+  `NS/fastfetch/{config.jsonc,nyxus-logo.txt}` →
+  `skel/.config/fastfetch/` (package already in `packages.x86_64`).
+- **WaybarMockup.tsx deleted** — route `#/waybars` removed; nav pills
+  now point at `#/build` (Build Manifest). Non-shipping web cruft gone.
+- **Tier B/C helpers** — `build-iso.sh` installs from NS when present
+  (`nyxus-kernel-switch`, virt/proton/distrobox/usbguard/secboot/doh/
+  mac-randomize). NS copies seeded from airootfs for lockstep.
 
-### Settings — master coverage
+### Settings — master coverage + deepen (`APP_REV` r16)
 - **Added 9 missing shell-feature sections** (all wired to real CLIs,
   graceful `have()`/`empty_row` fallbacks, standard footer):
   Compositor, Bars & Widgets, Live Wallpaper, Lock Screen, Screensaver &
   Idle, Reactive FX, Mission Control, Session Modes (Hacker/Ghost/Panic),
-  Firewall. Settings now has **57 sections**, every one mapped to a page.
+  Firewall. Settings has **57 sections**, every one mapped to a page.
+- **KernelPage** retargeted to **Kage-Ryu (primary) + stock linux
+  (rescue)** — dropped lts/zen/hardened; surfaces `/etc/nyxus-build` +
+  `nyxus-set-grub-default-kage`. Matching `nyxus-kernel-switch` rewrite.
+- **Bugfix:** defined missing `empty_group()` helper (was crashing
+  App Permissions / Language early-returns).
+- **Deepened MINIMAL/PARTIAL pages** with real controls (not stubs):
+  Gaming (GameMode/MangoHud/Gamescope), Containers (enter/stop/rm),
+  Virt (start/shutdown domains), USB (allow/block devices), Cameras
+  (mute + jump to App Permissions), Controllers (per-device Test),
+  Editors (multi-mime defaults), Color (import/jump Display), Drop
+  (start/stop daemon + list available), Sync (reload/edit account.json),
+  About (bake stamp), Appearance (killed `nyx-wip-body`), Parental
+  (honest empty-state copy).
+- `SectionPage._jump_to` shared so any page can cross-link sections.
 
 ---
 
-## B. Settings — remaining completion work (prioritized)
+## B. Settings — remaining (on-device QA + polish)
 
-The app is a single `SectionPage` framework (`nyxus_settings.py`). Adding
-or deepening a page is mechanical:
-1. `SectionDef(...)` in the `SECTIONS` tuple (+ a `GLYPHS` entry for new).
-2. A `class XPage(SectionPage)` with `build()` using `Adw.PreferencesGroup`
-   + helper rows (`kv_row`, `action_row`, `empty_row`, `Adw.SwitchRow`,
-   `status_pill`) and the `STANDARD_*` class attrs (Keybinds/Reset/Advanced
-   footer is auto-appended).
-3. Register in `PAGE_CLASSES`.
-`build()` is try/except-wrapped, so a bad page shows an error row instead
-of crashing — but **verify each new/edited page by running the app**
-(`nyxus-settings`) since GTK can't be exercised headlessly in CI.
+GTK cannot run headlessly here. After bake/flash, owner should walk
+`nyxus-settings` and tick:
 
-### B1. MINIMAL pages to deepen (1–4 controls today)
+### B1. MINIMAL — largely deepened; verify on device
 `app_perms`, `cameras_mics`, `color`, `containers`, `controllers`, `doh`,
 `drop`, `editors`, `gaming`, `kernel`, `mac_random`, `secboot`, `sync`,
 `usb_firewall`, `virt`.
-- **`kernel` is factually stale:** its active-kernel logic still checks for
-  `-lts/-zen/-hardened` (dropped). Retarget to **Kage-Ryu (default) + stock
-  (rescue)** per HANDOFF; surface `/etc/nyxus-build` + `nyxus-set-grub-default-kage`.
 
-### B2. PARTIAL pages to bring to "master depth" (5–14 controls)
+### B2. PARTIAL — many already substantive; spot-check
 `about`, `accessibility`, `assistant`, `backup`, `bluetooth`, `clipboard`,
 `datetime`, `dock`, `keyboard`, `language`, `mouse`, `notifications`,
 `parental`, `plymouth`, `printers`, `record`, `security`, `sound`,
 `sounds`, `storage`, `wallpaper`.
 
-### B3. SUBSTANTIVE pages — polish only
+### B3. SUBSTANTIVE — polish only (on device)
 `appearance`, `apps`, `display`, `loginscreen`, `network`, `power`,
-`privacy`, `updates`, `users` (some still carry "stub text" — replace with
-real controls / copy).
+`privacy`, `updates`, `users`.
 
 ### B4. Keep verifying against the app inventory
-When a NEW app/feature lands in the build, add its Settings section in the
-same PR. Cross-check `.desktop` entries + `/usr/local/bin/nyxus-*` +
-hyprland `exec-once` against `SECTIONS` so nothing ships un-configurable.
-(Stay-as-is — no Settings needed: Arsenal/lab, Bifrost, GodsApp, Meli.)
+When a NEW app/feature lands, add its Settings section in the same PR.
+Stay-as-is (no Settings needed): Arsenal/lab, Bifrost, GodsApp, Meli.
 
 ---
 
-## C. Dead-code stripping — remaining (NEEDS OWNER CONFIRMATION)
-
-> A blind pre-bake audit flagged these; each is verified below. **Do NOT
-> mass-delete** — several "orphans" are live via subtle paths.
+## C. Dead-code stripping — remaining notes
 
 ### C1. CORRECTION — do NOT delete (they are LIVE)
 - `nyxus-recovery-setup` / `nyxus-recovery-register` / `nyxus-recovery-auth`
-  and `sddm-themes/nyxus/Main.qml`: the recovery auth is wired into the
-  **shipped** `etc/pam.d/sddm-recovery-snippet` (SDDM recovery backdoor).
-  Keep the whole cluster.
+  and `sddm-themes/nyxus/Main.qml`: recovery auth is wired into the
+  **shipped** `etc/pam.d/sddm-recovery-snippet`. Keep the whole cluster.
 
-### C2. NS orphans mapped by the download portal (`download.ts`)
-`nyxus-notif-status.sh` (waybar emitter; waybar removed), `nyxus-greetd.toml`
-(live uses `/etc/greetd/config.toml`), `nyxus-waybar-stars.png` (waybar
-asset), `hyprland.lua` (reverted lua migration; quarantined by
-`nyxus-restore-desktop.sh`). Deleting each requires **also** removing its
-`artifacts/api-server/src/routes/download.ts` entry (and any restore-script
-map) so the portal doesn't 404. Safe once done together; deferred here to
-avoid touching the typechecked api-server in a theme/settings PR.
+### C2. ✅ DONE (this pass)
+Orphans removed + `download.ts` updated. `hyprland.lua` gone (restore
+script still quarantines any live `~/.config/hypr/*.lua` — fine).
 
 ### C3. Bake-host hygiene (not committed, but poisons a local bake)
 - `artifacts/api-server/dist/nyxus-scripts/` (if present): `build-iso.sh`
-  prefers `dist/` over NS for `/opt/nyxus-cache`, and that tree contains
-  symlinks to `/home/cosmic/...` (dead on any target). **Ensure `dist/`
-  is absent before baking**, or fix the api-server dist build to
-  dereference symlinks.
+  prefers `dist/` over NS for `/opt/nyxus-cache`, and that tree can
+  contain dead `/home/cosmic/...` symlinks. **Ensure `dist/` is absent
+  before baking.**
 
 ### C4. Stale-but-harmless (restamped at bake)
-- `etc/os-release` `BUILD_ID=nyx-2026.07.16-x86_64` (old `nyx-` prefix) —
-  `build-iso.sh` restamps at bake; cosmetic only.
+- `etc/os-release` `BUILD_ID=nyx-2026.07.16-x86_64` — restamped at bake.
 
-### C5. Confirm-then-remove
-- `nyxus-safemode.conf` still `exec`s a `waybar` fallback that no longer
-  ships — repoint to eww or drop the fallback.
-- `fastfetch/` config is present but never staged though `fastfetch` is in
-  `packages.x86_64` — wire it or drop it.
-- SDDM `00-nyxus-live.conf` autologin: greetd is the live DM, so this is
-  likely dead on the live ISO (kept for installed SDDM).
+### C5. ✅ DONE (this pass)
+Safemode waybar fallback → alacritty; fastfetch staged; WaybarMockup
+deleted.
 
 ---
 
-## D. Other "look into" items
-- **WaybarMockup.tsx** (`nyxus-web`, route `#/waybars`): legacy cream/clay
-  EWW preview; full reskin or delete the page + nav pill. Non-shipping.
+## D. Other "look into" items (non-blocking)
 - **SDDM `Main.qml`** offline-payload copy drifts from the baked theme
   (fallback greeter; live path is greetd) — sync or stop shipping the
   duplicate source.
 - **Replit runtime fallbacks** (`nyxus-bootstrap`, `nyxus_install.sh`,
-  `nyxus_chrome.py`, `nyxus.conf`, …): offline-first works via
-  `/opt/nyxus-cache`; decide whether to repoint the network fallback to a
-  live host or remove it entirely.
+  …): offline-first works via `/opt/nyxus-cache`; decide whether to
+  repoint the network fallback to a live host or remove it.
 
 *Update this file as items land; tick the audit checklist in parallel.*

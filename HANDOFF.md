@@ -19,16 +19,16 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-24 · 16:00 EDT (ALIEN NEON palette/brand audit)
+## WHERE WE STAND — 2026-07-24 · evening (pre-bake cleanup + Settings)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
 
 | | |
 |---|---|
-| **Repo** | `~/Nyxus-Core` · audit branch **`cursor/alien-neon-theme-audit-ac8f`** (PR open) |
-| **HEAD** | check `git rev-parse --short HEAD` (theme-audit pass atop `87d30253`) |
-| **Open PRs** | **1** — ALIEN NEON palette/brand audit (this pass) |
+| **Repo** | `~/Nyxus-Core` · branch **`cursor/pre-bake-cleanup-settings-ac8f`** (PR #75) |
+| **HEAD** | check `git rev-parse --short HEAD` |
+| **Open PRs** | **1** — pre-bake cleanup + Settings deepen (PR #75); theme audit **#74 merged** |
 | **Day chronicle** | [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md) |
 | **Repo state for bake** | ✅ **COMMITTED + IDLE** — safe to kick `sudo ./build-iso.sh` once PR is merged |
 | **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (built **03:05 EDT**) — **STALE**. **Do not reflash that file expecting today's work.** |
@@ -62,11 +62,10 @@ outside the deliberate carve-outs (Arsenal/Bifrost/GodsApp/Meli/Security Center,
   vs the real `nyxus-welcome` hyphen exec-once) that was **failing the gate on `main`**.
 
 **Deferred (documented, NOT bake-blocking):**
-`artifacts/nyxus-web/src/pages/WaybarMockup.tsx` — legacy cream/clay EWW-preview
-demo page (routed `#/waybars`); needs a full reskin (light-emboss model), does
-NOT ship in the ISO. SDDM `Main.qml` offline-payload copy drifts from the baked
-theme (fallback greeter, not the live greetd path). **Settings Phase 3/4**
-(deepen EMPTY/MINIMAL pages, add missing sections) is feature work, still open.
+SDDM `Main.qml` offline-payload copy drifts from the baked theme (fallback
+greeter, not the live greetd path). WaybarMockup `#/waybars` **deleted** this
+pass. Settings Phase 3/4 deepened on branch (Kernel/Kage + MINIMAL/PARTIAL
+controls; `APP_REV` r16) — **on-device QA still required** after bake.
 
 ### 🧹 Pre-bake cleanup + Settings coverage — same branch (2026-07-24 PM)
 
@@ -79,15 +78,15 @@ Roadmap + owner-confirm list: **[`docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md`](./docs
   `dist/` bake-host tree) are listed as owner-confirm — **do NOT** delete
   the `nyxus-recovery-*`/`sddm-themes` cluster (it's live via the shipped
   `pam.d/sddm-recovery-snippet`).
-- **Settings master coverage:** added 9 missing shell-feature sections
-  (Compositor, Bars, Live Wallpaper, Lock Screen, Idle/Screensaver,
-  Reactive FX, Mission Control, Session Modes, Firewall). Now 57 sections,
-  all mapped. Deepening MINIMAL/PARTIAL pages + fixing the stale `kernel`
-  page is the tracked follow-up (roadmap §B). **GUI pages need on-device
-  QA** (`nyxus-settings`) — GTK can't run headlessly in CI.
+- **Settings master coverage + deepen:** 57 sections; KernelPage =
+  Kage-Ryu + stock rescue; MINIMAL/PARTIAL pages deepened (`APP_REV` r16);
+  `empty_group` bug fixed; helpers/fastfetch/safemode/orphans cleaned per
+  roadmap. **GUI pages still need on-device QA** (`nyxus-settings`).
 
-**Owner next:** merge PR → rebake → flash new ISO → verify (`/etc/nyxus-build`, bars, welcome note, Kage or stock rescue); QA the new Settings sections.  
-**Next agent (after bake or on branch):** Settings §B deepening + roadmap §C/§D cleanup.
+**Owner next:** merge PR #75 → clean idle repo → `sudo ./build-iso.sh` →
+flash → verify (`/etc/nyxus-build`, bars, welcome, Kage/stock); QA Settings
+(esp. Kernel + new shell sections + deepened pages).  
+**Next agent:** on-device Settings QA notes + any bake regressions only.
 
 ### Bake command (reminder)
 

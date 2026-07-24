@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ──────────────────────────────────────────────────────────────────────
-#  NYXUS · Settings                                  rev 2026.07.24-r12
+#  NYXUS · Settings                                  rev 2026.07.24-r16
 # ──────────────────────────────────────────────────────────────────────
 #  System control center for NYXUS. GTK4 + libadwaita Python app.
 #  AdwNavigationSplitView (sidebar + content), ALIEN NEON aesthetic,
@@ -46,7 +46,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 # ── App identity ──────────────────────────────────────────────────────
 APP_ID    = "io.nyxus.settings"
 APP_NAME  = "NYXUS Settings"
-APP_REV   = "rev 2026.07.24-r15"
+APP_REV   = "rev 2026.07.24-r16"
 WIN_W     = 1180
 WIN_H     = 740   # fits inside 768 with EWW bar present (§12)
 
@@ -1260,6 +1260,13 @@ def empty_row(title: str, subtitle: str = "") -> Adw.ActionRow:
     row = Adw.ActionRow(title=title, subtitle=subtitle)
     row.add_css_class("nyx-empty-row")
     return row
+
+
+def empty_group(title: str, subtitle: str = "") -> Adw.PreferencesGroup:
+    """One-row empty-state PreferencesGroup for pages that early-return."""
+    grp = Adw.PreferencesGroup(title=title, description=subtitle)
+    grp.add(empty_row(title, subtitle))
+    return grp
 
 
 def debounced(scale: Gtk.Scale,
@@ -3345,6 +3352,34 @@ class ColorPage(SectionPage):
             title="Imported profiles",
             description="ICC files registered with colord on this user.")
         self.add_group(self.prof_group)
+
+        acts = Adw.PreferencesGroup(
+            title="Actions",
+            description="Import an ICC, open the profile folder, or jump "
+                        "to Display night-light controls")
+        self.add_group(acts)
+        acts.add(action_row(
+            "Import ICC profile…",
+            "colormgr import-profile (file picker via terminal path)",
+            "Import",
+            lambda: open_terminal(
+                "echo 'Drop an .icc/.icm path, then Enter:'; "
+                "read -r ICC; "
+                "colormgr import-profile \"$ICC\" || "
+                "echo 'import failed'; read -p 'enter to close'",
+                self.win),
+            css="nyx-pill-ok"))
+        acts.add(action_row(
+            "Open user ICC folder",
+            "~/.local/share/icc",
+            "Open",
+            lambda: fire_and_forget(
+                "xdg-open ~/.local/share/icc")))
+        acts.add(action_row(
+            "Open Display (night light)",
+            "Warm-shift / night light lives under Display",
+            "Open",
+            lambda: self._jump_to("display")))
 
         self._render()
         self.schedule_refresh(15000, self._tick)
@@ -6145,20 +6180,20 @@ class ParentalControlsPage(SectionPage):
          "Show",
          lambda: open_terminal(
              "cat /etc/hosts.nyxus-parental 2>/dev/null || "
-             "echo '(blocklist file not yet created)'", None)),
+             "echo '(no blocklist entries — toggle Web blocklist ON and add a host)'", None)),
         ("View bedtime timer status",
          "systemctl --user status nyxus-bedtime.timer",
          "Show",
          lambda: open_terminal(
              "systemctl --user status nyxus-bedtime.timer "
-             "2>/dev/null || echo '(timer not installed yet)'",
+             "2>/dev/null || echo '(bedtime timer inactive — enable Bedtime nudge first)'",
              None)),
         ("View parental helper log",
          "/var/log/nyxus-parental.log",
          "Show",
          lambda: open_terminal(
              "sudo tail -n 200 /var/log/nyxus-parental.log "
-             "2>/dev/null || echo '(no log yet)'", None)),
+             "2>/dev/null || echo '(no parental helper log — helper has not run yet)'", None)),
     ]
     KEY = "parental"
     HELPER = "/usr/local/libexec/nyxus-parental-helper"
@@ -7705,7 +7740,7 @@ class AppearancePage(SectionPage):
                       "/usr/share/backgrounds/nyxus.")
             empty.set_xalign(0)
             empty.set_wrap(True)
-            empty.add_css_class("nyx-wip-body")
+            empty.add_css_class("nyx-empty-row")
             flow.append(empty)
         else:
             for wp in walls[:30]:
@@ -9393,6 +9428,44 @@ class CamerasMicsPage(SectionPage):
             description="Audio sources reported by PipeWire / PulseAudio")
         self.add_group(self.mic_grp)
 
+        priv = Adw.PreferencesGroup(
+            title="Privacy",
+            description="Quick mute / unmute for capture devices. "
+                        "Per-app Flatpak camera/mic policy lives under "
+                        "App Permissions.")
+        self.add_group(priv)
+        if have("pactl"):
+            priv.add(action_row(
+                "Mute all microphones",
+                "pactl set-source-mute @DEFAULT_SOURCE@ 1",
+                "Mute",
+                lambda: sh_async(
+                    ["pactl", "set-source-mute", "@DEFAULT_SOURCE@", "1"],
+                    lambda r: self.toast(
+                        "mics muted" if r[0] == 0 else "mute failed"),
+                    timeout=4),
+                css="nyx-pill-warn"))
+            priv.add(action_row(
+                "Unmute default microphone",
+                "pactl set-source-mute @DEFAULT_SOURCE@ 0",
+                "Unmute",
+                lambda: sh_async(
+                    ["pactl", "set-source-mute", "@DEFAULT_SOURCE@", "0"],
+                    lambda r: self.toast(
+                        "mic unmuted" if r[0] == 0 else "unmute failed"),
+                    timeout=4),
+                css="nyx-pill-ok"))
+        else:
+            priv.add(empty_row(
+                "pactl not available",
+                "PipeWire/PulseAudio tools required for mute controls"))
+        if have("flatpak"):
+            priv.add(action_row(
+                "Open App Permissions",
+                "Per-Flatpak camera / microphone toggles",
+                "Open",
+                lambda: self._jump_to("app_perms")))
+
         tools = Adw.PreferencesGroup(title="Tests")
         self.add_group(tools)
         if have("cheese"):
@@ -9584,8 +9657,19 @@ class ControllersPage(SectionPage):
                         name = n
             except OSError:
                 pass
-            row = Adw.ActionRow(title=name,
-                                subtitle=f"/dev/input/{node}")
+            path = f"/dev/input/{node}"
+            row = Adw.ActionRow(title=name, subtitle=path)
+            if have("jstest"):
+                btn = Gtk.Button(label="Test")
+                btn.add_css_class("nyx-pill")
+                btn.set_valign(Gtk.Align.CENTER)
+                btn.connect(
+                    "clicked",
+                    lambda _b, pth=path: open_terminal(
+                        f"jstest {shlex.quote(pth)} || "
+                        "(echo 'jstest failed'; read _)",
+                        self.win))
+                row.add_suffix(btn)
             self._track(self.dev_grp, row)
 
         self.add_pill(status_pill(f"{len(js_nodes)} connected", "ok"))
@@ -9654,10 +9738,18 @@ class AboutPage(SectionPage):
         _, ker, _  = sh(["uname", "-r"])
         _, up, _   = sh(["uptime", "-p"])
         os_info = self._os_release()
+        bake_stamp = "(not present — live/dev)"
+        bake_path = Path("/etc/nyxus-build")
+        if bake_path.exists():
+            try:
+                bake_stamp = bake_path.read_text().strip().splitlines()[0][:72]
+            except Exception:
+                bake_stamp = "(unreadable)"
         for title, value in (
             ("Distribution",  os_info.get("PRETTY_NAME", "(n/a)")),
             ("NYXUS version", nyx_ver),
             ("Build ID",      os_info.get("BUILD_ID", "(n/a)")),
+            ("Bake stamp",    bake_stamp),
             ("Variant",       os_info.get("VARIANT", "(n/a)")),
             ("Hostname",      host.strip() or "(unset)"),
             ("Kernel",        ker.strip() or "(unknown)"),
@@ -10299,6 +10391,20 @@ class SyncPage(SectionPage):
             "Download remote bundle and apply locally",
             "Pull",
             lambda: fire_and_forget("nyxus-account --pull")))
+        ops.add(action_row(
+            "Reload status",
+            "Re-read ~/.config/nyxus/account.json",
+            "Reload",
+            self.rebuild))
+        ops.add(action_row(
+            "Edit account.json",
+            str(self.CFG),
+            "Open",
+            lambda: open_terminal(
+                f"${{EDITOR:-nano}} {self.CFG}; "
+                "chmod 600 ~/.config/nyxus/account.json 2>/dev/null; "
+                "read -p 'enter to close'",
+                self.win)))
 
         # Scope
         scope = Adw.PreferencesGroup(
@@ -10355,6 +10461,39 @@ class DropPage(SectionPage):
         running = (rc == 0 and out.strip())
         status.add(kv_row("kdeconnectd",
                           "running" if running else "stopped"))
+        if not running:
+            status.add(action_row(
+                "Start kdeconnectd",
+                "systemctl --user start kdeconnectd",
+                "Start",
+                lambda: sh_async(
+                    ["systemctl", "--user", "start", "kdeconnectd"],
+                    lambda r: (self.toast(
+                        "started" if r[0] == 0 else "start failed"),
+                               self.rebuild()),
+                    timeout=6),
+                css="nyx-pill-ok"))
+        else:
+            status.add(action_row(
+                "Stop kdeconnectd",
+                "systemctl --user stop kdeconnectd",
+                "Stop",
+                lambda: sh_async(
+                    ["systemctl", "--user", "stop", "kdeconnectd"],
+                    lambda r: (self.toast(
+                        "stopped" if r[0] == 0 else "stop failed"),
+                               self.rebuild()),
+                    timeout=6),
+                css="nyx-pill-warn"))
+        status.add(action_row(
+            "List available (unpaired) devices",
+            "kdeconnect-cli --list-available",
+            "Show",
+            lambda: open_terminal(
+                "kdeconnect-cli --list-available; "
+                "echo; echo 'Pair with: kdeconnect-cli -d <id> --pair'; "
+                "read -p 'enter to close'",
+                self.win)))
 
         # Devices
         dev_grp = Adw.PreferencesGroup(
@@ -10819,6 +10958,59 @@ class VirtPage(SectionPage):
                     timeout=30),
                 css="nyx-pill-ok"))
 
+        # Domains
+        if have("virsh"):
+            dom = Adw.PreferencesGroup(
+                title="Virtual machines",
+                description="Domains reported by virsh (qemu:///system)")
+            self.add_group(dom)
+            rc, out, _ = sh(
+                ["virsh", "-c", "qemu:///system", "list", "--all",
+                 "--name"], timeout=5)
+            names = [ln.strip() for ln in (out or "").splitlines()
+                     if ln.strip()]
+            if names:
+                for name in names[:20]:
+                    rc2, st, _ = sh(
+                        ["virsh", "-c", "qemu:///system",
+                         "domstate", name], timeout=3)
+                    state = (st or "?").strip() or "?"
+                    dom.add(kv_row(name, state))
+                    if state == "running":
+                        dom.add(action_row(
+                            f"Shut down {name}",
+                            "ACPI power-button (graceful)",
+                            "Shut down",
+                            lambda n=name: sh_async(
+                                ["virsh", "-c", "qemu:///system",
+                                 "shutdown", n],
+                                lambda r, nn=n: (
+                                    self.toast(
+                                        f"shutdown {nn}" if r[0] == 0
+                                        else "shutdown failed"),
+                                    self.rebuild()),
+                                timeout=15),
+                            css="nyx-pill-warn"))
+                    else:
+                        dom.add(action_row(
+                            f"Start {name}",
+                            "virsh start",
+                            "Start",
+                            lambda n=name: sh_async(
+                                ["virsh", "-c", "qemu:///system",
+                                 "start", n],
+                                lambda r, nn=n: (
+                                    self.toast(
+                                        f"started {nn}" if r[0] == 0
+                                        else "start failed"),
+                                    self.rebuild()),
+                                timeout=15),
+                            css="nyx-pill-ok"))
+            else:
+                dom.add(empty_row(
+                    "No VMs defined",
+                    "Create one in Virt Manager or via virt-install"))
+
         # Tools
         tools = Adw.PreferencesGroup(title="Tools")
         self.add_group(tools)
@@ -10919,19 +11111,65 @@ class ContainersPage(SectionPage):
             db.add(empty_row("distrobox not installed",
                              "Install with `sudo pacman -S distrobox`"))
         else:
-            rc, out, _ = sh(["distrobox", "list", "--no-color"], timeout=6)
             rows = []
-            if rc == 0 and out:
-                for line in out.splitlines():
-                    line = line.strip()
-                    if not line or line.startswith("ID"):
-                        continue
-                    parts = [p.strip() for p in line.split("|")]
-                    if len(parts) >= 4:
-                        rows.append(parts)
+            if have("nyxus-distrobox-helper"):
+                rc, out, _ = sh(
+                    ["nyxus-distrobox-helper", "--json"], timeout=8)
+                if rc == 0 and out:
+                    try:
+                        rows = json.loads(out) or []
+                    except Exception:
+                        rows = []
+            if not rows:
+                rc, out, _ = sh(
+                    ["distrobox", "list", "--no-color"], timeout=6)
+                if rc == 0 and out:
+                    for line in out.splitlines():
+                        line = line.strip()
+                        if not line or line.startswith("ID"):
+                            continue
+                        parts = [p.strip() for p in line.split("|")]
+                        if len(parts) >= 4:
+                            rows.append({"name": parts[1],
+                                         "status": parts[2],
+                                         "image": parts[3]})
             if rows:
                 for r in rows:
-                    db.add(kv_row(r[1], f"{r[2]} · {r[3]}"))
+                    name = r.get("name") if isinstance(r, dict) else r[1]
+                    status = (r.get("status") if isinstance(r, dict)
+                              else r[2])
+                    image = (r.get("image") if isinstance(r, dict)
+                             else r[3])
+                    db.add(kv_row(name, f"{status} · {image}"))
+                    db.add(action_row(
+                        f"Enter {name}",
+                        "Open an interactive shell in this box",
+                        "Enter",
+                        lambda n=name: open_terminal(
+                            f"distrobox enter {shlex.quote(n)}",
+                            self.win)))
+                    db.add(action_row(
+                        f"Stop {name}",
+                        "Stop the container (keeps the box)",
+                        "Stop",
+                        lambda n=name: sh_async(
+                            ["distrobox", "stop", "--yes", n],
+                            lambda rr, nn=n: (
+                                self.toast(
+                                    f"stopped {nn}" if rr[0] == 0
+                                    else "stop failed"),
+                                self.rebuild()),
+                            timeout=30),
+                        css="nyx-pill-warn"))
+                    db.add(action_row(
+                        f"Remove {name}",
+                        "distrobox rm — permanent",
+                        "Remove",
+                        lambda n=name: open_terminal(
+                            f"nyxus-distrobox-helper --rm {shlex.quote(n)}; "
+                            "read -p 'enter to close'",
+                            self.win),
+                        css="nyx-pill-warn"))
             else:
                 db.add(empty_row("No containers yet",
                                  "Use a quick template below to create one"))
@@ -10987,14 +11225,21 @@ class KernelPage(SectionPage):
          "Run",
          lambda: open_terminal(
              "sudo grub-mkconfig -o /boot/grub/grub.cfg", None)),
-        ("Show installed kernels",
-         "pacman -Q | grep ^linux",
+        ("Force Kage-Ryu as GRUB default",
+         "nyxus-set-grub-default-kage (saved-default flip)",
+         "Run",
+         lambda: open_terminal(
+             "sudo nyxus-set-grub-default-kage; "
+             "read -p 'enter to close'", None)),
+        ("Show /etc/nyxus-build",
+         "Bake tip stamp for this ISO",
          "Show",
          lambda: open_terminal(
-             "pacman -Q | grep -E '^linux( |-lts|-zen|-hardened)'",
-             None)),
+             "cat /etc/nyxus-build 2>/dev/null || "
+             "echo '(no bake stamp yet — live/dev session)'; "
+             "read -p 'enter to close'", None)),
     ]
-    """Switch the GRUB default kernel between linux/lts/zen/hardened."""
+    """Kage-Ryu (primary) + stock linux (rescue only)."""
     KEY = "kernel"
 
     def build(self) -> None:
@@ -11006,9 +11251,24 @@ class KernelPage(SectionPage):
         except Exception as e:
             log.warning("uname: %s", e)
 
-        cur = Adw.PreferencesGroup(title="Active kernel")
-        self.add_group(cur)
-        cur.add(kv_row("uname -r", active))
+        policy = Adw.PreferencesGroup(
+            title="Boot policy",
+            description="NYXUS ships Kage-Ryu as the primary kernel. "
+                        "Stock linux stays available only as a rescue "
+                        "entry if Kage fails to mount the live ISO.")
+        self.add_group(policy)
+        is_kage = "kage" in active.lower()
+        policy.add(kv_row("Running now", active + (
+            " · KAGE-RYU" if is_kage else " · stock (rescue)")))
+        bake = Path("/etc/nyxus-build")
+        if bake.exists():
+            try:
+                stamp = bake.read_text().strip().splitlines()[0][:72]
+            except Exception:
+                stamp = "(unreadable)"
+            policy.add(kv_row("Bake stamp", stamp))
+        else:
+            policy.add(kv_row("Bake stamp", "(not present — live/dev)"))
 
         inst = Adw.PreferencesGroup(
             title="Installed kernels",
@@ -11020,35 +11280,51 @@ class KernelPage(SectionPage):
                                "Reinstall the nyxus-scripts package"))
         else:
             rc, out, _ = sh(["nyxus-kernel-switch", "--json"], timeout=4)
+            rows = []
             if rc == 0 and out:
                 try:
                     data = json.loads(out)
+                    rows = data.get("installed", []) or []
                 except Exception:
-                    data = {"installed": []}
-                rows = data.get("installed", []) or []
-                if not rows:
-                    inst.add(empty_row("No kernels detected",
-                                       "Install one with `sudo pacman -S linux-lts`"))
-                for k in rows:
-                    name = k.get("name", "?")
-                    ver  = k.get("version", "?")
-                    is_active = (active.endswith("-lts") and name == "linux-lts") \
-                        or (active.endswith("-zen") and name == "linux-zen") \
-                        or (active.endswith("-hardened") and name == "linux-hardened") \
-                        or (name == "linux" and not any(
-                            active.endswith(s) for s in ("-lts","-zen","-hardened")))
-                    sub = ver + (" · ACTIVE" if is_active else "")
-                    inst.add(action_row(
-                        name, sub,
-                        "Make default",
-                        lambda n=name: sh_async(
-                            ["nyxus-kernel-switch", "--set", n],
-                            lambda r, nm=n: self.toast(
-                                f"default → {nm} · reboot to apply"
-                                if r[0] == 0 else "set failed (admin denied?)"),
-                            timeout=30)))
+                    rows = []
+            if not rows:
+                # Fallback: probe pacman directly for the canonical pair.
+                for name, role in (("linux-kage-ryu", "primary"),
+                                   ("linux", "rescue")):
+                    rcp, outp, _ = sh(["pacman", "-Q", name], timeout=3)
+                    if rcp == 0 and outp:
+                        ver = outp.strip().split(None, 1)[-1]
+                        rows.append({"name": name, "version": ver,
+                                     "role": role})
+            if not rows:
+                inst.add(empty_row(
+                    "No kernels detected",
+                    "Expected linux-kage-ryu (primary) and/or linux (rescue)"))
+            for k in rows:
+                name = k.get("name", "?")
+                ver = k.get("version", "?")
+                role = k.get("role") or (
+                    "primary" if name == "linux-kage-ryu" else "rescue")
+                is_active = (
+                    (name == "linux-kage-ryu" and "kage" in active.lower())
+                    or (name == "linux" and "kage" not in active.lower()
+                        and not any(active.endswith(s)
+                                    for s in ("-lts", "-zen", "-hardened")))
+                )
+                sub = f"{ver} · {role}" + (" · ACTIVE" if is_active else "")
+                inst.add(action_row(
+                    name, sub,
+                    "Make default",
+                    lambda n=name: sh_async(
+                        ["nyxus-kernel-switch", "--set", n],
+                        lambda r, nm=n: self.toast(
+                            f"default → {nm} · reboot to apply"
+                            if r[0] == 0 else "set failed (admin denied?)"),
+                        timeout=45)))
 
-        self.add_pill(status_pill(active.split(".")[0] + ".x", "ok"))
+        self.add_pill(status_pill(
+            "kage" if is_kage else "stock",
+            "ok" if is_kage else "warn"))
 
 
 class GamingPage(SectionPage):
@@ -11134,9 +11410,137 @@ class GamingPage(SectionPage):
                     "nyxus-protonup --available; read -p 'enter to close'",
                     self.win)))
 
+        # GameMode
+        gm = Adw.PreferencesGroup(
+            title="GameMode",
+            description="Asks the system to boost CPU/GPU while a game runs "
+                        "(gamemoded user service + gamemoderun wrapper)")
+        self.add_group(gm)
+        if have("gamemoded") or have("gamemode"):
+            rc, out, _ = sh(["systemctl", "--user", "is-active",
+                             "gamemoded.service"], timeout=3)
+            active = (rc == 0 and (out or "").strip() == "active")
+            gm.add(kv_row("gamemoded", "active" if active else "inactive"))
+            gm.add(action_row(
+                "Enable GameMode daemon",
+                "systemctl --user enable --now gamemoded",
+                "Enable",
+                lambda: sh_async(
+                    ["systemctl", "--user", "enable", "--now",
+                     "gamemoded.service"],
+                    lambda r: (self.toast(
+                        "gamemoded ON" if r[0] == 0 else "enable failed"),
+                               self.rebuild()),
+                    timeout=8),
+                css="nyx-pill-ok"))
+            gm.add(action_row(
+                "Disable GameMode daemon",
+                "systemctl --user disable --now gamemoded",
+                "Disable",
+                lambda: sh_async(
+                    ["systemctl", "--user", "disable", "--now",
+                     "gamemoded.service"],
+                    lambda r: (self.toast(
+                        "gamemoded OFF" if r[0] == 0 else "disable failed"),
+                               self.rebuild()),
+                    timeout=8),
+                css="nyx-pill-warn"))
+            prefs = load_prefs()
+            gprefs = prefs.setdefault("gaming", {})
+            wrap = Adw.SwitchRow(
+                title="Prefer gamemoderun",
+                subtitle="Remember preference for launchers that honour "
+                         "settings.json · gaming.prefer_gamemoderun")
+            wrap.set_active(bool(gprefs.get("prefer_gamemoderun", False)))
+            wrap.connect(
+                "notify::active",
+                lambda s, _p: self._gaming_pref(
+                    "prefer_gamemoderun", s.get_active()))
+            gm.add(wrap)
+        else:
+            gm.add(empty_row(
+                "GameMode not installed",
+                "sudo pacman -S gamemode lib32-gamemode"))
+
+        # MangoHud
+        mh = Adw.PreferencesGroup(
+            title="MangoHud",
+            description="Vulkan/OpenGL FPS overlay · config in "
+                        "~/.config/MangoHud/MangoHud.conf")
+        self.add_group(mh)
+        if have("mangohud"):
+            prefs = load_prefs()
+            gprefs = prefs.setdefault("gaming", {})
+            sw = Adw.SwitchRow(
+                title="Enable MangoHud by default",
+                subtitle="Sets MANGOHUD=1 in settings.json for wrappers "
+                         "that read gaming.mangohud")
+            sw.set_active(bool(gprefs.get("mangohud", False)))
+            sw.connect(
+                "notify::active",
+                lambda s, _p: self._gaming_pref("mangohud", s.get_active()))
+            mh.add(sw)
+            mh_conf = Path.home() / ".config/MangoHud/MangoHud.conf"
+            mh.add(kv_row("Config",
+                          "present" if mh_conf.exists() else "default"))
+            mh.add(action_row(
+                "Edit MangoHud.conf",
+                str(mh_conf),
+                "Open",
+                lambda: open_terminal(
+                    "mkdir -p ~/.config/MangoHud; "
+                    "touch ~/.config/MangoHud/MangoHud.conf; "
+                    "${EDITOR:-nano} ~/.config/MangoHud/MangoHud.conf",
+                    self.win)))
+            mh.add(action_row(
+                "Test overlay (glxgears)",
+                "mangohud glxgears",
+                "Test",
+                lambda: open_terminal(
+                    "mangohud glxgears 2>/dev/null || "
+                    "echo 'install mangohud + mesa-utils'; "
+                    "read -p 'enter to close'",
+                    self.win)))
+        else:
+            mh.add(empty_row(
+                "MangoHud not installed",
+                "sudo pacman -S mangohud lib32-mangohud"))
+
+        # Gamescope
+        gs = Adw.PreferencesGroup(
+            title="Gamescope",
+            description="Nested Wayland compositor for micro-stutter-free "
+                        "fullscreen gaming")
+        self.add_group(gs)
+        if have("gamescope"):
+            gs.add(action_row(
+                "Test gamescope (glxgears)",
+                "gamescope -W 1280 -H 720 -- glxgears",
+                "Test",
+                lambda: open_terminal(
+                    "gamescope -W 1280 -H 720 -- glxgears 2>/dev/null || "
+                    "echo 'gamescope failed'; read -p 'enter to close'",
+                    self.win)))
+            gs.add(action_row(
+                "Show gamescope help",
+                "gamescope --help",
+                "Show",
+                lambda: open_terminal(
+                    "gamescope --help | less", self.win)))
+        else:
+            gs.add(empty_row(
+                "Gamescope not installed",
+                "sudo pacman -S gamescope"))
+
         self.add_pill(status_pill(
             "ready" if have("steam") else "needs steam",
             "ok" if have("steam") else "warn"))
+
+    def _gaming_pref(self, key: str, value: bool) -> None:
+        prefs = load_prefs()
+        prefs.setdefault("gaming", {})[key] = bool(value)
+        save_prefs(prefs)
+        self.toast(f"gaming.{key} → {'ON' if value else 'OFF'}")
 
 
 class EditorsPage(SectionPage):
@@ -11214,19 +11618,32 @@ class EditorsPage(SectionPage):
                 desktop = "code-oss.desktop"
             default.add(action_row(
                 f"Set {label} as default",
-                desktop,
+                f"{desktop} · text/plain + markdown + json",
                 "Set",
-                lambda d=desktop: sh_async(
-                    ["xdg-mime", "default", d, "text/plain"],
-                    lambda r, dd=d: self.toast(
-                        f"default → {dd}" if r[0] == 0
-                        else "xdg-mime failed"),
-                    timeout=4)))
+                lambda d=desktop: self._set_editor_default(d)))
 
         any_present = any(have(b) for b, _, _ in self.EDITORS)
         self.add_pill(status_pill(
             "ready" if any_present else "none installed",
             "ok" if any_present else "warn"))
+
+    def _set_editor_default(self, desktop: str) -> None:
+        mimes = ("text/plain", "text/markdown", "application/json",
+                 "text/x-python", "text/css", "text/html")
+
+        def _run(i: int = 0) -> None:
+            if i >= len(mimes):
+                self.toast(f"default → {desktop}")
+                self.rebuild()
+                return
+            sh_async(
+                ["xdg-mime", "default", desktop, mimes[i]],
+                lambda r, idx=i: (
+                    self.toast("xdg-mime failed") if r[0] != 0
+                    else _run(idx + 1)),
+                timeout=4)
+
+        _run(0)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -11336,23 +11753,56 @@ class UsbPage(SectionPage):
                     timeout=15),
                 css=("nyx-pill-warn" if mname == "lockdown" else "")))
 
-        # Devices
+        # Devices — allow/block when daemon is active
         if have("usbguard"):
-            dv = Adw.PreferencesGroup(title="Known devices")
+            dv = Adw.PreferencesGroup(
+                title="Known devices",
+                description="Allow / Block write temporary rules via "
+                            "usbguard (admin). Persistent rules live in "
+                            "/etc/usbguard/rules.conf — see Advanced.")
             self.add_group(dv)
             rc, out, _ = sh(["usbguard", "list-devices"], timeout=3)
             shown = 0
             if rc == 0 and out:
                 for line in out.splitlines()[:12]:
                     line = line.strip()
-                    if not line: continue
+                    if not line:
+                        continue
+                    # Typical: "1: allow id 1d6b:0002 serial ... name ..."
                     parts = line.split(":", 1)
-                    if len(parts) == 2:
-                        dv.add(kv_row(parts[0].strip(), parts[1].strip()[:80]))
-                        shown += 1
+                    if len(parts) != 2:
+                        continue
+                    did = parts[0].strip()
+                    detail = parts[1].strip()
+                    dv.add(kv_row(f"#{did}", detail[:90]))
+                    if did.isdigit():
+                        dv.add(action_row(
+                            f"Allow device #{did}",
+                            "usbguard allow-device (session)",
+                            "Allow",
+                            lambda d=did: open_terminal(
+                                f"sudo usbguard allow-device {d}; "
+                                "read -p 'enter to close'",
+                                self.win),
+                            css="nyx-pill-ok"))
+                        dv.add(action_row(
+                            f"Block device #{did}",
+                            "usbguard block-device (session)",
+                            "Block",
+                            lambda d=did: open_terminal(
+                                f"sudo usbguard block-device {d}; "
+                                "read -p 'enter to close'",
+                                self.win),
+                            css="nyx-pill-warn"))
+                    shown += 1
             if shown == 0:
                 dv.add(empty_row("No devices visible",
-                                 "(daemon may be inactive)"))
+                                 "(daemon may be inactive — Enable above)"))
+            dv.add(action_row(
+                "Refresh device list",
+                "Rebuild this section",
+                "Refresh",
+                self.rebuild))
 
         self.add_pill(status_pill(
             mode,

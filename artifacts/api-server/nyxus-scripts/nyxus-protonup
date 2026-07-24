@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  /usr/local/bin/nyxus-protonup                            rev 2026-05-14 r1
+#
+#  NYXUS Proton-GE installer.
+#
+#  Pulls the latest (or a specific) GloriousEggroll Proton-GE release from
+#  GitHub and extracts it into ~/.steam/root/compatibilitytools.d/ so Steam
+#  picks it up next launch. No AUR, no pip, no helper packages.
+#
+#  Usage:
+#    nyxus-protonup                List installed local versions
+#    nyxus-protonup --available    List the 10 newest GE releases on GitHub
+#    nyxus-protonup --install      Install the latest release
+#    nyxus-protonup --install TAG  Install GE-Proton<TAG>
+#    nyxus-protonup --remove TAG   Remove a previously-installed release
+#    nyxus-protonup --help
+#
+#  Logs to ~/.cache/nyxus/protonup.log
+#
+#  (c) 2026 JOSEPH SIERENGOWSKI - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ============================================================================
+set -euo pipefail
+
+DEST="${HOME}/.steam/root/compatibilitytools.d"
+LOG_DIR="${HOME}/.cache/nyxus"
+LOG="${LOG_DIR}/protonup.log"
+mkdir -p "${DEST}" "${LOG_DIR}"; touch "${LOG}"
+API="https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"
+
+ts()   { date '+%Y-%m-%dT%H:%M:%S%z'; }
+log()  { printf '[%s] %s\n' "$(ts)" "$*" >>"${LOG}"; }
+die()  { log "FATAL: $*"; printf 'nyxus-protonup: %s\n' "$*" >&2; exit 1; }
+
+need() { command -v "$1" >/dev/null || die "missing dep: $1"; }
+need curl; need tar; need python3
+
+cmd_list() {
+  if [[ ! -d "${DEST}" ]] || [[ -z "$(ls -A "${DEST}" 2>/dev/null)" ]]; then
+    printf '(no Proton-GE versions installed in %s)\n' "${DEST}"; return
+  fi
+  printf 'installed in %s:\n' "${DEST}"
+  for d in "${DEST}"/*/; do
+    [[ -d "$d" ]] || continue
+    printf '  %s\n' "$(basename "$d")"
+  done
+}
+
+fetch_releases() {
+  local tmp; tmp="$(mktemp)"; trap 'rm -f "$tmp"' RETURN
+  if ! curl -sSL --max-time 20 "${API}?per_page=10" -o "$tmp"; then
+    die "GitHub API unreachable (no internet?)"
+  fi
+  python3 -c '
+import json, sys
+data = json.load(open(sys.argv[1]))
+for r in data:
+    name = r.get("tag_name","")
+    if not name: continue
+    asset = next((a for a in r.get("assets",[])
+                  if a["name"].endswith(".tar.gz")), None)
+    url = asset["url"] if asset else ""
+    fname = asset["name"] if asset else ""
+    print(f"{name}\t{url}\t{fname}")
+' "$tmp"
+}
+
+cmd_available() {
+  fetch_releases | awk -F'\t' '{printf "  %s\n",$1}'
+}
+
+cmd_install() {
+  local tag="${1:-}"
+  local rows; rows="$(fetch_releases)"
+  local line
+  if [[ -z "${tag}" ]]; then
+    line="$(printf '%s\n' "${rows}" | head -1)"
+  else
+    line="$(printf '%s\n' "${rows}" | awk -F'\t' -v t="${tag}" '$1==t {print; exit}')"
+    [[ -z "${line}" ]] && die "tag not found in latest 10: ${tag}"
+  fi
+  IFS=$'\t' read -r name url fname <<<"${line}"
+  [[ -n "${url}" ]] || die "no .tar.gz asset on release ${name}"
+  if [[ -d "${DEST}/${name}" ]]; then
+    printf 'already installed: %s\n' "${name}"; return
+  fi
+  log "downloading ${fname} from ${url}"
+  local tmp; tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+  curl -fsSL --max-time 600 \
+    -H "Accept: application/octet-stream" \
+    -o "${tmp}/${fname}" "${url}" \
+      || die "download failed"
+  log "extracting -> ${DEST}/"
+  tar -C "${DEST}" -xzf "${tmp}/${fname}" \
+      || die "extract failed (corrupt archive?)"
+  printf 'installed: %s\n' "${name}"
+  printf 'restart Steam to see it under: Settings > Compatibility.\n'
+}
+
+cmd_remove() {
+  local tag="$1"
+  [[ -d "${DEST}/${tag}" ]] || die "not installed: ${tag}"
+  rm -rf "${DEST:?}/${tag}"
+  log "removed ${tag}"
+  printf 'removed: %s\n' "${tag}"
+}
+
+case "${1:-list}" in
+  list|"")        cmd_list ;;
+  --available|-a) cmd_available ;;
+  --install|-i)   cmd_install "${2:-}" ;;
+  --remove|-r)    [[ $# -ge 2 ]] || die "usage: --remove TAG"; cmd_remove "$2" ;;
+  --help|-h)      sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *)              die "unknown arg: $1 (try --help)" ;;
+esac
