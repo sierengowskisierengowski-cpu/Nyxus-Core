@@ -33,7 +33,8 @@
 | **HEAD** | check `git rev-parse --short HEAD` |
 | **Open PRs** | **1** — pre-bake cleanup + Settings deepen (PR #75); theme audit **#74 merged** |
 | **Day chronicle** | [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md) |
-| **Repo state for bake** | ✅ **COMMITTED + IDLE** — safe to kick `sudo ./build-iso.sh` once PR is merged |
+| **Repo state for bake** | ✅ **COMMITTED + IDLE** — safe to kick `sudo ./build-iso.sh` |
+| **Deep audit** | [`docs/DEEP_BUILD_AUDIT_2026-07-24.md`](./docs/DEEP_BUILD_AUDIT_2026-07-24.md) · tip `b433927e` |
 | **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (built **03:05 EDT**) — **STALE**. **Do not reflash that file expecting today's work.** |
 | **Kage-Ryu pkgs** | `linux-kage-ryu-7.0.12` + headers (~**08:53 EDT**). PKGBUILD enables iso9660/squashfs/loop. Still **verify** live mount after bake. |
 | **Running desktop kernel** | Stock `7.1.3-arch1-2` (not Kage) — expected until new ISO |
