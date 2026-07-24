@@ -22,7 +22,7 @@
     ;; bottom scrim: tagline + boot line + copyright (the graffiti brand
     ;; art already carries the NYXUS HYPRLAND wordmark, so no big label)
     (box :class "splash-footer" :orientation "v" :space-evenly false :hexpand true :halign "fill"
-      (label :class "splash-tag"  :halign "center" :wrap false :show-truncated false :text "OBSIDIAN PRISM · IRIDESCENT VOID")
+      (label :class "splash-tag"  :halign "center" :wrap false :show-truncated false :text "ALIEN NEON · IRIDESCENT VOID")
       (label :class "splash-boot" :halign "center" :text "INITIALIZING SESSION …")
       (label :class "splash-foot" :halign "center" :text "© 2026 JOSEPH A. SIERENGOWSKI"))))
 

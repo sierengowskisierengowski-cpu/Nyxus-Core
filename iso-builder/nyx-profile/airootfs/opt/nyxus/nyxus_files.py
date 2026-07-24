@@ -45,7 +45,10 @@ _h = logging.handlers.RotatingFileHandler(LOG_FILE, maxBytes=512_000,
 _h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
 log.addHandler(_h)
 
-GOLD = "#d4b87a"
+try:
+    from nyxus_palette import ACCENT_PRIMARY as ACCENT
+except Exception:
+    ACCENT = "#7d3dff"   # ALIEN NEON prism violet fallback
 INK = "#080a10"
 
 

@@ -491,7 +491,7 @@ fi
 hd "13g. NYXUS welcome tour"
 [[ -f "${AIROOT}/opt/nyxus/nyxus_welcome.py" ]] \
   && ok "nyxus_welcome.py present" || fail "nyxus_welcome.py missing"
-grep -q "/usr/local/bin/nyxus welcome" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
+grep -q "/usr/local/bin/nyxus-welcome" "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" \
   && ok "welcome auto-launch wired in user session" \
   || fail "welcome auto-launch not wired in hyprland exec-once"
 

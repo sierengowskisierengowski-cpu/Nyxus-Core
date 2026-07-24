@@ -7,12 +7,12 @@ to each screen edge at the same size + margins as the corresponding waybar.
 Each window renders a Cairo particle system at 30fps:
 
     - 14 soft-edged fog blobs per bar (56 total)
-    - Pure white + off-white (cream raised) + occasional warm gold (~15%)
+    - Pure white + off-white + occasional light-grey wisp (monochrome only)
     - Smooth drift velocities + sinusoidal wobble for organic motion
     - Wraps off-edge cleanly (blobs leave one side, enter the other)
     - Radial-gradient soft falloff (no hard edges)
 
-Architecture: matches the locked NYXUS Visual System (DARK MIRROR rev
+Architecture: matches the locked NYXUS Visual System (ALIEN NEON rev
 r13) — pure white #ffffff / off-white #eef2fa / light grey #c8ccd6 /
 mid grey #9aa0ad. Monochrome only — no gold, no cream. Runs underneath
 the translucent waybar shell so the fog reads as living atmosphere
@@ -96,7 +96,7 @@ FPS              = 30
 FRAME_MS         = int(1000 / FPS)
 BLOBS_PER_BAR    = 18
 
-# ── PALETTE (DARK MIRROR rev r13 — see nyxus_palette.py canonical source) ──
+# ── PALETTE (ALIEN NEON rev r13 — see nyxus_palette.py canonical source) ──
 # Float tuples for Cairo. Mirrors WHITE_PURE / WHITE_OFF / GREY_LIGHT /
 # GREY_MID from nyxus_palette.py.
 COLOR_WHITE      = (1.000, 1.000, 1.000)   # #ffffff
@@ -264,7 +264,7 @@ class FogApp(Adw.Application):
         except Exception: pass
 
     def do_activate(self):
-        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        # Force dark theme to match NYXUS ALIEN NEON aesthetic
         try:
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)

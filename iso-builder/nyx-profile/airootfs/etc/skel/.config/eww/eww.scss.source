@@ -112,7 +112,7 @@ $neon-orange-soft:      mix(#ffffff, $neon-orange, 30%);
 $neon-blue-soft:        mix(#ffffff, $neon-blue, 40%);
 
 /* ---------------------------------------------------------------------
- * NYXUS . EWW styles - DARK MIRROR aesthetic
+ * NYXUS . EWW styles - ALIEN NEON aesthetic
  * (c) 2026 JOSEPH A. SIERENGOWSKI . NYX-J5W-2026-SIERENGOWSKI-LOCKED
  *
  * Palette:
@@ -161,7 +161,7 @@ window, window.background, decoration {
    backgrounds, the glass painted on padding-box and the gradient on
    border-box, showing only through the transparent border. Alphas sit
    at .70-.86 so Hyprland's dual-kawase layer blur reads through the
-   glass (the DARK MIRROR frosted look) without killing legibility. */
+   glass (the ALIEN NEON frosted look) without killing legibility. */
 
 /* Structural shell: animated starfield + prism rim paint via inline :style
    in eww.yuck. Static fallbacks below keep bars obsidian if inline hiccups. */

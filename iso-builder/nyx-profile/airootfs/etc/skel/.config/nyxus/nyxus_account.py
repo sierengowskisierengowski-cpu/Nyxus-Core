@@ -180,10 +180,14 @@ def _curl_get(url: str, token: str) -> tuple[int, bytes, str]:
 
 
 # ---------- GUI ----------
-GOLD = "#d4b87a"; INK = "#080a10"
+try:
+    from nyxus_palette import ACCENT_PRIMARY as ACCENT
+except Exception:
+    ACCENT = "#7d3dff"   # ALIEN NEON prism violet fallback
+INK = "#080a10"
 CSS = f"""
 .acct-window {{ background: {INK}; }}
-.acct-header {{ color: {GOLD}; font-weight: 700; font-size: 18px;
+.acct-header {{ color: {ACCENT}; font-weight: 700; font-size: 18px;
                  padding: 8px 0 12px 0; letter-spacing: 0.04em; }}
 .acct-status {{ color: rgba(230,232,238,0.7); padding-bottom: 8px; }}
 .acct-row    {{ padding: 8px 4px; }}

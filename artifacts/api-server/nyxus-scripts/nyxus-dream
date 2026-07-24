@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # NYXUS · Dream Protocol  rev 2026-07-24
 # Easter egg unlocked by solving the Welcome Transmission riddle.
-# Chord: Super+Shift+D   ·   requires ~/.config/nyxus/dream.unlocked
+# Chord: Super+Alt+D   ·   requires ~/.config/nyxus/dream.unlocked
 #
 #   nyxus-dream          → pulse (default)
 #   nyxus-dream pulse    → violet dreamglass border spin + toast

@@ -1,4 +1,4 @@
-# NYXUS · DARK MIRROR · Quickstart
+# NYXUS · ALIEN NEON · Quickstart
 
 Welcome to NYXUS. A short tour:
 

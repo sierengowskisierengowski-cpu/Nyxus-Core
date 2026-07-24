@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # ============================================================
-#  NYXUS TERMINAL — bare VTE (DARK MIRROR rev 2026-05-07 r13)
+#  NYXUS TERMINAL — bare VTE (ALIEN NEON rev 2026-05-07 r13)
 #
 #  Rewritten 2026-05-07: stripped every overlay, graffiti layer,
 #  spray-can header, idle animation, and color palette. The window
 #  is now just the VTE terminal widget on a dark-glass surface.
 #
 #  All visual presence (rim-light, glow, shadow, blur) is supplied
-#  by Hyprland's system-wide DARK MIRROR active-border gradient
+#  by Hyprland's system-wide ALIEN NEON active-border gradient
 #  (white -> off-white #eef2fa -> light grey #c8ccd6 -> faded
 #  black -> ink black) defined in hyprland.conf. The terminal
 #  itself contributes nothing — exactly what the user asked for.
@@ -80,7 +80,7 @@ APP_ID  = "io.nyxus.terminal"
 WIN_W   = 700
 WIN_H   = 480
 
-# DARK MIRROR palette
+# ALIEN NEON palette
 BG_RGBA       = (0.031, 0.047, 0.078, 0.55)   # rgba(8,12,20,0.55) dark glass
 FG_HEX        = "#eef2fa"                     # off-white text
 CURSOR_HEX    = "#ffffff"                     # pure white caret
@@ -127,7 +127,7 @@ class NyxusTerminal(Adw.Application):
         except Exception: pass
 
     def do_activate(self):
-        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        # Force dark theme to match NYXUS ALIEN NEON aesthetic
         try:
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
@@ -308,7 +308,7 @@ class NyxusTerminal(Adw.Application):
         vte.grab_focus()
 
 
-# ── Try to apply unified DARK MIRROR chrome (no-op if unavailable) ──────────
+# ── Try to apply unified ALIEN NEON chrome (no-op if unavailable) ──────────
 try:
     sys.path.insert(0, os.path.expanduser("~/.nyxus"))
     from nyxus_chrome import install_chrome as _nyx_install_chrome  # noqa

@@ -23,7 +23,7 @@ STATE = os.path.expanduser("~/.config/nyxus/wallfx.conf")
 BARS = 10
 FPS = 30
 # hue targets per workspace ID (NYXUS names them: 1 WEB, 2 CODE, 3 TERM,
-# 4 FILES, 5 MEDIA, 6 COMMS). Subtle shifts keep DARK MIRROR intact while
+# 4 FILES, 5 MEDIA, 6 COMMS). Subtle shifts keep ALIEN NEON intact while
 # giving every desk its own temperature. Special workspaces keep current.
 WS_HUE = {"1": 0.0, "2": 12.0, "3": -14.0, "4": 22.0, "5": -24.0,
           "6": 8.0, "7": -8.0, "8": 26.0, "9": -18.0, "10": 6.0}

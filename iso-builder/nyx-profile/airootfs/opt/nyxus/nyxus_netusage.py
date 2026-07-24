@@ -2,7 +2,7 @@
 """
 NYXUS Network Usage — libadwaita live per-interface traffic monitor.
 
-DARK MIRROR rev r1
+ALIEN NEON rev r1
 
 Reads /proc/net/dev directly (no daemon dependency):
     Rates           live RX/TX throughput per interface (1 s poll)

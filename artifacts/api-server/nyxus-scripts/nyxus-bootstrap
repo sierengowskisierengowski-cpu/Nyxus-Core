@@ -29,7 +29,7 @@ set -uo pipefail
 # ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
 # r12 (2026-07-23): offline-first — Replit dependency cut, install no longer
 # aborts on `clear`/set -e, hyprexpo build is one-shot + offline-aware.
-BOOTSTRAP_VERSION="2026.07.24-r13-fixes"
+BOOTSTRAP_VERSION="2026.07.24-r14-alien-neon"
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
@@ -43,7 +43,7 @@ log() { printf '[nyxus-bootstrap] %s %s\n' "$(date -Iseconds)" "$*"; }
 # hyprctl notify is rendered directly by the compositor — always available
 # inside an `exec-once` because $HYPRLAND_INSTANCE_SIGNATURE is set by then.
 # Icons: 0 warn, 1 info, 2 hint, 3 error, 4 confused, 5 ok, -1 none
-# Color: DARK MIRROR off-white rgb(eef2fa) for normal, rgb(ff8888) for error.
+# Color: ALIEN NEON off-white rgb(eef2fa) for normal, rgb(ff8888) for error.
 notify() {
   command -v hyprctl >/dev/null 2>&1 || return 0
   local icon="${1:-2}" timeout="${2:-5000}" color="${3:-rgb(eef2fa)}" msg="${4:-}"

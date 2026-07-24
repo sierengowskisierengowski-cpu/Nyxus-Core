@@ -233,7 +233,7 @@ class Picker(Adw.Application):
         self._opts = opts
 
     def do_activate(self):
-        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        # Force dark theme to match NYXUS ALIEN NEON aesthetic
         try:
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)

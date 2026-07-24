@@ -1,7 +1,7 @@
 // ============================================
 // NYXUS — shared desktop primitives
-// DARK MIRROR rev r16 (LOCKED) — monochrome only.
-// White / off-white / black / dark glass. No neon. No per-app colors.
+// ALIEN NEON rev r16 (LOCKED) — monochrome chrome + canon neon accents.
+// White / off-white / void / dark glass. Neon only on workspace stripes.
 // Mirrors the actual installed Hyprland system: 26 real apps (3 live iframes
 // for the apps that ship a web mirror + 11 tarballs + 12 system Python apps).
 // Every entry below corresponds to a real installable file in nyxus-scripts/.
@@ -10,10 +10,10 @@ import { useState, useEffect } from "react";
 
 export const BASE = "/api/download/nyxus";
 
-// ── DARK MIRROR PALETTE (matches nyxus_chrome.py + nyxus-palette.css) ────
+// ── ALIEN NEON PALETTE (matches nyxus_chrome.py + nyxus-palette.css) ────
 export const C = {
   // surfaces
-  void:         "#000000",
+  void:         "#05060a",
   glassDark:    "rgba(8,12,20,0.55)",     // panels, cards, frames, headerbars
   glassDeeper:  "rgba(15,20,32,0.72)",    // inputs, hovered cards
   glassDeepest: "rgba(5,7,12,0.92)",      // tooltips, popovers, dropdowns
@@ -32,8 +32,8 @@ export const C = {
   text:          "#eef2fa",  // alias
   dim:           "#6a6e78",  // alias
 
-  // workspace identity stripes — ONLY allowed color, ONLY on bottom waybar
-  ws: ["#ec4899", "#ea7e3c", "#d4a73a", "#6aa872", "#5a8aab", "#8a6aaa", "#ec4899", "#ea7e3c", "#d4a73a"],
+  // workspace identity stripes — ALIEN NEON canon neons, ONLY on bottom waybar
+  ws: ["#7d3dff", "#ff2dad", "#39ff14", "#2bd2ff", "#ff8a1e", "#e367ff", "#ffe600", "#ff2d55", "#7d3dff"],
 };
 
 // Back-compat NEONS export — now monochrome (used by LeftBar workspace pips)

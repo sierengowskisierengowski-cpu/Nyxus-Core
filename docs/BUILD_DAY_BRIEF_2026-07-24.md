@@ -21,7 +21,7 @@ The last day was not “add features for fun.” It was **closing the loop** bet
 5. **Live-boot pain fixed in repo.** eww minutes-long first paint (`npx sass`), black box, hyprpm header spam, build stamp in terminals — landed via PR #71 → #72 on `main`.
 6. **Pre-bake hygiene.** W1 `profiledef` permissions, W6 arsenal/reactive shards actually ship, Copilot GO/NO-GO stored in HANDOFF.
 7. **Theme Phase 1.** Palette + Settings chrome + Theme Packs prism-only + Welcome wizard polish (PR #73).
-8. **Welcome Transmission.** Borderless kitty poem/riddle on first login; solve → Dream Protocol (`Super+Shift+D`).
+8. **Welcome Transmission.** Borderless kitty poem/riddle on first login; solve → Dream Protocol (`Super+Alt+D`).
 9. **Stand now.** `main` clean, pushed, **0 open PRs**, bake-ready. Old ISO on disk is **stale**. Owner rebakes + reflashes.
 
 ---

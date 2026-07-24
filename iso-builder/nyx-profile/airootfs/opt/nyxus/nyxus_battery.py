@@ -2,7 +2,7 @@
 """
 NYXUS Battery Health — libadwaita battery diagnostics panel.
 
-DARK MIRROR rev r1
+ALIEN NEON rev r1
 
 Reads /sys/class/power_supply/* directly (no daemon dependency):
     Charge          capacity %, charging status, time estimates

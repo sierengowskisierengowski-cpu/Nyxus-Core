@@ -17,7 +17,7 @@ mkdir -p "$(dirname "$LOG")"
 exec 2>>"$LOG"
 echo "--- $(date -Iseconds) mode=$MODE ---" >&2
 
-GOLD="#d4b87a"
+GOLD="#7d3dff"   # ALIEN NEON prism violet (accent)
 INK="#080a10"
 INK2="#10131c"
 TXT="#e6e8ee"
@@ -44,7 +44,7 @@ _menu() {
         entry { placeholder-color: ${DIM}; }
         listview { lines: 12; spacing: 1px; scrollbar: false; }
         element { padding: 7px 10px; border-radius: 5px; }
-        element selected { background-color: ${GOLD}; text-color: ${INK}; }
+        element selected { background-color: ${GOLD}; text-color: ${TXT}; }
         element-text { background-color: inherit; text-color: inherit; }
       " 2>>"$LOG"
   elif _have wofi; then

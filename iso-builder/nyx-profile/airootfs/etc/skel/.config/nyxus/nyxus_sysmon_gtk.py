@@ -607,7 +607,7 @@ class NyxusSysmonGtk(Adw.Application):
             print(f"NYXUS SysMon do_activate crashed — see {log}")
 
     def _do_activate_inner(self):
-        # Force dark theme to match NYXUS DARK MIRROR aesthetic
+        # Force dark theme to match NYXUS ALIEN NEON aesthetic
         try:
             sm = Adw.StyleManager.get_default()
             sm.set_color_scheme(Adw.ColorScheme.FORCE_DARK)

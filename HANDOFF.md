@@ -19,28 +19,57 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-24 · 11:46 EDT
+## WHERE WE STAND — 2026-07-24 · 16:00 EDT (ALIEN NEON palette/brand audit)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
 
 | | |
 |---|---|
-| **Repo** | `~/Nyxus-Core` · branch **`main`** · clean · synced with `origin/main` |
-| **HEAD** | check `git rev-parse --short HEAD` (status brief written atop `238f45cc`) |
-| **Open PRs** | **0** |
+| **Repo** | `~/Nyxus-Core` · audit branch **`cursor/alien-neon-theme-audit-ac8f`** (PR open) |
+| **HEAD** | check `git rev-parse --short HEAD` (theme-audit pass atop `87d30253`) |
+| **Open PRs** | **1** — ALIEN NEON palette/brand audit (this pass) |
 | **Day chronicle** | [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md) |
-| **Repo state for bake** | ✅ **COMMITTED + IDLE** — safe to kick `sudo ./build-iso.sh` |
+| **Repo state for bake** | ✅ **COMMITTED + IDLE** — safe to kick `sudo ./build-iso.sh` once PR is merged |
 | **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (built **03:05 EDT**) — **STALE**. **Do not reflash that file expecting today's work.** |
 | **Kage-Ryu pkgs** | `linux-kage-ryu-7.0.12` + headers (~**08:53 EDT**). PKGBUILD enables iso9660/squashfs/loop. Still **verify** live mount after bake. |
 | **Running desktop kernel** | Stock `7.1.3-arch1-2` (not Kage) — expected until new ISO |
+| **Gates** | ✅ `pnpm run typecheck` · ✅ `pnpm run build` · ✅ `iso-builder/verify-profile.sh` (was failing on `main` — stale welcome assert; fixed) |
 
-### ✅ DONE / 🔲 STILL OPEN
+### 🔦 ALIEN NEON palette/brand audit — this pass (2026-07-24 PM)
 
-Full narrative + grouped lists → **[`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md)**.
+**Every shipped surface is now the ONE ALIEN NEON palette** (no gold `#d4b87a`,
+no cream, no old violet `#a06bff`, no `DARK MIRROR`/`OBSIDIAN PRISM` brand)
+outside the deliberate carve-outs (Arsenal/Bifrost/GodsApp/Meli/Security Center,
+`nyxus_palette.py` ban-statement, `docs/legacy-visuals.md` history).
 
-**Owner next:** rebake → flash new ISO → verify (`/etc/nyxus-build`, bars, welcome note, Kage or stock rescue).  
-**Next agent (after bake or on branch):** ALIEN NEON Phase 2 (shell GTK) + Settings polish.
+- **Shell apps** — killed local gold; `nyxus_account/backup/clipboard/drop/files/updater`
+  now import `ACCENT_PRIMARY` (prism violet, fallback `#7d3dff`); `nyxus_toast`
+  accents → canon green/orange/red/cyan; desktop icon-select + rofi context menu → violet.
+- **Brand** — `DARK MIRROR`/`OBSIDIAN PRISM` → **ALIEN NEON** across the whole
+  desktop (login `issue`/`motd`, eww ticker + boot-splash label, `.desktop`
+  tooltips, cursor theme, hypr/eww/greetd/sddm/wlogout, locale `.po`, bootstrap,
+  install.sh, cava, btop, nyxus-home HUD, asset generators, calamares slideshow).
+- **Installer** — Calamares branding synced to the ALIEN-NEON `show.qml`; stale
+  gold `stylesheet.qss` cleared.
+- **Build wiring (key finding)** — `build-iso.sh` regenerates skel + `/opt/nyxus`
+  from `artifacts/api-server/nyxus-scripts` (**NS = source of truth**) at bake.
+  NS lagged the baked profile, so a bake would have **stripped the Welcome-
+  Transmission windowrules** and shipped the old wlogout/greeter — synced NS back
+  up so the offline payload matches what boots. Bumped `BOOTSTRAP_VERSION` →
+  `2026.07.24-r14-alien-neon` so installed systems re-pull the retheme.
+- **verify-profile.sh** — fixed a stale assertion (grepped `nyxus welcome` space
+  vs the real `nyxus-welcome` hyphen exec-once) that was **failing the gate on `main`**.
+
+**Deferred (documented, NOT bake-blocking):**
+`artifacts/nyxus-web/src/pages/WaybarMockup.tsx` — legacy cream/clay EWW-preview
+demo page (routed `#/waybars`); needs a full reskin (light-emboss model), does
+NOT ship in the ISO. SDDM `Main.qml` offline-payload copy drifts from the baked
+theme (fallback greeter, not the live greetd path). **Settings Phase 3/4**
+(deepen EMPTY/MINIMAL pages, add missing sections) is feature work, still open.
+
+**Owner next:** merge PR → rebake → flash new ISO → verify (`/etc/nyxus-build`, bars, welcome note, Kage or stock rescue).  
+**Next agent (after bake or on branch):** ALIEN NEON Phase 2 GTK HUD deepening + Settings Phase 3/4.
 
 ### Bake command (reminder)
 

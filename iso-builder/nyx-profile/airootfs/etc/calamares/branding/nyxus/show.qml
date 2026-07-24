@@ -3,7 +3,7 @@
  *
  * 6-slide installer slideshow. Auto-advances every 8 s with a real
  * cross-fade transition between slides (no snap). Sharp slab edges,
- * canonical DARK MIRROR palette (#7d3dff purple + #2bd2ff cyan), no
+ * canonical ALIEN NEON palette (#7d3dff purple + #2bd2ff cyan), no
  * blur, monospace typography.
  *
  *  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -33,7 +33,7 @@ Item {
     readonly property var slides: [
         {
             title:   "Welcome to NYXUS",
-            tagline: "DARK MIRROR · 2026.05",
+            tagline: "ALIEN NEON · 2026.05",
             body:    "A fresh take on Arch Linux: every NYXUS app is\nfirst-party, every config is auditable, every default\nis the one we'd ship to ourselves."
         },
         {
@@ -95,7 +95,7 @@ Item {
                 font.bold: true
             }
             Text {
-                text: "DARK MIRROR"
+                text: "ALIEN NEON"
                 color: root.textLo
                 font.family: "JetBrains Mono"
                 font.pixelSize: 9

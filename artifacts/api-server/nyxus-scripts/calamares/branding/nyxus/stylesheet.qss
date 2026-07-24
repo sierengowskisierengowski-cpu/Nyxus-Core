@@ -1,8 +1,8 @@
 /*
- * Calamares stylesheet — DARK MIRROR / NYXUS gold.
+ * Calamares stylesheet — ALIEN NEON / NYXUS violet.
  *
  * Mirrors the rest of the NYXUS palette: near-black canvas, gold
- * (#d4b87a) accent, soft text. Loaded automatically by Calamares
+ * (#7d3dff) accent, soft text. Loaded automatically by Calamares
  * when the "nyxus" branding component is active.
  *
  * © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
@@ -28,12 +28,12 @@ QPushButton {
 
 QPushButton:hover {
     background-color: #22222c;
-    border-color:     #d4b87a;
+    border-color:     #7d3dff;
 }
 
 QPushButton:default,
 QPushButton[default="true"] {
-    background-color: #d4b87a;
+    background-color: #7d3dff;
     color:            #0b0b0f;
     border:           none;
     font-weight:      bold;
@@ -55,13 +55,13 @@ QLineEdit, QComboBox, QSpinBox, QPlainTextEdit, QTextEdit {
     border:        1px solid #2a2a35;
     border-radius: 6px;
     padding:       6px 8px;
-    selection-background-color: #d4b87a;
+    selection-background-color: #7d3dff;
     selection-color:            #0b0b0f;
 }
 
 QLineEdit:focus, QComboBox:focus, QSpinBox:focus,
 QPlainTextEdit:focus, QTextEdit:focus {
-    border-color: #d4b87a;
+    border-color: #7d3dff;
 }
 
 QProgressBar {
@@ -73,7 +73,7 @@ QProgressBar {
 }
 
 QProgressBar::chunk {
-    background-color: #d4b87a;
+    background-color: #7d3dff;
     border-radius:    5px;
 }
 
@@ -87,14 +87,14 @@ QListView, QTreeView, QTableView {
 QListView::item:selected,
 QTreeView::item:selected,
 QTableView::item:selected {
-    background: #d4b87a;
+    background: #7d3dff;
     color:      #0b0b0f;
 }
 
 QCheckBox::indicator:checked,
 QRadioButton::indicator:checked {
-    background-color: #d4b87a;
-    border:           1px solid #d4b87a;
+    background-color: #7d3dff;
+    border:           1px solid #7d3dff;
 }
 
 QScrollBar:vertical, QScrollBar:horizontal {
@@ -107,4 +107,4 @@ QScrollBar::handle {
     min-height:    24px;
     min-width:     24px;
 }
-QScrollBar::handle:hover { background: #d4b87a; }
+QScrollBar::handle:hover { background: #7d3dff; }

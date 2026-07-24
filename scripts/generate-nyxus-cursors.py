@@ -19,12 +19,12 @@ REPO = Path(__file__).resolve().parent.parent
 THEME = REPO / "iso-builder/nyx-profile/airootfs/usr/share/icons/NYXUS-Aurora"
 CUR_DIR = THEME / "hyprcursors"
 
-# DARK MIRROR palette
-PURPLE = "#a06bff"
-CYAN = "#3ad8ff"
+# ALIEN NEON palette
+PURPLE = "#7d3dff"
+CYAN = "#2bd2ff"
 INK = "#0a0d14"
 BONE = "#e8edf5"
-GLOW = "#3ad8ff"
+GLOW = "#2bd2ff"
 
 CANVAS = 64  # all SVGs use 64x64 viewBox; hotspots are normalized 0..1
 
@@ -127,8 +127,8 @@ def cur_help() -> str:
 
 def cur_not_allowed() -> str:
     body = (
-        f'<circle cx="32" cy="32" r="22" fill="none" stroke="#ff4d6b" stroke-width="5"/>'
-        f'<line x1="16" y1="16" x2="48" y2="48" stroke="#ff4d6b" stroke-width="5" stroke-linecap="round"/>'
+        f'<circle cx="32" cy="32" r="22" fill="none" stroke="#ff2d55" stroke-width="5"/>'
+        f'<line x1="16" y1="16" x2="48" y2="48" stroke="#ff2d55" stroke-width="5" stroke-linecap="round"/>'
     )
     return svg(body)
 
@@ -183,7 +183,7 @@ def write_manifest() -> None:
     THEME.mkdir(parents=True, exist_ok=True)
     (THEME / "manifest.hl").write_text(
         'name = NYXUS Aurora\n'
-        'description = NYXUS DARK MIRROR cursor theme — cyan-edged ink with purple accents\n'
+        'description = NYXUS ALIEN NEON cursor theme — cyan-edged ink with purple accents\n'
         'version = 1.0\n'
         'cursors_directory = hyprcursors\n'
     )
@@ -191,7 +191,7 @@ def write_manifest() -> None:
     (THEME / "index.theme").write_text(
         '[Icon Theme]\n'
         'Name=NYXUS-Aurora\n'
-        'Comment=NYXUS DARK MIRROR cursor theme\n'
+        'Comment=NYXUS ALIEN NEON cursor theme\n'
         'Inherits=Adwaita\n'
     )
 

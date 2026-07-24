@@ -310,7 +310,7 @@ else
     pacman -S --noconfirm --needed ttf-google-fonts-git 2>/dev/null || \
     pacman -S --noconfirm --needed ttf-croscore 2>/dev/null || true
   fi
-  printf "  ${DIM}Inter font: $inter_ok files found — DARK MIRROR fallback chain handles missing fonts${R}\n"
+  printf "  ${DIM}Inter font: $inter_ok files found — ALIEN NEON fallback chain handles missing fonts${R}\n"
 fi
 
 # ── App Icons — paint-splatter neon icons via Cairo ───────────────────────────
@@ -407,7 +407,7 @@ dl "hyprland.conf" "$HYPR_DIR/hyprland.conf" || failed=$((failed+1))
 dl "hyprlock.conf" "$HYPR_DIR/hyprlock.conf"  || failed=$((failed+1))
 dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 
-# ── Modular DARK MIRROR confs (sourced by hyprland.conf) ─────────────────────
+# ── Modular ALIEN NEON confs (sourced by hyprland.conf) ─────────────────────
 # Without these, hyprland.conf's `source = ~/.config/hypr/conf.d/...` lines
 # silently no-op and apps render fully opaque / unblurred. These six files
 # carry the locked NYXUS window opacity, blur tuning, layer-shell blur,

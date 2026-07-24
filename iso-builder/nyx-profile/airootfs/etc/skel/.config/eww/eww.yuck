@@ -1,5 +1,5 @@
 ;; ─────────────────────────────────────────────────────────────────────
-;; NYXUS · EWW configuration — DARK MIRROR aesthetic · ENTERPRISE BUILD
+;; NYXUS · EWW configuration — ALIEN NEON aesthetic · ENTERPRISE BUILD
 ;; © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 ;;
 ;; Layout matrix:
@@ -21,7 +21,7 @@
 (defpoll TIME       :interval "1s"   :initial '{"hms":"--:--:--","hm":"--:--","sec":"--","date":"...","long":"..."}'
                                      "~/.config/eww/scripts/time.sh")
 ;; ticker.sh runs at 10 fps to scroll one column per tick (true marquee).
-(defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · DARK MIRROR · LIVE                                                  ","tooltip":"NYXUS"}'
+(defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · ALIEN NEON · LIVE                                                  ","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0,"load":"0","swap":0,"gpu":"--","gputemp":"--","fan":"--","netrx":"--","nettx":"--","hot":"0","chot":0,"mhot":0,"thot":0,"ghot":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
@@ -1108,7 +1108,7 @@
                :image-width 96 :image-height 96))
       (label :class "saver-clock" :text "${TIME.hm}")
       (label :class "saver-date"  :text "${TIME.long}")
-      (label :class "saver-brand" :text "NYXUS · DARK MIRROR")
+      (label :class "saver-brand" :text "NYXUS · ALIEN NEON")
       (label :class "saver-hint"  :text "double-click ✦ to unlock · click elsewhere to dismiss"))))
 
 ;; ═════════════════════════════════════════════════════════════════════

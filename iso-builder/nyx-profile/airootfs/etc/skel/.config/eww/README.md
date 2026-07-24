@@ -1,6 +1,6 @@
 # NYXUS · EWW Widget Stack
 
-**ElKowar's Wacky Widgets** powering the NYXUS DARK MIRROR shell.
+**ElKowar's Wacky Widgets** powering the NYXUS ALIEN NEON shell.
 
 > © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 > Replaces waybar entirely. 4 bars + 4 overlays + 3 OSD pop-ups.
@@ -12,7 +12,7 @@
 | Path | Purpose |
 |---|---|
 | `eww.yuck` | Widget tree, windows, defpoll variables |
-| `eww.scss` | DARK MIRROR theme (violet `#7d3dff`, cyan `#2bd2ff`) |
+| `eww.scss` | ALIEN NEON theme (violet `#7d3dff`, cyan `#2bd2ff`) |
 | `nyxus.conf` | User-tunable config (sourced by launcher + service) |
 | `scripts/*.sh` | Data probes called by `defpoll` |
 | `~/.config/systemd/user/nyxus-eww.service` | Auto-start + restart-on-failure |

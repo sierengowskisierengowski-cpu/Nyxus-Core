@@ -159,14 +159,17 @@ def _terminal_run(title: str, sh_cmd: str) -> None:
 
 
 # ---------- GUI ----------
-GOLD = "#d4b87a"
+try:
+    from nyxus_palette import ACCENT_PRIMARY as ACCENT, WHITE_OFF as TXT
+except Exception:
+    ACCENT = "#7d3dff"; TXT = "#eef2fa"   # ALIEN NEON prism fallback
 INK = "#080a10"
 INK2 = "#10131c"
 
 CSS = f"""
 .updater-window {{ background: {INK}; }}
 .updater-header {{
-    color: {GOLD}; font-weight: 700; font-size: 16px;
+    color: {ACCENT}; font-weight: 700; font-size: 16px;
     letter-spacing: 0.04em; padding: 4px 0 8px 0;
 }}
 .updater-summary {{
@@ -175,9 +178,9 @@ CSS = f"""
 }}
 .updater-row {{ padding: 8px 12px; }}
 .updater-pkg {{ color: #ffffff; font-weight: 500; }}
-.updater-ver {{ color: {GOLD}; font-family: monospace; font-size: 11px; }}
+.updater-ver {{ color: {ACCENT}; font-family: monospace; font-size: 11px; }}
 .updater-repo {{
-    color: {INK}; background: {GOLD};
+    color: {TXT}; background: {ACCENT};
     border-radius: 4px; padding: 1px 6px; font-size: 10px;
     font-weight: 700;
 }}
@@ -187,7 +190,7 @@ CSS = f"""
     font-size: 14px;
 }}
 .updater-action {{
-    background: {GOLD}; color: {INK};
+    background: {ACCENT}; color: {TXT};
     border-radius: 6px; padding: 6px 14px;
     font-weight: 700;
 }}

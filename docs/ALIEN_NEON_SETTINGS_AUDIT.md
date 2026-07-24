@@ -9,6 +9,30 @@
 >
 > **Current work pointer:** Settings polish in progress on `cursor/audit-stay-as-is-scope-92cd` — Welcome rewired; meta path dumps removed on Welcome/Login/Plymouth/Sounds/Language; VPN import usable. Phase 1 palette done. Next: more Settings pages + Phase 2 shell GTK.
 
+> ## ✅ 2026-07-24 PM — ALIEN NEON PALETTE/BRAND PURGE COMPLETE (branch `cursor/alien-neon-theme-audit-ac8f`)
+> **Every shipped in-scope surface is now the one ALIEN NEON palette.** This closes
+> the *palette + brand* dimension of §1 (the reason each surface was "not ALIEN NEON"
+> was gold `#d4b87a` and/or the `DARK MIRROR` brand — both are now gone).
+> - Gold `#d4b87a` **eliminated** from `nyxus_account/backup/clipboard/drop/files/
+>   updater/toast`, the desktop icon layer, and the rofi context menu → prism violet
+>   `#7d3dff` (shell apps now `import ACCENT_PRIMARY` from `nyxus_palette`).
+> - `DARK MIRROR` **and** `OBSIDIAN PRISM` brand strings → **ALIEN NEON** everywhere
+>   in-scope (shell apps, eww, hypr, greetd/sddm/wlogout, calamares slideshow,
+>   login issue/motd, boot-splash label, cursor theme, locale `.po`, bootstrap,
+>   install.sh, cava/btop, nyxus-home HUD, asset generators, nyxus-web primitives).
+> - Calamares installer synced to the ALIEN-NEON slideshow; stale gold stylesheet cleared.
+> - **Build wiring fix:** `build-iso.sh` bakes skel/`opt` from `artifacts/.../nyxus-scripts`
+>   (NS = source of truth); NS was behind the baked profile → synced so the bake keeps
+>   the Welcome-Transmission windowrules + wlogout/greeter fixes. `BOOTSTRAP_VERSION`
+>   bumped → `2026.07.24-r14-alien-neon`.
+> - **Gate fix:** `verify-profile.sh` welcome exec-once assertion corrected (was failing on `main`).
+> - Gates green: `typecheck`, `build`, `verify-profile.sh`.
+>
+> **Still open (feature work, NOT palette):** Settings EMPTY/MINIMAL/PARTIAL buildout
+> (§2), missing Settings sections (§4), full GTK-HUD restyle depth (Phase 2 "cascade").
+> **Deferred (non-shipping):** `WaybarMockup.tsx` cream demo page; SDDM `Main.qml`
+> offline-payload drift (fallback greeter, not live greetd).
+
 ## ⛔ STAY AS-IS — OUT OF SCOPE (owner 2026-07-24)
 
 These keep their **own** look / branding. Do **not** force ALIEN NEON onto them.

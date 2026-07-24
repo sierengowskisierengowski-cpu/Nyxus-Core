@@ -11,8 +11,8 @@ set -euo pipefail
 
 # ── Design tokens ─────────────────────────────────────────────────────────────
 R="\033[0m"; B="\033[1m"; DIM="\033[2m"
-VIOLET="\033[38;2;160;107;255m"   # #a06bff — obsidian prism violet
-CYAN="\033[38;2;58;216;255m"      # #3ad8ff — starlight cyan
+VIOLET="\033[38;2;125;61;255m"   # #7d3dff — obsidian prism violet
+CYAN="\033[38;2;58;216;255m"      # #2bd2ff — starlight cyan
 GOLD="\033[38;5;220m"; GREEN="\033[92m"; RED="\033[91m"
 
 ok()   { printf "  ${GREEN}${B}✓${R}  %s\n" "$1"; }

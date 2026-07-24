@@ -1,4 +1,4 @@
-// NYXUS · SDDM greeter · DARK MIRROR void login (rev 2026-07-12 r3)
+// NYXUS · SDDM greeter · ALIEN NEON void login (rev 2026-07-12 r3)
 //
 // Lean QtQuick.Controls 2 theme with hidden recovery gate:
 // hold FN (Launch1 / XF86Tools) + Space to sign in without passphrase.

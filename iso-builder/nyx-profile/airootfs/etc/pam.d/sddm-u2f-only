@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════════════
-#  PAM service · sddm-u2f-only  (NYXUS · DARK MIRROR)
+#  PAM service · sddm-u2f-only  (NYXUS · ALIEN NEON)
 #
 #  Single-purpose stack invoked by /usr/local/bin/nyxus-bd-router after the
 #  ghost-auth password gate and the TOTP gate have already passed.  Runs
