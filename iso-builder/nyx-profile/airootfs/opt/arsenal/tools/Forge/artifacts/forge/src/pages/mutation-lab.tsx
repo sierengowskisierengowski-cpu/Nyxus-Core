@@ -26,7 +26,7 @@ type SSEEvent =
   | { type: "done" };
 
 function noveltyGradient(score: number) {
-  if (score >= 9) return { background: 'linear-gradient(90deg, #7d3dff, #6d28d9)', boxShadow: '0 0 10px rgba(125,61,255,0.4)' };
+  if (score >= 9) return { background: 'linear-gradient(90deg, #7c3aed, #6d28d9)', boxShadow: '0 0 10px rgba(124,58,237,0.4)' };
   if (score >= 7) return { background: 'linear-gradient(90deg, #dc2626, #991b1b)' };
   if (score >= 4) return { background: 'linear-gradient(90deg, #ea580c, #c2410c)' };
   return { background: '#1e293b' };
@@ -361,7 +361,7 @@ export default function MutationLab() {
               )}
               <div className="flex items-center gap-2 pt-1" style={{ color: '#f97316' }}>
                 <Zap className="w-3 h-3 animate-spin" />
-                <span className="text-[10px] font-mono tracking-wider">Claude is generating the threat package</span>
+                <span className="text-[10px] font-mono tracking-wider">Local AI is generating the threat package</span>
                 <span className="animate-forge-blink text-sm">▋</span>
               </div>
             </div>

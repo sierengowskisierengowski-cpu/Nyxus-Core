@@ -108,7 +108,7 @@ export default function Disclosure() {
     { date: null, label: "Vendor Notification", desc: "Private disclosure sent to affected vendor", color: '#60a5fa', done: false },
     { date: null, label: "Acknowledgment", desc: "Vendor acknowledges receipt (target: 7 days)", color: '#7B5EA7', done: false },
     { date: null, label: "Patch Released", desc: "Vendor releases security patch", color: '#4ade80', done: false },
-    { date: null, label: "Public Disclosure", desc: "Public disclosure after 90-day window", color: '#ff2d55', done: false },
+    { date: null, label: "Public Disclosure", desc: "Public disclosure after 90-day window", color: '#f87171', done: false },
   ] : [];
 
   return (
@@ -162,7 +162,7 @@ export default function Disclosure() {
 
           {isLoading ? (
             <div className="space-y-3">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" style={{ background: '#05060a' }} />)}
+              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" style={{ background: '#0a0a14' }} />)}
             </div>
           ) : highNoveltyThreats.length === 0 ? (
             <div className="p-8 text-center rounded-lg" style={{ background: '#09090f', border: '1px solid #0f0f1a' }}>
@@ -188,7 +188,7 @@ export default function Disclosure() {
                       <div className="text-[11px] font-semibold leading-snug" style={{ color: selectedThreat?.id === threat.id ? '#a78bfa' : '#94a3b8' }}>{threat.name}</div>
                       <span
                         className="text-[9px] font-black font-mono px-2 py-0.5 rounded shrink-0 text-white"
-                        style={{ background: 'linear-gradient(90deg, #7d3dff, #6d28d9)', boxShadow: '0 0 8px rgba(125,61,255,0.4)' }}
+                        style={{ background: 'linear-gradient(90deg, #7c3aed, #6d28d9)', boxShadow: '0 0 8px rgba(124,58,237,0.4)' }}
                       >
                         {threat.noveltyScore}/10
                       </span>
@@ -246,7 +246,7 @@ export default function Disclosure() {
               <div className="p-5 space-y-4">
                 {tab === "disclosure" && (
                   <>
-                    <pre className="p-4 rounded-lg text-[11px] font-mono overflow-y-auto max-h-96 whitespace-pre-wrap leading-relaxed" style={{ background: '#04040a', border: '1px solid #05060a', color: '#64748b' }}>
+                    <pre className="p-4 rounded-lg text-[11px] font-mono overflow-y-auto max-h-96 whitespace-pre-wrap leading-relaxed" style={{ background: '#04040a', border: '1px solid #0a0a14', color: '#64748b' }}>
                       {generateDisclosureTemplate(selectedThreat)}
                     </pre>
                     <button
@@ -264,7 +264,7 @@ export default function Disclosure() {
 
                 {tab === "cve" && (
                   <>
-                    <pre className="p-4 rounded-lg text-[11px] font-mono overflow-y-auto max-h-96 whitespace-pre-wrap leading-relaxed" style={{ background: '#04040a', border: '1px solid #05060a', color: '#64748b' }}>
+                    <pre className="p-4 rounded-lg text-[11px] font-mono overflow-y-auto max-h-96 whitespace-pre-wrap leading-relaxed" style={{ background: '#04040a', border: '1px solid #0a0a14', color: '#64748b' }}>
                       {generateCveTemplate(selectedThreat)}
                     </pre>
                     <div className="flex gap-2">

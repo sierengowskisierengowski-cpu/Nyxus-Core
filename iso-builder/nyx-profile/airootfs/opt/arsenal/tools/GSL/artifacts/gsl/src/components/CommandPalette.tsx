@@ -43,7 +43,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   "Steganography":              "#d946ef",
   "Reverse Engineering":        "#fb923c",
   "Docker & Container Security":"#22d3ee",
-  "Social Engineering":         "#ff2d55",
+  "Social Engineering":         "#f87171",
   "IoT & Hardware":             "#4ade80",
   "GowskiNet Specific":         "#9b7fef",
   "CTF & Practice":             "#34d399",

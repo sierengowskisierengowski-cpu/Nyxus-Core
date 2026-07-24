@@ -20,7 +20,7 @@ const CATEGORIES = [
 ];
 
 const categoryStyle: Record<string, React.CSSProperties> = {
-  MITRE: { background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', color: '#ff2d55' },
+  MITRE: { background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', color: '#f87171' },
   Malware: { background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)', color: '#fb923c' },
   LOLBAS: { background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', color: '#facc15' },
   GTFOBINS: { background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80' },
@@ -191,7 +191,7 @@ export default function KnowledgeBase() {
                       <span style={{ color: '#475569' }}>{cat.category}</span>
                       <span style={{ color: '#64748b' }}>{cat.count}</span>
                     </div>
-                    <div className="h-1 rounded-full overflow-hidden" style={{ background: '#05060a' }}>
+                    <div className="h-1 rounded-full overflow-hidden" style={{ background: '#0a0a14' }}>
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #7B5EA7, #6d28d9)' }} />
                     </div>
                   </div>
@@ -216,7 +216,7 @@ export default function KnowledgeBase() {
 
           {isLoading ? (
             <div className="space-y-3">
-              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" style={{ background: '#05060a' }} />)}
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" style={{ background: '#0a0a14' }} />)}
             </div>
           ) : entries?.length === 0 ? (
             <div className="text-center py-16">

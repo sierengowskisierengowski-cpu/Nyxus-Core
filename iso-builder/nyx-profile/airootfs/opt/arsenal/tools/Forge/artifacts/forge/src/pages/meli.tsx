@@ -113,7 +113,7 @@ export default function Meli() {
                 : { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }
               }
             >
-              <Cpu className="w-5 h-5" style={{ color: status?.online ? '#4ade80' : '#ff2d55' }} />
+              <Cpu className="w-5 h-5" style={{ color: status?.online ? '#4ade80' : '#f87171' }} />
               {status?.online && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#4ade80', boxShadow: '0 0 4px rgba(74,222,128,0.6)' }} />
               )}
@@ -125,7 +125,7 @@ export default function Meli() {
                   className="text-[9px] font-black font-mono tracking-wider uppercase px-2.5 py-1 rounded"
                   style={status?.online
                     ? { background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', color: '#4ade80' }
-                    : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ff2d55' }
+                    : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }
                   }
                 >
                   {status?.online ? "● ONLINE" : "● OFFLINE"}
@@ -173,7 +173,7 @@ export default function Meli() {
 
         {feedLoading ? (
           <div className="space-y-3">
-            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" style={{ background: '#05060a' }} />)}
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" style={{ background: '#0a0a14' }} />)}
           </div>
         ) : !feed?.length ? (
           <div
@@ -212,7 +212,7 @@ export default function Meli() {
                     </div>
                     <pre
                       className="text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed p-3 rounded-lg"
-                      style={{ background: '#04040a', color: '#4ade80', border: '1px solid #05060a' }}
+                      style={{ background: '#04040a', color: '#4ade80', border: '1px solid #0a0a14' }}
                     >
                       {cmd.command}
                     </pre>

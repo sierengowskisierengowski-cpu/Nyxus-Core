@@ -169,7 +169,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               title="Sign out"
               className="flex items-center gap-1 text-[9px] tracking-[0.15em] uppercase font-bold font-mono transition-colors"
               style={{ color: '#475569' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#ff2d55')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#f87171')}
               onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
             >
               <LogOut className="w-3 h-3" />Sign Out

@@ -28,8 +28,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(true);
 
   const refresh = React.useCallback(async () => {
-    setUser(await fetchMe());
-    setLoading(false);
+    try {
+      setUser(await fetchMe());
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   React.useEffect(() => {
