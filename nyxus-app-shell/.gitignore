@@ -1,0 +1,4 @@
+# Rust / Tauri build output — the prebuilt binary is staged into the ISO at
+# iso-builder/nyx-profile/airootfs/usr/local/bin/nyxus-app-shell instead.
+src-tauri/target/
+src-tauri/gen/

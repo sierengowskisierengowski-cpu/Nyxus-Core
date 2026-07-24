@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=RedForge
+Comment=Blue-team training — missions/scoring (MITRE ATT&CK)
+Exec=nyxus-app-shell redforge
+Icon=nyxus-redforge
+Terminal=false
+Categories=Security;Education;
+StartupWMClass=NYXUS App
+Keywords=nyxus;security;arsenal;

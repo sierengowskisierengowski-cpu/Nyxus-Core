@@ -418,7 +418,8 @@ for conf in nyxus-hyprland-general.conf \
             nyxus-hyprland-blur.conf \
             nyxus-hyprland-layerblur.conf \
             nyxus-hyprland-fog.conf \
-            nyxus-hyprland-mission.conf; do
+            nyxus-hyprland-mission.conf \
+            nyxus-arsenal-apps.conf; do
   dl "$conf" "$HYPR_DIR/conf.d/$conf" || failed=$((failed+1))
 done
 

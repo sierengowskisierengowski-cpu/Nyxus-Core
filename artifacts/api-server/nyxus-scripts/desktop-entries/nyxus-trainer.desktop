@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AI Cyber Defense Trainer
+Comment=Operator training console (red/blue)
+Exec=nyxus-app-shell trainer
+Icon=nyxus-trainer
+Terminal=false
+Categories=Security;Education;
+StartupWMClass=NYXUS App
+Keywords=nyxus;security;arsenal;

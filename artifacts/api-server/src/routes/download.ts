@@ -255,6 +255,7 @@ const ALLOWED_FILES: Record<string, string> = {
   // Allowlist entry removed — file no longer exists in nyxus-scripts/.
   "hypridle.conf":               "hypridle.conf",
   "nyxus-hyprland-rules.conf":   "nyxus-hyprland-rules.conf",
+  "nyxus-arsenal-apps.conf":     "nyxus-arsenal-apps.conf",
   "nyxus-hyprland-blur.conf":    "nyxus-hyprland-blur.conf",
   "nyxus-hyprland-fog.conf":     "nyxus-hyprland-fog.conf",
   "nyxus-hyprland-opacity.conf":   "nyxus-hyprland-opacity.conf",
