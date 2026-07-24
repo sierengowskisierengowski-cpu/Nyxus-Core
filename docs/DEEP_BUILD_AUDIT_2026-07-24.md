@@ -1,8 +1,10 @@
-# NYXUS — Deep Build Audit
+# NYXUS — Deep Build Audit (revised)
 
-> **When:** 2026-07-24 · 14:25 EDT  
-> **Against:** `main` @ `8cf3ebdd` (+ lockstep fixes in follow-up commit if present)  
-> **Scope:** whole ISO/desktop build consistency — git, gates, NS↔skel↔opt lockstep, palette/brand, keybinds, profiledef, bootstrap/cache, welcome transmission.
+> **When:** 2026-07-24 · evening (second pass)  
+> **Against:** `main` @ `20122725` + fix branch `cursor/bake-wipe-lockstep-ac8f`  
+> **Scope:** whole ISO/desktop build consistency — git, gates, NS↔skel↔opt
+> lockstep, **bake wipe/restore completeness**, palette/brand, offline cache
+> poison, Settings, download portal map.
 
 ---
 
@@ -10,135 +12,117 @@
 
 | Gate | Result |
 |---|---|
-| Git `main` clean / synced / **0 open PRs** | ✅ PASS |
-| `iso-builder/verify-profile.sh` | ✅ PASS |
-| Critical app lockstep (settings r16, palette, welcome-note, dream, helpers) | ✅ PASS (after this audit’s skel/.nyxus strip + hypr sync) |
-| Profiledef 755 for new bins | ✅ PASS |
-| Welcome Transmission + Dream wiring (NS + skel rules) | ✅ PASS |
-| Bake-ready repo state | ✅ **GO** (owner still must rebake; ISO on disk is stale) |
+| Git `main` = tip of #74+#75 merges | ✅ PASS |
+| Prior audit GO on tip | ⚠️ **INCOMPLETE** — missed bake wipe gaps |
+| Wipe→restore: `eww/assets` + `hypr/scripts` + hypr extras | ✅ **FIXED** this pass (was FAIL) |
+| Offline cache prefers NS (not poisonous `dist/`) | ✅ **FIXED** this pass |
+| `verify-profile.sh` | ✅ PASS |
+| Settings 57 / APP_REV r16 / Kernel Kage+stock | ✅ PASS |
+| download.ts orphans | ✅ **FIXED** (`eww.scss` → css + scss.source) |
+| Bake-ready after this PR merges | ✅ **GO** (owner must merge then rebake) |
 
-**Not bake-blocking (documented):** leftover brand strings in comments/asset names; builder `/opt/nyxus-cache` stale; local `pnpm typecheck` env quirk (CI green on #75).
+**Still non-blocking:** Theme Phase 2 GTK cascade; SDDM offline Main.qml drift;
+on-device Settings QA; residual “dark mirror” art-generator graffiti tag string.
 
 ---
 
-## 1. Git / gates
+## 1. Critical finding (why the first GO was wrong)
+
+`build-iso.sh` does `rm -rf skel/.config/{hypr,eww}` then restages only a
+**partial** file list from NS. Committed skel looked fine in a static diff,
+but a real bake would have **deleted**:
+
+| Wiped & not restored (before fix) | Impact |
+|---|---|
+| `skel/.config/eww/assets/` (247 PNGs) | Blank HUD / missing overlay art |
+| `skel/.config/hypr/scripts/*.sh` | idle-glass, prism-pulse, daily-line break |
+| `hyprpaper.conf`, `nyxus-monitors.conf`, `nyxus-voice.conf` | monitors `source=` + wallpaper helper |
+
+**Fix applied:**
+1. Seeded NS: `hypr/scripts/`, `hyprpaper.conf`, `nyxus-monitors.conf`,
+   `nyxus-voice.conf` (copied from skel — now SoT).
+2. `build-iso.sh` restages those + `cp -a NS/eww/assets → skel`.
+3. Dry-run wipe+restore simulation: **PASS**.
+
+---
+
+## 2. Offline cache poison
+
+`artifacts/api-server/dist/nyxus-scripts/` contained **broken symlinks** to
+`/home/cosmic/Nyxus-Core/scripts/...`. Old bake preferred `dist/` over NS →
+poisoned `/opt/nyxus-cache` on the stick.
+
+**Fix:** prefer NS always; reject `dist/` if dangling links. Removed local
+`dist/nyxus-scripts/` in this environment. Owner should also
+`rm -rf artifacts/api-server/dist/nyxus-scripts` on the bake host before
+`sudo ./build-iso.sh` if it reappears.
+
+---
+
+## 3. Lockstep scorecard (post-fix)
+
+| Artifact | Status |
+|---|---|
+| NS ↔ opt `nyxus_settings.py` r16 | ✅ |
+| Tier B/C helpers NS ↔ LBIN | ✅ (+ bake install from NS) |
+| Hypr shards NS ↔ skel (content) | ✅ |
+| Hypr scripts / monitors / paper / voice | ✅ now in NS + bake restage |
+| EWW yuck/css/scripts/assets | ✅ assets restaged at bake |
+| Screensaver chain in `.config/nyxus` | ✅ only those three |
+| `skel/.nyxus` app `.py` copies | ✅ stripped (bake makes symlinks) |
+| `BOOTSTRAP_VERSION` | `2026.07.24-r14-alien-neon` ✅ |
+| `/etc/nyxus-build` | generated at bake only ✅ |
+| packages: kage (bake-append), fastfetch, usbguard, gamemode; no waybar | ✅ |
+
+---
+
+## 4. Palette / brand
 
 | Check | Status |
 |---|---|
-| Branch | `main` = `origin/main` |
-| Open PRs | **0** |
-| Uncommitted before audit fixes | clean |
-| `verify-profile.sh` | exit 0 (only soft WARN: `customize_airootfs.sh` not +x — mkarchiso chmods) |
-| Last ISO on disk | `nyxus-2026.07.24` @ **03:05** — **STALE** vs tip (pre–#74/#75) |
+| Canon hex lock (violet/magenta/green/orange/void/text) | ✅ |
+| cream `#f4ead5` / old violet / shipped gold (non–Security Center) | ✅ absent |
+| Stay-as-is Security Center gold | ✅ intentional |
+| Residual DM/OP comments in rofi/eww/bashrc/chrome/sounds/icons | ✅ **polished** this pass |
+| Graffiti generator still stamps `"dark mirror"` into art assets | ℹ️ P3 art string |
 
 ---
 
-## 2. Lockstep (NS = bake source of truth)
+## 5. Settings
 
-`build-iso.sh` regenerates skel hypr + many configs from `artifacts/api-server/nyxus-scripts/` (NS), and rebuilds `skel/.nyxus` as **per-file symlinks** to `/opt/nyxus`.
-
-| Artifact | NS | opt/nyxus | skel | Notes |
-|---|---|---|---|---|
-| `nyxus_settings.py` APP_REV **r16** | ✅ | ✅ match | bake → symlink | Had **stale r12 copy** under `skel/.nyxus/` — **removed** this audit |
-| `nyxus_palette.py` | ✅ | ✅ | ✅ `.nyxus` + `.config/nyxus` | match |
-| `nyxus_welcome_note.py` | ✅ | ✅ | was in `.nyxus` | match; now via bake symlink |
-| `nyxus-welcome-note` / `nyxus-dream` bins | ✅ | airootfs bin ✅ | — | md5 match |
-| `nyxus-hyprland-rules/opacity` | ✅ | — | ✅ | md5 match (welcome-note windowrules present) |
-| `hyprland.conf` | ✅ | — | was drift (comments + dup R) | **synced NS → skel** this audit |
-| Tier helpers (kernel-switch, virt, …) | ✅ | airootfs ✅ | — | all MATCH |
-| `BOOTSTRAP_VERSION` | `2026.07.24-r14-alien-neon` | same in airootfs bin | — | match |
-| `kitty-welcome.conf` | ✅ | skel `.config/kitty` ✅ | — | match |
-| `skel/.config/nyxus` app `.py` | — | — | screensaver chain only | ✅ (PR #75) |
-| `skel/.nyxus` app `.py` | — | — | **was full stale tree** | **stripped** this audit → only `nyxus-start/` left |
+- 57 sections = 57 `PAGE_CLASSES`
+- Kernel = `linux-kage-ryu` + `linux` only
+- `empty_group` defined
+- 9 shell sections present
+- On-device GTK QA still required after flash
 
 ---
 
-## 3. Palette / brand
+## 6. download.ts
 
-| Token | Shipped desktop trees |
-|---|---|
-| cream `#f4ead5` | ✅ none |
-| old violet `#a06bff` | ✅ none |
-| gold `#d4b87a` | ℹ️ **ban-comment only** in `nyxus_settings.py` (“never gold”) |
-| `DARK MIRROR` / `OBSIDIAN PRISM` | ⚠️ **residual** in comments, sound/icon theme *names*, rofi/eww headers, prism-pulse script title, stay-as-is `nyxus_security.py` — **not** Settings chrome / Theme Packs. Non-blocking polish. |
-
-Stay-as-is untouched by design: Bifrost / GodsApp / Meli / Arsenal.
+- Removed orphan `eww/eww.scss`
+- Added `eww/eww.css` + `eww/eww.scss.source`
+- Same-name map keys present in NS: **0 missing** (spot check)
 
 ---
 
-## 4. Keybinds
-
-| Chord | Status |
-|---|---|
-| `Super+Shift+D` | rofi/wofi **run** only (Dream moved to Alt) |
-| `Super+Alt+D` | Dream Protocol |
-| `Super+Shift+N` | Welcome Transmission replay |
-| Duplicate `Super+R` (saucer flip) | was 2× in skel; **resolved** by NS→skel sync (one remains) |
-| `Super+W` | wifi toggle; wallpaper studio line is **commented** |
-
----
-
-## 5. Profiledef / helpers
-
-All checked present + `file_permissions` 755:
-
-`nyxus-welcome-note`, `nyxus-dream`, `nyxus-kernel-switch`, `nyxus-distrobox-helper`, `nyxus-doh`, `nyxus-mac-randomize`, `nyxus-protonup`, `nyxus-secboot`, `nyxus-usbguard-helper`, `nyxus-virt-setup`.
-
----
-
-## 6. Bootstrap / offline cache
-
-| Item | Status |
-|---|---|
-| Repo `nyxus_install.sh` | ✅ no `set -e`; `clear` guarded |
-| Builder host `/opt/nyxus-cache/nyxus_install.sh` | ⛔ **STALE** (2026-07-20, still `set -e` + bare `clear`) — explains today’s Hyprland first-boot toast on the **builder** desktop. **Bake** restages cache from NS — stick OK if baked from this tip. |
-| Marker on builder | should be `2026.07.24-r14-alien-neon` to silence refresh |
-
----
-
-## 7. Settings coverage
-
-- **APP_REV** `2026.07.24-r16` on NS + opt  
-- 57 sections incl. 9 shell features (Compositor, Bars, Live Wallpaper, Lock, Idle, Reactive, Mission, Session Modes, Firewall)  
-- Kernel page = Kage-Ryu + stock rescue  
-- Theme Phase 2 (GTK shell app chrome cascade) still a **follow-up**, not a bake blocker  
-
-Roadmap: `docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md`
-
----
-
-## 8. Fixes applied in this audit pass
-
-1. Synced `skel/.../hyprland.conf` ← NS (bake SoT).  
-2. Stripped **42+** stale `skel/.nyxus/*.py` duplicates (bake regenerates symlinks).  
-3. Left `skel/.nyxus/nyxus-start/` directory as-is.  
-4. Re-ran `verify-profile` → PASS.
-
----
-
-## 9. Owner checklist before / after bake
+## 7. Owner bake checklist
 
 ```bash
-cd ~/Nyxus-Core && git status   # clean
+cd ~/Nyxus-Core
+git checkout main && git pull
+# after merging bake-wipe-lockstep PR:
+git status   # clean / idle
+rm -rf artifacts/api-server/dist/nyxus-scripts   # if present
 cd iso-builder && sudo ./build-iso.sh
 # flash NEW iso only — not the 03:05 file
-# on stick: cat /etc/nyxus-build   # expect tip ≥ this audit
-# QA: bars, welcome note once, settings Kernel page, Super+Alt+D dream if unlocked
+# stick QA:
+#   cat /etc/nyxus-build
+#   ls ~/.config/eww/assets | head
+#   ls ~/.config/hypr/scripts
+#   nyxus-settings → Kernel
+#   bars / welcome note / Super+Alt+D dream
 ```
-
-**Builder desktop (optional):** refresh `/opt/nyxus-cache` from NS or ignore — not what the ISO bake uses after `build-iso.sh` restages cache.
-
----
-
-## 10. Residual follow-ups (non-blocking)
-
-| Item | Priority |
-|---|---|
-| Rebake + reflash | **P0 owner** |
-| Purge residual DARK MIRROR / OBSIDIAN PRISM from rofi/eww *comments* & theme index names | P2 polish |
-| Refresh host `/opt/nyxus-cache` | P2 builder hygiene |
-| ALIEN NEON Phase 2 GTK cascade | P2 theme |
-| Prune stale remote branches / old ISOs in `out/` | P3 |
 
 ---
 

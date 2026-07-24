@@ -1851,7 +1851,7 @@ scrollbar slider:hover {
 }
 .dash-close:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.40); }
 
-/* -- POWERMENU overlay . Obsidian Prism ----------------------------- */
+/* -- POWERMENU overlay · ALIEN NEON ----------------------------- */
 
 .powermenu-root {
   background-color: rgba(6, 2, 15, 0.42);
