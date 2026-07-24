@@ -365,26 +365,41 @@ if [[ -f "${WP_DIR}/manifest.tsv" ]]; then
 else
   fail "manifest.tsv missing"
 fi
-SDDM_BG="${AIROOT}/usr/share/sddm/themes/nyxus/backgrounds"
-SDDM_PNG=$(find "${SDDM_BG}" -maxdepth 1 -name '*.png' 2>/dev/null | wc -l)
-if (( SDDM_PNG >= WP_PNG )); then
-  ok "${SDDM_PNG} wallpapers mirrored to SDDM theme"
-else
-  fail "SDDM wallpaper mirror has ${SDDM_PNG}, expected >= ${WP_PNG}"
-fi
 WP_CONF="${AIROOT}/etc/skel/.config/nyxus/wallpaper.conf"
 if [[ -f "${WP_CONF}" ]]; then
   # Runtime schema: WALLPAPER="slug" + WALLPAPER_PATH="/abs/path" (consumed by
   # nyxus-wallpaper-autostart and nyxus_wallpaper_studio.py).
   WP_DEFAULT=$(grep -oP '^WALLPAPER_PATH="?\K[^"]+' "${WP_CONF}" | head -1)
   WP_SLUG=$(grep -oP '^WALLPAPER="?\K[^"]+' "${WP_CONF}" | head -1)
-  # Runtime path is under the live user's $HOME (e.g. /home/cosmic/...),
-  # which does not exist in the build-time airootfs — it is populated from
-  # /etc/skel at first login. Translate /home/<user>/... -> /etc/skel/...
-  # for the build-time existence check.
-  WP_DEFAULT_SKEL="${WP_DEFAULT#/home/}"
-  WP_DEFAULT_SKEL="/etc/skel/${WP_DEFAULT_SKEL#*/}"
-  if [[ -n "${WP_DEFAULT}" && -f "${AIROOT}${WP_DEFAULT_SKEL}" ]]; then
+else
+  WP_DEFAULT=""; WP_SLUG=""
+fi
+SDDM_BG="${AIROOT}/usr/share/sddm/themes/nyxus/backgrounds"
+SDDM_PNG=$(find "${SDDM_BG}" -maxdepth 1 -name '*.png' 2>/dev/null | wc -l)
+# The greeter ships a CURATED set of alien hero backgrounds (see HANDOFF.md
+# "SDDM greeter = urban-alien heroes"), not the full wallpaper pack. Require
+# the mirror to be non-empty AND to contain the default hero, so the login
+# screen always has its alien art — without demanding all ${WP_PNG} wallpapers.
+if (( SDDM_PNG >= 1 )) && [[ -n "${WP_SLUG}" && -f "${SDDM_BG}/${WP_SLUG}.png" ]]; then
+  ok "${SDDM_PNG} alien hero background(s) mirrored to SDDM greeter (incl. default '${WP_SLUG}')"
+else
+  fail "SDDM greeter backgrounds: have ${SDDM_PNG}, need >=1 incl. default hero '${WP_SLUG}.png'"
+fi
+if [[ -f "${WP_CONF}" ]]; then
+  # WALLPAPER_PATH may be either a system-wide path (e.g.
+  # /usr/share/backgrounds/nyxus/<slug>.png — user-agnostic, the current
+  # canonical form) or a per-user runtime path under the live user's $HOME
+  # (e.g. /home/<user>/... — populated from /etc/skel at first login, so it
+  # does not exist in the build-time airootfs). Resolve both against airootfs:
+  #   /home/<user>/REST  -> /etc/skel/REST
+  #   /anything/else     -> checked as-is under airootfs
+  if [[ "${WP_DEFAULT}" == /home/* ]]; then
+    WP_DEFAULT_REL="${WP_DEFAULT#/home/}"          # user/REST...
+    WP_DEFAULT_CHECK="/etc/skel/${WP_DEFAULT_REL#*/}"
+  else
+    WP_DEFAULT_CHECK="${WP_DEFAULT}"
+  fi
+  if [[ -n "${WP_DEFAULT}" && -f "${AIROOT}${WP_DEFAULT_CHECK}" ]]; then
     ok "default wallpaper present: ${WP_DEFAULT}"
   else
     fail "default WALLPAPER_PATH invalid or missing: '${WP_DEFAULT}'"
@@ -1164,7 +1179,13 @@ CHROME_SCAN=(
   "${AIROOT}/etc/skel/.config/rofi/startmenu.rasi"
   "${AIROOT}/etc/skel/.config/swaync/style.css"
 )
-FORBIDDEN_PATTERN='#(7d3dff|7d3dff|5B21B6|a78bfa|7d3dff|2bd2ff|06b6d4|0ea5e9|dc2626|ef4444)([^0-9a-fA-F]|$)|splat-pink|splat-purple|DARK MIRROR'
+# Old / drift palette hexes that must NEVER appear in chrome configs. The
+# canonical ALIEN NEON colors (#7d3dff violet, #2bd2ff cyan, …) are ALLOWED
+# and are intentionally NOT listed here. (A global palette find/replace once
+# corrupted this list by rewriting the old violet/cyan hexes to the canonical
+# ones, which turned this compliance check into a check that banned ALIEN
+# NEON — do not reintroduce canonical colors below.)
+FORBIDDEN_PATTERN='#(C084FC|7C3AED|5B21B6|a78bfa|a06bff|3ad8ff|06b6d4|0ea5e9|dc2626|ef4444)([^0-9a-fA-F]|$)|splat-pink|splat-purple|DARK MIRROR'
 if grep -RIniE "${FORBIDDEN_PATTERN}" "${CHROME_SCAN[@]}" >/tmp/verify-profile-forbidden.out 2>/dev/null; then
   fail "chrome configs contain forbidden ALIEN NEON colors/tokens (see /tmp/verify-profile-forbidden.out)"
 else
