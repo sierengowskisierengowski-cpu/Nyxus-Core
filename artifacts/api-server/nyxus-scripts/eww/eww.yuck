@@ -555,33 +555,45 @@
         (label :class "bar-hub-time" :halign "center" :text "${TIME.hm}")
         (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))))
 
-;; Music face: transport UI on the same saucer, on a slightly larger cockpit
-;; screen — title/artist, a live CAVA graph, elapsed/length + progress bar
-;; and prev / play-pause / next controls.
+;; Music face: an old-school (1980s carry-around) ALIEN BOOMBOX instead of
+;; a bare transport strip (rev 2026-07-25) — twin speaker-grille dots
+;; flanking the title, a nested cassette-deck display window, a pulsing
+;; power LED either side of play/pause, still on the same saucer cockpit
+;; screen. Same PLAYER/CAVA bindings and playerctl controls as before —
+;; this only restyles the face. Kept compact: the oval cockpit window is
+;; only ~235px wide, so this is accents on the existing layout, not a
+;; wider redesign that would overflow the transparent window into the
+;; painted hull art.
 (defwidget bar_hub_music []
   (overlay
     (saucer_base)
-    (box :class "saucer-screen saucer-screen-music" :halign "center" :valign "center"
+    (box :class "saucer-screen saucer-screen-music boombox-frame" :halign "center" :valign "center"
          :style "margin-top: 10px;"
       (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
-        (label :class "bar-hub-music-title" :limit-width 30 :truncate "end"
-               :halign "center"
-               :text "${PLAYER.icon}  ${PLAYER.title}"
-               :tooltip "${PLAYER.tooltip}")
-        (label :class "bar-hub-music-artist" :limit-width 34 :truncate "end"
-               :halign "center"
-               :visible {PLAYER.artist != ""}
-               :text "${PLAYER.artist}")
-        (cava_saucer)
+        (box :class "boombox-display" :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
+          (box :class "boombox-title-row" :orientation "h" :space-evenly false :spacing 5 :halign "center" :valign "center"
+            (box :class "boombox-speaker" :valign "center")
+            (label :class "bar-hub-music-title" :limit-width 26 :truncate "end"
+                   :halign "center"
+                   :text "${PLAYER.icon}  ${PLAYER.title}"
+                   :tooltip "${PLAYER.tooltip}")
+            (box :class "boombox-speaker" :valign "center"))
+          (label :class "bar-hub-music-artist" :limit-width 30 :truncate "end"
+                 :halign "center"
+                 :visible {PLAYER.artist != ""}
+                 :text "${PLAYER.artist}")
+          (cava_saucer))
         (box :class "saucer-prog-row" :orientation "h" :space-evenly false :spacing 6 :halign "center" :valign "center"
           (label :class "saucer-time" :text "${PLAYER.pos}")
           (box :class "saucer-prog" :hexpand true :valign "center"
             (box :class "saucer-prog-fill"
                  :style "background-size: ${PLAYER.progress}% 100%;"))
           (label :class "saucer-time" :text "${PLAYER.len}"))
-        (box :class "saucer-controls" :orientation "h" :space-evenly false :spacing 12 :halign "center"
+        (box :class "boombox-controls" :orientation "h" :space-evenly false :spacing 10 :halign "center"
           (button :class "saucer-btn" :onclick "playerctl previous &" :tooltip "Previous" "󰒮")
+          (box :class "boombox-led" :valign "center")
           (button :class "saucer-btn saucer-btn-main" :onclick "playerctl play-pause &" :tooltip "Play / pause" "${PLAYER.icon}")
+          (box :class "boombox-led" :valign "center")
           (button :class "saucer-btn" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))))
 
 ;; The idle<->music "flip". rotate-left-right is GTK's real card-flip

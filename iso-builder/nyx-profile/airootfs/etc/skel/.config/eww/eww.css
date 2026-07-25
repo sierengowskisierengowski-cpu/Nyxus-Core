@@ -263,6 +263,47 @@ window, window.background, decoration {
   box-shadow: 0 0 14px rgba(255, 45, 85, 0.3), 0 0 26px rgba(125, 61, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.74);
 }
 
+/* -- ALIEN BOOMBOX accents (music face, rev 2026-07-25) ---------------
+ * Old-school 1980s carry-around boombox flavor layered onto the existing
+ * saucer-screen-music panel: a nested cassette-deck display window, twin
+ * speaker-grille dots flanking the title, and a pulsing power LED either
+ * side of play/pause. Verified live: GTK's CSS engine here does run
+ * @keyframes animations (confirmed with a throwaway opacity-pulse test
+ * on the clock label before building this). */
+.boombox-frame { background: transparent; }
+
+.boombox-display {
+  background-color: rgba(3, 1, 8, 0.55);
+  border-radius: 5px;
+  padding: 2px 6px 1px 6px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.55);
+}
+
+.boombox-speaker {
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 999px;
+  background-color: rgba(5, 2, 11, 0.95);
+  border: 1px solid rgba(125, 61, 255, 0.65);
+  box-shadow: 0 0 6px rgba(125, 61, 255, 0.45), inset 0 0 0 2px rgba(0, 0, 0, 0.60), inset 0 0 4px rgba(255, 45, 173, 0.35);
+}
+
+.boombox-controls { margin-top: 1px; }
+
+@keyframes boombox-led-pulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.30; }
+  100% { opacity: 1; }
+}
+.boombox-led {
+  min-width: 5px;
+  min-height: 5px;
+  border-radius: 999px;
+  background-color: #ff2d55;
+  box-shadow: 0 0 6px rgba(255, 45, 85, 0.90), 0 0 12px rgba(255, 45, 85, 0.50);
+  animation: boombox-led-pulse 1.6s ease-in-out infinite;
+}
+
 /* bigger, livelier CAVA spectrum for the music face — mint so it reads as
  * a distinct graph against the red title/progress, violet glow for depth. */
 .cava-saucer {
@@ -1291,69 +1332,16 @@ window, window.background, decoration {
   min-width: 0;
 }
 
-/* Per-button float — pink rim always on, subtle fill, glow on hover. */
+/* Float-island is JUST layout spacing now (rev 2026-07-25) — it used to
+ * paint its own faint single-hue rim and strip the real per-pill styling
+ * down to nothing, which is why the rail read as "plain white with a thin
+ * line" instead of the machined-obsidian look everywhere else on the
+ * desktop. The pills already carry the full obsidian-vessel glass + neon
+ * hairline + glow treatment (see .ws-pill-* / .app-pill-* below) — let it
+ * show through instead of overriding it away. */
 .float-island {
   margin-bottom: 8px;
-  padding: 3px 4px;
-  border-radius: 11px;
-  background: rgba(255, 45, 85, 0.04);
-  background-color: rgba(255, 45, 85, 0.04);
-  border: 1px solid rgba(255, 45, 85, 0.55);
-  box-shadow: 0 0 8px rgba(255, 45, 85, 0.12), inset 0 0 10px rgba(255, 45, 85, 0.04);
-  transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
-}
-
-.float-island:hover {
-  border-color: rgba(255, 45, 85, 0.78);
-  background: rgba(255, 45, 85, 0.08);
-  box-shadow: 0 0 16px rgba(255, 45, 85, 0.35), inset 0 0 12px rgba(255, 45, 85, 0.08);
-}
-
-.float-island:active {
-  border-color: rgba(255, 45, 85, 0.9);
-  box-shadow: 0 0 12px rgba(255, 45, 85, 0.42);
-}
-
-.float-island .ws-pill,
-.float-island .app-pill,
-.float-island .ws-pill-pink,
-.float-island .ws-pill-green,
-.float-island .ws-pill-purple,
-.float-island .ws-pill-gold,
-.float-island .ws-pill-orange,
-.float-island .ws-pill-blue,
-.float-island .ws-pill-cyan,
-.float-island .app-pill-pink,
-.float-island .app-pill-green,
-.float-island .app-pill-purple,
-.float-island .app-pill-gold,
-.float-island .app-pill-orange,
-.float-island .app-pill-blue {
   background: transparent;
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  box-shadow: none;
-  margin: 0;
-}
-
-.float-island .ws-pill:hover,
-.float-island .app-pill:hover,
-.float-island .ws-pill-pink:hover,
-.float-island .ws-pill-green:hover,
-.float-island .ws-pill-purple:hover,
-.float-island .ws-pill-gold:hover,
-.float-island .ws-pill-orange:hover,
-.float-island .ws-pill-blue:hover,
-.float-island .ws-pill-cyan:hover,
-.float-island .app-pill-pink:hover,
-.float-island .app-pill-green:hover,
-.float-island .app-pill-purple:hover,
-.float-island .app-pill-gold:hover,
-.float-island .app-pill-orange:hover,
-.float-island .app-pill-blue:hover {
-  background: transparent;
-  background-image: none;
   border: none;
   box-shadow: none;
 }
