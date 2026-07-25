@@ -109,14 +109,14 @@ start_live() {
     return 1
   fi
   if [[ ! -f "${VIDEO}" ]]; then
-    render_loop || true
-    VIDEO="$(resolve_video)"
-  fi
-  if [[ ! -f "${VIDEO}" ]]; then
-    notify-send "NYXUS Live Wallpaper" "loop missing and render failed — still image" 2>/dev/null
+    # First boot: the flagship loop hasn't rendered yet and ffmpeg can take
+    # 1-2+ min. Show the still immediately so the desktop is never blank,
+    # render in the background, then swap to the animated loop the moment
+    # it's ready — instead of blocking on ffmpeg before anything appears.
     start_still keepstate
     set_state on
-    return 1
+    setsid bash -c 'nyxus-live-wallpaper render >/dev/null 2>&1 && nyxus-live-wallpaper auto >/dev/null 2>&1' >/dev/null 2>&1 &
+    return 0
   fi
   pkill -x mpvpaper 2>/dev/null || true
   stop_still_daemons

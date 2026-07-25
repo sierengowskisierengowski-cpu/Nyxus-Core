@@ -85,39 +85,57 @@ _CSS = b"""
 window.nyx-screensaver { background: #05010d; }
 /* dim scrim over the alien wallpaper so the clock stays legible */
 .nyx-scrim { background: rgba(5, 3, 14, 0.55); }
+
+/* ALIEN NEON card -- same visual language as hyprlock's Prism HUD clock
+ * card (near-black glass, 1px neon hairline, 2px accent top rule) so the
+ * idle screen doesn't read as a plain, undesigned placeholder before
+ * hyprlock takes over. */
+.nyx-card {
+  background-color: rgba(7, 5, 14, 0.82);
+  border: 1px solid rgba(125, 61, 255, 0.32);
+  border-top: 2px solid #7d3dff;
+  border-radius: 16px;
+  padding: 40px 64px;
+}
+.nyx-card.nyx-pulse-on { border-top-color: #ff2dad; }
+
 .nyx-logo {
-  color: rgba(255, 255, 255, 0.95);
+  color: #7d3dff;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 96px;
+  font-size: 72px;
   font-weight: 800;
-  text-shadow: 0 0 28px rgba(255, 255, 255, 0.60);
+  text-shadow: 0 0 8px rgba(125, 61, 255, 0.85),
+               0 0 28px rgba(125, 61, 255, 0.55),
+               0 0 60px rgba(125, 61, 255, 0.30);
 }
 .nyx-word {
-  color: rgba(255, 255, 255, 0.85);
+  color: #eef2fa;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.55em;
-  text-shadow: 0 0 14px rgba(255, 255, 255, 0.40);
+  text-shadow: 0 0 10px rgba(255, 45, 173, 0.45);
 }
 .nyx-clock {
-  color: rgba(255, 255, 255, 0.85);
+  color: #eef2fa;
   font-family: 'JetBrains Mono', monospace;
   font-size: 56px;
   font-weight: 600;
+  text-shadow: 0 0 18px rgba(43, 210, 255, 0.45);
 }
 .nyx-tag {
-  color: rgba(8, 12, 20, 0.55);
+  color: rgba(238, 242, 250, 0.45);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  letter-spacing: 0.45em;
+  font-size: 12px;
+  letter-spacing: 0.42em;
 }
 .nyx-pulse {
-  color: rgba(255, 255, 255, 0.18);
+  color: rgba(125, 61, 255, 0.55);
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.6em;
 }
+.nyx-pulse.nyx-pulse-on { color: rgba(255, 45, 173, 0.75); }
 """
 
 
@@ -136,11 +154,10 @@ class ScreensaverWindow(Gtk.ApplicationWindow):
             Gtk.STYLE_PROVIDER_PRIORITY_USER,
         )
 
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=22)
-        box.set_halign(Gtk.Align.CENTER)
-        box.set_valign(Gtk.Align.CENTER)
-        box.set_hexpand(True)
-        box.set_vexpand(True)
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=22)
+        card.set_halign(Gtk.Align.CENTER)
+        card.set_valign(Gtk.Align.CENTER)
+        card.add_css_class("nyx-card")
 
         logo = Gtk.Label(label="\u25e4 X \u25e5")
         logo.add_css_class("nyx-logo")
@@ -148,20 +165,30 @@ class ScreensaverWindow(Gtk.ApplicationWindow):
         word = Gtk.Label(label="N Y X U S")
         word.add_css_class("nyx-word")
 
-        sep_top = Gtk.Label(label="\u2500" * 28)
-        sep_top.add_css_class("nyx-pulse")
+        self.sep_top = Gtk.Label(label="\u2500" * 28)
+        self.sep_top.add_css_class("nyx-pulse")
 
         self.clock = Gtk.Label(label=time.strftime("%H:%M"))
         self.clock.add_css_class("nyx-clock")
 
-        sep_bot = Gtk.Label(label="\u2500" * 28)
-        sep_bot.add_css_class("nyx-pulse")
+        self.sep_bot = Gtk.Label(label="\u2500" * 28)
+        self.sep_bot.add_css_class("nyx-pulse")
 
         tag = Gtk.Label(label="S I L E N T  .  D A R K  .  P U R E L Y   F U N C T I O N A L")
         tag.add_css_class("nyx-tag")
 
-        for w in (logo, word, sep_top, self.clock, sep_bot, tag):
-            box.append(w)
+        for w in (logo, word, self.sep_top, self.clock, self.sep_bot, tag):
+            card.append(w)
+
+        # Outer centering box \u2014 the card hugs its content; this fills/centers it.
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        box.set_halign(Gtk.Align.CENTER)
+        box.set_valign(Gtk.Align.CENTER)
+        box.set_hexpand(True)
+        box.set_vexpand(True)
+        box.append(card)
+        self._card = card
+        self._pulse_on = False
 
         # Alien-wallpaper backdrop (rev 2026-07-21): the idle screen shows one
         # of the NYXUS alien walls behind the clock instead of flat black.
@@ -196,10 +223,27 @@ class ScreensaverWindow(Gtk.ApplicationWindow):
         overlay.add_overlay(box)
         self.set_child(overlay)
         GLib.timeout_add_seconds(10, self._tick_clock)
+        # Slow violet<->magenta breathing glow on the card's top rule + the
+        # hairline separators — the one bit of ambient motion on an
+        # otherwise static idle screen, matching the "living" feel of the
+        # reactive layer on the main desktop.
+        GLib.timeout_add_seconds(2, self._tick_pulse)
 
     def _tick_clock(self):
         try:
             self.clock.set_text(time.strftime("%H:%M"))
+        except Exception:
+            pass
+        return True
+
+    def _tick_pulse(self):
+        try:
+            self._pulse_on = not self._pulse_on
+            for w in (self._card, self.sep_top, self.sep_bot):
+                if self._pulse_on:
+                    w.add_css_class("nyx-pulse-on")
+                else:
+                    w.remove_css_class("nyx-pulse-on")
         except Exception:
             pass
         return True

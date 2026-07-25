@@ -430,6 +430,20 @@ chmod 700 /var/log/nyxus
 # Intel+NVIDIA (GL SIGSEGV, then VT-handoff blank screen); greetd uses the
 # same Wayland/DRM path Hyprland does. nyxus-greeter chain falls back to
 # tuigreet (text) so the box never lands on a frozen screen. (rev 2026-07-14)
+#
+# Pre-create the greeter's runtime dirs AS ROOT (rev 2026-07-25). nyxus-greeter
+# runs as the unprivileged "greeter" user (config.toml `user = "greeter"`) and
+# sets HOME=/var/lib/greetd + XDG_CACHE_HOME=/var/cache/regreet, then does its
+# own `mkdir -p` + `cp` to seed the login background. Neither /var/lib nor
+# /var/cache is writable by a non-root user, so on a FRESH bake — where
+# nothing else ever creates these paths (regreet's own tmpfiles rule only
+# covers /var/log/regreet + /var/lib/regreet, NOT these) — every one of those
+# calls silently no-ops and the login screen ships with NO background image
+# at all. Root can create+chown them here; the script's own mkdir -p then
+# stays a harmless no-op on every later boot.
+mkdir -p /var/lib/greetd /var/cache/regreet
+chown greeter:greeter /var/lib/greetd /var/cache/regreet 2>/dev/null || true
+chmod 0755 /var/lib/greetd /var/cache/regreet
 systemctl enable greetd.service              2>/dev/null || true
 systemctl enable NetworkManager.service      2>/dev/null || true
 systemctl enable systemd-timesyncd.service   2>/dev/null || true
