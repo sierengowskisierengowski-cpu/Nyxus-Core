@@ -16,27 +16,15 @@ case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$P
 export HISTSIZE=10000 HISTFILESIZE=20000 HISTCONTROL=ignoreboth
 shopt -s histappend checkwinsize
 
-# `glow` — pipe any text through the NYXUS random-neon colorizer:
+# `glow` — opt-in NYXUS neon colorizer (not run automatically):
 #   ls | glow        say "hello" | glow -c        glow "loud text"
 glow() { nyxus-glow "$@"; }
 
-# ── NYXUS terminal greeting ─────────────────────────────────────────────
-# Every new interactive terminal opens with a random-neon-glow NYXUS line
-# over the transparent background. Set NYXUS_NO_GREETING=1 to silence it.
-if [ -z "${NYXUS_NO_GREETING:-}" ] && command -v nyxus-glow >/dev/null 2>&1; then
+# Auto rainbow greeting is OFF by default (live-boot QA 2026-07-25).
+# Opt in:  NYXUS_GREETING=1
+if [ "${NYXUS_GREETING:-0}" = "1" ] && command -v nyxus-glow >/dev/null 2>&1; then
   printf '\n'
   nyxus-glow -c "        N Y X U S"
-  NYXUS_GLOW_DENSITY=0.5 nyxus-glow -w "  dark mirror · you are in it"
-  # Build stamp — instant freshness check so the owner never debugs a stale bake.
-  if [ -r /etc/nyxus-build ]; then
-    _stamp="$(sed -n '/^iso /p; /^built /p; /^source commit/p' /etc/nyxus-build 2>/dev/null)"
-    if [ -n "$_stamp" ]; then
-      printf '\033[38;2;125;61;255m  ┄ build stamp ┄\033[38;2;238;242;250m\n'
-      printf '%s\n' "$_stamp" | sed 's/^/  /'
-      printf '\033[0m'
-    fi
-    unset _stamp
-  fi
+  NYXUS_GLOW_DENSITY=0.5 nyxus-glow -w "  alien neon · you are in it"
   printf '\n'
 fi
-

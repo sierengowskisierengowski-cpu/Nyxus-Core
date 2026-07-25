@@ -1138,12 +1138,12 @@
   (bar_top_layout))
 
 (defwindow bar-left
-  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-left"
+  :monitor 0 :stacking "fg" :exclusive false :namespace "nyxus-bar-left"
   :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center left")
   (workspaces_rail))
 
 (defwindow bar-right
-  :monitor 0 :stacking "fg" :exclusive true :namespace "nyxus-bar-right"
+  :monitor 0 :stacking "fg" :exclusive false :namespace "nyxus-bar-right"
   :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center right")
   (app_rail))
 

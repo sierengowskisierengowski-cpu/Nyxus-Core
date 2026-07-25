@@ -15,10 +15,13 @@
     letter-spacing: 0.18em;
 }
 
-/* ── DEEP VOID CANVAS · frosted glass over wallpaper ─────────────── */
+/* ── URBAN-ALIEN CANVAS · frosted glass over hero wall ───────────── */
 window {
-    background-color: rgba(5, 6, 10, 0.82) ;
-    background-image: none                  ;
+    background-color: rgba(5, 6, 10, 0.72) ;
+    background-image: url("/usr/share/backgrounds/nyxus/nyxus-urban-alien.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: #eef2fa                          ;
 }
 

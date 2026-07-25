@@ -1,20 +1,46 @@
 #!/usr/bin/env bash
 # NYXUS Settings — canonical launcher for the main control center.
 #
-# Launches the unified NYXUS Settings app (~/.nyxus/nyxus_settings.py,
-# GTK4 + libadwaita, ALIEN NEON + live accent). This is THE settings
-# surface: the eww dashboard/quicksettings buttons, the dock, and any
-# `nyxus settings` dispatch all land here.
+# Launches the unified NYXUS Settings app (GTK4 + libadwaita, ALIEN NEON).
+# This is THE settings surface: eww dashboard/quicksettings, dock, and
+# `nyxus settings` all land here.
 #
-# The old target (nyxus-panel/settings.py SettingsWindow) is the Panel's
-# own preferences window — it is NOT a system settings surface and is
-# reachable from inside the Panel app only.
+# Resolution order (first existing wins):
+#   1. ~/.nyxus/nyxus_settings.py   — bake-time per-file symlink / user install
+#   2. /opt/nyxus/nyxus_settings.py — ISO system copy (always present on stick)
 #
 # If a window is already open, focus it instead of spawning a twin.
+set -u
+
+LOG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/nyxus"
+mkdir -p "${LOG_DIR}"
+LOG="${LOG_DIR}/settings.log"
+
 if command -v hyprctl >/dev/null 2>&1; then
   if hyprctl clients -j 2>/dev/null | grep -q '"io.nyxus.settings"'; then
     hyprctl dispatch focuswindow 'class:io.nyxus.settings' >/dev/null 2>&1
     exit 0
   fi
 fi
-exec python3 "$HOME/.nyxus/nyxus_settings.py" "$@"
+
+TARGET=""
+for cand in \
+  "${HOME}/.nyxus/nyxus_settings.py" \
+  "/opt/nyxus/nyxus_settings.py"
+do
+  if [[ -f "${cand}" ]]; then
+    TARGET="${cand}"
+    break
+  fi
+done
+
+if [[ -z "${TARGET}" ]]; then
+  msg="NYXUS Settings missing (no ~/.nyxus or /opt/nyxus copy)."
+  printf '%s\n' "${msg}" | tee -a "${LOG}" >&2
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send -u critical "NYXUS Settings" "${msg}" 2>/dev/null || true
+  fi
+  exit 2
+fi
+
+exec python3 "${TARGET}" "$@" 2>>"${LOG}"

@@ -531,6 +531,20 @@ systemctl disable systemd-timesyncd.service 2>/dev/null || true
 # display-manager.service at boot.
 systemctl disable sddm.service 2>/dev/null || true
 
+# Suppress nm-applet xdg autostart — its "Wired connection" / Ethernet toasts
+# clutter Hypr sessions. EWW owns network chrome; package stays for Settings.
+if [[ -f /etc/xdg/autostart/nm-applet.desktop ]]; then
+  printf '%s\n' \
+    '[Desktop Entry]' \
+    'Type=Application' \
+    'Name=Network Manager Applet' \
+    'Hidden=true' \
+    'X-GNOME-Autostart-enabled=false' \
+    'NoDisplay=true' \
+    > /etc/xdg/autostart/nm-applet.desktop
+  echo "[customize_airootfs] nm-applet autostart suppressed (Hidden=true)"
+fi
+
 # Bind /etc/nsswitch.conf so .local hostnames resolve via mDNS.
 if [ -f /etc/nsswitch.conf ] && ! grep -q 'mdns_minimal' /etc/nsswitch.conf; then
   sed -i 's/^hosts:.*/hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns/' \

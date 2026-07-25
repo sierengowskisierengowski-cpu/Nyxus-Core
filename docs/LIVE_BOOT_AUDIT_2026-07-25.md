@@ -79,13 +79,15 @@
 
 ## Priority for next bake (owner)
 
-1. ~~Commit Claude app-shell fail-fast~~ — landed `1951f365` (incremental only).  
-2. **Align app-shell ↔ `nyxus-webapp` ports** + stage `nyxus-webapp` / `/opt/arsenal` (or hide arsenal desktops until setup).  
-3. **wlogout** urban-alien background (match hyprlock/greeter).  
-4. **Settings** — one desktop Exec + `/opt` fallback.  
-5. **EWW** — exclusive-zone / black-box (retest with wallpaper up).  
-6. Soft: kill `nyxus-glow` greeting; disable nm-applet autostart; stop wallpaper pkill during install; hyprpm residual.  
-7. Rebake → reflash → re-QA.
+1. ~~Commit Claude app-shell fail-fast~~ — landed `1951f365`.  
+2. ~~Align app-shell ↔ `nyxus-webapp` ports + stage `nyxus-webapp`~~ — landed this tip.  
+3. ~~wlogout urban-alien~~ — landed.  
+4. ~~Settings one Exec + `/opt` fallback~~ — landed.  
+5. ~~EWW side rails `exclusive false`~~ — landed (top/bottom stay exclusive).  
+6. ~~glow greeting off / nm-applet suppressed / wallpaper no-pkill~~ — landed.  
+7. **Owner:** rebake → reflash → stick QA (checklist below).
+
+Arsenal apps still need Vault/`nyxus-setup-apps` to actually run — ports/messaging are fixed; backends are not bundled.
 
 ---
 

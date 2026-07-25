@@ -176,6 +176,7 @@ file_permissions=(
   ["/usr/local/bin/nyxus-voiced"]="0:0:755"
   ["/usr/local/bin/nyxus-vpn"]="0:0:755"
   ["/usr/local/bin/nyxus-wait-bootstrap"]="0:0:755"
+  ["/usr/local/bin/nyxus-webapp"]="0:0:755"
   ["/usr/local/bin/nyxus-wall-cycle"]="0:0:755"
   ["/usr/local/bin/nyxus-wall-fx"]="0:0:755"
   ["/usr/local/bin/nyxus-wall-next"]="0:0:755"

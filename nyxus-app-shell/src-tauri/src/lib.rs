@@ -23,11 +23,13 @@ struct AppDef {
 
 // The NYXUS tool roster. Add a line here + a .desktop launcher = a new app.
 const APPS: &[AppDef] = &[
+    // Ports MUST match `nyxus-webapp` register_app URLs (not invented 2305x slots).
     AppDef { id: "cipher",   title: "CIPHER",                   port: 23051, start: "nyxus-webapp cipher" },
-    AppDef { id: "forge",    title: "Forge",                    port: 23052, start: "nyxus-webapp forge" },
-    AppDef { id: "redforge", title: "RedForge",                 port: 23053, start: "nyxus-webapp redforge" },
-    AppDef { id: "gsl",      title: "GSL",                      port: 23054, start: "nyxus-webapp gsl" },
-    AppDef { id: "trainer",  title: "AI Cyber Defense Trainer", port: 23055, start: "nyxus-webapp trainer" },
+    AppDef { id: "forge",    title: "Forge",                    port: 20000, start: "nyxus-webapp forge" },
+    AppDef { id: "redforge", title: "RedForge",                 port: 5173,  start: "nyxus-webapp redforge" },
+    AppDef { id: "gsl",      title: "GSL",                      port: 19670, start: "nyxus-webapp gsl" },
+    AppDef { id: "trainer",  title: "AI Cyber Defense Trainer", port: 20508, start: "nyxus-webapp trainer" },
+    // AXIOM has no ensure_* in nyxus-webapp yet — keep a dedicated slot; starter fails fast.
     AppDef { id: "axiom",    title: "AXIOM",                    port: 23056, start: "nyxus-webapp axiom" },
 ];
 

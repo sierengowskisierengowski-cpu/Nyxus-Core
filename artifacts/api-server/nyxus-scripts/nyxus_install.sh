@@ -1257,13 +1257,19 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   # ALIEN NEON default (2026-07-23): prefer urban-alien / system alien walls.
   # Never hardcode void-vortex as the post-install wallpaper — that was the
   # "old wallpaper after install" regression.
-  pkill -x swaybg    2>/dev/null || true
-  pkill -x hyprpaper 2>/dev/null || true
-  pkill -x mpvpaper  2>/dev/null || true
+  # Do NOT pkill wallpaper daemons here — that blanked the desktop for minutes
+  # during first-boot install (live-boot QA 2026-07-25). Prefer the already-
+  # running still/live wall; only (re)start if nothing is painting a wall.
   ALIEN_SYS="/usr/share/backgrounds/nyxus/nyxus-urban-alien.png"
   ALIEN_HOME="$WALLS_DIR/nyxus-urban-alien.png"
   LOGIN_WALL="/usr/share/backgrounds/nyxus/nyxus-login-wall.png"
-  if command -v swaybg >/dev/null 2>&1 && [[ -s "$ALIEN_HOME" ]]; then
+  if pgrep -x swaybg >/dev/null 2>&1 || pgrep -x mpvpaper >/dev/null 2>&1 \
+     || pgrep -x hyprpaper >/dev/null 2>&1 || pgrep -x awww-daemon >/dev/null 2>&1; then
+    ok "Wallpaper daemon already running — left intact during install"
+  elif command -v nyxus-wallpaper-autostart >/dev/null 2>&1; then
+    nyxus-wallpaper-autostart >/tmp/nyxus-wall-autostart.log 2>&1 || true
+    ok "Wallpaper delegated to nyxus-wallpaper-autostart"
+  elif command -v swaybg >/dev/null 2>&1 && [[ -s "$ALIEN_HOME" ]]; then
     nohup swaybg -i "$ALIEN_HOME" -m fill -c "#05060a" >/tmp/nyxus-swaybg.log 2>&1 &
     disown
     ok "Wallpaper set — nyxus-urban-alien.png (home walls)"
@@ -1275,9 +1281,6 @@ if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
     nohup swaybg -i "$LOGIN_WALL" -m fill -c "#05060a" >/tmp/nyxus-swaybg.log 2>&1 &
     disown
     warn "urban-alien missing — fell back to login-wall"
-  elif command -v nyxus-wallpaper-autostart >/dev/null 2>&1; then
-    nyxus-wallpaper-autostart >/tmp/nyxus-wall-autostart.log 2>&1 || true
-    ok "Wallpaper delegated to nyxus-wallpaper-autostart"
   fi
 fi
 

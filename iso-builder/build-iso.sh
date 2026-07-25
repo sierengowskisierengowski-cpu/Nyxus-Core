@@ -706,6 +706,12 @@ fi
 if [[ -f "${NS}/nyxus-session-start" ]]; then
   install -m 0755 "${NS}/nyxus-session-start" "${LBIN}/nyxus-session-start"
 fi
+if [[ -f "${NS}/nyxus-settings" ]]; then
+  install -m 0755 "${NS}/nyxus-settings" "${LBIN}/nyxus-settings"
+fi
+if [[ -f "${NS}/nyxus-webapp" ]]; then
+  install -m 0755 "${NS}/nyxus-webapp" "${LBIN}/nyxus-webapp"
+fi
 if [[ -f "${NS}/desktop-entries/nyxus-hyprland.desktop" ]]; then
   install -Dm644 "${NS}/desktop-entries/nyxus-hyprland.desktop" \
     "${PROFILE_DIR}/airootfs/usr/share/wayland-sessions/nyxus-hyprland.desktop"
