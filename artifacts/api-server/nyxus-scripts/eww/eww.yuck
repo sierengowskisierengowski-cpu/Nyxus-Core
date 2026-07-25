@@ -539,12 +539,18 @@
   (label :class "cava-saucer" :halign "center" :text CAVA :tooltip "Audio reactive · CAVA"))
 
 ;; Idle face: clock + date on a solid dark cockpit screen, dead-centre in
-;; the transparent oval.
+;; the transparent oval. Offset measured directly against the current
+;; nyxus-saucer-band.png (rev 2026-07-25): the transparent cockpit window
+;; is centred ~31px below the image's geometric centre (of 368px height),
+;; i.e. ~8.4% of the rendered height -> ~10px at the box's 116px min-height.
+;; Earlier margin-bottom nudges (16px, then 4px) were tuned against older
+;; saucer art and drifted wrong every time the art got swapped — measure
+;; against the actual asset instead of eyeballing next time it changes.
 (defwidget bar_hub_idle []
   (overlay
     (saucer_base)
     (box :class "saucer-screen" :halign "center" :valign "center"
-         :style "margin-bottom: 4px;"
+         :style "margin-top: 10px;"
       (box :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
         (label :class "bar-hub-time" :halign "center" :text "${TIME.hm}")
         (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))))
@@ -556,7 +562,7 @@
   (overlay
     (saucer_base)
     (box :class "saucer-screen saucer-screen-music" :halign "center" :valign "center"
-         :style "margin-bottom: 2px;"
+         :style "margin-top: 10px;"
       (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
         (label :class "bar-hub-music-title" :limit-width 30 :truncate "end"
                :halign "center"
@@ -578,15 +584,17 @@
           (button :class "saucer-btn saucer-btn-main" :onclick "playerctl play-pause &" :tooltip "Play / pause" "${PLAYER.icon}")
           (button :class "saucer-btn" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))))
 
-;; The idle↔music "flip". eww/GTK cannot do a true 3D card flip, so this
-;; approximates one with a softer crossfade transition, toggled by MPRIS
-;; playback state.
+;; The idle<->music "flip". rotate-left-right is GTK's real card-flip
+;; transition (rotates the outgoing face away and the incoming one in
+;; around a vertical axis) — a genuine flip, not a fade standing in for
+;; one. Verified live (rev 2026-07-25): reads as a real flip at the
+;; default ~200ms GTK stack duration, no extra tuning needed.
 ;; Only the IDLE (clock) face is wrapped in the hub-open button. The music
 ;; face is transport-only — nesting its prev/play/next buttons inside an
 ;; outer GtkButton made every tap fire the outer onclick (nyxus-hub-open)
 ;; instead of the transport control. Flip back to the clock with Super+R.
 (defwidget bar_hub_trigger []
-  (stack :class "saucer-stack" :transition "crossfade" :same-size true
+  (stack :class "saucer-stack" :transition "rotate-left-right" :same-size true
          :selected {(PLAYER.status == "Stopped") == SAUCER_FORCE ? 1 : 0}
     (button :class "bar-hub-trigger"
             :onclick "nyxus-hub-open &"
