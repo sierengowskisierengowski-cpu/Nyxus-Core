@@ -64,11 +64,50 @@ pub fn run() {
             // Bring the server up + swap the splash for the real UI off the main
             // thread, so the loading window paints instantly.
             std::thread::spawn(move || {
+                let fail_now = |handle: &tauri::AppHandle, msg: String| {
+                    if let Some(win) = handle.get_webview_window("main") {
+                        let _ = win.set_title(def.title);
+                        let _ = win.eval(&format!(
+                            "document.querySelector('.sub').textContent = {:?}; \
+                             document.querySelector('.ring').style.borderTopColor = '#ff2dad';",
+                            msg
+                        ));
+                    }
+                };
+
                 if !port_up(def.port) {
-                    let _ = Command::new("sh").arg("-lc").arg(def.start).spawn();
+                    // Run the starter SYNCHRONOUSLY and check what it actually did —
+                    // some of these tools (CIPHER/RedForge/GSL/Trainer/Bifrost) need a
+                    // dev-machine-only project (e.g. ~/GowskiNet-Vault) that a live/
+                    // portable NYXUS boot never has. `nyxus-webapp` already detects
+                    // that and dies with a specific reason (e.g. "CIPHER project
+                    // missing at ..."); surface THAT immediately instead of blindly
+                    // waiting 90s and showing a generic port-timeout message.
+                    match Command::new("sh").arg("-lc").arg(def.start).output() {
+                        Ok(out) if !out.status.success() => {
+                            let stderr = String::from_utf8_lossy(&out.stderr);
+                            let reason = stderr.lines().last().unwrap_or("").trim();
+                            let msg = if reason.is_empty() {
+                                format!("NYXUS · {} did not start (exit {}).", def.title, out.status)
+                            } else {
+                                format!("NYXUS · {}", reason)
+                            };
+                            fail_now(&handle, msg);
+                            return;
+                        }
+                        Err(e) => {
+                            fail_now(&handle, format!("NYXUS · could not launch {}: {}", def.title, e));
+                            return;
+                        }
+                        Ok(_) => {} // starter reported success — fall through to load it
+                    }
                 }
-                // Wait up to 90s (a cold first start can npm/build) for the port.
-                let deadline = Instant::now() + Duration::from_secs(90);
+
+                // Either it was already up, or the starter just reported success —
+                // short grace window in case the port isn't bound the instant it
+                // returns (nyxus-webapp already waits on its own health checks, so
+                // this is just a safety margin, not the primary wait anymore).
+                let deadline = Instant::now() + Duration::from_secs(15);
                 while Instant::now() < deadline && !port_up(def.port) {
                     std::thread::sleep(Duration::from_millis(500));
                 }
@@ -79,8 +118,6 @@ pub fn run() {
                         let url = format!("http://localhost:{}/", def.port);
                         let _ = win.eval(&format!("window.location.replace('{}')", url));
                     } else {
-                        // Server never came up — show a readable failure instead
-                        // of an eternal spinner.
                         let msg = format!(
                             "NYXUS · {} could not start its service on port {}. \
                              Open a terminal and run:  nyxus-webapp {}",

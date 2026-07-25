@@ -9,7 +9,9 @@
 set -u
 
 CONF="${HOME}/.config/nyxus/wallpaper.conf"
-DEFAULT="/usr/share/backgrounds/nyxus/nyxus-nebula-01.png"
+# ALIEN default. nebula-01 is not shipped under /usr/share/backgrounds/nyxus
+# (would fall through to a non-alien legacy path). Keep lockstep with LBIN.
+DEFAULT="/usr/share/backgrounds/nyxus/nyxus-urban-alien.png"
 LEGACY_PNG="${HOME}/.config/hypr/walls/nyxus-urban-alien.png"
 
 WALLPAPER_PATH=""

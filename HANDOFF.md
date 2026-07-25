@@ -1,11 +1,14 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-24 evening (#76 merged — bake GO)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-25 early (live-boot audit after first stick QA)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
+>
+> **Live USB report + full sweep:**  
+> [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md)
 >
 > **Last ~day of building (story + done/open):**  
 > [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md)
@@ -22,7 +25,7 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-24 · evening (#76 merged · bake GO)
+## WHERE WE STAND — 2026-07-25 · after first live boot (audit)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
@@ -30,14 +33,13 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | `09966a21` (Merge #76 bake wipe lockstep) — confirm with `git rev-parse --short HEAD` |
-| **Open PRs** | **none** (#74 / #75 / #76 merged) |
-| **Day chronicle** | [`docs/BUILD_DAY_BRIEF_2026-07-24.md`](./docs/BUILD_DAY_BRIEF_2026-07-24.md) |
-| **Repo state for bake** | ✅ **GO** — idle → `rm -rf artifacts/api-server/dist/nyxus-scripts` if present → `cd iso-builder && sudo ./build-iso.sh` |
-| **Deep audit** | [`docs/DEEP_BUILD_AUDIT_2026-07-24.md`](./docs/DEEP_BUILD_AUDIT_2026-07-24.md) · revised evening |
-| **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (built **03:05 EDT**) — **STALE**. **Do not reflash that file expecting today's work.** |
-| **Kage-Ryu pkgs** | `linux-kage-ryu-7.0.12` + headers (~**08:53 EDT**). PKGBUILD enables iso9660/squashfs/loop. Still **verify** live mount after bake. |
-| **Running desktop kernel** | Stock `7.1.3-arch1-2` (not Kage) — expected until new ISO |
+| **HEAD** | check `git rev-parse --short HEAD` |
+| **Open PRs** | **none** — Claude arsenal fix was **local only** (now landing on `main`) |
+| **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
+| **Repo state for bake** | 🟡 **NOT GO yet** — land remaining HIGH stick fixes (eww boxes, Settings, glow, wallpaper first-paint, wlogout/login art) then rebake |
+| **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (**17:03 EDT**, sha `ed2f21e4…`) — flashed; **missing** Claude app-shell fix + later fixes |
+| **Kage-Ryu on stick** | ✅ splash / boot path worked on live USB |
+| **Running desktop kernel** | Stock on builder; Kage on stick |
 | **Gates** | ✅ `pnpm run typecheck` · ✅ `pnpm run build` · ✅ `iso-builder/verify-profile.sh` |
 
 ### 🔦 ALIEN NEON palette/brand audit — this pass (2026-07-24 PM)
