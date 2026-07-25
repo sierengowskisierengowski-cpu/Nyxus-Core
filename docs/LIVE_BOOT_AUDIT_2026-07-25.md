@@ -42,15 +42,15 @@
 | 2 | ~1 min black + cursor before login | PARTIAL / EXPECTED-ish | greetd→cage→regreet→session handoff on hybrid GPU; long DRM settle. Not a missing wall by itself. | M | no |
 | 3 | “Hyprpg couldn’t load headers” | STILL_BROKEN (noise) | `hyprpm` during bootstrap for `hyprexpo` (`nyxus-hyprland-mission.conf`). Needs matching Hyprland headers / guard when headers absent (PR #71 touched this — verify guard still fires on stick). | S | no |
 | 4 | First-boot still installing | EXPECTED | Offline bootstrap + cache install | — | — |
-| 5 | EWW bars/saucer fast but **boxed** | STILL_BROKEN on stick | CSS wants transparent bars (`eww.css` `.bar-* { background: transparent }`) + layer blur rules. Black box = compositor/GTK layer path or stale CSS on device. Needs live `eww` namespace + screenshot repro. | M | **yes** (UX) |
+| 5 | EWW bars/saucer fast but **boxed** | STILL_BROKEN on stick | Bars use `:exclusive true` full-width zones (black slabs especially with no wall). Transparent `window` CSS already present; PR #71 only fixed sass stall — **not** exclusive-zone chrome. Saucer cockpit fill is intentionally near-opaque. | M | **yes** |
 | 6 | Notification saucer | ✅ OK | Working | — | — |
-| 7 | Wallpaper blank ~5 min | PARTIAL | Autostart: `nyxus-live-wallpaper auto \|\| nyxus-wallpaper-autostart`. Still wall exists (`urban-alien` in sys + skel). Delay = bootstrap/`awww`/livewall race or first-boot install fighting wallpaper. NS had **drift** (`nebula-01` DEFAULT) vs LBIN (`urban-alien`) — fixed in NS this pass. | M | **yes** |
+| 7 | Wallpaper blank ~5 min | PARTIAL | Wall asset OK (`urban-alien`). First-boot `nyxus_install.sh` **pkills** wallpaper daemons then restarts after long install → wall returns when bootstrap ends. Don’t tear down wallpaper during install. | M | soft / **yes** UX |
 | 8 | Deep Core / Power / QC / Hub OK; Fire missing; Bifrost OK | MIXED | Fire launcher/binary not present as `nyxus-fire*`. Bifrost works when its stack is available. | S–M | Fire: no |
-| 9 | “Wired connection ethernet” box | EXPECTED (not a bug) | Claude confirmed: normal NM/network indicator chrome, not Arsenal failure UI. | — | — |
-| 10 | Settings opens nothing | STILL_BROKEN / UNKNOWN | Launcher: `nyxus-settings` → `python3 ~/.nyxus/nyxus_settings.py`. Opt has `nyxus_settings.py`; skel `.nyxus` symlinks are **bake-generated**. Need stick log `~/.cache/nyxus/settings.log` / try `nyxus settings`. Possible: wrong desktop entry, GTK crash, or pre-symlink race. | M | **yes** |
-| 11 | Logout B&W / old style; wanted urban-alien eye candy + new login | STILL_BROKEN | **Logout** = `wlogout` with `background-image: none` (void tiles). **Login** = greetd+regreet + `nyxus-login-bg.png` / cache path — themed CSS exists but is **not** the full urban-alien redesign described in `docs/NYXUS_BUILD_BRIEF.md` (still open checklist). | L | **yes** (owner priority) |
-| 12 | Forge :23052 / GSL :23054 “open terminal…” 10–15 min later | FIXED_IN_TREE (not in flashed ISO) | App-shell used to spawn starter async and poll **90s** × N apps → staggered port banners. Claude: sync start + surface `nyxus-webapp` stderr + **15s** grace. Live ISO cannot run vault apps without `~/GowskiNet-Vault`. | S | messaging: yes for UX |
-| 13 | Rainbow terminal text | STILL_BROKEN (as unwanted) | `artifacts/.../bashrc` interactive greeting calls `nyxus-glow` (“scatter random neon”). Not lolcat — **intentional glow banner** still on. Silence: `NYXUS_NO_GREETING=1` or remove greeting block. | S | yes if owner wants it gone |
+| 9 | “Wired connection ethernet” box | STILL_BROKEN (noise) | Most likely **`network-manager-applet`** xdg-autostart (`nm-applet.desktop`) — classic Wired/Ethernet toast. Not fixed by app-shell. Disable/override on Hypr live; EWW wifi is enough. | S | soft |
+| 10 | Settings opens nothing | STILL_BROKEN | **Dual desktops disagree:** `io.nyxus.settings` → `nyxus-settings` → `~/.nyxus/…`; `nyxus-settings.desktop` → `nyxus settings` → `/opt/nyxus/…`. Bootstrap can churn `~/.nyxus`. Fix: one Exec + `/opt` fallback + toast on fail. | S | **yes** |
+| 11 | Logout B&W / old style; wanted urban-alien eye candy + new login | STILL_BROKEN | **Logout** = `wlogout` with `background-image: none` (void tiles). **Login** = greetd+regreet (urban-alien staged). Lock = hyprlock (alien). Full redesign in `NYXUS_BUILD_BRIEF` still open. | M–L | **yes** |
+| 12 | Forge :23052 / GSL :23054 “open terminal…” 10–15 min later | STILL_BROKEN (fail-fast only in tree) | **Port mismatch** app-shell vs `nyxus-webapp`: forge `23052`≠`20000`, gsl `23054`≠`19670`, redforge `23053`≠`5173`, trainer `23055`≠`20508`. Also needs Vault/`/opt/arsenal` wiring; `nyxus-webapp` not staged to LBIN at bake (arrives via bootstrap). Claude patch = faster wrong-failure, not green apps. | L | **yes** |
+| 13 | Rainbow terminal text | STILL_BROKEN (as unwanted) | `bashrc` interactive greeting calls `nyxus-glow`. PR #71 only added build stamp — did not remove glow. Silence: `NYXUS_NO_GREETING=1` or remove greeting. | S | soft / owner-want |
 
 ---
 
@@ -63,8 +63,9 @@
 
 ### Arsenal / app-shell
 - Desktops: `Exec=nyxus-app-shell <id>` for forge/axiom/etc.
-- Backend: `nyxus-webapp` expects `GOWSKINET_VAULT` / `~/GowskiNet-Vault` for CIPHER/GSL/etc.
-- Portable ISO will **never** silently run those without vault or bundled services — fail-fast messaging is the correct product behavior.
+- **Port table (broken):** forge 23052≠20000, gsl 23054≠19670, redforge 23053≠5173, trainer 23055≠20508 (cipher 23051 OK).
+- Backend: `nyxus-webapp` expects Vault / `/opt/arsenal`; not staged to LBIN at bake (bootstrap path).
+- Claude `1951f365` = fail-fast UX only — **not** green arsenal apps.
 
 ### Wallpaper lockstep
 - LBIN (baked path used on stick): `DEFAULT=.../nyxus-urban-alien.png` ✅  
@@ -78,14 +79,13 @@
 
 ## Priority for next bake (owner)
 
-1. **Commit + push** Claude `nyxus-app-shell` fix (done this pass if landed).  
-2. **Kill or default-off** `nyxus-glow` bashrc greeting.  
-3. **Settings** on-stick repro → fix launcher/crash.  
-4. **EWW black boxes** on-stick repro (layer namespace + CSS).  
-5. **Wallpaper first paint** — don’t wait on bootstrap; guarantee `awww`/`swaybg` urban-alien in first 2s.  
-6. **wlogout + login eye-candy** redesign (urban-alien full-bleed) — large, explicit art/CSS work.  
-7. **hyprpm headers** — soft-fail / skip when headers missing.  
-8. Rebake → reflash → re-QA.
+1. ~~Commit Claude app-shell fail-fast~~ — landed `1951f365` (incremental only).  
+2. **Align app-shell ↔ `nyxus-webapp` ports** + stage `nyxus-webapp` / `/opt/arsenal` (or hide arsenal desktops until setup).  
+3. **wlogout** urban-alien background (match hyprlock/greeter).  
+4. **Settings** — one desktop Exec + `/opt` fallback.  
+5. **EWW** — exclusive-zone / black-box (retest with wallpaper up).  
+6. Soft: kill `nyxus-glow` greeting; disable nm-applet autostart; stop wallpaper pkill during install; hyprpm residual.  
+7. Rebake → reflash → re-QA.
 
 ---
 
