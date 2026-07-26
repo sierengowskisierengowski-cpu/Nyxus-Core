@@ -146,9 +146,13 @@
 (defvar SAUCER_FORCE false)
 
 ;; ── audio visualizer ─────────────────────────────────────────────────
-;; cava.sh streams one line of block glyphs per frame (30 fps).
+;; cava.sh streams one line of block glyphs per frame (30 fps). It also
+;; pushes CAVA_BASS (a plain 0-100 scalar from the lowest 2 bars) via
+;; `eww update` on the same frame tick — the boombox speaker cones react
+;; to this directly instead of parsing glyph characters back into numbers.
 (deflisten CAVA :initial "▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
                 "~/.config/eww/scripts/cava.sh")
+(defvar CAVA_BASS "0")
 
 ;; ── prism rim animator ───────────────────────────────────────────────
 ;; prism-anim.sh streams {a,b,p,g} frames (~15 fps): rotating rim
@@ -572,12 +576,14 @@
       (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
         (box :class "boombox-display" :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
           (box :class "boombox-title-row" :orientation "h" :space-evenly false :spacing 5 :halign "center" :valign "center"
-            (box :class "boombox-speaker" :valign "center")
+            (box :class "boombox-speaker" :valign "center"
+                 :style "min-width: ${12 + CAVA_BASS / 17}px; min-height: ${12 + CAVA_BASS / 17}px; box-shadow: 0 0 ${6 + CAVA_BASS / 8}px rgba(125, 61, 255, ${0.45 + CAVA_BASS / 250}), inset 0 0 0 2px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(255, 45, 173, 0.35);")
             (label :class "bar-hub-music-title" :limit-width 26 :truncate "end"
                    :halign "center"
                    :text "${PLAYER.icon}  ${PLAYER.title}"
                    :tooltip "${PLAYER.tooltip}")
-            (box :class "boombox-speaker" :valign "center"))
+            (box :class "boombox-speaker" :valign "center"
+                 :style "min-width: ${12 + CAVA_BASS / 17}px; min-height: ${12 + CAVA_BASS / 17}px; box-shadow: 0 0 ${6 + CAVA_BASS / 8}px rgba(125, 61, 255, ${0.45 + CAVA_BASS / 250}), inset 0 0 0 2px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(255, 45, 173, 0.35);"))
           (label :class "bar-hub-music-artist" :limit-width 30 :truncate "end"
                  :halign "center"
                  :visible {PLAYER.artist != ""}

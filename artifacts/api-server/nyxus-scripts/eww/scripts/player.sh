@@ -52,6 +52,24 @@ if command -v playerctl >/dev/null 2>&1; then
   fi
 fi
 
+# Universal fallback (rev 2026-07-25): MPRIS only covers players that
+# implement it — bare mpv (no mpv-mpris plugin), some games, browser tabs
+# without a MediaSession all report nothing, so the saucer never flipped
+# to the music face even with real audio playing. If MPRIS found nothing,
+# check PipeWire/Pulse directly for any live sink-input (any app actively
+# rendering audio) and treat that as "Playing" so the flip still fires —
+# just without real track metadata to show.
+if [[ "$status" == "Stopped" ]] && command -v pactl >/dev/null 2>&1; then
+  if pactl list short sink-inputs 2>/dev/null | grep -q .; then
+    status="Playing"
+    title="Now Playing"
+    artist=""
+    pos_fmt="--:--"
+    len_fmt="--:--"
+    progress=0
+  fi
+fi
+
 case "$status" in
   Playing) icon="▶" ;;
   Paused)  icon="⏸" ;;
