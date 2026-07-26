@@ -94,6 +94,107 @@ flash → verify (`/etc/nyxus-build`, bars, welcome, Kage/stock); QA Settings
 (esp. Kernel + new shell sections + deepened pages).  
 **Next agent:** on-device Settings QA notes + any bake regressions only.
 
+### 🛸 Bottom-bar eww redesign + audio detection — this pass (2026-07-25 evening)
+
+Owner reported a live-boot punch list (login-screen background missing, ~5min
+wallpaper delay, saucer clock off-center, rainbow kitty, black box around eww
+bars, arsenal apps hanging ~90s each). Investigated each individually instead
+of assuming they were all one thing — three turned out to be **already-correct
+code** (kitty.conf, greeter background wiring, eww bar CSS all verified clean
+via a live Hyprland session on the builder box — see §0 note below on how).
+Two were real bugs, now fixed. Commits `4c7b52ca`, `bb11fb6a`, `99aa77af`,
+`8013121a`, all pushed:
+
+- **Login screen had no background on a truly fresh bake** — `nyxus-greeter`
+  runs as the unprivileged `greeter` user and needs `/var/lib/greetd` +
+  `/var/cache/regreet` to exist, but neither `customize_airootfs.sh` nor
+  regreet's own tmpfiles rule (which covers different paths) ever created
+  them. `greeter` can't create dirs under root-owned `/var/lib`/`/var/cache`
+  itself, so every `mkdir`/`cp` in the script silently no-op'd. Fixed:
+  `customize_airootfs.sh` now pre-creates + chowns both, as root, at bake time.
+- **Wallpaper ~5min blank on first boot** — the exec-once wiring
+  (`command -v nyxus-live-wallpaper && nyxus-live-wallpaper auto || nyxus-wallpaper-autostart`)
+  never fell through to the fast static-image script (the command always
+  exists), so first boot blocked the whole background on a synchronous
+  ffmpeg render of the flagship loop. Fixed: show the still immediately,
+  render in the background, swap to the animated loop once ready.
+- **nyxus_screensaver.py redesigned** — was plain white text on a dim
+  wallpaper (didn't even use the ALIEN NEON palette it imports). Now a glass
+  card matching hyprlock's Prism HUD language, with a violet↔magenta
+  breathing pulse. Verified live with a real screenshot.
+- **Saucer clock/music screen recentred** — measured the actual
+  `nyxus-saucer-band.png` pixel-by-pixel: the transparent cockpit window
+  sits ~31px *below* image centre, not above as the old margin assumed (that
+  margin had been re-guessed twice already against different art revisions
+  and drifted wrong each time). Fixed with a measured `margin-top: 10px`
+  instead of another guess. Flip transition swapped `crossfade` →
+  `rotate-left-right` (GTK's real card-flip, not a fade standing in for one).
+- **Left/right rail "plain white box" look** — `.float-island` was painting
+  its own faint single-hue rim and explicitly stripping the pills' real
+  per-hue `obsidian-vessel` glass/glow styling (deep fill, neon hairline, 2px
+  accent top-rule, real glow — already built, just suppressed) down to
+  transparent. Removed the override; the existing rich design shows through.
+- **Arsenal apps (CIPHER/Forge/RedForge/GSL/Trainer/Bifrost) hanging ~90s
+  each with a cryptic port-timeout message** — root cause: they need
+  `~/GowskiNet-Vault`/`~/Projects/bifrost`, dev-machine-only projects never
+  shipped on live media. `nyxus-app-shell` now runs the starter synchronously
+  and surfaces its actual failure reason immediately instead of blindly
+  polling the port for 90s (`nyxus-app-shell/src-tauri/src/lib.rs`, rebuilt +
+  redeployed to the airootfs binary). Decision: **hide/fail-fast on live
+  media**, not attempt to bundle the vault. AXIOM found to have **zero**
+  `nyxus-webapp` backend wired at all (separate, deeper gap, now fails fast
+  too instead of hanging).
+- **Universal audio detection** — `player.sh` only checked MPRIS
+  (`playerctl`), so the saucer never flipped to the music face for players
+  that don't implement it (bare `mpv` without `mpv-mpris`, verified live).
+  Added a `pactl`-based fallback: any live PipeWire/Pulse sink-input now
+  triggers "Playing" with a generic title if MPRIS finds nothing.
+- **`CAVA_BASS`** — new 0-100 live scalar pushed from `cava.sh` every frame
+  (loudest bar across the spectrum, not a fixed low-frequency index — tested
+  live against an 80Hz tone that peaked in bars 4-9, not 0-1, so "bass = low
+  bars" doesn't hold generally). Currently drives the CSS boombox speaker
+  dots' size/glow; this plumbing is reusable regardless of what replaces the
+  visual layer (see below).
+
+**⚠️ IN PROGRESS, NOT WIRED IN — 3D saucer + boombox (owner's call, this
+session):** the CSS-only boombox restyle in `99aa77af` was a stopgap; the
+owner wants real 3D-modelled assets instead, same pipeline as the alien
+companion (Meshy → render hero shot → wire in as an image, same as
+`nyxus-saucer-band.png`). Live-3D-in-Godot was discussed and explicitly
+rejected in favor of image-based for this — see the conversation, not
+re-litigated here. **Status:** owner generated 4 new GLB models, dropped in
+`~/Downloads/`:
+`Meshy_AI_nyxus_oblong_saucer_3_0725230844_image-to-3d-texture.glb`,
+`Meshy_AI_nyxus_boombox_3d_fina_0725230853_image-to-3d-texture.glb`,
+`Meshy_AI_nyxus_left_dock_3d_0725230915_image-to-3d-texture.glb`,
+`Meshy_AI_nyxus_right_dock_3d_0725230902_image-to-3d-texture.glb` (left/right
+NOT started yet — owner said do saucer+boombox first). Rendered hero shots
+for saucer + boombox with Blender (`blender --background --python`, EEVEE,
+transparent PNG) — **Blender 5.1.2 is installed on the builder box**, this is
+the render pipeline now, not a live Godot overlay. Found the boombox's true
+front by rendering a full 12-angle turntable rather than guessing an azimuth
+(front-facing render is `az=225 el=16 dist=2.5 lens=34`, see
+`render_hero.py`-style script in conversation — not yet committed anywhere,
+was a scratch job-tmp script). **Not yet done:** neither render has been
+saved into the repo or wired into `saucer_base`/`bar_hub_music` — that's
+still the flat `nyxus-saucer-band.png` shipping today. **Next agent, if
+picking this up:** (1) get the final hero renders from wherever they landed
+(job scratch dir, or re-render from the GLBs in Downloads — script logic is
+in this session's transcript), (2) crop/trim transparent margins, (3) wire
+in as background-image the same way `saucer_base` does today, (4) figure out
+where the display/text overlay sits on the new art (old measurement approach
+— pixel-scan the PNG for the transparent/dark region — won't directly apply
+to a differently-shaped asset), (5) **hard requirement, owner was burned by
+this before:** whatever click-handling exists must keep hub-open and
+transport-controls (prev/play/next) as separate hit-regions — do NOT let a
+transport click fall through to hub-open. (6) Left/right dock 3D (rail
+redesign) — models exist, zero integration work started.
+
+**⚠️ Also not committed:** none — everything discussed in this session that
+reached a working state is committed and pushed as of `8013121a`. The 3D
+work above is scratch-only (Blender renders in job tmp, never copied into
+the repo) — treat it as **not started from the repo's perspective**.
+
 ### Bake command (reminder)
 
 ```bash
