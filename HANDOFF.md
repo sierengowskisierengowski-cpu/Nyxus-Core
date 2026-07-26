@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-26 ~01:45 EDT (eww chrome experiments fully reverted · bake GO)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-26 ~06:20 EDT (bake DONE · flash next)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -31,7 +31,7 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-26 · restored pre-saucer tip (bake GO)
+## WHERE WE STAND — 2026-07-26 · bake DONE (flash new ISO)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
@@ -39,12 +39,12 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | `352901b3` — confirm with `git rev-parse --short HEAD` |
+| **HEAD** | `dc5269b8` — confirm with `git rev-parse --short HEAD` |
 | **Open PRs** | **none** |
 | **Chrome night brief** | [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
-| **Repo state for bake** | ✅ **GO** — tip = pre-`ecdcc952` evening baseline (live-boot fixes + prior eww/audio). Saucer/boombox/dock experiments **fully reverted**; owner OK’d restored look. **Leave saucer/time alone.** Owner baking: `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh` |
-| **Last ISO on disk** | `nyxus-2026.07.25` @ **15:00** — **STALE**. Do not flash for this tip; rebake first. |
+| **Repo state for bake** | Bake **DONE**. ISO `nyxus-2026.07.26` @ **02:26** is the stick to flash (pre-saucer-redesign baseline; livewall planet experiment was after bake start / reverted — not needed for this flash). Next: owner flash + UEFI boot QA. |
+| **Last ISO on disk** | `nyxus-2026.07.26-x86_64.iso` @ **02:26** (~7.5G) — **FLASH THIS**. Older `07.25` @ 15:00 is stale. |
 | **Kage-Ryu on stick** | ✅ splash / boot path worked on prior live USB |
 | **Running desktop kernel** | Stock on builder; Kage on stick |
 | **Gates** | ✅ `iso-builder/verify-profile.sh` |
