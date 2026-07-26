@@ -411,22 +411,16 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
-;; Ticker wrapped in the transparent Meshy ticker-bar art (Downloads).
-;; Art is a tall Meshy render — stretch to the top-bar band so it reads as
-;; a wrap around the marquee, not a tiny contained stamp.
+;; Naked ticker — full-width sliding marquee, zero vessel chrome.
 (defwidget ticker_widget []
-  (overlay
-    (box :class "ticker-frame" :hexpand true
-         :style "background-image: url('assets/nyxus-ticker-bar-transparent.png'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; min-height: 44px;")
-    (box :class "ticker-row" :orientation "h" :hexpand true :halign "center" :valign "center"
-         :style "padding: 0 28px;"
-      (label :class {GLITCH.ticker ? "ticker ticker-marquee ticker-hero ticker-naked nyx-glitch" : "ticker ticker-marquee ticker-hero ticker-naked"}
-             :hexpand true
-             :halign "center"
-             :xalign 0.5
-             :unindent false
-             :text "${TICKER.text}"
-             :tooltip "${TICKER.tooltip}"))))
+  (box :class "ticker-row" :orientation "h" :hexpand true :halign "center" :valign "center"
+    (label :class {GLITCH.ticker ? "ticker ticker-marquee ticker-hero ticker-naked nyx-glitch" : "ticker ticker-marquee ticker-hero ticker-naked"}
+           :hexpand true
+           :halign "center"
+           :xalign 0.5
+           :unindent false
+           :text "${TICKER.text}"
+           :tooltip "${TICKER.tooltip}")))
 
 ;; ── workspaces: HOME + stations 1..10 (from stations.json) ─────────
 (defwidget workspace_home_pill []
@@ -449,16 +443,12 @@
             :tooltip "${st.name} · ${st.tagline}"
       "${st.code}")))
 
-;; Left dock art wraps the station pills (Downloads transparent left dock).
-;; Content aspect ≈0.26 — at ~520px tall the frame wants ~135px wide.
+;; Transparent column — each pill is its own float-island (no rail slab).
 (defwidget workspaces_rail []
-  (overlay
-    (box :class "dock-frame dock-frame-left"
-         :style "background-image: url('assets/nyxus-left-dock-transparent.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 134px; min-height: 520px;")
-    (box :class "ws-rail ws-rail-float" :orientation "v" :space-evenly false :spacing 8 :valign "center" :halign "center"
-      (workspace_home_pill)
-      (for st in {WORKSPACES.stations}
-        (station_pill :st st)))))
+  (box :class "ws-rail ws-rail-float" :orientation "v" :space-evenly false :spacing 10 :valign "center" :halign "center"
+    (workspace_home_pill)
+    (for st in {WORKSPACES.stations}
+      (station_pill :st st))))
 
 ;; `hue` gives every rail icon its own neon hover identity
 ;; (.app-pill-<hue> in eww.scss — HOME-HUD language, rev 2026-07-09).
@@ -468,24 +458,21 @@
             :style "background-position: center;"
       "${glyph}")))
 
-;; Right dock art wraps the app launchers (Downloads transparent right dock).
+;; Transparent column — each launcher is its own float-island (no rail slab).
 (defwidget app_rail []
-  (overlay
-    (box :class "dock-frame dock-frame-right"
-         :style "background-image: url('assets/nyxus-right-dock-transparent.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 134px; min-height: 520px;")
-    (box :class "app-rail app-rail-float" :orientation "v" :space-evenly false :spacing 9 :valign "center" :halign "center"
-      (app_launcher :glyph "󰣇" :cmd "nyxus-start"     :label "NYXUS Start" :hue "pink")
-      (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
-      (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
-      (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
-      (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon" :hue "pink")
-      (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad" :hue "purple")
-      (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies" :hue "gold")
-      (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio" :hue "purple")
-      (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")
-      (security_toggle :glyph "󰞇" :cmd "nyxus-hacker-mode toggle" :state "${SECSTATE.hacker}" :tip "Hacker Mode" :hue "green")
-      (security_toggle :glyph "󰈈" :cmd "nyxus-ghost toggle" :state "${SECSTATE.ghost}" :tip "Ghost Mode" :hue "purple")
-      (security_toggle :glyph "󰌾" :cmd "nyxus-panic lock" :state "${SECSTATE.panic}" :tip "Panic Lock" :hue "red"))))
+  (box :class "app-rail app-rail-float" :orientation "v" :space-evenly false :spacing 11 :valign "center" :halign "center"
+    (app_launcher :glyph "󰣇" :cmd "nyxus-start"     :label "NYXUS Start" :hue "pink")
+    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
+    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
+    (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon" :hue "pink")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad" :hue "purple")
+    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies" :hue "gold")
+    (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio" :hue "purple")
+    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")
+    (security_toggle :glyph "󰞇" :cmd "nyxus-hacker-mode toggle" :state "${SECSTATE.hacker}" :tip "Hacker Mode" :hue "green")
+    (security_toggle :glyph "󰈈" :cmd "nyxus-ghost toggle" :state "${SECSTATE.ghost}" :tip "Ghost Mode" :hue "purple")
+    (security_toggle :glyph "󰌾" :cmd "nyxus-panic lock" :state "${SECSTATE.panic}" :tip "Panic Lock" :hue "red")))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; BARS
@@ -1134,17 +1121,17 @@
 
 (defwindow bar-top
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "4" :width "100%" :height "52px" :anchor "top center")
+  :geometry (geometry :x "0" :y "4" :width "100%" :height "36px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left
   :monitor 0 :stacking "fg" :exclusive false :namespace "nyxus-bar-left"
-  :geometry (geometry :x "4" :y "0" :width "148px" :height "78%" :anchor "center left")
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center left")
   (workspaces_rail))
 
 (defwindow bar-right
   :monitor 0 :stacking "fg" :exclusive false :namespace "nyxus-bar-right"
-  :geometry (geometry :x "4" :y "0" :width "148px" :height "78%" :anchor "center right")
+  :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center right")
   (app_rail))
 
 ;; Fullscreen overlays sit inside .overlay-backdrop — a tinted sheet
