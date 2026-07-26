@@ -23,10 +23,6 @@
 ;; ticker.sh runs at 10 fps to scroll one column per tick (true marquee).
 (defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · ALIEN NEON · LIVE                                                  ","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
-;; Same sliding-window marquee technique as TICKER, sized for the saucer's
-;; measured windshield viewport instead of the full top bar.
-(defpoll SAUCER_CLOCK :interval "0.15s" :initial '{"text":"00:00:00  ·  --- --"}'
-                                     "~/.config/eww/scripts/saucer-clock-ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0,"load":"0","swap":0,"gpu":"--","gputemp":"--","fan":"--","netrx":"--","nettx":"--","hot":"0","chot":0,"mhot":0,"thot":0,"ghot":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
 (defpoll CPUCORES   :interval "3s"   :initial '{"cores":[]}'
@@ -531,67 +527,68 @@
               :l2_spark "${NETGRAPH.up_spark}"   :l2_val "↑ ${NETGRAPH.up_fmt}"
               :tip "${NETGRAPH.tooltip}"))
 
-;; LIVEWALL SAUCER (rev 2026-07-25 night — same asset as the flying UFO in
-;; the desktop background, nyxus-livewall-ufo.png, so the bar and the
-;; wallpaper's cruising ship visually match). Oval cockpit window
-;; pixel-measured (connected-component analysis, not eyeballed): centre
-;; x=0.500 y=0.510, size w=0.451 h=0.325 of the image -> the clock ticker
-;; is anchored there. This asset's soft magenta halo (low-alpha glow, not
-;; a solid background -- confirmed by sampling actual pixel alpha) is left
-;; as-is for now; strip it (same floodfill the boot splash did) if it
-;; reads as a smear against the bar instead of a glow once seen live.
-(defwidget saucer_base_idle []
+;; The saucer PNG cockpit window is TRANSPARENT, so both faces are built as
+;; an `overlay`: the saucer band is the base layer and a solid dark "screen"
+;; box is centered on top (nudged up with margin-bottom because the cockpit
+;; oval sits above the saucer's vertical centre). This keeps the clock/music
+;; UI dead-centre inside the oval on a real opaque backing instead of the
+;; old fragile padding that read as see-through.
+(defwidget saucer_base []
   (box :class "saucer-frame"
-       :style "background-image: url('assets/nyxus-saucer-livewall.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 384px; min-height: 150px;"))
+       :style "background-image: url('assets/nyxus-saucer-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 430px; min-height: 116px;"))
 
 ;; Bigger, livelier CAVA strip for the music face (full 14-bar spectrum,
 ;; taller glyphs + neon gradient glow) — the "bad-ass" beat graph.
 (defwidget cava_saucer []
   (label :class "cava-saucer" :halign "center" :text CAVA :tooltip "Audio reactive · CAVA"))
 
-;; Idle face: clock as a sliding marquee (SAUCER_CLOCK, same technique as
-;; the top-bar TICKER) in the measured oval cockpit window instead of a
-;; static two-line stack -- the window's exact pixel width no longer has
-;; to precisely fit the text, it just scrolls through it. This asset (the
-;; flat livewall UFO) doesn't have the lowrider's distinct ring lights, so
-;; the "always glow" ask is a general ambient pulse on the hull itself
-;; (.saucer-frame-glow) rather than a band tied to specific rings.
+;; Idle face: clock + date on a solid dark cockpit screen, dead-centre in
+;; the transparent oval. Offset measured directly against the current
+;; nyxus-saucer-band.png (rev 2026-07-25): the transparent cockpit window
+;; is centred ~31px below the image's geometric centre (of 368px height),
+;; i.e. ~8.4% of the rendered height -> ~10px at the box's 116px min-height.
+;; Earlier margin-bottom nudges (16px, then 4px) were tuned against older
+;; saucer art and drifted wrong every time the art got swapped — measure
+;; against the actual asset instead of eyeballing next time it changes.
 (defwidget bar_hub_idle []
   (overlay
-    (saucer_base_idle)
-    (box :class "saucer-screen saucer-screen-lowrider" :halign "center" :valign "start"
-         :style "margin-top: 52px;"
-      (label :class "bar-hub-clock-ticker" :hexpand true :halign "center" :xalign 0.5 :unindent false :text "${SAUCER_CLOCK.text}"))))
+    (saucer_base)
+    (box :class "saucer-screen" :halign "center" :valign "center"
+         :style "margin-top: 10px;"
+      (box :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
+        (label :class "bar-hub-time" :halign "center" :text "${TIME.hm}")
+        (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))))
 
-;; LOWRIDER BOOMBOX (rev 2026-07-25 night — replaces the earlier 3D-model
-;; attempt, then a "photoreal" v2). This is the "glass wireframe" v3 the
-;; owner picked. Pixel-measured against
-;; assets/nyxus-boombox-transparent.png (connected-component analysis,
-;; not eyeballed):
-;;   - screen: centre x=0.498 y=0.496, size w=0.435 h=0.264 of the image.
-;;   - bottom underglow strip: centre x=0.500 y=0.950, width=0.719.
-;; Frame height matches saucer_base_idle (150px) on purpose -- the flip
-;; stack uses :same-size true, so mismatched natural heights between the
-;; two faces made the idle face's overlay position float in empty space
-;; (found live: the clock rendered way above the ship because the stack
-;; padded idle out to match music's much-taller old box). Same height on
-;; both faces keeps the overlay math honest for real this time.
+;; Music face: an old-school (1980s carry-around) ALIEN BOOMBOX instead of
+;; a bare transport strip (rev 2026-07-25) — twin speaker-grille dots
+;; flanking the title, a nested cassette-deck display window, a pulsing
+;; power LED either side of play/pause, still on the same saucer cockpit
+;; screen. Same PLAYER/CAVA bindings and playerctl controls as before —
+;; this only restyles the face. Kept compact: the oval cockpit window is
+;; only ~235px wide, so this is accents on the existing layout, not a
+;; wider redesign that would overflow the transparent window into the
+;; painted hull art.
 (defwidget bar_hub_music []
   (overlay
-    (box :class "boombox-frame" :halign "center" :valign "center"
-         :style "background-image: url('assets/nyxus-boombox-transparent.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: ${189 + CAVA_BASS / 10}px; min-height: ${150 + CAVA_BASS / 12}px;")
-    (box :class "boombox-underglow" :halign "center" :valign "end" :style "margin-bottom: 3px;")
-    (box :class "saucer-screen saucer-screen-music" :halign "center" :valign "start"
-         :style "margin-top: 55px;"
+    (saucer_base)
+    (box :class "saucer-screen saucer-screen-music boombox-frame" :halign "center" :valign "center"
+         :style "margin-top: 10px;"
       (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
-        (label :class "bar-hub-music-title bar-hub-music-title-sm" :limit-width 18 :truncate "end"
-               :halign "center"
-               :text "${PLAYER.icon}  ${PLAYER.title}"
-               :tooltip "${PLAYER.tooltip}")
-        (label :class "bar-hub-music-artist bar-hub-music-artist-sm" :limit-width 20 :truncate "end"
-               :halign "center"
-               :visible {PLAYER.artist != ""}
-               :text "${PLAYER.artist}")
+        (box :class "boombox-display" :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
+          (box :class "boombox-title-row" :orientation "h" :space-evenly false :spacing 5 :halign "center" :valign "center"
+            (box :class "boombox-speaker" :valign "center"
+                 :style "min-width: ${12 + CAVA_BASS / 17}px; min-height: ${12 + CAVA_BASS / 17}px; box-shadow: 0 0 ${6 + CAVA_BASS / 8}px rgba(125, 61, 255, ${0.45 + CAVA_BASS / 250}), inset 0 0 0 2px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(255, 45, 173, 0.35);")
+            (label :class "bar-hub-music-title" :limit-width 26 :truncate "end"
+                   :halign "center"
+                   :text "${PLAYER.icon}  ${PLAYER.title}"
+                   :tooltip "${PLAYER.tooltip}")
+            (box :class "boombox-speaker" :valign "center"
+                 :style "min-width: ${12 + CAVA_BASS / 17}px; min-height: ${12 + CAVA_BASS / 17}px; box-shadow: 0 0 ${6 + CAVA_BASS / 8}px rgba(125, 61, 255, ${0.45 + CAVA_BASS / 250}), inset 0 0 0 2px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(255, 45, 173, 0.35);"))
+          (label :class "bar-hub-music-artist" :limit-width 30 :truncate "end"
+                 :halign "center"
+                 :visible {PLAYER.artist != ""}
+                 :text "${PLAYER.artist}")
+          (cava_saucer))
         (box :class "saucer-prog-row" :orientation "h" :space-evenly false :spacing 6 :halign "center" :valign "center"
           (label :class "saucer-time" :text "${PLAYER.pos}")
           (box :class "saucer-prog" :hexpand true :valign "center"
@@ -600,7 +597,9 @@
           (label :class "saucer-time" :text "${PLAYER.len}"))
         (box :class "boombox-controls" :orientation "h" :space-evenly false :spacing 10 :halign "center"
           (button :class "saucer-btn" :onclick "playerctl previous &" :tooltip "Previous" "󰒮")
+          (box :class "boombox-led" :valign "center")
           (button :class "saucer-btn saucer-btn-main" :onclick "playerctl play-pause &" :tooltip "Play / pause" "${PLAYER.icon}")
+          (box :class "boombox-led" :valign "center")
           (button :class "saucer-btn" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))))
 
 ;; The idle<->music "flip". rotate-left-right is GTK's real card-flip
