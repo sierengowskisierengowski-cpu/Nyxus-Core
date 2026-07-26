@@ -166,7 +166,7 @@ window, window.background, decoration {
 
 .bar-hub-time {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #ffffff;
@@ -175,29 +175,14 @@ window, window.background, decoration {
 
 .bar-hub-date {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: rgba(255, 45, 173, 0.92);
   text-shadow: 0 0 8px rgba(255, 45, 173, 0.55);
 }
 
-.saucer-screen.saucer-screen-lowrider {
-  padding: 0px 8px;
-  min-width: 118px;
-  border-radius: 6px;
-  border: none;
-  box-shadow: none;
-}
-.bar-hub-clock-ticker {
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #ffffff;
-  text-shadow: 0 0 10px rgba(255, 45, 173, 0.75), 0 0 18px rgba(125, 61, 255, 0.45);
-}
-
+/* Idle hub uses TIME.hm + TIME.date (not SAUCER_CLOCK marquee). */
 @keyframes saucer-underglow-pulse {
   0%   { box-shadow: 0 0 20px 8px rgba(125, 61, 255, 0.55); }
   50%  { box-shadow: 0 0 28px 12px rgba(57, 255, 20, 0.55); }
@@ -246,65 +231,52 @@ window, window.background, decoration {
 
 .bar-hub-music-title {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: #ff2d55;
   text-shadow: 0 0 12px rgba(255, 45, 85, 0.65), 0 0 22px rgba(125, 61, 255, 0.3);
 }
 
 .bar-hub-music-artist {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   color: rgba(255, 45, 173, 0.9);
   text-shadow: 0 0 8px rgba(255, 45, 173, 0.45);
 }
 
+/* Boombox face is PNG-only chrome; no extra underglow plate. */
 .bar-hub-music-title-sm { font-size: 9px; }
 .bar-hub-music-artist-sm { font-size: 8px; }
 
-@keyframes boombox-underglow-pulse {
-  0%   { box-shadow: 0 0 18px 7px rgba(125, 61, 255, 0.55); }
-  33%  { box-shadow: 0 0 24px 10px rgba(57, 255, 20, 0.55); }
-  66%  { box-shadow: 0 0 22px 9px rgba(255, 45, 173, 0.55); }
-  100% { box-shadow: 0 0 18px 7px rgba(125, 61, 255, 0.55); }
-}
-.boombox-underglow {
-  min-width: 120px;
-  min-height: 4px;
-  background: transparent;
-  animation: boombox-underglow-pulse 2.4s ease-in-out infinite;
-}
-
 /* ── SAUCER COCKPIT SCREEN (bottom-center hub trigger) ────────────────
- * The saucer PNG has a transparent oval cockpit window; `.saucer-screen`
- * is the SOLID dark display that sits inside it (via an eww overlay) so
- * the clock / music UI is never see-through. Deep obsidian fill + a
- * subtle neon rim + inner ink vignette = a real lit-up cockpit screen. */
+ * Livewall UFO cockpit ≈ cx 0.50 cy 0.50 w 0.45 h 0.37 of the frame.
+ * Inscribed-ellipse safe width ≈ 0.45 * 384 * 0.707 ≈ 122px. */
 .saucer-frame {
   background-color: transparent;
 }
 
 .saucer-screen {
-  background-color: rgba(5, 2, 14, 0.88);
-  border: 1px solid rgba(125, 61, 255, 0.55);
+  background-color: rgba(5, 2, 14, 0.82);
+  border: none;
   border-radius: 999px;
-  padding: 5px 26px;
-  min-width: 176px;
-  box-shadow: 0 0 14px rgba(125, 61, 255, 0.35), 0 0 26px rgba(255, 45, 173, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.72);
+  padding: 4px 14px;
+  min-width: 118px;
+  max-width: 160px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 14px rgba(0, 0, 0, 0.7);
 }
 
-/* music face needs more room for transport + graph — softer rectangle,
- * kept compact so it still nests inside the saucer body (rings visible
- * above and below) instead of floating over the hull. */
+/* Boombox-v4 screen ≈ w 0.34 h 0.24 of a 190×150 frame → ~65×36. */
 .saucer-screen-music {
-  border-radius: 10px;
-  padding: 2px 6px;
-  min-width: 78px;
+  border-radius: 8px;
+  padding: 2px 5px;
+  min-width: 64px;
+  max-width: 72px;
   border: none;
   box-shadow: none;
+  background-color: rgba(5, 2, 14, 0.78);
 }
 
 /* -- ALIEN BOOMBOX accents (music face, rev 2026-07-25) ---------------
@@ -3598,6 +3570,18 @@ scrollbar slider:hover {
   padding: 8px 14px;
   box-shadow: 0 0 0 1px rgba(255, 45, 173, 0.1), 0 0 28px rgba(125, 61, 255, 0.22), 0 12px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 24px rgba(57, 255, 20, 0.08);
   margin: 0 0 6px 0;
+}
+
+/* Side rails + top ticker use Meshy transparent PNGs as the only chrome. */
+.dock-frame.dock-frame-left,
+.dock-frame.dock-frame-right,
+.ticker-frame {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
 }
 
 .dock-row {

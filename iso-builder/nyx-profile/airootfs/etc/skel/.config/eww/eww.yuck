@@ -23,10 +23,6 @@
 ;; ticker.sh runs at 10 fps to scroll one column per tick (true marquee).
 (defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · ALIEN NEON · LIVE                                                  ","tooltip":"NYXUS"}'
                                      "~/.config/eww/scripts/ticker.sh")
-;; Same sliding-window marquee technique as TICKER, sized for the saucer's
-;; measured windshield viewport instead of the full top bar.
-(defpoll SAUCER_CLOCK :interval "0.15s" :initial '{"text":"00:00:00  ·  --- --"}'
-                                     "~/.config/eww/scripts/saucer-clock-ticker.sh")
 (defpoll SYSPULSE   :interval "2s"   :initial '{"cpu":0,"mem":0,"temp":0,"load":"0","swap":0,"gpu":"--","gputemp":"--","fan":"--","netrx":"--","nettx":"--","hot":"0","chot":0,"mhot":0,"thot":0,"ghot":0}'
                                      "~/.config/eww/scripts/sys-pulse.sh")
 (defpoll CPUCORES   :interval "3s"   :initial '{"cores":[]}'
@@ -415,16 +411,22 @@
     (label :class "ticker-player-text" :limit-width 48
            :text "${PLAYER.icon}  ${PLAYER.title}")))
 
-;; Naked ticker — full-width sliding marquee, zero vessel chrome.
+;; Ticker wrapped in the transparent Meshy ticker-bar art (Downloads).
+;; Art is a tall Meshy render — stretch to the top-bar band so it reads as
+;; a wrap around the marquee, not a tiny contained stamp.
 (defwidget ticker_widget []
-  (box :class "ticker-row" :orientation "h" :hexpand true :halign "center" :valign "center"
-    (label :class {GLITCH.ticker ? "ticker ticker-marquee ticker-hero ticker-naked nyx-glitch" : "ticker ticker-marquee ticker-hero ticker-naked"}
-           :hexpand true
-           :halign "center"
-           :xalign 0.5
-           :unindent false
-           :text "${TICKER.text}"
-           :tooltip "${TICKER.tooltip}")))
+  (overlay
+    (box :class "ticker-frame" :hexpand true
+         :style "background-image: url('assets/nyxus-ticker-bar-transparent.png'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; min-height: 44px;")
+    (box :class "ticker-row" :orientation "h" :hexpand true :halign "center" :valign "center"
+         :style "padding: 0 28px;"
+      (label :class {GLITCH.ticker ? "ticker ticker-marquee ticker-hero ticker-naked nyx-glitch" : "ticker ticker-marquee ticker-hero ticker-naked"}
+             :hexpand true
+             :halign "center"
+             :xalign 0.5
+             :unindent false
+             :text "${TICKER.text}"
+             :tooltip "${TICKER.tooltip}"))))
 
 ;; ── workspaces: HOME + stations 1..10 (from stations.json) ─────────
 (defwidget workspace_home_pill []
@@ -447,12 +449,16 @@
             :tooltip "${st.name} · ${st.tagline}"
       "${st.code}")))
 
-;; Transparent column — each pill is its own float-island (no rail slab).
+;; Left dock art wraps the station pills (Downloads transparent left dock).
+;; Content aspect ≈0.26 — at ~520px tall the frame wants ~135px wide.
 (defwidget workspaces_rail []
-  (box :class "ws-rail ws-rail-float" :orientation "v" :space-evenly false :spacing 10 :valign "center" :halign "center"
-    (workspace_home_pill)
-    (for st in {WORKSPACES.stations}
-      (station_pill :st st))))
+  (overlay
+    (box :class "dock-frame dock-frame-left"
+         :style "background-image: url('assets/nyxus-left-dock-transparent.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 134px; min-height: 520px;")
+    (box :class "ws-rail ws-rail-float" :orientation "v" :space-evenly false :spacing 8 :valign "center" :halign "center"
+      (workspace_home_pill)
+      (for st in {WORKSPACES.stations}
+        (station_pill :st st)))))
 
 ;; `hue` gives every rail icon its own neon hover identity
 ;; (.app-pill-<hue> in eww.scss — HOME-HUD language, rev 2026-07-09).
@@ -462,21 +468,24 @@
             :style "background-position: center;"
       "${glyph}")))
 
-;; Transparent column — each launcher is its own float-island (no rail slab).
+;; Right dock art wraps the app launchers (Downloads transparent right dock).
 (defwidget app_rail []
-  (box :class "app-rail app-rail-float" :orientation "v" :space-evenly false :spacing 11 :valign "center" :halign "center"
-    (app_launcher :glyph "󰣇" :cmd "nyxus-start"     :label "NYXUS Start" :hue "pink")
-    (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
-    (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
-    (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon" :hue "pink")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad" :hue "purple")
-    (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies" :hue "gold")
-    (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio" :hue "purple")
-    (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")
-    (security_toggle :glyph "󰞇" :cmd "nyxus-hacker-mode toggle" :state "${SECSTATE.hacker}" :tip "Hacker Mode" :hue "green")
-    (security_toggle :glyph "󰈈" :cmd "nyxus-ghost toggle" :state "${SECSTATE.ghost}" :tip "Ghost Mode" :hue "purple")
-    (security_toggle :glyph "󰌾" :cmd "nyxus-panic lock" :state "${SECSTATE.panic}" :tip "Panic Lock" :hue "red")))
+  (overlay
+    (box :class "dock-frame dock-frame-right"
+         :style "background-image: url('assets/nyxus-right-dock-transparent.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 134px; min-height: 520px;")
+    (box :class "app-rail app-rail-float" :orientation "v" :space-evenly false :spacing 9 :valign "center" :halign "center"
+      (app_launcher :glyph "󰣇" :cmd "nyxus-start"     :label "NYXUS Start" :hue "pink")
+      (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
+      (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
+      (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
+      (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'" :label "SysMon" :hue "pink")
+      (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'" :label "Notepad" :hue "purple")
+      (app_launcher :glyph "" :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'" :label "Stickies" :hue "gold")
+      (app_launcher :glyph "" :cmd "eww open --toggle mixer" :label "Audio" :hue "purple")
+      (app_launcher :glyph "" :cmd "eww open --toggle bluetooth" :label "Bluetooth" :hue "blue")
+      (security_toggle :glyph "󰞇" :cmd "nyxus-hacker-mode toggle" :state "${SECSTATE.hacker}" :tip "Hacker Mode" :hue "green")
+      (security_toggle :glyph "󰈈" :cmd "nyxus-ghost toggle" :state "${SECSTATE.ghost}" :tip "Ghost Mode" :hue "purple")
+      (security_toggle :glyph "󰌾" :cmd "nyxus-panic lock" :state "${SECSTATE.panic}" :tip "Panic Lock" :hue "red"))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; BARS
@@ -531,82 +540,51 @@
               :l2_spark "${NETGRAPH.up_spark}"   :l2_val "↑ ${NETGRAPH.up_fmt}"
               :tip "${NETGRAPH.tooltip}"))
 
-;; LIVEWALL SAUCER (rev 2026-07-25 night — same asset as the flying UFO in
-;; the desktop background, nyxus-livewall-ufo.png, so the bar and the
-;; wallpaper's cruising ship visually match). Oval cockpit window
-;; pixel-measured (connected-component analysis, not eyeballed): centre
-;; x=0.500 y=0.510, size w=0.451 h=0.325 of the image -> the clock ticker
-;; is anchored there. This asset's soft magenta halo (low-alpha glow, not
-;; a solid background -- confirmed by sampling actual pixel alpha) is left
-;; as-is for now; strip it (same floodfill the boot splash did) if it
-;; reads as a smear against the bar instead of a glow once seen live.
+;; LIVEWALL SAUCER — same UFO as the desktop cruising ship
+;; (assets/nyxus-saucer-livewall.png == livewall/nyxus-livewall-ufo.png).
+;; Cockpit window ~center of art (frac cx≈0.50 cy≈0.50 w≈0.45 h≈0.37).
+;; Idle face: normal time + date INSIDE that window. Music face: boombox
+;; PNG from Downloads (v4) with player UI inside its screen.
 (defwidget saucer_base_idle []
   (box :class "saucer-frame"
        :style "background-image: url('assets/nyxus-saucer-livewall.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 384px; min-height: 150px;"))
 
-;; Bigger, livelier CAVA strip for the music face (full 14-bar spectrum,
-;; taller glyphs + neon gradient glow) — the "bad-ass" beat graph.
 (defwidget cava_saucer []
   (label :class "cava-saucer" :halign "center" :text CAVA :tooltip "Audio reactive · CAVA"))
 
-;; Idle face: clock as a sliding marquee (SAUCER_CLOCK, same technique as
-;; the top-bar TICKER) in the measured oval cockpit window instead of a
-;; static two-line stack -- the window's exact pixel width no longer has
-;; to precisely fit the text, it just scrolls through it. This asset (the
-;; flat livewall UFO) doesn't have the lowrider's distinct ring lights, so
-;; the "always glow" ask is a general ambient pulse on the hull itself
-;; (.saucer-frame-glow) rather than a band tied to specific rings.
 (defwidget bar_hub_idle []
   (overlay
     (saucer_base_idle)
-    (box :class "saucer-screen saucer-screen-lowrider" :halign "center" :valign "start"
-         :style "margin-top: 52px;"
-      (label :class "bar-hub-clock-ticker" :hexpand true :halign "center" :xalign 0.5 :unindent false :text "${SAUCER_CLOCK.text}"))))
+    (box :class "saucer-screen" :halign "center" :valign "center"
+      (box :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
+        (label :class "bar-hub-time" :halign "center" :text "${TIME.hm}")
+        (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))))
 
-;; LOWRIDER BOOMBOX (rev 2026-07-25 night — replaces the earlier 3D-model
-;; attempt, then a "photoreal" v2). This is the "glass wireframe" v3 the
-;; owner picked. Pixel-measured against
-;; assets/nyxus-boombox-transparent.png (connected-component analysis,
-;; not eyeballed):
-;;   - screen: centre x=0.498 y=0.496, size w=0.435 h=0.264 of the image.
-;;   - bottom underglow strip: centre x=0.500 y=0.950, width=0.719.
-;; SIZE FIX (rev 2026-07-26): the screen's real safe width is ~70px at
-;; this frame size (0.435 frac * 189px frame * 0.85 margin -- the corners
-;; are visibly rounded but it isn't a full ellipse like the saucer's, so
-;; a smaller margin than the saucer's strict 1/sqrt(2) ellipse-inscribe
-;; factor is enough) -- nowhere near enough for title+artist+progress+
-;; controls all stacked, so this only keeps a short title in the actual
-;; screen and drops artist/progress rather than overflow the hull.
-;; Controls stay inside the overlay too (not a plate below the ship) so
-;; this face's total height doesn't grow past saucer_base_idle's 150px --
-;; a below-ship plate here would reintroduce the same height-mismatch bug
-;; the previous commit fixed (:same-size true on the flip stack).
+;; Boombox music face — Downloads Meshy boombox-transparent-v4.
+;; Screen ~frac cx=0.50 cy=0.51 w=0.34 h=0.24 of the square art.
+;; Keep UI compact so it stays inside the screen; same stack height as
+;; the saucer so the flip does not reintroduce empty-space mismatch.
 (defwidget bar_hub_music []
   (overlay
     (box :class "boombox-frame" :halign "center" :valign "center"
-         :style "background-image: url('assets/nyxus-boombox-transparent.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: ${189 + CAVA_BASS / 10}px; min-height: ${150 + CAVA_BASS / 12}px;")
-    (box :class "boombox-underglow" :halign "center" :valign "end" :style "margin-bottom: 3px;")
-    (box :class "saucer-screen saucer-screen-music" :halign "center" :valign "start"
-         :style "margin-top: 55px;"
-      (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
-        (label :class "bar-hub-music-title bar-hub-music-title-sm" :limit-width 7 :truncate "end"
+         :style "background-image: url('assets/nyxus-boombox-transparent.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 190px; min-height: 150px;")
+    (box :class "saucer-screen saucer-screen-music" :halign "center" :valign "center"
+      (box :orientation "v" :space-evenly false :spacing 2 :halign "center" :valign "center"
+        (label :class "bar-hub-music-title" :limit-width 14 :truncate "end"
                :halign "center"
-               :text "${PLAYER.title}"
+               :text "${PLAYER.icon} ${PLAYER.title}"
                :tooltip "${PLAYER.tooltip}")
-        (box :class "boombox-controls" :orientation "h" :space-evenly false :spacing 4 :halign "center"
+        (label :class "bar-hub-music-artist" :limit-width 16 :truncate "end"
+               :halign "center"
+               :visible {PLAYER.artist != ""}
+               :text "${PLAYER.artist}")
+        (box :class "saucer-controls" :orientation "h" :space-evenly false :spacing 8 :halign "center"
           (button :class "saucer-btn" :onclick "playerctl previous &" :tooltip "Previous" "󰒮")
           (button :class "saucer-btn saucer-btn-main" :onclick "playerctl play-pause &" :tooltip "Play / pause" "${PLAYER.icon}")
           (button :class "saucer-btn" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))))
 
-;; The idle<->music "flip". rotate-left-right is GTK's real card-flip
-;; transition (rotates the outgoing face away and the incoming one in
-;; around a vertical axis) — a genuine flip, not a fade standing in for
-;; one. Verified live (rev 2026-07-25): reads as a real flip at the
-;; default ~200ms GTK stack duration, no extra tuning needed.
-;; Only the IDLE (clock) face is wrapped in the hub-open button. The music
-;; face is transport-only — nesting its prev/play/next buttons inside an
-;; outer GtkButton made every tap fire the outer onclick (nyxus-hub-open)
-;; instead of the transport control. Flip back to the clock with Super+R.
+;; Idle<->music flip. Only the clock face is the hub-open button so music
+;; transport clicks are not swallowed by an outer button.
 (defwidget bar_hub_trigger []
   (stack :class "saucer-stack" :transition "rotate-left-right" :same-size true
          :selected {(PLAYER.status == "Stopped") == SAUCER_FORCE ? 1 : 0}
@@ -1151,22 +1129,22 @@
 ;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
-  :geometry (geometry :x "0" :y "8" :width "100%" :height "74px" :anchor "bottom center")
+  :geometry (geometry :x "0" :y "6" :width "100%" :height "160px" :anchor "bottom center")
   (bar_bottom_layout))
 
 (defwindow bar-top
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-top"
-  :geometry (geometry :x "0" :y "4" :width "100%" :height "36px" :anchor "top center")
+  :geometry (geometry :x "0" :y "4" :width "100%" :height "52px" :anchor "top center")
   (bar_top_layout))
 
 (defwindow bar-left
   :monitor 0 :stacking "fg" :exclusive false :namespace "nyxus-bar-left"
-  :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center left")
+  :geometry (geometry :x "4" :y "0" :width "148px" :height "78%" :anchor "center left")
   (workspaces_rail))
 
 (defwindow bar-right
   :monitor 0 :stacking "fg" :exclusive false :namespace "nyxus-bar-right"
-  :geometry (geometry :x "10" :y "0" :width "56px" :height "70%" :anchor "center right")
+  :geometry (geometry :x "4" :y "0" :width "148px" :height "78%" :anchor "center right")
   (app_rail))
 
 ;; Fullscreen overlays sit inside .overlay-backdrop — a tinted sheet

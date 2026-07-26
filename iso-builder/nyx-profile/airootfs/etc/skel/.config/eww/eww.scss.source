@@ -257,7 +257,7 @@ window, window.background, decoration {
 }
 .bar-hub-time {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #ffffff;
@@ -267,62 +267,14 @@ window, window.background, decoration {
 }
 .bar-hub-date {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: rgba($nyxus-accent-secondary, 0.92);
   text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55);
 }
 
-/* -- LOWRIDER SAUCER (rev 2026-07-25 night) ---------------------------
- * The measured windshield viewport (see eww.yuck comment above
- * bar_hub_idle) is only ~20px tall / ~141px wide at this frame's scale --
- * too small for static clock text at normal size without either
- * overflowing or shrinking to near-illegible. Clock is now a sliding
- * marquee (SAUCER_CLOCK, same technique as the top-bar TICKER) instead,
- * so the exact pixel width doesn't matter -- it scrolls through a fixed
- * character window. The width/padding override uses the COMPOUND
- * selector .saucer-screen.saucer-screen-lowrider (not
- * .saucer-screen-lowrider alone) so it beats .saucer-screen on
- * specificity regardless of source order -- a plain same-specificity
- * override here previously lost the cascade because .saucer-screen is
- * defined later in this file.
- *
- * WIDTH FIX (rev 2026-07-26): the window is a true ELLIPSE, not a
- * rounded rect -- 135px used the ellipse's full bounding-box width
- * (0.451 frac), which is wrong. The largest rectangle that fits INSIDE
- * an ellipse without its corners poking past the curve is smaller than
- * the bounding box by a factor of 1/sqrt(2) (~0.707) on each axis --
- * standard result for a rectangle inscribed in an ellipse sharing its
- * centre. 0.451 * 384px frame * 0.707 = ~122.5px safe max; 118px used
- * for a small margin. */
-.saucer-screen.saucer-screen-lowrider {
-  padding: 0px 8px;
-  min-width: 118px;
-  border-radius: 6px;
-  /* No CSS border/glow here -- the art already draws a real neon oval
-   * frame around this exact window. .saucer-screen's own border+box-
-   * shadow doubled up with it and looked like two competing outlines. */
-  border: none;
-  box-shadow: none;
-}
-.bar-hub-clock-ticker {
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #ffffff;
-  text-shadow:
-    0 0 10px rgba($nyxus-accent-secondary, 0.75),
-    0 0 18px rgba($nyxus-accent-primary, 0.45);
-}
-
-/* Pulsing green<->violet glow anchored at the measured hydraulic-leg
- * underglow-ring band (bottom ~45% of the image) -- the "lowrider"
- * lighting effect, driven by a plain box-shadow keyframe animation
- * (confirmed live that this GTK CSS engine runs @keyframes before
- * building this). No image manipulation -- a glow UNDER the rendered
- * rings, matching their real position and colors. */
+/* Idle hub uses TIME.hm + TIME.date (not SAUCER_CLOCK marquee). */
 @keyframes saucer-underglow-pulse {
   0%   { box-shadow: 0 0 20px 8px rgba(125, 61, 255, 0.55); }
   50%  { box-shadow: 0 0 28px 12px rgba(57, 255, 20, 0.55); }
@@ -361,9 +313,9 @@ window, window.background, decoration {
 .notif-crit .notif-summary { color: #ffd0dc; text-shadow: 0 0 12px rgba($nyxus-accent-secondary, 0.9); }
 .bar-hub-music-title {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: $neon-red;
   text-shadow:
     0 0 12px rgba($neon-red, 0.65),
@@ -371,81 +323,47 @@ window, window.background, decoration {
 }
 .bar-hub-music-artist {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   color: rgba($nyxus-accent-secondary, 0.90);
   text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45);
 }
 
-/* -- LOWRIDER BOOMBOX (rev 2026-07-25 night) --------------------------
- * Measured screen (see eww.yuck comment above bar_hub_music) is ~39px
- * tall at this frame's scale -- tight for title+artist+progress+controls
- * stacked, so -sm variants trim the two text rows (source order after
- * the base rules above, same color/glow, just smaller). Underglow pulse
- * matches the two real speaker-ring colors (violet left / green right)
- * plus the magenta bottom light strip -- alternates through all three
- * rather than just two, so it doesn't just repeat the saucer's cycle. */
+/* Boombox face is PNG-only chrome; no extra underglow plate. */
 .bar-hub-music-title-sm { font-size: 9px; }
 .bar-hub-music-artist-sm { font-size: 8px; }
 
-@keyframes boombox-underglow-pulse {
-  0%   { box-shadow: 0 0 18px 7px rgba(125, 61, 255, 0.55); }
-  33%  { box-shadow: 0 0 24px 10px rgba(57, 255, 20, 0.55); }
-  66%  { box-shadow: 0 0 22px 9px rgba(255, 45, 173, 0.55); }
-  100% { box-shadow: 0 0 18px 7px rgba(125, 61, 255, 0.55); }
-}
-.boombox-underglow {
-  min-width: 120px;
-  min-height: 4px;
-  background: transparent;
-  animation: boombox-underglow-pulse 2.4s ease-in-out infinite;
-}
-
 /* ── SAUCER COCKPIT SCREEN (bottom-center hub trigger) ────────────────
- * The saucer PNG has a transparent oval cockpit window; `.saucer-screen`
- * is the SOLID dark display that sits inside it (via an eww overlay) so
- * the clock / music UI is never see-through. Deep obsidian fill + a
- * subtle neon rim + inner ink vignette = a real lit-up cockpit screen. */
-/* Ambient box-shadow glow on .saucer-frame was REMOVED (rev 2026-07-26) --
- * it followed the box's rectangular bounds, not the ship's actual
- * silhouette, and read as a stray disconnected shadow next to the left
- * rail instead of a glow on the hull. The art's own baked-in neon rim
- * lighting is doing this job already; don't re-add a shape-agnostic
- * box-shadow glow here without confirming live it hugs the art. */
+ * Livewall UFO cockpit ≈ cx 0.50 cy 0.50 w 0.45 h 0.37 of the frame.
+ * Inscribed-ellipse safe width ≈ 0.45 * 384 * 0.707 ≈ 122px — keep the
+ * plate inside that so time/date sit in the glass, not past the rim. */
 .saucer-frame {
   background-color: transparent;
 }
 
 .saucer-screen {
-  background-color: rgba(5, 2, 14, 0.88);
-  border: 1px solid rgba($nyxus-accent-primary, 0.55);
+  background-color: rgba(5, 2, 14, 0.82);
+  border: none;
   border-radius: 999px;
-  padding: 5px 26px;
-  min-width: 176px;
+  padding: 4px 14px;
+  min-width: 118px;
+  max-width: 160px;
   box-shadow:
-    0 0 14px rgba($nyxus-accent-primary, 0.35),
-    0 0 26px rgba($nyxus-accent-secondary, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 0 16px rgba(0, 0, 0, 0.72);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 14px rgba(0, 0, 0, 0.70);
 }
-/* SCREEN FIX (rev 2026-07-26): min-width was never updated when the
- * boombox art changed tonight -- 232px is wider than the ENTIRE frame
- * (min-width ~189px at the current 150px frame height), so the plate was
- * guaranteed to overflow the hull regardless of the real screen's
- * measured position. Real screen bbox is w=0.435 of the frame (~82px at
- * 189px wide); the boombox's screen has visibly rounded corners but
- * isn't a full ellipse like the saucer's, so an 0.85 margin (not the
- * saucer's stricter 1/sqrt(2) ellipse-inscribe factor) is enough --
- * 0.435 * 189px * 0.85 =~ 70px. */
+
+/* Boombox-v4 screen ≈ w 0.34 h 0.24 of a 190×150 frame → ~65×36. Compact
+ * title/artist/transport only; art bezel provides the neon rim. */
 .saucer-screen-music {
-  border-radius: 10px;
-  padding: 2px 6px;
-  min-width: 78px;
-  /* Same as the saucer: the art already draws a real neon screen bezel
-   * here, so no separate CSS border/glow on top of it. */
+  border-radius: 8px;
+  padding: 2px 5px;
+  min-width: 64px;
+  max-width: 72px;
   border: none;
   box-shadow: none;
+  background-color: rgba(5, 2, 14, 0.78);
 }
 
 /* -- ALIEN BOOMBOX accents (music face, rev 2026-07-25) ---------------
@@ -2802,6 +2720,19 @@ scrollbar slider:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 0 24px rgba($nyxus-accent-ok, 0.08);
   margin: 0 0 6px 0;
+}
+
+/* Side rails + top ticker use Meshy transparent PNGs as the only chrome —
+ * kill the generic .dock-frame gradient so it does not double-draw. */
+.dock-frame.dock-frame-left,
+.dock-frame.dock-frame-right,
+.ticker-frame {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
 }
 
 .dock-row { padding: 0 4px; }
