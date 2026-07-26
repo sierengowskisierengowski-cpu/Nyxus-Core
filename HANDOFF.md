@@ -33,7 +33,7 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | `0bf2d06c` — confirm with `git rev-parse --short HEAD` |
+| **HEAD** | `b6774d53` — confirm with `git rev-parse --short HEAD` |
 | **Open PRs** | **none** (eww chrome pushed straight to `main`) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
 | **Repo state for bake** | ✅ **GO** — bottom hub = livewall UFO + normal time/date; music flip = boombox-v4 + fitted player; left/right docks + ticker wrapped in Meshy transparent art. Dropped SAUCER_CLOCK marquee. NS↔skel lockstep. `verify-profile` PASS. |
