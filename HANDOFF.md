@@ -39,7 +39,7 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | `97d1bcab` — confirm with `git rev-parse --short HEAD` |
+| **HEAD** | `352901b3` — confirm with `git rev-parse --short HEAD` |
 | **Open PRs** | **none** |
 | **Chrome night brief** | [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
