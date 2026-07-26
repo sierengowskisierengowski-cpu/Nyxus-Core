@@ -286,25 +286,11 @@ window, window.background, decoration {
  * .saucer-screen-lowrider alone) so it beats .saucer-screen on
  * specificity regardless of source order -- a plain same-specificity
  * override here previously lost the cascade because .saucer-screen is
- * defined later in this file.
- *
- * WIDTH FIX (rev 2026-07-26): the window is a true ELLIPSE, not a
- * rounded rect -- 135px used the ellipse's full bounding-box width
- * (0.451 frac), which is wrong. The largest rectangle that fits INSIDE
- * an ellipse without its corners poking past the curve is smaller than
- * the bounding box by a factor of 1/sqrt(2) (~0.707) on each axis --
- * standard result for a rectangle inscribed in an ellipse sharing its
- * centre. 0.451 * 384px frame * 0.707 = ~122.5px safe max; 118px used
- * for a small margin. */
+ * defined later in this file. */
 .saucer-screen.saucer-screen-lowrider {
   padding: 0px 8px;
-  min-width: 118px;
+  min-width: 135px;
   border-radius: 6px;
-  /* No CSS border/glow here -- the art already draws a real neon oval
-   * frame around this exact window. .saucer-screen's own border+box-
-   * shadow doubled up with it and looked like two competing outlines. */
-  border: none;
-  box-shadow: none;
 }
 .bar-hub-clock-ticker {
   font-family: "JetBrainsMono Nerd Font", monospace;
@@ -429,23 +415,19 @@ window, window.background, decoration {
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 0 16px rgba(0, 0, 0, 0.72);
 }
-/* SCREEN FIX (rev 2026-07-26): min-width was never updated when the
- * boombox art changed tonight -- 232px is wider than the ENTIRE frame
- * (min-width ~189px at the current 150px frame height), so the plate was
- * guaranteed to overflow the hull regardless of the real screen's
- * measured position. Real screen bbox is w=0.435 of the frame (~82px at
- * 189px wide); the boombox's screen has visibly rounded corners but
- * isn't a full ellipse like the saucer's, so an 0.85 margin (not the
- * saucer's stricter 1/sqrt(2) ellipse-inscribe factor) is enough --
- * 0.435 * 189px * 0.85 =~ 70px. */
+/* music face needs more room for transport + graph — softer rectangle,
+ * kept compact so it still nests inside the saucer body (rings visible
+ * above and below) instead of floating over the hull. */
 .saucer-screen-music {
-  border-radius: 10px;
-  padding: 2px 6px;
-  min-width: 78px;
-  /* Same as the saucer: the art already draws a real neon screen bezel
-   * here, so no separate CSS border/glow on top of it. */
-  border: none;
-  box-shadow: none;
+  border-radius: 18px;
+  padding: 3px 14px 4px 14px;
+  min-width: 232px;
+  border-color: rgba($neon-red, 0.50);
+  box-shadow:
+    0 0 14px rgba($neon-red, 0.30),
+    0 0 26px rgba($nyxus-accent-primary, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 16px rgba(0, 0, 0, 0.74);
 }
 
 /* -- ALIEN BOOMBOX accents (music face, rev 2026-07-25) ---------------

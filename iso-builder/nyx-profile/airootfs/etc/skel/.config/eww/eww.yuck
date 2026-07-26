@@ -570,17 +570,12 @@
 ;; not eyeballed):
 ;;   - screen: centre x=0.498 y=0.496, size w=0.435 h=0.264 of the image.
 ;;   - bottom underglow strip: centre x=0.500 y=0.950, width=0.719.
-;; SIZE FIX (rev 2026-07-26): the screen's real safe width is ~70px at
-;; this frame size (0.435 frac * 189px frame * 0.85 margin -- the corners
-;; are visibly rounded but it isn't a full ellipse like the saucer's, so
-;; a smaller margin than the saucer's strict 1/sqrt(2) ellipse-inscribe
-;; factor is enough) -- nowhere near enough for title+artist+progress+
-;; controls all stacked, so this only keeps a short title in the actual
-;; screen and drops artist/progress rather than overflow the hull.
-;; Controls stay inside the overlay too (not a plate below the ship) so
-;; this face's total height doesn't grow past saucer_base_idle's 150px --
-;; a below-ship plate here would reintroduce the same height-mismatch bug
-;; the previous commit fixed (:same-size true on the flip stack).
+;; Frame height matches saucer_base_idle (150px) on purpose -- the flip
+;; stack uses :same-size true, so mismatched natural heights between the
+;; two faces made the idle face's overlay position float in empty space
+;; (found live: the clock rendered way above the ship because the stack
+;; padded idle out to match music's much-taller old box). Same height on
+;; both faces keeps the overlay math honest for real this time.
 (defwidget bar_hub_music []
   (overlay
     (box :class "boombox-frame" :halign "center" :valign "center"
@@ -589,11 +584,21 @@
     (box :class "saucer-screen saucer-screen-music" :halign "center" :valign "start"
          :style "margin-top: 55px;"
       (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
-        (label :class "bar-hub-music-title bar-hub-music-title-sm" :limit-width 7 :truncate "end"
+        (label :class "bar-hub-music-title bar-hub-music-title-sm" :limit-width 18 :truncate "end"
                :halign "center"
-               :text "${PLAYER.title}"
+               :text "${PLAYER.icon}  ${PLAYER.title}"
                :tooltip "${PLAYER.tooltip}")
-        (box :class "boombox-controls" :orientation "h" :space-evenly false :spacing 4 :halign "center"
+        (label :class "bar-hub-music-artist bar-hub-music-artist-sm" :limit-width 20 :truncate "end"
+               :halign "center"
+               :visible {PLAYER.artist != ""}
+               :text "${PLAYER.artist}")
+        (box :class "saucer-prog-row" :orientation "h" :space-evenly false :spacing 6 :halign "center" :valign "center"
+          (label :class "saucer-time" :text "${PLAYER.pos}")
+          (box :class "saucer-prog" :hexpand true :valign "center"
+            (box :class "saucer-prog-fill"
+                 :style "background-size: ${PLAYER.progress}% 100%;"))
+          (label :class "saucer-time" :text "${PLAYER.len}"))
+        (box :class "boombox-controls" :orientation "h" :space-evenly false :spacing 10 :halign "center"
           (button :class "saucer-btn" :onclick "playerctl previous &" :tooltip "Previous" "󰒮")
           (button :class "saucer-btn saucer-btn-main" :onclick "playerctl play-pause &" :tooltip "Play / pause" "${PLAYER.icon}")
           (button :class "saucer-btn" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))))
