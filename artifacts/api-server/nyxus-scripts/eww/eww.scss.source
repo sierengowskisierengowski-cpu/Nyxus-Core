@@ -343,22 +343,15 @@ window, window.background, decoration {
 }
 
 .saucer-screen {
-  background-color: transparent;
-  background: none;
+  background-color: rgba(5, 2, 14, 0.82);
   border: none;
-  border-radius: 0;
-  padding: 2px 8px;
-  min-width: 0;
-  max-width: none;
-  box-shadow: none;
-}
-.saucer-stack,
-.bar-hub-trigger {
-  background: transparent;
-  background-color: transparent;
-  background-image: none;
-  border: none;
-  box-shadow: none;
+  border-radius: 999px;
+  padding: 4px 14px;
+  min-width: 118px;
+  max-width: 160px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 14px rgba(0, 0, 0, 0.70);
 }
 
 /* Boombox-v4 screen ≈ w 0.34 h 0.24 of a 190×150 frame → ~65×36. Compact
