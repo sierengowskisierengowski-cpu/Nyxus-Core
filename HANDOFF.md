@@ -25,7 +25,7 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-25 · afternoon (fixes landed · rebake)
+## WHERE WE STAND — 2026-07-25 · late (eww boombox + audio · bake GO)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
@@ -33,14 +33,14 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | check `git rev-parse --short HEAD` |
-| **Open PRs** | **none** |
+| **HEAD** | `d7f8be99` / tip after `8013121a` — confirm with `git rev-parse --short HEAD` |
+| **Open PRs** | **none** (evening eww pushed straight to `main`) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
-| **Repo state for bake** | ✅ **GO to rebake** — everything through commit `8013121a` is committed + pushed to `origin/main`. See §"🛸 Bottom-bar eww redesign" below for tonight's additions on top of the afternoon fixes. |
-| **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (**17:03 EDT**) — **STALE**, predates the whole afternoon + evening pass. Rebake before reflash. |
+| **Repo state for bake** | ✅ **GO** — live-boot fixes + saucer center/flip + side-rail glass + alien boombox + universal audio/`CAVA_BASS`. NS↔skel lockstep. `verify-profile` PASS. |
+| **Last ISO on disk** | `nyxus-2026.07.25` @ **15:00** — **STALE** vs evening tip. Rebake before flash. |
 | **Kage-Ryu on stick** | ✅ splash / boot path worked on prior live USB |
 | **Running desktop kernel** | Stock on builder; Kage on stick |
-| **Gates** | ✅ `iso-builder/verify-profile.sh` (re-run after this tip) |
+| **Gates** | ✅ `iso-builder/verify-profile.sh` |
 
 ### 🔦 ALIEN NEON palette/brand audit — this pass (2026-07-24 PM)
 
