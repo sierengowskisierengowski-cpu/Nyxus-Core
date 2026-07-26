@@ -33,7 +33,7 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | `d7f8be99` / tip after `8013121a` — confirm with `git rev-parse --short HEAD` |
+| **HEAD** | `28a121ff` (after `8013121a` eww) — confirm with `git rev-parse --short HEAD` |
 | **Open PRs** | **none** (evening eww pushed straight to `main`) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
 | **Repo state for bake** | ✅ **GO** — live-boot fixes + saucer center/flip + side-rail glass + alien boombox + universal audio/`CAVA_BASS`. NS↔skel lockstep. `verify-profile` PASS. |
