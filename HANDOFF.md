@@ -25,7 +25,7 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-25 · late (eww boombox + audio · bake GO)
+## WHERE WE STAND — 2026-07-26 · restored pre-saucer tip (bake GO)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
@@ -33,10 +33,10 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | `83e3c274` — pre-saucer-redesign baseline restored; confirm with `git rev-parse --short HEAD` |
+| **HEAD** | `32d2bd1e` — confirm with `git rev-parse --short HEAD` |
 | **Open PRs** | **none** (evening eww pushed straight to `main`) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
-| **Repo state for bake** | WARN: saucer/boombox/dock chrome experiments fully reverted to pre-redesign evening baseline. Fix saucer time/date in a fresh pass after live QA of this restore. |
+| **Repo state for bake** | GO — tip is pre-saucer-redesign evening baseline (live-boot fixes + prior eww/audio). Bad saucer/boombox/dock experiments were reverted; tree matches that baseline. Leave saucer/time alone for now. `verify-profile` before bake. |
 | **Last ISO on disk** | `nyxus-2026.07.25` @ **15:00** — **STALE** vs evening tip. Rebake before flash. |
 | **Kage-Ryu on stick** | ✅ splash / boot path worked on prior live USB |
 | **Running desktop kernel** | Stock on builder; Kage on stick |
