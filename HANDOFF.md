@@ -33,10 +33,10 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** |  — restored pre-saucer-redesign baseline; confirm with efb09aae |
+| **HEAD** | `83e3c274` — pre-saucer-redesign baseline restored; confirm with `git rev-parse --short HEAD` |
 | **Open PRs** | **none** (evening eww pushed straight to `main`) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
-| **Repo state for bake** | ⚠️ saucer/boombox/dock chrome experiments (→) **fully reverted**. Tip matches pre-redesign evening baseline. Fix saucer time/date in a fresh pass after live QA of this restore. |
+| **Repo state for bake** | WARN: saucer/boombox/dock chrome experiments fully reverted to pre-redesign evening baseline. Fix saucer time/date in a fresh pass after live QA of this restore. |
 | **Last ISO on disk** | `nyxus-2026.07.25` @ **15:00** — **STALE** vs evening tip. Rebake before flash. |
 | **Kage-Ryu on stick** | ✅ splash / boot path worked on prior live USB |
 | **Running desktop kernel** | Stock on builder; Kage on stick |
