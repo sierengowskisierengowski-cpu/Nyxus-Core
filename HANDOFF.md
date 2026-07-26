@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-25 afternoon (live-boot fixes on main)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-25 evening (bottom-bar eww redesign + audio detection on main)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -36,8 +36,8 @@
 | **HEAD** | check `git rev-parse --short HEAD` |
 | **Open PRs** | **none** |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
-| **Repo state for bake** | ✅ **GO to rebake** — live-boot HIGH fixes on tip (Settings, ports, wlogout, glow off, nm-applet, wallpaper no-pkill, eww side exclusive false, greeter dirs, blocking livewall) |
-| **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (**17:03 EDT**) — **STALE vs afternoon tip**. Rebake before reflash. |
+| **Repo state for bake** | ✅ **GO to rebake** — everything through commit `8013121a` is committed + pushed to `origin/main`. See §"🛸 Bottom-bar eww redesign" below for tonight's additions on top of the afternoon fixes. |
+| **Last ISO on disk** | `iso-builder/out/nyxus-2026.07.24-x86_64.iso` (**17:03 EDT**) — **STALE**, predates the whole afternoon + evening pass. Rebake before reflash. |
 | **Kage-Ryu on stick** | ✅ splash / boot path worked on prior live USB |
 | **Running desktop kernel** | Stock on builder; Kage on stick |
 | **Gates** | ✅ `iso-builder/verify-profile.sh` (re-run after this tip) |
