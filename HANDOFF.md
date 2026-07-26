@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-26 early (chrome art swap — livewall saucer + boombox-v4 + docks/ticker)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-25 evening (bottom-bar eww redesign + audio detection on main)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -25,7 +25,7 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-26 · chrome art swap (bake GO after push)
+## WHERE WE STAND — 2026-07-25 · late (eww boombox + audio · bake GO)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
@@ -33,11 +33,11 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | tip after chrome art commit — confirm with `git rev-parse --short HEAD` |
-| **Open PRs** | **none** (eww chrome pushed straight to `main`) |
+| **HEAD** | `28a121ff` (after `8013121a` eww) — confirm with `git rev-parse --short HEAD` |
+| **Open PRs** | **none** (evening eww pushed straight to `main`) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
-| **Repo state for bake** | ✅ **GO** — bottom hub = livewall UFO + normal time/date; music flip = boombox-v4 + fitted player; left/right docks + ticker wrapped in Meshy transparent art. Dropped SAUCER_CLOCK marquee. NS↔skel lockstep. `verify-profile` PASS. |
-| **Last ISO on disk** | `nyxus-2026.07.25` @ **15:00** — **STALE** vs this tip (also vs the bad marquee commits). Rebake before flash. |
+| **Repo state for bake** | ✅ **GO** — live-boot fixes + saucer center/flip + side-rail glass + alien boombox + universal audio/`CAVA_BASS`. NS↔skel lockstep. `verify-profile` PASS. |
+| **Last ISO on disk** | `nyxus-2026.07.25` @ **15:00** — **STALE** vs evening tip. Rebake before flash. |
 | **Kage-Ryu on stick** | ✅ splash / boot path worked on prior live USB |
 | **Running desktop kernel** | Stock on builder; Kage on stick |
 | **Gates** | ✅ `iso-builder/verify-profile.sh` |
