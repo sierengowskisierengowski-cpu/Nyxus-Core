@@ -1,39 +1,41 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════
-# nyxus-livewall-flagship  [base.png]  [out.mp4]        · rev 2026-07-26
+# nyxus-livewall-flagship  [base.png]  [out.mp4]        · rev 2026-07-14
 #
-# Renders the NYXUS flagship LIVING WALLPAPER — seamless looping cosmic
-# scene from a still (prefer the alien-hero / desktop-hero wall):
+# Renders the NYXUS flagship LIVING WALLPAPER — a seamless looping
+# cosmic scene assembled with ffmpeg from a still nebula wallpaper:
 #
-#   · PARALLAX DRIFT  — nebula breathes (zoom + orbit)
-#   · TWINKLING STARS — procedural star plane scrolls + pulses
-#   · CRUISING UFO    — theme saucer flyby (same art as bar UFO)
-#   · PLANET SPIN     — top-center + bottom-left planets rotate slowly
-#   · RING ORBIT      — bottom-right gas rings rotate around the planet
-#   · METEOR DRIFT    — rock clusters pass slowly (seamless sin drift)
+#   · PARALLAX DRIFT  — the nebula slowly breathes (zoom + orbit) while
+#                       a separate starfield plane scrolls at its own
+#                       rate, so foreground stars and the deep nebula
+#                       drift apart → real depth/parallax.
+#   · TWINKLING STARS — an overlaid procedural starfield whose stars
+#                       pulse individually (per-pixel phase), on top of
+#                       the wallpaper's own baked-in stars.
+#   · CRUISING UFO    — the SAME slick neon saucer as the bottom-bar saucer
+#                       clock / notification UFO (reused theme art, matted +
+#                       soft violet halo, NOT hand-drawn) cruises once across
+#                       the open sky per loop → reads as an "occasional" flyby.
 #
-# Oscillators complete integer cycles over the loop → seamless.
-# Env: NYX_W NYX_H NYX_DUR NYX_FPS NYX_CRF NYX_UFO
+# Every oscillator completes an integer number of cycles over the loop
+# and the star plane is horizontally periodic, so the clip loops with
+# no visible seam. Output is a small H.264 mp4 that mpvpaper plays as
+# the Hyprland background (see nyxus-live-wallpaper).
+#
+# Env overrides (for testing): NYX_W NYX_H NYX_DUR NYX_FPS NYX_CRF
 # © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ════════════════════════════════════════════════════════════════════
 set -euo pipefail
 
+# ── locate the base nebula still ────────────────────────────────────
 BASE="${1:-}"
 if [[ -z "${BASE}" ]]; then
-  BASE="${HOME}/.config/hypr/walls/nyxus-desktop-hero.png"
-  if [[ ! -f "${BASE}" ]]; then
-    BASE="${HOME}/.config/hypr/walls/nyxus-wall-alien-hero.png"
-  fi
+  # prefer the user's current wallpaper, else the shipped alien-hero
+  BASE="${HOME}/.config/hypr/walls/nyxus-wall-alien-hero.png"
   if [[ -f "${HOME}/.config/nyxus/wallpaper.conf" ]]; then
     # shellcheck source=/dev/null
     . "${HOME}/.config/nyxus/wallpaper.conf" 2>/dev/null || true
-    # Prefer hero wall for flagship scene; only honor WALLPAPER_PATH if it
-    # is itself a hero/graffiti cosmic still (rooftop etc. keep default).
-    if [[ -n "${WALLPAPER_PATH:-}" && -f "${WALLPAPER_PATH}" ]]; then
-      case "$(basename "${WALLPAPER_PATH}")" in
-        *alien-hero*|*desktop-hero*|*graffiti-space*) BASE="${WALLPAPER_PATH}" ;;
-      esac
-    fi
+    [[ -n "${WALLPAPER_PATH:-}" && -f "${WALLPAPER_PATH}" ]] && BASE="${WALLPAPER_PATH}"
   fi
 fi
 [[ -f "${BASE}" ]] || { echo "nyxus-livewall-flagship: no base still: ${BASE}" >&2; exit 1; }
@@ -43,8 +45,8 @@ mkdir -p "$(dirname "${OUT}")"
 
 command -v ffmpeg  >/dev/null || { echo "ffmpeg not installed"  >&2; exit 3; }
 command -v magick  >/dev/null || { echo "imagemagick (magick) not installed" >&2; exit 3; }
-command -v python3 >/dev/null || { echo "python3 not installed" >&2; exit 3; }
 
+# ── active monitor size (fallback 1920x1080) ────────────────────────
 if [[ -n "${NYX_W:-}" && -n "${NYX_H:-}" ]]; then
   W="${NYX_W}"; H="${NYX_H}"
 else
@@ -52,8 +54,9 @@ else
     python3 -c "import json,sys;m=json.load(sys.stdin)[0];print(m['width'],m['height'])" \
     2>/dev/null || echo "1920 1080")
 fi
+SW=$((W * 2))                     # starfield plane is 2×W wide (periodic)
 
-DUR="${NYX_DUR:-30}"
+DUR="${NYX_DUR:-30}"              # loop length (s) — one UFO flyby per loop
 FPS="${NYX_FPS:-24}"
 CRF="${NYX_CRF:-22}"
 FRAMES=$((DUR * FPS))
@@ -61,7 +64,7 @@ FRAMES=$((DUR * FPS))
 MDIR="$(mktemp -d /tmp/nyxus-flagship.XXXXXX)"
 trap 'rm -rf "${MDIR}"' EXIT
 
-# ── 1. procedural twinkling starfield (periodic in W) ───────────────
+# ── 1. procedural twinkling starfield (periodic in W → seamless scroll)
 magick -size "${W}x${H}" xc:black -seed 21 +noise Random -colorspace Gray \
   -auto-level -threshold 99.1% "${MDIR}/small.png"
 magick -size "${W}x${H}" xc:black -seed 88 +noise Random -colorspace Gray \
@@ -69,9 +72,16 @@ magick -size "${W}x${H}" xc:black -seed 88 +noise Random -colorspace Gray \
 magick "${MDIR}/small.png" "${MDIR}/big.png" -compose screen -composite \
   -fuzz 1% -transparent black -channel A -level 0,55% +channel \
   -fill "#e6ecff" -colorize 10% "${MDIR}/stars.png"
+# duplicate side-by-side so the plane wraps seamlessly when scrolled by W
 magick "${MDIR}/stars.png" "${MDIR}/stars.png" +append "${MDIR}/starfield.png"
 
-# ── 2. UFO saucer sprite ────────────────────────────────────────────
+# ── 2. UFO saucer sprite — REUSE the polished theme saucer art ──────
+# We do NOT hand-draw the UFO. The flying ship IS the slick neon-graffiti
+# NYXUS saucer used by the bottom-bar SAUCER CLOCK and the notification UFO
+# popup. nyxus-livewall-ufo.png is that exact art matted off its black
+# background (flood-fill) with a soft violet halo baked on. Fallbacks reuse
+# the transparent bar-saucer art (nyxus-saucer-band.png), same style; a
+# procedural draw is only a never-fail last resort.
 SCRIPT_SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(dirname "${SCRIPT_SELF}")"
 UFO_SRC="${NYX_UFO:-}"
@@ -85,7 +95,7 @@ if [[ -z "${UFO_SRC}" ]]; then
   done
 fi
 
-bake_glow() {
+bake_glow() {  # $1 = raw saucer png → soft violet halo baked → MDIR/ufo.png
   local pad="${MDIR}/ufo_pad.png" ga="${MDIR}/ufo_ga.png" gl="${MDIR}/ufo_glow.png" sz
   magick "$1" -bordercolor none -border 110 "${pad}"
   magick "${pad}" -alpha extract -blur 0x34 "${ga}"
@@ -97,11 +107,12 @@ bake_glow() {
 
 if [[ -n "${UFO_SRC}" && -f "${UFO_SRC}" ]]; then
   if [[ "$(basename "${UFO_SRC}")" == "nyxus-livewall-ufo.png" ]]; then
-    cp "${UFO_SRC}" "${MDIR}/ufo.png"
+    cp "${UFO_SRC}" "${MDIR}/ufo.png"          # glow already baked
   else
-    bake_glow "${UFO_SRC}"
+    bake_glow "${UFO_SRC}"                       # raw saucer → add glow
   fi
 else
+  # last-ditch procedural saucer (kept only so a render never fails)
   magick -size 300x170 xc:none \
     -fill "#2a0f45" -draw "ellipse 150,100 122,30 0,360" \
     -fill "#5c1f95" -draw "ellipse 150,95 120,20 0,360" \
@@ -111,217 +122,44 @@ else
     "${MDIR}/ufo.png"
 fi
 
-# ── 3. planet / ring / meteor layers (scaled from 1920×1080 hero wall) ─
-python3 - "${BASE}" "${MDIR}" "${W}" "${H}" <<'PY'
-import sys
-from pathlib import Path
-import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
-
-base_path, out_dir, W, H = sys.argv[1], Path(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
-sx, sy = W / 1920.0, H / 1080.0
-
-def P(x, y=None):
-    if y is None:
-        return int(round(x * sx))
-    return int(round(x * sx)), int(round(y * sy))
-
-base = Image.open(base_path).convert("RGBA").resize((W, H), Image.LANCZOS)
-arr = np.array(base)
-blur = base.filter(ImageFilter.GaussianBlur(radius=42))
-
-# Planets on 1920×1080 hero grid (cx, cy, r)
-planets = {
-    "top": (1020, 95, 58),     # above NYXUS · X
-    "bl":  (235, 865, 118),    # bottom-left sphere
-    "br":  (1685, 885, 158),   # bottom-right ringed body
-}
-# Meteor bboxes (x0,y0,x1,y1) on 1920×1080
-meteors = [
-    ("m_tr", 1580, 15, 1915, 255),
-    ("m_bl", 15, 900, 210, 1080),
-    ("m_bc", 540, 970, 790, 1080),
-    ("m_br", 1765, 970, 1920, 1080),
-    ("m_mid", 1120, 985, 1360, 1080),
-]
-
-def circle_mask(w, h, cx, cy, r, feather=3):
-    yy, xx = np.ogrid[:h, :w]
-    d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
-    m = np.clip((r + feather - d) / max(feather, 1e-6), 0, 1)
-    return (m * 255).astype(np.uint8)
-
-clean = base.copy()
-meta = []
-
-# Punch planets + meteors out of clean plate (blur fill) so overlays don't ghost
-for name, (cx0, cy0, r0) in planets.items():
-    cx = int(round(cx0 * sx))
-    cy = int(round(cy0 * sy))
-    r = int(round(r0 * min(sx, sy)))
-    pad = r + 10
-    box = (max(0, cx - pad), max(0, cy - pad), min(W, cx + pad), min(H, cy + pad))
-    # fill hole so the spinning overlay does not ghost the still planet
-    mask_img = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(mask_img).ellipse((cx - r, cy - r, cx + r, cy + r), fill=255)
-    mask_img = mask_img.filter(ImageFilter.GaussianBlur(radius=6))
-    clean = Image.composite(blur, clean, mask_img)
-    # circular sprite
-    crop = base.crop(box)
-    ca = np.array(crop)
-    lc_x, lc_y = cx - box[0], cy - box[1]
-    cm = circle_mask(ca.shape[1], ca.shape[0], lc_x, lc_y, r, feather=4)
-    ca[:, :, 3] = np.minimum(ca[:, :, 3], cm)
-    sp = out_dir / f"planet_{name}.png"
-    Image.fromarray(ca).save(sp)
-    meta.append(("planet", name, box[0], box[1], sp.name, ca.shape[1], ca.shape[0]))
-
-# BR rings: elliptical annulus around planet, keep bright magenta band
-cx = int(round(1685 * sx)); cy = int(round(885 * sy))
-r = int(round(158 * min(sx, sy)))
-rx = int(round(r * 1.62)); ry = int(round(r * 0.38))
-pad = max(rx, ry) + 12
-box = (max(0, cx - pad), max(0, cy - pad), min(W, cx + pad), min(H, cy + pad))
-crop = np.array(base.crop(box))
-lc_x, lc_y = cx - box[0], cy - box[1]
-yy, xx = np.ogrid[: crop.shape[0], : crop.shape[1]]
-# ellipse distance-ish mask for rings, exclude planet disk
-ell = ((xx - lc_x) / max(rx, 1)) ** 2 + ((yy - lc_y) / max(ry, 1)) ** 2
-ring = (ell <= 1.0) & (((xx - lc_x) ** 2 + (yy - lc_y) ** 2) > (r * 1.05) ** 2)
-rgb = crop[:, :, :3].astype(np.float32)
-lum = 0.2126 * rgb[:, :, 0] + 0.7152 * rgb[:, :, 1] + 0.0722 * rgb[:, :, 2]
-purple = (rgb[:, :, 0] + rgb[:, :, 2]) / 2 - rgb[:, :, 1]
-keep = ring & ((purple > 18) | (lum > 70))
-alpha = np.zeros(crop.shape[:2], dtype=np.float32)
-alpha[keep] = np.clip((purple[keep] / 80.0) * 0.55 + (lum[keep] / 255.0) * 0.55, 0, 1)
-# soft feather
-from PIL import ImageFilter as _IF
-a_img = Image.fromarray((alpha * 255).astype(np.uint8)).filter(_IF.GaussianBlur(radius=2))
-crop[:, :, 3] = np.array(a_img)
-# also punch a wider ring footprint on clean
-mask_img = Image.new("L", (W, H), 0)
-ImageDraw.Draw(mask_img).ellipse((cx - rx, cy - ry, cx + rx, cy + ry), fill=255)
-mask_img = mask_img.filter(ImageFilter.GaussianBlur(radius=8))
-clean = Image.composite(blur, clean, mask_img)
-sp = out_dir / "rings_br.png"
-Image.fromarray(crop).save(sp)
-meta.append(("rings", "br", box[0], box[1], sp.name, crop.shape[1], crop.shape[0]))
-
-for name, x0, y0, x1, y1 in meteors:
-    bx0, by0 = int(round(x0 * sx)), int(round(y0 * sy))
-    bx1, by1 = int(round(x1 * sx)), int(round(y1 * sy))
-    box = (bx0, by0, bx1, by1)
-    # soft rectangular mask → keep rocky (not pure starfield)
-    crop = np.array(base.crop(box))
-    rgb = crop[:, :, :3].astype(np.float32)
-    lum = 0.2126 * rgb[:, :, 0] + 0.7152 * rgb[:, :, 1] + 0.0722 * rgb[:, :, 2]
-    # rocks are mid-dark with some purple highlight; kill empty star voids
-    rock = (lum > 12) & (lum < 210)
-    alpha = np.zeros(crop.shape[:2], dtype=np.float32)
-    alpha[rock] = np.clip((210 - np.abs(lum[rock] - 90)) / 160.0, 0.15, 1.0)
-    # edge feather
-    a_img = Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(radius=3))
-    # also multiply by a soft oval so bbox corners don't hard-cut
-    yy, xx = np.ogrid[: crop.shape[0], : crop.shape[1]]
-    ox, oy = crop.shape[1] / 2, crop.shape[0] / 2
-    oval = np.clip(1.0 - (((xx - ox) / (ox * 0.95)) ** 2 + ((yy - oy) / (oy * 0.95)) ** 2), 0, 1)
-    crop[:, :, 3] = (np.array(a_img).astype(np.float32) * oval).astype(np.uint8)
-    # punch clean
-    mask_img = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(mask_img).ellipse(box, fill=255)
-    mask_img = mask_img.filter(ImageFilter.GaussianBlur(radius=5))
-    clean = Image.composite(blur, clean, mask_img)
-    sp = out_dir / f"meteor_{name}.png"
-    Image.fromarray(crop).save(sp)
-    meta.append(("meteor", name, bx0, by0, sp.name, crop.shape[1], crop.shape[0]))
-
-clean.save(out_dir / "clean_base.png")
-with open(out_dir / "layers.txt", "w") as f:
-    for row in meta:
-        f.write(" ".join(map(str, row)) + "\n")
-print(f"prepared {len(meta)} layers @ {W}x{H}")
-PY
-
-# ── 4. motion constants ─────────────────────────────────────────────
-PANX=$(python3 -c "print(round(${W}*0.013))")
+# ── 3. motion constants ─────────────────────────────────────────────
+PANX=$(python3 -c "print(round(${W}*0.013))")   # nebula orbit amplitude
 PANY=$(python3 -c "print(round(${H}*0.016))")
-SBOB=$(python3 -c "print(round(${H}*0.010))")
-UW=$(python3 -c "print(round(${W}*0.28))")
-UY=$(python3 -c "print(round(${H}*0.14))")
+SBOB=$(python3 -c "print(round(${H}*0.010))")    # starfield vertical bob
+UW=$(python3 -c "print(round(${W}*0.28))")       # UFO width on screen
+UY=$(python3 -c "print(round(${H}*0.14))")       # UFO cruise altitude
 UBOB=$(python3 -c "print(round(${H}*0.02))")
-U0=9; U1=21; UCROSS=$((U1 - U0))
-# meteor drift amplitudes (px) — slow pass, integer-cycle sin → seamless
-MDX=$(python3 -c "print(round(${W}*0.045))")
-MDY=$(python3 -c "print(round(${H}*0.018))")
+U0=9; U1=21; UCROSS=$((U1 - U0))                 # flyby window (s)
 
-# Parse layer placements
-mapfile -t LAYERS < "${MDIR}/layers.txt"
-
-# Build ffmpeg inputs + filter. Index map:
-# 0 clean_base, 1 starfield, 2 ufo, then dynamic layers in order of layers.txt
-INPUTS=(
-  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${MDIR}/clean_base.png"
-  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${MDIR}/starfield.png"
-  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${MDIR}/ufo.png"
-)
-idx=3
-declare -a FILTER_PARTS=()
-# start: breathe clean base
-FILTER_PARTS+=("[0:v]scale=${W}:${H}:flags=lanczos,setsar=1,format=rgba,zoompan=z='1.05+0.02*sin(2*PI*on/${FRAMES})':x='iw/2-(iw/zoom/2)+${PANX}*sin(2*PI*on/${FRAMES})':y='ih/2-(ih/zoom/2)+${PANY}*cos(2*PI*on/${FRAMES})':d=1:fps=${FPS}:s=${W}x${H}[neb]")
-FILTER_PARTS+=("[1:v]format=rgba,geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='alpha(X,Y)*(0.45+0.55*sin(2*PI*T/5+2*PI*6*X/W+Y*0.02))'[stars]")
-FILTER_PARTS+=("[neb][stars]overlay=x='-${W}*t/${DUR}':y='${SBOB}*sin(2*PI*t/${DUR})':format=auto[bg0]")
-
-cur="bg0"
-mi=0
-for line in "${LAYERS[@]}"; do
-  # shellcheck disable=SC2086
-  set -- ${line}
-  kind="$1"; name="$2"; ox="$3"; oy="$4"; file="$5"; lw="$6"; lh="$7"
-  INPUTS+=(-loop 1 -t "${DUR}" -framerate "${FPS}" -i "${MDIR}/${file}")
-  vin="[${idx}:v]"
-  vspin="sp${idx}"
-  vnext="bg${idx}"
-  case "${kind}" in
-    planet)
-      # 1 full slow spin per loop. Expand canvas so corners aren't clipped.
-      rw=$(python3 -c "import math; print(int(math.ceil(math.hypot(${lw},${lh}))))")
-      FILTER_PARTS+=("${vin}format=rgba,rotate=a='2*PI*t/${DUR}':c=none:ow=${rw}:oh=${rw}:fillcolor=none[${vspin}]")
-      FILTER_PARTS+=("[${cur}][${vspin}]overlay=x='${ox}-(${rw}-${lw})/2':y='${oy}-(${rw}-${lh})/2':format=auto[${vnext}]")
-      ;;
-    rings)
-      # rings orbit opposite + 1.5 turns / loop
-      rw=$(python3 -c "import math; print(int(math.ceil(math.hypot(${lw},${lh}))))")
-      FILTER_PARTS+=("${vin}format=rgba,rotate=a='-3*PI*t/${DUR}':c=none:ow=${rw}:oh=${rw}:fillcolor=none[${vspin}]")
-      FILTER_PARTS+=("[${cur}][${vspin}]overlay=x='${ox}-(${rw}-${lw})/2':y='${oy}-(${rw}-${lh})/2':format=auto[${vnext}]")
-      ;;
-    meteor)
-      # slow drift like the saucer flyby — sin so the loop seals
-      phase=$(python3 -c "print(${mi}*0.9)")
-      FILTER_PARTS+=("${vin}format=rgba[${vspin}]")
-      FILTER_PARTS+=("[${cur}][${vspin}]overlay=x='${ox}+${MDX}*sin(2*PI*t/${DUR}+${phase})':y='${oy}+${MDY}*sin(2*PI*t/${DUR}+${phase}+1.2)':format=auto[${vnext}]")
-      mi=$((mi + 1))
-      ;;
-  esac
-  cur="${vnext}"
-  idx=$((idx + 1))
-done
-
-FILTER_PARTS+=("[2:v]format=rgba,scale=${UW}:-1[ufo]")
-FILTER_PARTS+=("[${cur}][ufo]overlay=x='-360+(${W}+720)*(t-${U0})/${UCROSS}':y='${UY}+${UBOB}*sin(2*PI*(t-${U0})/6)':enable='between(t,${U0},${U1})':format=auto,format=yuv420p[out]")
-
-# Join filter parts with semicolons
-FC=""
-for p in "${FILTER_PARTS[@]}"; do
-  if [[ -z "${FC}" ]]; then FC="${p}"; else FC="${FC};${p}"; fi
-done
-
+# ── 4. render ───────────────────────────────────────────────────────
+#  neb   : scaled nebula, slow breathing zoom + orbital drift
+#  stars : starfield, per-star twinkle (period 5s → 6 cycles / 30s),
+#          scrolled left by exactly W over the loop (periodic → seamless)
+#  ufo   : cruises off-screen-left → off-screen-right inside [U0,U1]
 ffmpeg -hide_banner -loglevel error -y \
-  "${INPUTS[@]}" \
-  -filter_complex "${FC}" \
+  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${BASE}" \
+  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${MDIR}/starfield.png" \
+  -loop 1 -t "${DUR}" -framerate "${FPS}" -i "${MDIR}/ufo.png" \
+  -filter_complex "
+    [0:v]scale=${W}:${H}:flags=lanczos,setsar=1,format=rgba,
+      zoompan=z='1.05+0.02*sin(2*PI*on/${FRAMES})':
+        x='iw/2-(iw/zoom/2)+${PANX}*sin(2*PI*on/${FRAMES})':
+        y='ih/2-(ih/zoom/2)+${PANY}*cos(2*PI*on/${FRAMES})':
+        d=1:fps=${FPS}:s=${W}x${H}[neb];
+    [1:v]format=rgba,
+      geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':
+        a='alpha(X,Y)*(0.45+0.55*sin(2*PI*T/5+2*PI*6*X/W+Y*0.02))'[stars];
+    [neb][stars]overlay=x='-${W}*t/${DUR}':y='${SBOB}*sin(2*PI*t/${DUR})':
+      format=auto[bg];
+    [2:v]format=rgba,scale=${UW}:-1[ufo];
+    [bg][ufo]overlay=
+      x='-360+(${W}+720)*(t-${U0})/${UCROSS}':
+      y='${UY}+${UBOB}*sin(2*PI*(t-${U0})/6)':
+      enable='between(t,${U0},${U1})':format=auto,
+      format=yuv420p[out]
+  " \
   -map "[out]" \
   -c:v libx264 -preset medium -crf "${CRF}" -movflags +faststart -an \
   "${OUT}"
 
 echo "flagship living wallpaper rendered: ${OUT}"
-echo "  base=${BASE}"
-echo "  layers=$(wc -l < "${MDIR}/layers.txt") planets+rings+meteors + UFO flyby"
