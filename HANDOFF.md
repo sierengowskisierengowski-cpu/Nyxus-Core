@@ -1,11 +1,17 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-25 evening (bottom-bar eww redesign + audio detection on main)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-26 ~01:45 EDT (eww chrome experiments fully reverted · bake GO)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
+>
+> **⚠ EWW hub chrome night (Jul 25→26) — READ BEFORE TOUCHING SAUCER/BARS:**  
+> [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md)  
+> Redesign + Meshy wraps were wrong; **fully reverted**. Owner confirmed restored
+> desktop looks good. **Do not restart saucer/time/dock/ticker work** unless the
+> owner explicitly asks. Bake the restored tip.
 >
 > **Live USB report + full sweep:**  
 > [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md)
@@ -33,14 +39,33 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | `32d2bd1e` — confirm with `git rev-parse --short HEAD` |
-| **Open PRs** | **none** (evening eww pushed straight to `main`) |
+| **HEAD** | `97d1bcab` — confirm with `git rev-parse --short HEAD` |
+| **Open PRs** | **none** |
+| **Chrome night brief** | [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md) |
 | **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
-| **Repo state for bake** | GO — tip is pre-saucer-redesign evening baseline (live-boot fixes + prior eww/audio). Bad saucer/boombox/dock experiments were reverted; tree matches that baseline. Leave saucer/time alone for now. `verify-profile` before bake. |
-| **Last ISO on disk** | `nyxus-2026.07.25` @ **15:00** — **STALE** vs evening tip. Rebake before flash. |
+| **Repo state for bake** | ✅ **GO** — tip = pre-`ecdcc952` evening baseline (live-boot fixes + prior eww/audio). Saucer/boombox/dock experiments **fully reverted**; owner OK’d restored look. **Leave saucer/time alone.** Owner baking: `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh` |
+| **Last ISO on disk** | `nyxus-2026.07.25` @ **15:00** — **STALE**. Do not flash for this tip; rebake first. |
 | **Kage-Ryu on stick** | ✅ splash / boot path worked on prior live USB |
 | **Running desktop kernel** | Stock on builder; Kage on stick |
 | **Gates** | ✅ `iso-builder/verify-profile.sh` |
+
+### 🛑 EWW chrome night — reverted (2026-07-25 → 26) — DO NOT REPEAT
+
+**Intent (owner):** swap hub art to livewall UFO + **normal time/date** in cockpit;
+music face = boombox-v4 with UI fitted in the screen; optionally wrap docks/ticker
+in Meshy “transparent” PNGs. **Not** a redesign.
+
+**What went wrong:** prior agent pushed marquee/`SAUCER_CLOCK` + lowrider redesign
+(`ecdcc952`, `c73caae0`). Follow-up (`0bf2d06c`) tried the real brief + live
+`sync-eww` — docks/ticker looked wrong; tall bar + Hyprland layer-blur catch-all
+painted a frosted **shadow box** behind the saucer. Owner: restore everything,
+bake the good tip, leave chrome alone.
+
+**Resolution:** full revert of `ecdcc952`…`058ee2c4` chain. Tree matches
+pre-redesign evening baseline. Live session synced; owner: “perfect / looks good.”
+**Next chrome pass only when owner restarts it** — small, visual OK before push.
+
+Full narrative + bake notes → [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md).
 
 ### 🔦 ALIEN NEON palette/brand audit — this pass (2026-07-24 PM)
 
@@ -535,6 +560,12 @@ Verify a flashed stick from the agent side (no sudo needed):
   `git checkout -- iso-builder/nyx-profile/ && git clean -fdx -- iso-builder/nyx-profile/`.
 - **Alacritty rejects 8-digit `#rrggbbaa` hex** — use `0xAARRGGBB` (e.g.
   `0x8CEEF2FA`) or 6-digit `#rrggbb`. Hitting `#eef2fa8c` pops a red parse error.
+- **EWW hub chrome (2026-07-26):** do **not** re-land `ecdcc952` / `c73caae0` /
+  `0bf2d06c` (marquee clock, lowrider redesign, Meshy dock/ticker wraps). Owner
+  reverted; restored tip looks good. Layer-blur catch-all `^(nyxus.*)$` can
+  frost a rectangular “shadow box” behind tall transparent bars — see
+  [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md).
+  Saucer/time only when owner explicitly restarts that workstream.
 
 ---
 
