@@ -273,6 +273,54 @@ window, window.background, decoration {
   color: rgba($nyxus-accent-secondary, 0.92);
   text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.55);
 }
+
+/* -- LOWRIDER SAUCER (rev 2026-07-25 night) ---------------------------
+ * The measured windshield viewport (see eww.yuck comment above
+ * bar_hub_idle) is only ~20px tall / ~141px wide at this frame's scale --
+ * too small for static clock text at normal size without either
+ * overflowing or shrinking to near-illegible. Clock is now a sliding
+ * marquee (SAUCER_CLOCK, same technique as the top-bar TICKER) instead,
+ * so the exact pixel width doesn't matter -- it scrolls through a fixed
+ * character window. The width/padding override uses the COMPOUND
+ * selector .saucer-screen.saucer-screen-lowrider (not
+ * .saucer-screen-lowrider alone) so it beats .saucer-screen on
+ * specificity regardless of source order -- a plain same-specificity
+ * override here previously lost the cascade because .saucer-screen is
+ * defined later in this file. */
+.saucer-screen.saucer-screen-lowrider {
+  padding: 0px 8px;
+  min-width: 135px;
+  border-radius: 6px;
+}
+.bar-hub-clock-ticker {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-shadow:
+    0 0 10px rgba($nyxus-accent-secondary, 0.75),
+    0 0 18px rgba($nyxus-accent-primary, 0.45);
+}
+
+/* Pulsing green<->violet glow anchored at the measured hydraulic-leg
+ * underglow-ring band (bottom ~45% of the image) -- the "lowrider"
+ * lighting effect, driven by a plain box-shadow keyframe animation
+ * (confirmed live that this GTK CSS engine runs @keyframes before
+ * building this). No image manipulation -- a glow UNDER the rendered
+ * rings, matching their real position and colors. */
+@keyframes saucer-underglow-pulse {
+  0%   { box-shadow: 0 0 20px 8px rgba(125, 61, 255, 0.55); }
+  50%  { box-shadow: 0 0 28px 12px rgba(57, 255, 20, 0.55); }
+  100% { box-shadow: 0 0 20px 8px rgba(125, 61, 255, 0.55); }
+}
+.saucer-underglow {
+  min-width: 250px;
+  min-height: 4px;
+  background: transparent;
+  animation: saucer-underglow-pulse 2.4s ease-in-out infinite;
+}
+
 /* ── UFO notification popup (message inside the saucer screen) ───────── */
 .notif-ufo { background-color: transparent; }
 .notif-app {
@@ -316,12 +364,44 @@ window, window.background, decoration {
   text-shadow: 0 0 8px rgba($nyxus-accent-secondary, 0.45);
 }
 
+/* -- LOWRIDER BOOMBOX (rev 2026-07-25 night) --------------------------
+ * Measured screen (see eww.yuck comment above bar_hub_music) is ~39px
+ * tall at this frame's scale -- tight for title+artist+progress+controls
+ * stacked, so -sm variants trim the two text rows (source order after
+ * the base rules above, same color/glow, just smaller). Underglow pulse
+ * matches the two real speaker-ring colors (violet left / green right)
+ * plus the magenta bottom light strip -- alternates through all three
+ * rather than just two, so it doesn't just repeat the saucer's cycle. */
+.bar-hub-music-title-sm { font-size: 9px; }
+.bar-hub-music-artist-sm { font-size: 8px; }
+
+@keyframes boombox-underglow-pulse {
+  0%   { box-shadow: 0 0 18px 7px rgba(125, 61, 255, 0.55); }
+  33%  { box-shadow: 0 0 24px 10px rgba(57, 255, 20, 0.55); }
+  66%  { box-shadow: 0 0 22px 9px rgba(255, 45, 173, 0.55); }
+  100% { box-shadow: 0 0 18px 7px rgba(125, 61, 255, 0.55); }
+}
+.boombox-underglow {
+  min-width: 120px;
+  min-height: 4px;
+  background: transparent;
+  animation: boombox-underglow-pulse 2.4s ease-in-out infinite;
+}
+
 /* ── SAUCER COCKPIT SCREEN (bottom-center hub trigger) ────────────────
  * The saucer PNG has a transparent oval cockpit window; `.saucer-screen`
  * is the SOLID dark display that sits inside it (via an eww overlay) so
  * the clock / music UI is never see-through. Deep obsidian fill + a
  * subtle neon rim + inner ink vignette = a real lit-up cockpit screen. */
-.saucer-frame { background-color: transparent; }
+/* Ambient box-shadow glow on .saucer-frame was REMOVED (rev 2026-07-26) --
+ * it followed the box's rectangular bounds, not the ship's actual
+ * silhouette, and read as a stray disconnected shadow next to the left
+ * rail instead of a glow on the hull. The art's own baked-in neon rim
+ * lighting is doing this job already; don't re-add a shape-agnostic
+ * box-shadow glow here without confirming live it hugs the art. */
+.saucer-frame {
+  background-color: transparent;
+}
 
 .saucer-screen {
   background-color: rgba(5, 2, 14, 0.88);
