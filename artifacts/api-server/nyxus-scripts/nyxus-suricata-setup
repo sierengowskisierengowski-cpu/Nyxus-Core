@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-suricata-setup · rev 2026-07-27
+#
+# Installs and wires Suricata so NYXUS can finally see its OWN wire.
+#
+# WHY: the honeypots only see traffic aimed at the bait. Nothing on this box
+# watched the traffic actually crossing enp47s0 - no Suricata, Zeek, ntopng
+# or arkime, only tshark. That was the single biggest "eyes on everything"
+# gap. Suricata's eve.json is then tailed by the promtail already running for
+# the honeypot stack, so alerts land in the same Loki as the honeypot feed
+# and the host journal - one timeline, not three screens.
+#
+# Run it once:   nyxus-suricata-setup
+# It asks for sudo (package install + a system service) and nothing else.
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+
+IFACE="${NYXUS_SURICATA_IFACE:-$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'dev \K\S+' || echo enp47s0)}"
+EVE_DIR="$HOME/Projects/honeypot/logs/suricata"
+
+say() { printf '\033[36m  %s\033[0m\n' "$*"; }
+die() { printf '\033[31m  %s\033[0m\n' "$*" >&2; exit 1; }
+
+command -v ip >/dev/null || die "iproute2 missing"
+say "interface: $IFACE"
+
+# ── 1. install ──────────────────────────────────────────────────────
+if ! command -v suricata >/dev/null 2>&1; then
+  say "installing suricata (from the blackarch repo you already have wired)…"
+  sudo pacman -S --needed --noconfirm suricata || die "install failed"
+else
+  say "suricata already installed: $(suricata -V 2>/dev/null | head -1)"
+fi
+
+# ── 2. rules ────────────────────────────────────────────────────────
+if command -v suricata-update >/dev/null 2>&1; then
+  say "fetching rules…"
+  sudo suricata-update || say "rule update failed - continuing with any existing rules"
+fi
+
+# ── 3. point it at the right NIC and keep eve.json where promtail can see it
+#      Suricata runs as root, so it writes into a directory we pre-create and
+#      hand to it; promtail already bind-mounts ~/Projects/honeypot/logs.
+mkdir -p "$EVE_DIR"
+say "eve.json -> $EVE_DIR"
+
+sudo install -d -m 0755 /etc/suricata
+if [ -f /etc/suricata/suricata.yaml ]; then
+  sudo cp -n /etc/suricata/suricata.yaml /etc/suricata/suricata.yaml.nyxus-orig || true
+  # af-packet interface
+  sudo sed -i -E "0,/^\s*-\s*interface:.*/s//  - interface: ${IFACE}/" /etc/suricata/suricata.yaml
+  # default log dir -> the promtail-visible dir
+  sudo sed -i -E "s|^default-log-dir:.*|default-log-dir: ${EVE_DIR}|" /etc/suricata/suricata.yaml
+  say "suricata.yaml updated (original kept as suricata.yaml.nyxus-orig)"
+else
+  die "/etc/suricata/suricata.yaml not found after install"
+fi
+
+# eve.json must be world-readable for the container to tail it
+sudo chmod 0755 "$EVE_DIR" || true
+
+# ── 4. service ──────────────────────────────────────────────────────
+say "enabling suricata on ${IFACE}…"
+sudo systemctl enable --now suricata 2>/dev/null || {
+  say "unit not found - starting with an explicit interface override"
+  sudo systemctl edit --force --full suricata >/dev/null 2>&1 || true
+}
+sleep 3
+systemctl is-active suricata >/dev/null 2>&1 \
+  && say "suricata: active" \
+  || say "suricata not active yet - check: journalctl -u suricata -n 40"
+
+# ── 5. tell promtail about eve.json ─────────────────────────────────
+PT="$HOME/Projects/honeypot/promtail/promtail.yml"
+if [ -f "$PT" ] && ! grep -q 'job_name: suricata' "$PT"; then
+  cat >> "$PT" <<'YAML'
+
+  # ── SURICATA (host wire visibility) ─────────────────────────────────
+  # Alerts + flow records for the machine's OWN traffic, landing in the same
+  # Loki as the honeypot feed and the host journal.
+  - job_name: suricata
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: suricata
+          host: nyx-cosmic
+          __path__: /var/log/honeypot/suricata/eve.json
+    pipeline_stages:
+      - json:
+          expressions:
+            event_type: event_type
+            src_ip: src_ip
+            dest_ip: dest_ip
+            dest_port: dest_port
+            proto: proto
+            signature: 'alert.signature'
+            severity: 'alert.severity'
+      - labels:
+          event_type:
+          proto:
+          severity:
+YAML
+  say "promtail: suricata scrape added"
+  (cd "$HOME/Projects/honeypot" && docker compose restart promtail >/dev/null 2>&1) && say "promtail restarted"
+fi
+
+say "done. Query it with:  {job=\"suricata\"}  in Grafana (http://localhost:3000)"
+say "alerts only:          {job=\"suricata\", event_type=\"alert\"}"
