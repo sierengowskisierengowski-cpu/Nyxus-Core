@@ -54,6 +54,21 @@ _sync() {
   # the search overlay holds EXCLUSIVE keyboard - never leave it mapped once
   # the owner has navigated away from START
   [[ "$ws" == "$START_STATION" ]] || eww close start-search >/dev/null 2>&1
+
+  # VERIFY. An `eww open` issued while the daemon is still bringing windows
+  # up (e.g. immediately after `eww reload`) is accepted and then dropped, so
+  # the station looks empty. Confirm the window we asked for is actually
+  # mapped and retry once - cheap, and the failure mode it prevents is the
+  # one the owner kept hitting ("I clicked HOME and it went to nothing").
+  local want=""
+  [[ "$ws" == "$HOME_STATION"  ]] && want="home-deck"
+  [[ "$ws" == "$START_STATION" ]] && want="start-panel"
+  if [[ -n "$want" ]]; then
+    if ! eww active-windows 2>/dev/null | grep -q "^${want}:"; then
+      sleep 1
+      eww open "$want" >/dev/null 2>&1
+    fi
+  fi
 }
 
 # settle first: eww may still be coming up at login
