@@ -1,6 +1,11 @@
 # NYXUS — STATIONS, APPS & HOME LAB BRIEF (2026-07-27)
 
-> Session: Jul 26 evening → Jul 27 afternoon. Owner: Joseph A. Sierengowski.
+> Session: Jul 26 evening → Jul 27 evening. Owner: Joseph A. Sierengowski.
+>
+> **★★ IF YOU READ ONE THING: the "BIFROST'S AI EDR WAS RUNNING BLIND"
+> section below.** Ollama was never started, so Bifrost dropped ~15,000
+> suspicious events an hour and produced no real verdicts — while reporting
+> `active` to every health check in this build. Fix: run `nyxus-edr-repair`.
 > Extends `HOME_AND_START_STATIONS_BRIEF_2026-07-27.md` (read that first for
 > the eww traps). Everything here is live **and** committed.
 

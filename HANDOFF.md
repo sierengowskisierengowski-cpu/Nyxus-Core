@@ -10,6 +10,15 @@
 > **★ Security inventory (Jul 27):**  
 > [`docs/SECURITY_INVENTORY_2026-07-27.md`](./docs/SECURITY_INVENTORY_2026-07-27.md) — full Arsenal / modes / GodsApp / Intel / Vault / local Projects / BlackArch list.
 >
+> **⚠ CRITICAL — BIFROST'S AI EDR WAS RUNNING BLIND (found Jul 27):**  
+> Ollama was installed but never started, so `heimdall.guardian` got
+> connection-refused on every event: circuit breaker permanently OPEN,
+> **~15,000 suspicious events dropped per hour**, and 100% of verdicts
+> downgraded to `severity=INFO`. It reported **`active`** to every health
+> check in this build the whole time. **Run `nyxus-edr-repair`** (needs root).
+> Full evidence + verification commands in the brief below.
+>
+>
 > **★ NEWEST — STATIONS, APPS & HOME LAB (Jul 27 pm) — READ FIRST:**  
 > [`docs/STATIONS_APPS_AND_LAB_BRIEF_2026-07-27.md`](./docs/STATIONS_APPS_AND_LAB_BRIEF_2026-07-27.md)  
 > Six stations now (HOME/START/GHOST/FORGE/LAB/ARSENAL), and the GowskiNet
