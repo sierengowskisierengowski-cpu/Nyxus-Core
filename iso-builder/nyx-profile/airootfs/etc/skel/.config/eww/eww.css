@@ -5812,29 +5812,180 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 .mon-trace  { text-shadow: 0 0 8px rgba(255, 255, 255, 0.20); }
 .mon-glyph  { text-shadow: 0 0 10px rgba(255, 45, 173, 0.45); }
 
-
-/* -- LIVE LIQUID INSIDE THE CAPS ------------------------------------
-   GTK3's CSS engine interpolates background-image between gradients when
-   the stop COUNT matches, so animating the stop POSITIONS reads as fluid
-   sloshing inside the keycap. No background-size (the compile step strips
-   it), no images, no extra widgets. Staggered delays make the rail ripple
-   rather than pulse in lockstep. */
-@keyframes nyxus-liquid {
+/* -- LIVE LIQUID v2 -------------------------------------------------
+   v1 animated a SOFT gradient and just looked like a colour wash. Real
+   liquid needs a HARD surface line: two stops at the SAME position give a
+   crisp meniscus, and animating that position makes the fluid visibly rise
+   and fall inside the cap. A bright band sits just under the surface as
+   the shine. GTK 3.24 interpolates background-image between gradients as
+   long as the stop COUNT matches - all frames below are 5 stops.
+   Each hue gets its OWN fluid colour and its own phase offset, so the rail
+   ripples like a row of filled vials instead of blinking in lockstep. */
+@keyframes liquid-pink {
   0%   { background-image: linear-gradient(180deg,
-           rgba(255,255,255,0.20) 0%, rgba(125,61,255,0.20) 24%,
-           rgba(255,45,173,0.85) 34%, rgba(90,20,150,0.90) 100%); }
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(125,61,255,0.95) 67%,
+           rgba(56,27,114,0.98) 100%); }
   50%  { background-image: linear-gradient(180deg,
-           rgba(255,255,255,0.20) 0%, rgba(125,61,255,0.20) 66%,
-           rgba(255,45,173,0.85) 76%, rgba(90,20,150,0.90) 100%); }
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
+           rgba(255,255,255,0.85) 24%, rgba(125,61,255,0.95) 31%,
+           rgba(56,27,114,0.98) 100%); }
   100% { background-image: linear-gradient(180deg,
-           rgba(255,255,255,0.20) 0%, rgba(125,61,255,0.20) 24%,
-           rgba(255,45,173,0.85) 34%, rgba(90,20,150,0.90) 100%); }
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(125,61,255,0.95) 67%,
+           rgba(56,27,114,0.98) 100%); }
 }
-.ws-pill, .app-pill {
-  animation-name: nyxus-liquid;
-  animation-duration: 3800ms;
+.ws-pill-pink, .app-pill-pink {
+  animation-name: liquid-pink;
+  animation-duration: 4200ms;
   animation-iteration-count: infinite;
   animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-delay: 0ms;
 }
-.ws-pill:nth-child(even), .app-pill:nth-child(even) { animation-delay: -2600ms; }
-.ws-pill-active { animation-duration: 2400ms; }
+@keyframes liquid-green {
+  0%   { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(255,45,173,0.95) 67%,
+           rgba(114,20,77,0.98) 100%); }
+  50%  { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
+           rgba(255,255,255,0.85) 24%, rgba(255,45,173,0.95) 31%,
+           rgba(114,20,77,0.98) 100%); }
+  100% { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(255,45,173,0.95) 67%,
+           rgba(114,20,77,0.98) 100%); }
+}
+.ws-pill-green, .app-pill-green {
+  animation-name: liquid-green;
+  animation-duration: 4200ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-delay: -900ms;
+}
+@keyframes liquid-purple {
+  0%   { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(57,255,20,0.95) 67%,
+           rgba(25,114,9,0.98) 100%); }
+  50%  { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
+           rgba(255,255,255,0.85) 24%, rgba(57,255,20,0.95) 31%,
+           rgba(25,114,9,0.98) 100%); }
+  100% { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(57,255,20,0.95) 67%,
+           rgba(25,114,9,0.98) 100%); }
+}
+.ws-pill-purple, .app-pill-purple {
+  animation-name: liquid-purple;
+  animation-duration: 4200ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-delay: -1800ms;
+}
+@keyframes liquid-gold {
+  0%   { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(255,138,30,0.95) 67%,
+           rgba(114,62,13,0.98) 100%); }
+  50%  { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
+           rgba(255,255,255,0.85) 24%, rgba(255,138,30,0.95) 31%,
+           rgba(114,62,13,0.98) 100%); }
+  100% { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(255,138,30,0.95) 67%,
+           rgba(114,62,13,0.98) 100%); }
+}
+.ws-pill-gold, .app-pill-gold {
+  animation-name: liquid-gold;
+  animation-duration: 4200ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-delay: -2700ms;
+}
+@keyframes liquid-orange {
+  0%   { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(255,138,30,0.95) 67%,
+           rgba(114,62,13,0.98) 100%); }
+  50%  { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
+           rgba(255,255,255,0.85) 24%, rgba(255,138,30,0.95) 31%,
+           rgba(114,62,13,0.98) 100%); }
+  100% { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(255,138,30,0.95) 67%,
+           rgba(114,62,13,0.98) 100%); }
+}
+.ws-pill-orange, .app-pill-orange {
+  animation-name: liquid-orange;
+  animation-duration: 4200ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-delay: -450ms;
+}
+@keyframes liquid-blue {
+  0%   { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(77,159,255,0.95) 67%,
+           rgba(34,71,114,0.98) 100%); }
+  50%  { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
+           rgba(255,255,255,0.85) 24%, rgba(77,159,255,0.95) 31%,
+           rgba(34,71,114,0.98) 100%); }
+  100% { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(77,159,255,0.95) 67%,
+           rgba(34,71,114,0.98) 100%); }
+}
+.ws-pill-blue, .app-pill-blue {
+  animation-name: liquid-blue;
+  animation-duration: 4200ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-delay: -1350ms;
+}
+@keyframes liquid-cyan {
+  0%   { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(255,45,85,0.95) 67%,
+           rgba(114,20,38,0.98) 100%); }
+  50%  { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
+           rgba(255,255,255,0.85) 24%, rgba(255,45,85,0.95) 31%,
+           rgba(114,20,38,0.98) 100%); }
+  100% { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(255,45,85,0.95) 67%,
+           rgba(114,20,38,0.98) 100%); }
+}
+.ws-pill-cyan, .app-pill-cyan {
+  animation-name: liquid-cyan;
+  animation-duration: 4200ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-delay: -2250ms;
+}
+@keyframes liquid-occupied {
+  0%   { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(125,61,255,0.95) 67%,
+           rgba(56,27,114,0.98) 100%); }
+  50%  { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
+           rgba(255,255,255,0.85) 24%, rgba(125,61,255,0.95) 31%,
+           rgba(56,27,114,0.98) 100%); }
+  100% { background-image: linear-gradient(180deg,
+           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
+           rgba(255,255,255,0.85) 60%, rgba(125,61,255,0.95) 67%,
+           rgba(56,27,114,0.98) 100%); }
+}
+.ws-pill-occupied, .app-pill-occupied {
+  animation-name: liquid-occupied;
+  animation-duration: 4200ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-delay: -600ms;
+}
