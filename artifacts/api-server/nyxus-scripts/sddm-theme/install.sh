@@ -34,15 +34,31 @@ mkdir -p "${THEME_DIR}"
 cp -r "${SCRIPT_DIR}/." "${THEME_DIR}/"
 rm -f "${THEME_DIR}/install.sh"
 
-# ── Background: rev r26c — STARFIELD LOGIN (pure black + 4-point starbursts).
-# Priority order: nyxus-login-stars.png (current) → nyxus-urban-alien.png
-# (legacy local) → bundled background.png → network fetch of starfield.
-if [[ -f "${SCRIPT_DIR}/../nyxus-login-stars.png" ]]; then
-    echo "${C_DIM}→${C_RST} Using local NYXUS starfield (nyxus-login-stars.png)"
-    cp "${SCRIPT_DIR}/../nyxus-login-stars.png" "${THEME_DIR}/background.png"
+# ── Background: rev r27 — URBAN ALIEN LOGIN (2026-07-26).
+# The owner's chosen look for every login/lock surface is the urban-alien
+# graffiti art, so the login wall now WINS this chain. The starfield used to
+# win, which is why a reinstall kept reverting the login screen away from the
+# rest of the theme. Priority: nyxus-login-wall.png (urban alien, matches
+# hyprlock) → nyxus-urban-alien.png → nyxus-login-stars.png (starfield,
+# legacy) → bundled background.png → network fetch.
+# Scaled to 1920x1080 cover so the panel never letterboxes.
+_nyx_set_bg() {
+    if command -v magick &>/dev/null; then
+        magick "$1" -resize 1920x1080^ -gravity center -extent 1920x1080 \
+            "${THEME_DIR}/background.png"
+    else
+        cp "$1" "${THEME_DIR}/background.png"
+    fi
+}
+if [[ -f "${SCRIPT_DIR}/../nyxus-login-wall.png" ]]; then
+    echo "${C_DIM}→${C_RST} Using NYXUS urban-alien login wall"
+    _nyx_set_bg "${SCRIPT_DIR}/../nyxus-login-wall.png"
 elif [[ -f "${SCRIPT_DIR}/../nyxus-urban-alien.png" ]]; then
-    echo "${C_DIM}→${C_RST} Using local cosmic ink swirl wallpaper (legacy)"
-    cp "${SCRIPT_DIR}/../nyxus-urban-alien.png" "${THEME_DIR}/background.png"
+    echo "${C_DIM}→${C_RST} Using NYXUS urban-alien hero"
+    _nyx_set_bg "${SCRIPT_DIR}/../nyxus-urban-alien.png"
+elif [[ -f "${SCRIPT_DIR}/../nyxus-login-stars.png" ]]; then
+    echo "${C_DIM}→${C_RST} Using NYXUS starfield (legacy fallback)"
+    _nyx_set_bg "${SCRIPT_DIR}/../nyxus-login-stars.png"
 elif [[ -f "${SCRIPT_DIR}/background.png" ]]; then
     echo "${C_DIM}→${C_RST} Using bundled background.png"
 elif command -v curl &>/dev/null; then
@@ -57,19 +73,22 @@ chmod 755 "${THEME_DIR}"
 find "${THEME_DIR}" -type f -exec chmod 644 {} \;
 
 # ── SDDM activation config
+# THEME SELECTION ONLY. Do NOT write [General] here: this file sorts AFTER
+# 10-nyxus.conf, so anything set here wins, and both keys we used to write
+# broke the greeter outright (2026-07-26 "no login screen"):
+#   DisplayServer=wayland  -> sddm looks for a wayland greeter compositor
+#     (weston) that is not installed -> HELPER_DISPLAYSERVER_ERROR, exit 4,
+#     then a fallback to x11-user.
+#   GreeterEnvironment=... -> REPLACES the whole var, dropping
+#     QT_QUICK_BACKEND=software, which the hybrid-GPU laptop requires ->
+#     the x11 fallback greeter then SIGSEGVs (exit 11) and nothing renders.
+# DisplayServer / GreeterEnvironment belong to 10-nyxus.conf. Leave them there.
 mkdir -p /etc/sddm.conf.d
 cat > "${SDDM_CONF}" <<EOF
 [Theme]
 Current=${THEME_NAME}
-
-[General]
-DisplayServer=wayland
-GreeterEnvironment=QT_WAYLAND_SHELL_INTEGRATION=layer-shell
-
-[Wayland]
-SessionDir=/usr/share/wayland-sessions
 EOF
-echo "${C_OK}✓${C_RST} Wrote ${SDDM_CONF}"
+echo "${C_OK}✓${C_RST} Wrote ${SDDM_CONF} (theme only)"
 
 # ── Ensure SDDM is enabled
 if command -v systemctl &>/dev/null; then

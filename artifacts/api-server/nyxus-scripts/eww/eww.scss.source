@@ -41,8 +41,22 @@ $t-slow:      350ms $ease-apple;
  * pill / tile / clock / ticker shares this exact language so the whole
  * bar reads as one machined obsidian instrument panel.
  * ------------------------------------------------------------------- */
+/* SHADOW-BLOCK FIX (2026-07-26): this mixin is shared by every rail pill,
+   bottom-bar orb and ticker tile, so its two darkest tokens were painting a
+   black slab behind each one -- the "shadow blocks" around the left/right
+   rails and parts of the bottom bar.
+     1. `0 6px 18px rgba(0,0,0,0.62)` was a hard ink drop shadow with no
+        spread falloff; on a 38px pill it reads as a rectangular block
+        rather than a shadow. REMOVED (glow does the lifting instead).
+     2. `background-color` at alpha .985 was effectively opaque, so
+        Hyprland's dual-kawase layer blur had nothing to show through and
+        every pill was a flat black tile. Dropped to .55 -- still well
+        above the `ignore_alpha 0.2` layerrule threshold, so the bars stay
+        blurred, but the wallpaper now reads through as real glass.
+   The accent ring is bumped in exchange, so the pills glow instead of
+   casting. Keep this block pure ASCII (see the charset note up top). */
 @mixin obsidian-vessel($hue, $strength: 1.0) {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image:
     url('assets/fog-vessel.png'),
     linear-gradient(180deg,
@@ -55,9 +69,8 @@ $t-slow:      350ms $ease-apple;
   border-top: 2px solid rgba($hue, 0.95 * $strength);
   box-shadow:
     0 0 16px rgba($hue, 0.22 * $strength),
-    0 6px 18px rgba(0, 0, 0, 0.62),
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 0 14px rgba(0, 0, 0, 0.52),
+    inset 0 0 14px rgba(0, 0, 0, 0.32),
     inset 0 -8px 18px rgba($hue, 0.06 * $strength);
 }
 @mixin obsidian-vessel-hover($hue) {
@@ -65,9 +78,8 @@ $t-slow:      350ms $ease-apple;
   box-shadow:
     0 0 22px rgba($hue, 0.50),
     0 0 40px rgba($hue, 0.22),
-    0 6px 18px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 0 12px rgba(0, 0, 0, 0.40);
+    inset 0 0 12px rgba(0, 0, 0, 0.28);
 }
 /* pressed keycap: the button sinks -- ink floods in, the top sheen dies,
    a tight accent rim confirms the click. Pairs with obsidian-vessel. */
@@ -339,15 +351,26 @@ window, window.background, decoration {
  * kept compact so it still nests inside the saucer body (rings visible
  * above and below) instead of floating over the hull. */
 .saucer-screen-music {
-  border-radius: 18px;
-  padding: 3px 14px 4px 14px;
-  min-width: 232px;
-  border-color: rgba($neon-red, 0.50);
-  box-shadow:
-    0 0 14px rgba($neon-red, 0.30),
-    0 0 26px rgba($nyxus-accent-primary, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 0 16px rgba(0, 0, 0, 0.74);
+  min-width: 158px;
+  min-height: 108px;
+  border-radius: 8px;
+  padding: 4px 8px 5px 8px;
+  /* NO border: the boombox art already paints a green+magenta neon bezel
+     around this window. Drawing a second ring inside it was what made the
+     face read as muddy/doubled. One bezel, from the art. */
+  border: none;
+  background-color: #01040a;
+  /* a real backlit VFD: phosphor scanlines over a top-lit green wash */
+  background-image:
+    repeating-linear-gradient(180deg,
+      rgba(141, 255, 106, 0.075) 0px,
+      rgba(141, 255, 106, 0.075) 1px,
+      rgba(0, 0, 0, 0.00) 1px,
+      rgba(0, 0, 0, 0.00) 3px),
+    linear-gradient(180deg,
+      rgba(24, 74, 34, 0.55) 0%,
+      rgba(4, 14, 8, 0.85) 46%,
+      rgba(1, 3, 8, 1.00) 100%);
 }
 
 /* -- ALIEN BOOMBOX accents (music face, rev 2026-07-25) ---------------
@@ -922,9 +945,8 @@ window, window.background, decoration {
   color: #ffffff;
   box-shadow:
     0 0 18px rgba($neon-red, 0.35),
-    0 6px 18px rgba(0, 0, 0, 0.62),
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 0 14px rgba(0, 0, 0, 0.52);
+    inset 0 0 14px rgba(0, 0, 0, 0.32);
 }
 .brand-gem {
   font-size: 14px;
@@ -952,8 +974,7 @@ window, window.background, decoration {
   @include obsidian-vessel-hover($neon-red);
   box-shadow:
     0 0 28px rgba($neon-red, 0.55),
-    0 0 48px rgba($nyxus-accent-primary, 0.22),
-    0 6px 18px rgba(0, 0, 0, 0.62);
+    0 0 48px rgba($nyxus-accent-primary, 0.22);
 }
 .brand-top {
   padding: 2px 10px 2px 6px;
@@ -3881,3 +3902,404 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
     0 0 12px rgba($neon-red, 0.45),
     0 0 22px rgba($nyxus-accent-warn, 0.28);
 }
+/* ====================================================================
+   NYXUS OVERRIDE BLOCK - appended 2026-07-26
+   Rules here intentionally sit at the END of the file: GTK CSS resolves
+   equal-specificity conflicts by document order, so a later single-class
+   rule beats the same selector earlier in the sheet WITHOUT editing any
+   existing line. This exists because `sass` is not installed on this box
+   and a full npx recompile reintroduces ~164 lines of drift (it resolves
+   several mix()/color.adjust() values to different colors than the live
+   sheet), which would silently shift the palette. Keep new bar work here.
+   Mirrored verbatim at the end of eww.scss.source.
+   ==================================================================== */
+
+/* -- BOOMBOX MUSIC FACE ------------------------------------------------
+   Sized to the MEASURED boombox display window: 424x294 of the 1254x380
+   band renders to 125x87 inside the 430x116 slot (the band is height-
+   limited, so it draws 351x112 and centres). The old values were cut for
+   the saucer's 204x61 oval (min-width 232px, pill radius) and would have
+   burst straight through the boombox's glass.
+   OPAQUE on purpose: a translucent panel let the boombox art show through
+   behind the text and read as dirty/unfinished. The glass is now solid so
+   the readout looks like a real lit display. The bass-reactive outer glow
+   is applied inline in eww.yuck (it needs the CAVA_BASS variable). */
+.saucer-screen-music {
+  min-width: 158px;
+  min-height: 108px;
+  border-radius: 10px;
+  padding: 3px 7px 4px 7px;
+  background-color: rgba(2, 1, 6, 0.97);
+  background-image: linear-gradient(180deg,
+      rgba(125, 255, 94, 0.10) 0%,
+      rgba(4, 2, 10, 0.00) 42%,
+      rgba(255, 45, 173, 0.07) 100%);
+  border: 1px solid rgba(125, 255, 94, 0.55);
+}
+.boombox-base  { background-color: transparent; }
+.boombox-frame { background-color: rgba(2, 1, 6, 0.97); }
+
+/* the art already paints two huge woofers either side of the glass, so the
+   inner display is a bare scanline plate now, not a second bezel */
+.boombox-display {
+  background-color: transparent;
+  border-radius: 3px;
+  padding: 0 2px;
+  box-shadow: none;
+}
+.bar-hub-music-title  { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: #ffffff;
+                        text-shadow: 0 0 10px rgba(125, 255, 94, 0.85), 0 0 20px rgba(255, 45, 173, 0.45); }
+.bar-hub-music-artist { font-size: 10px; letter-spacing: 0.10em; color: rgba(125, 255, 94, 0.92);
+                        text-shadow: 0 0 8px rgba(125, 255, 94, 0.5); }
+.cava-saucer          { font-size: 16px; letter-spacing: 0.02em; color: #8dff6a;
+                        text-shadow: 0 0 8px rgba(125, 255, 94, 0.95), 0 0 18px rgba(125, 255, 94, 0.5); }
+
+/* 108px of progress bar + two time labels overflowed the 112px glass */
+.saucer-prog { min-width: 70px; min-height: 4px; }
+.saucer-time { font-size: 9px; color: rgba(255, 255, 255, 0.85); }
+.saucer-btn  { min-width: 27px; min-height: 20px; font-size: 12px; padding: 0 3px;
+               border-radius: 6px;
+               color: #eafff2;
+               background-color: rgba(158, 255, 130, 0.10);
+               background-image: linear-gradient(180deg,
+                   rgba(255, 255, 255, 0.20) 0%,
+                   rgba(255, 255, 255, 0.02) 46%,
+                   rgba(0, 0, 0, 0.30) 100%);
+               border: 1px solid rgba(141, 255, 106, 0.55);
+               box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30),
+                           inset 0 -2px 5px rgba(0, 0, 0, 0.55),
+                           0 0 9px rgba(141, 255, 106, 0.35);
+               text-shadow: 0 0 9px rgba(141, 255, 106, 0.9); }
+.saucer-btn:hover { background-color: rgba(158, 255, 130, 0.26);
+               border-color: rgba(141, 255, 106, 0.95);
+               box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38),
+                           0 0 16px rgba(141, 255, 106, 0.75); }
+.saucer-btn-main { min-width: 31px; border-color: rgba(255, 45, 173, 0.75);
+               box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30),
+                           inset 0 -2px 5px rgba(0, 0, 0, 0.55),
+                           0 0 12px rgba(255, 45, 173, 0.55);
+               text-shadow: 0 0 10px rgba(255, 45, 173, 0.95); }
+/* progress: a lit phosphor track, not a grey hairline */
+.saucer-prog-fill { background-color: #8dff6a;
+               box-shadow: 0 0 8px rgba(141, 255, 106, 0.9); }
+
+/* woofer pulse discs - geometry + colour come from the inline CAVA_BASS style */
+.boombox-cone { border-radius: 999px; background-color: transparent; }
+
+/* ====================================================================
+   NYXUS RAILS v2 - "NEON SPINE"  (redesign, 2026-07-26)
+   Hand-designed, no external art, so nothing here depends on an asset
+   aspect ratio or a keyed PNG. Three ideas:
+     1. a glowing tube runs the rail behind the caps, drawn purely with
+        gradient colour STOPS (never background-size, which the compile
+        step strips) - the caps read as beads on a lit wire instead of
+        loose floating tiles.
+     2. caps are slanted graffiti keycaps (asymmetric radius) with a
+        chrome bevel, not plain rounded squares.
+     3. glow carries state: idle dim, hover bloom, active full bloom.
+   Per-hue rules are GENERATED from the accent colours already resolved
+   in this sheet, so the accent engine keeps control of the palette and
+   nothing is hardcoded to today's purple.
+   ==================================================================== */
+.ws-rail, .app-rail {
+  padding: 20px 0;
+  background-color: transparent;
+  background-image: linear-gradient(90deg,
+    rgba(0, 0, 0, 0) 0%,          rgba(0, 0, 0, 0) 44%,
+    rgba(125, 61, 255, 0.22) 44%, rgba(125, 61, 255, 0.22) 46.5%,
+    rgba(206, 158, 255, 0.72) 46.5%, rgba(206, 158, 255, 0.72) 53.5%,
+    rgba(125, 61, 255, 0.22) 53.5%, rgba(125, 61, 255, 0.22) 56%,
+    rgba(0, 0, 0, 0) 56%,         rgba(0, 0, 0, 0) 100%);
+}
+.float-island { margin-bottom: 10px; background-color: transparent; }
+
+.ws-pill, .app-pill {
+  min-width: 42px;
+  min-height: 42px;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 16px 5px 16px 5px;
+  background-color: rgba(9, 3, 20, 0.55);
+  background-image: linear-gradient(152deg,
+    rgba(255, 255, 255, 0.17) 0%,
+    rgba(255, 255, 255, 0.02) 38%,
+    rgba(0, 0, 0, 0.32) 100%);
+  transition: all 190ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+
+.app-pill-blue {
+  border-color: rgba(77, 159, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(77, 159, 255, 0.38),
+    0 0 30px rgba(77, 159, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-blue:hover {
+  border-color: rgba(77, 159, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(77, 159, 255, 0.85),
+    0 0 54px rgba(77, 159, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-gold {
+  border-color: rgba(255, 138, 30, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 138, 30, 0.38),
+    0 0 30px rgba(255, 138, 30, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-gold:hover {
+  border-color: rgba(255, 138, 30, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 138, 30, 0.85),
+    0 0 54px rgba(255, 138, 30, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-green {
+  border-color: rgba(255, 45, 173, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 45, 173, 0.38),
+    0 0 30px rgba(255, 45, 173, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-green:hover {
+  border-color: rgba(255, 45, 173, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 45, 173, 0.85),
+    0 0 54px rgba(255, 45, 173, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-orange {
+  border-color: rgba(255, 138, 30, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 138, 30, 0.38),
+    0 0 30px rgba(255, 138, 30, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-orange:hover {
+  border-color: rgba(255, 138, 30, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 138, 30, 0.85),
+    0 0 54px rgba(255, 138, 30, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-pink {
+  border-color: rgba(125, 61, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(125, 61, 255, 0.38),
+    0 0 30px rgba(125, 61, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-pink:hover {
+  border-color: rgba(125, 61, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(125, 61, 255, 0.85),
+    0 0 54px rgba(125, 61, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-purple {
+  border-color: rgba(57, 255, 20, 0.82);
+  box-shadow:
+    0 0 15px rgba(57, 255, 20, 0.38),
+    0 0 30px rgba(57, 255, 20, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-purple:hover {
+  border-color: rgba(57, 255, 20, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(57, 255, 20, 0.85),
+    0 0 54px rgba(57, 255, 20, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-blue {
+  border-color: rgba(77, 159, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(77, 159, 255, 0.38),
+    0 0 30px rgba(77, 159, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-blue:hover {
+  border-color: rgba(77, 159, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(77, 159, 255, 0.85),
+    0 0 54px rgba(77, 159, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-cyan {
+  border-color: rgba(255, 45, 85, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 45, 85, 0.38),
+    0 0 30px rgba(255, 45, 85, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-cyan:hover {
+  border-color: rgba(255, 45, 85, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 45, 85, 0.85),
+    0 0 54px rgba(255, 45, 85, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-gold {
+  border-color: rgba(255, 138, 30, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 138, 30, 0.38),
+    0 0 30px rgba(255, 138, 30, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-gold:hover {
+  border-color: rgba(255, 138, 30, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 138, 30, 0.85),
+    0 0 54px rgba(255, 138, 30, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-green {
+  border-color: rgba(255, 45, 173, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 45, 173, 0.38),
+    0 0 30px rgba(255, 45, 173, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-green:hover {
+  border-color: rgba(255, 45, 173, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 45, 173, 0.85),
+    0 0 54px rgba(255, 45, 173, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-occupied {
+  border-color: rgba(125, 61, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(125, 61, 255, 0.38),
+    0 0 30px rgba(125, 61, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-occupied:hover {
+  border-color: rgba(125, 61, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(125, 61, 255, 0.85),
+    0 0 54px rgba(125, 61, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-orange {
+  border-color: rgba(255, 138, 30, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 138, 30, 0.38),
+    0 0 30px rgba(255, 138, 30, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-orange:hover {
+  border-color: rgba(255, 138, 30, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 138, 30, 0.85),
+    0 0 54px rgba(255, 138, 30, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-pink {
+  border-color: rgba(125, 61, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(125, 61, 255, 0.38),
+    0 0 30px rgba(125, 61, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-pink:hover {
+  border-color: rgba(125, 61, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(125, 61, 255, 0.85),
+    0 0 54px rgba(125, 61, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-purple {
+  border-color: rgba(57, 255, 20, 0.82);
+  box-shadow:
+    0 0 15px rgba(57, 255, 20, 0.38),
+    0 0 30px rgba(57, 255, 20, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-purple:hover {
+  border-color: rgba(57, 255, 20, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(57, 255, 20, 0.85),
+    0 0 54px rgba(57, 255, 20, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+
+/* the live workspace: a lit spray-tag, not just a tinted tile */
+.ws-pill-active {
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.92);
+  border-radius: 16px 5px 16px 5px;
+  color: #0a0410;
+  background-color: rgba(255, 45, 173, 1);
+  background-image: linear-gradient(140deg,
+    rgba(125, 61, 255, 1) 0%,
+    rgba(255, 45, 173, 1) 55%,
+    rgba(255, 138, 30, 1) 100%);
+  box-shadow:
+    0 0 26px rgba(255, 45, 173, 0.78),
+    0 0 56px rgba(125, 61, 255, 0.42),
+    inset 0 2px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.32);
+}
+.ws-pill-occupied { background-color: rgba(24, 10, 44, 0.62); }
+
+/* -- TOP TICKER: a lit rail under the crawl -------------------------- */
+.bar-top-ticker-only {
+  background-image: linear-gradient(180deg,
+    rgba(0, 0, 0, 0) 0%,          rgba(0, 0, 0, 0) 84%,
+    rgba(125, 61, 255, 0.30) 88%, rgba(206, 158, 255, 0.68) 94%,
+    rgba(255, 45, 173, 0.55) 97%, rgba(0, 0, 0, 0) 100%);
+}
+.ticker-label {
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-shadow: 0 0 9px rgba(255, 45, 173, 0.50), 0 0 20px rgba(125, 61, 255, 0.28);
+}
+
+/* -- BOTTOM METRICS: same shape, more phosphor ----------------------- */
+.mon-trace  { text-shadow: 0 0 8px rgba(255, 255, 255, 0.20); }
+.mon-glyph  { text-shadow: 0 0 10px rgba(255, 45, 173, 0.45); }
+

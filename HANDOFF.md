@@ -1,17 +1,28 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-26 ~06:20 EDT (bake DONE · flash next)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-26 ~22:00 EDT (login FIXED · bars redesigned)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
 >
-> **⚠ EWW hub chrome night (Jul 25→26) — READ BEFORE TOUCHING SAUCER/BARS:**  
+> **★ NEWEST — LOGIN FIXED + BARS REDESIGNED (Jul 26 eve) — READ FIRST:**  
+> [`docs/BARS_AND_LOGIN_BRIEF_2026-07-26.md`](./docs/BARS_AND_LOGIN_BRIEF_2026-07-26.md)  
+> The **"no login screen"** bug is finally dead: `/etc/sddm.conf.d/nyxus.conf`
+> was regenerated on every run by `sddm-theme/install.sh` — fixed at the source,
+> verified live. Also: hacker-mode was silently stuck on, the bar "shadow blocks"
+> are gone, and the side rails / ticker / bottom hub were **redesigned at the
+> owner's explicit request** (saucer↔1980s boombox flip, bass-reactive).
+> **This supersedes the Jul 25→26 revert note below — do NOT revert it as if it
+> were that episode.** Contains the eww toolchain traps (no `sass` installed;
+> live `eww.css` has drifted from source; use append-only override blocks).
+>
+> **⚠ EWW hub chrome night (Jul 25→26) — historical:**  
 > [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md)  
 > Redesign + Meshy wraps were wrong; **fully reverted**. Owner confirmed restored
-> desktop looks good. **Do not restart saucer/time/dock/ticker work** unless the
-> owner explicitly asks. Bake the restored tip.
+> desktop looks good. Do not restart saucer/time/dock/ticker work unless the
+> owner explicitly asks — **on Jul 26 the owner DID ask; see the brief above.**
 >
 > **Live USB report + full sweep:**  
 > [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md)

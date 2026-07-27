@@ -256,11 +256,26 @@ window, window.background, decoration {
  * kept compact so it still nests inside the saucer body (rings visible
  * above and below) instead of floating over the hull. */
 .saucer-screen-music {
-  border-radius: 18px;
-  padding: 3px 14px 4px 14px;
-  min-width: 232px;
-  border-color: rgba(255, 45, 85, 0.5);
-  box-shadow: 0 0 14px rgba(255, 45, 85, 0.3), 0 0 26px rgba(125, 61, 255, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.74);
+  min-width: 158px;
+  min-height: 108px;
+  border-radius: 8px;
+  padding: 4px 8px 5px 8px;
+  /* NO border: the boombox art already paints a green+magenta neon bezel
+     around this window. Drawing a second ring inside it was what made the
+     face read as muddy/doubled. One bezel, from the art. */
+  border: none;
+  background-color: #01040a;
+  /* a real backlit VFD: phosphor scanlines over a top-lit green wash */
+  background-image:
+    repeating-linear-gradient(180deg,
+      rgba(141, 255, 106, 0.075) 0px,
+      rgba(141, 255, 106, 0.075) 1px,
+      rgba(0, 0, 0, 0.00) 1px,
+      rgba(0, 0, 0, 0.00) 3px),
+    linear-gradient(180deg,
+      rgba(24, 74, 34, 0.55) 0%,
+      rgba(4, 14, 8, 0.85) 46%,
+      rgba(1, 3, 8, 1.00) 100%);
 }
 
 /* -- ALIEN BOOMBOX accents (music face, rev 2026-07-25) ---------------
@@ -664,13 +679,13 @@ window, window.background, decoration {
 .nexus-heart-btn {
   padding: 3px 20px 4px;
   border-radius: 999px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 45, 173, 0.384);
   border-top: 2px solid rgba(255, 45, 173, 0.76);
-  box-shadow: 0 0 16px rgba(255, 45, 173, 0.176), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 173, 0.048);
+  box-shadow: 0 0 16px rgba(255, 45, 173, 0.176), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 45, 173, 0.048);
   border-top: 2px solid rgba(255, 45, 173, 0.95);
   box-shadow: 0 0 24px rgba(255, 45, 173, 0.35), 0 0 48px rgba(125, 61, 255, 0.18), 0 4px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 20px rgba(125, 61, 255, 0.1);
   transition: all 280ms cubic-bezier(0.23, 1, 0.32, 1);
@@ -678,7 +693,7 @@ window, window.background, decoration {
 
 .nexus-heart-btn:hover {
   border-color: rgba(255, 45, 173, 0.95);
-  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   box-shadow: 0 0 32px rgba(255, 45, 173, 0.55), 0 0 60px rgba(125, 61, 255, 0.28), 0 4px 16px rgba(0, 0, 0, 0.55);
 }
 
@@ -718,20 +733,20 @@ window, window.background, decoration {
   padding: 4px 10px;
   min-height: 28px;
   border-radius: 999px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 45, 173, 0.264);
   border-top: 2px solid rgba(255, 45, 173, 0.5225);
-  box-shadow: 0 0 16px rgba(255, 45, 173, 0.121), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 173, 0.033);
+  box-shadow: 0 0 16px rgba(255, 45, 173, 0.121), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 45, 173, 0.033);
   border-color: rgba(255, 45, 173, 0.42);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .nexus-orb:hover {
   border-color: rgba(255, 45, 173, 0.95);
-  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
 }
 
@@ -798,19 +813,19 @@ window, window.background, decoration {
 .reactor-chip {
   padding: 2px 7px;
   border-radius: 6px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.216);
   border-top: 2px solid rgba(125, 61, 255, 0.4275);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.099), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.027);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.099), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.027);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .reactor-chip:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
 }
 
 .reactor-chip-key {
@@ -935,13 +950,13 @@ window, window.background, decoration {
   min-height: 30px;
   min-width: 20px;
   border-radius: 12px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.48);
   border-top: 2px solid rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
   color: #eef2fa;
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-weight: 700;
@@ -955,7 +970,7 @@ window, window.background, decoration {
 
 .pill:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 10px rgba(125, 61, 255, 0.55);
 }
@@ -1056,7 +1071,7 @@ window, window.background, decoration {
 
 .power-pill:hover {
   border-color: rgba(255, 45, 85, 0.95);
-  box-shadow: 0 0 22px rgba(255, 45, 85, 0.5), 0 0 40px rgba(255, 45, 85, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 45, 85, 0.5), 0 0 40px rgba(255, 45, 85, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 10px rgba(255, 45, 85, 0.6);
 }
@@ -1075,15 +1090,15 @@ window, window.background, decoration {
   font-weight: 700;
   letter-spacing: 0.04em;
   border: 1px solid transparent;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 45, 85, 0.456);
   border-top: 2px solid rgba(255, 45, 85, 0.9025);
-  box-shadow: 0 0 16px rgba(255, 45, 85, 0.209), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 85, 0.057);
+  box-shadow: 0 0 16px rgba(255, 45, 85, 0.209), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 45, 85, 0.057);
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(255, 45, 85, 0.35), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 14px rgba(0, 0, 0, 0.52);
+  box-shadow: 0 0 18px rgba(255, 45, 85, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 14px rgba(0, 0, 0, 0.32);
 }
 
 .brand-gem {
@@ -1109,8 +1124,8 @@ window, window.background, decoration {
 
 .brand:hover {
   border-color: rgba(255, 45, 85, 0.95);
-  box-shadow: 0 0 22px rgba(255, 45, 85, 0.5), 0 0 40px rgba(255, 45, 85, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 28px rgba(255, 45, 85, 0.55), 0 0 48px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62);
+  box-shadow: 0 0 22px rgba(255, 45, 85, 0.5), 0 0 40px rgba(255, 45, 85, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 0 28px rgba(255, 45, 85, 0.55), 0 0 48px rgba(125, 61, 255, 0.22);
 }
 
 .brand-top {
@@ -1177,19 +1192,19 @@ window, window.background, decoration {
 .clock {
   padding: 3px 18px;
   border-radius: 8px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.48);
   border-top: 2px solid rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
   transition: all 180ms ease;
 }
 
 .clock:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
 }
 
 .clock-glyph {
@@ -1292,13 +1307,13 @@ window, window.background, decoration {
 .ticker-box {
   padding: 2px 14px;
   border-radius: 10px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 45, 173, 0.3456);
   border-top: 2px solid rgba(255, 45, 173, 0.684);
-  box-shadow: 0 0 16px rgba(255, 45, 173, 0.1584), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 173, 0.0432);
+  box-shadow: 0 0 16px rgba(255, 45, 173, 0.1584), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 45, 173, 0.0432);
   min-width: 0;
   box-shadow: 0 0 14px rgba(255, 45, 173, 0.18), 0 5px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 12px rgba(255, 45, 173, 0.08);
 }
@@ -2331,19 +2346,19 @@ scrollbar slider:hover {
   min-width: 150px;
   min-height: 130px;
   border-radius: 10px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(57, 255, 20, 0.408);
   border-top: 2px solid rgba(57, 255, 20, 0.8075);
-  box-shadow: 0 0 16px rgba(57, 255, 20, 0.187), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(57, 255, 20, 0.051);
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.187), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(57, 255, 20, 0.051);
   transition: all 180ms ease;
 }
 
 .power-btn:hover {
   border-color: rgba(57, 255, 20, 0.95);
-  box-shadow: 0 0 22px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
 }
 
 /* Destructive variants (Shutdown/Restart) - red border + glyph in
@@ -2644,13 +2659,13 @@ scrollbar slider:hover {
 
 /* Top-bar player - obsidian capsule riding the telemetry strip */
 .ticker-player {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.312);
   border-top: 2px solid rgba(125, 61, 255, 0.6175);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.039);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.143), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.039);
   border-radius: 10px;
   padding: 2px 10px;
   margin-left: 4px;
@@ -2659,7 +2674,7 @@ scrollbar slider:hover {
 
 .ticker-player:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
 }
 
 .ticker-player-text {
@@ -3095,13 +3110,13 @@ scrollbar slider:hover {
 }
 
 .cal-day-today {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.48);
   border-top: 2px solid rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
   color: #ffffff;
   font-weight: 800;
   box-shadow: 0 0 18px rgba(125, 61, 255, 0.55);
@@ -3111,13 +3126,13 @@ scrollbar slider:hover {
   margin-top: 10px;
   padding: 10px 16px;
   border-radius: 10px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 138, 30, 0.48);
   border-top: 2px solid rgba(255, 138, 30, 0.95);
-  box-shadow: 0 0 16px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 138, 30, 0.06);
+  box-shadow: 0 0 16px rgba(255, 138, 30, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 138, 30, 0.06);
   color: #eef2fa;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -3125,7 +3140,7 @@ scrollbar slider:hover {
 
 .cal-close:hover {
   border-color: rgba(255, 138, 30, 0.95);
-  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
 }
 
@@ -3138,7 +3153,7 @@ scrollbar slider:hover {
 
 .qs-pill:hover, .cal-pill:hover {
   border-color: rgba(57, 255, 20, 0.95);
-  box-shadow: 0 0 22px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
 }
 
@@ -3173,19 +3188,19 @@ scrollbar slider:hover {
   padding: 14px 10px;
   min-width: 78px;
   border-radius: 12px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.48);
   border-top: 2px solid rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.06);
   transition: all 200ms cubic-bezier(0.16, 1, 0.2, 1);
 }
 
 .qs-tile:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
 }
 
 .qs-tile-on {
@@ -3302,13 +3317,13 @@ scrollbar slider:hover {
 .wifi-advanced, .bt-advanced, .mix-advanced {
   padding: 6px 12px;
   border-radius: 8px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 45, 173, 0.408);
   border-top: 2px solid rgba(255, 45, 173, 0.8075);
-  box-shadow: 0 0 16px rgba(255, 45, 173, 0.187), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 173, 0.051);
+  box-shadow: 0 0 16px rgba(255, 45, 173, 0.187), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 45, 173, 0.051);
   color: rgb(170.3, 135.65, 255);
   /* NO letter-spacing: tracking ellipsizes these compact buttons */
 }
@@ -3317,7 +3332,7 @@ scrollbar slider:hover {
 .notif-dnd:hover, .notif-clear:hover, .wifi-advanced:hover, .bt-advanced:hover,
 .mix-advanced:hover {
   border-color: rgba(255, 45, 173, 0.95);
-  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
 }
 
@@ -4173,13 +4188,13 @@ scale slider {
   min-width: 40px;
   min-height: 40px;
   border-radius: 12px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.288);
   border-top: 2px solid rgba(125, 61, 255, 0.57);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.132), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.036);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.132), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.036);
   color: #eef2fa;
   font-size: 16px;
   transition: all 180ms ease;
@@ -4187,7 +4202,7 @@ scale slider {
 
 .dash-player-btn:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
 }
 
@@ -4420,19 +4435,19 @@ scale slider {
 .hud-tile {
   padding: 2px 9px;
   border-radius: 6px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.264);
   border-top: 2px solid rgba(125, 61, 255, 0.5225);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.121), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.033);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.121), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.033);
   transition: all 180ms ease;
 }
 
 .hud-tile:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
 }
 
 .hud-tile-glyph {
@@ -4584,115 +4599,115 @@ scale slider {
 
 /* -- app rail: per-app neon hover identities -------------------------- */
 .app-pill-pink {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.36);
   border-top: 2px solid rgba(125, 61, 255, 0.7125);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.045);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.165), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.045);
   color: rgb(123.34, 208.02, 247.46);
   text-shadow: 0 0 8px rgba(125, 61, 255, 0.45);
 }
 
 .app-pill-green {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 45, 173, 0.36);
   border-top: 2px solid rgba(255, 45, 173, 0.7125);
-  box-shadow: 0 0 16px rgba(255, 45, 173, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 173, 0.045);
+  box-shadow: 0 0 16px rgba(255, 45, 173, 0.165), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 45, 173, 0.045);
   color: rgb(170.3, 135.65, 255);
   text-shadow: 0 0 8px rgba(255, 45, 173, 0.45);
 }
 
 .app-pill-purple {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(57, 255, 20, 0.36);
   border-top: 2px solid rgba(57, 255, 20, 0.7125);
-  box-shadow: 0 0 16px rgba(57, 255, 20, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(57, 255, 20, 0.045);
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.165), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(57, 255, 20, 0.045);
   color: rgb(135.65, 217.05, 255);
   text-shadow: 0 0 8px rgba(57, 255, 20, 0.45);
 }
 
 .app-pill-gold {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 138, 30, 0.36);
   border-top: 2px solid rgba(255, 138, 30, 0.7125);
-  box-shadow: 0 0 16px rgba(255, 138, 30, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 138, 30, 0.045);
+  box-shadow: 0 0 16px rgba(255, 138, 30, 0.165), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 138, 30, 0.045);
   color: rgb(255, 207.6, 124.8);
   text-shadow: 0 0 8px rgba(255, 138, 30, 0.45);
 }
 
 .app-pill-orange {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 138, 30, 0.36);
   border-top: 2px solid rgba(255, 138, 30, 0.7125);
-  box-shadow: 0 0 16px rgba(255, 138, 30, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 138, 30, 0.045);
+  box-shadow: 0 0 16px rgba(255, 138, 30, 0.165), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 138, 30, 0.045);
   color: rgb(255, 160.5, 127.6);
   text-shadow: 0 0 8px rgba(255, 138, 30, 0.45);
 }
 
 .app-pill-blue {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(77, 159, 255, 0.36);
   border-top: 2px solid rgba(77, 159, 255, 0.7125);
-  box-shadow: 0 0 16px rgba(77, 159, 255, 0.165), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(77, 159, 255, 0.045);
+  box-shadow: 0 0 16px rgba(77, 159, 255, 0.165), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(77, 159, 255, 0.045);
   color: rgb(148.2, 197.4, 255);
   text-shadow: 0 0 8px rgba(77, 159, 255, 0.45);
 }
 
 .app-pill-pink:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(125, 61, 255, 0.85);
 }
 
 .app-pill-green:hover {
   border-color: rgba(255, 45, 173, 0.95);
-  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(255, 45, 173, 0.85);
 }
 
 .app-pill-purple:hover {
   border-color: rgba(57, 255, 20, 0.95);
-  box-shadow: 0 0 22px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(57, 255, 20, 0.85);
 }
 
 .app-pill-gold:hover {
   border-color: rgba(255, 138, 30, 0.95);
-  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(255, 138, 30, 0.85);
 }
 
 .app-pill-orange:hover {
   border-color: rgba(255, 138, 30, 0.95);
-  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(255, 138, 30, 0.85);
 }
 
 .app-pill-blue:hover {
   border-color: rgba(77, 159, 255, 0.95);
-  box-shadow: 0 0 22px rgba(77, 159, 255, 0.5), 0 0 40px rgba(77, 159, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(77, 159, 255, 0.5), 0 0 40px rgba(77, 159, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(77, 159, 255, 0.85);
 }
@@ -4702,90 +4717,90 @@ scale slider {
    every pill is a solid near-black keycap wrapped in a neon hairline. */
 .ws-pill {
   border-radius: 11px;
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.24);
   border-top: 2px solid rgba(125, 61, 255, 0.475);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.11), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.03);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.03);
   color: rgba(238, 242, 250, 0.42);
 }
 
 .ws-pill-pink {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(125, 61, 255, 0.312);
   border-top: 2px solid rgba(125, 61, 255, 0.6175);
-  box-shadow: 0 0 16px rgba(125, 61, 255, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(125, 61, 255, 0.039);
+  box-shadow: 0 0 16px rgba(125, 61, 255, 0.143), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(125, 61, 255, 0.039);
   color: rgb(123.34, 208.02, 247.46);
 }
 
 .ws-pill-green {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 45, 173, 0.312);
   border-top: 2px solid rgba(255, 45, 173, 0.6175);
-  box-shadow: 0 0 16px rgba(255, 45, 173, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 173, 0.039);
+  box-shadow: 0 0 16px rgba(255, 45, 173, 0.143), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 45, 173, 0.039);
   color: rgb(170.3, 135.65, 255);
 }
 
 .ws-pill-purple {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(57, 255, 20, 0.312);
   border-top: 2px solid rgba(57, 255, 20, 0.6175);
-  box-shadow: 0 0 16px rgba(57, 255, 20, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(57, 255, 20, 0.039);
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.143), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(57, 255, 20, 0.039);
   color: rgb(135.65, 217.05, 255);
 }
 
 .ws-pill-gold {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 138, 30, 0.312);
   border-top: 2px solid rgba(255, 138, 30, 0.6175);
-  box-shadow: 0 0 16px rgba(255, 138, 30, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 138, 30, 0.039);
+  box-shadow: 0 0 16px rgba(255, 138, 30, 0.143), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 138, 30, 0.039);
   color: rgb(255, 207.6, 124.8);
 }
 
 .ws-pill-orange {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 138, 30, 0.312);
   border-top: 2px solid rgba(255, 138, 30, 0.6175);
-  box-shadow: 0 0 16px rgba(255, 138, 30, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 138, 30, 0.039);
+  box-shadow: 0 0 16px rgba(255, 138, 30, 0.143), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 138, 30, 0.039);
   color: rgb(255, 160.5, 127.6);
 }
 
 .ws-pill-blue {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(77, 159, 255, 0.312);
   border-top: 2px solid rgba(77, 159, 255, 0.6175);
-  box-shadow: 0 0 16px rgba(77, 159, 255, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(77, 159, 255, 0.039);
+  box-shadow: 0 0 16px rgba(77, 159, 255, 0.143), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(77, 159, 255, 0.039);
   color: rgb(148.2, 197.4, 255);
 }
 
 .ws-pill-cyan {
-  background-color: rgba(8, 3, 16, 0.985);
+  background-color: rgba(8, 3, 16, 0.55);
   background-image: url("assets/fog-vessel.png"), linear-gradient(180deg, rgba(24, 12, 40, 0.34) 0%, rgba(6, 2, 12, 0) 52%);
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   border: 1px solid rgba(255, 45, 85, 0.312);
   border-top: 2px solid rgba(255, 45, 85, 0.6175);
-  box-shadow: 0 0 16px rgba(255, 45, 85, 0.143), 0 6px 18px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.52), inset 0 -8px 18px rgba(255, 45, 85, 0.039);
+  box-shadow: 0 0 16px rgba(255, 45, 85, 0.143), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 14px rgba(0, 0, 0, 0.32), inset 0 -8px 18px rgba(255, 45, 85, 0.039);
   color: rgba(255, 45, 85, 0.88);
 }
 
@@ -4795,49 +4810,49 @@ scale slider {
 
 .ws-pill-pink:hover {
   border-color: rgba(125, 61, 255, 0.95);
-  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(125, 61, 255, 0.5), 0 0 40px rgba(125, 61, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(125, 61, 255, 0.85);
 }
 
 .ws-pill-green:hover {
   border-color: rgba(255, 45, 173, 0.95);
-  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 45, 173, 0.5), 0 0 40px rgba(255, 45, 173, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(255, 45, 173, 0.85);
 }
 
 .ws-pill-purple:hover {
   border-color: rgba(57, 255, 20, 0.95);
-  box-shadow: 0 0 22px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(57, 255, 20, 0.85);
 }
 
 .ws-pill-gold:hover {
   border-color: rgba(255, 138, 30, 0.95);
-  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(255, 138, 30, 0.85);
 }
 
 .ws-pill-orange:hover {
   border-color: rgba(255, 138, 30, 0.95);
-  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.5), 0 0 40px rgba(255, 138, 30, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(255, 138, 30, 0.85);
 }
 
 .ws-pill-blue:hover {
   border-color: rgba(77, 159, 255, 0.95);
-  box-shadow: 0 0 22px rgba(77, 159, 255, 0.5), 0 0 40px rgba(77, 159, 255, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(77, 159, 255, 0.5), 0 0 40px rgba(77, 159, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(77, 159, 255, 0.85);
 }
 
 .ws-pill-cyan:hover {
   border-color: rgba(255, 45, 85, 0.95);
-  box-shadow: 0 0 22px rgba(255, 45, 85, 0.5), 0 0 40px rgba(255, 45, 85, 0.22), 0 6px 18px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 22px rgba(255, 45, 85, 0.5), 0 0 40px rgba(255, 45, 85, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 0 12px rgba(0, 0, 0, 0.28);
   color: #ffffff;
   text-shadow: 0 0 12px rgba(255, 45, 85, 0.85);
 }
@@ -5404,3 +5419,405 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 }
 
 /*# sourceMappingURL=eww.css.map */
+
+/* ====================================================================
+   NYXUS OVERRIDE BLOCK - appended 2026-07-26
+   Rules here intentionally sit at the END of the file: GTK CSS resolves
+   equal-specificity conflicts by document order, so a later single-class
+   rule beats the same selector earlier in the sheet WITHOUT editing any
+   existing line. This exists because `sass` is not installed on this box
+   and a full npx recompile reintroduces ~164 lines of drift (it resolves
+   several mix()/color.adjust() values to different colors than the live
+   sheet), which would silently shift the palette. Keep new bar work here.
+   Mirrored verbatim at the end of eww.scss.source.
+   ==================================================================== */
+
+/* -- BOOMBOX MUSIC FACE ------------------------------------------------
+   Sized to the MEASURED boombox display window: 424x294 of the 1254x380
+   band renders to 125x87 inside the 430x116 slot (the band is height-
+   limited, so it draws 351x112 and centres). The old values were cut for
+   the saucer's 204x61 oval (min-width 232px, pill radius) and would have
+   burst straight through the boombox's glass.
+   OPAQUE on purpose: a translucent panel let the boombox art show through
+   behind the text and read as dirty/unfinished. The glass is now solid so
+   the readout looks like a real lit display. The bass-reactive outer glow
+   is applied inline in eww.yuck (it needs the CAVA_BASS variable). */
+.saucer-screen-music {
+  min-width: 158px;
+  min-height: 108px;
+  border-radius: 10px;
+  padding: 3px 7px 4px 7px;
+  background-color: rgba(2, 1, 6, 0.97);
+  background-image: linear-gradient(180deg,
+      rgba(125, 255, 94, 0.10) 0%,
+      rgba(4, 2, 10, 0.00) 42%,
+      rgba(255, 45, 173, 0.07) 100%);
+  border: 1px solid rgba(125, 255, 94, 0.55);
+}
+.boombox-base  { background-color: transparent; }
+.boombox-frame { background-color: rgba(2, 1, 6, 0.97); }
+
+/* the art already paints two huge woofers either side of the glass, so the
+   inner display is a bare scanline plate now, not a second bezel */
+.boombox-display {
+  background-color: transparent;
+  border-radius: 3px;
+  padding: 0 2px;
+  box-shadow: none;
+}
+.bar-hub-music-title  { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: #ffffff;
+                        text-shadow: 0 0 10px rgba(125, 255, 94, 0.85), 0 0 20px rgba(255, 45, 173, 0.45); }
+.bar-hub-music-artist { font-size: 10px; letter-spacing: 0.10em; color: rgba(125, 255, 94, 0.92);
+                        text-shadow: 0 0 8px rgba(125, 255, 94, 0.5); }
+.cava-saucer          { font-size: 16px; letter-spacing: 0.02em; color: #8dff6a;
+                        text-shadow: 0 0 8px rgba(125, 255, 94, 0.95), 0 0 18px rgba(125, 255, 94, 0.5); }
+
+/* 108px of progress bar + two time labels overflowed the 112px glass */
+.saucer-prog { min-width: 70px; min-height: 4px; }
+.saucer-time { font-size: 9px; color: rgba(255, 255, 255, 0.85); }
+.saucer-btn  { min-width: 27px; min-height: 20px; font-size: 12px; padding: 0 3px;
+               border-radius: 6px;
+               color: #eafff2;
+               background-color: rgba(158, 255, 130, 0.10);
+               background-image: linear-gradient(180deg,
+                   rgba(255, 255, 255, 0.20) 0%,
+                   rgba(255, 255, 255, 0.02) 46%,
+                   rgba(0, 0, 0, 0.30) 100%);
+               border: 1px solid rgba(141, 255, 106, 0.55);
+               box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30),
+                           inset 0 -2px 5px rgba(0, 0, 0, 0.55),
+                           0 0 9px rgba(141, 255, 106, 0.35);
+               text-shadow: 0 0 9px rgba(141, 255, 106, 0.9); }
+.saucer-btn:hover { background-color: rgba(158, 255, 130, 0.26);
+               border-color: rgba(141, 255, 106, 0.95);
+               box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38),
+                           0 0 16px rgba(141, 255, 106, 0.75); }
+.saucer-btn-main { min-width: 31px; border-color: rgba(255, 45, 173, 0.75);
+               box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30),
+                           inset 0 -2px 5px rgba(0, 0, 0, 0.55),
+                           0 0 12px rgba(255, 45, 173, 0.55);
+               text-shadow: 0 0 10px rgba(255, 45, 173, 0.95); }
+/* progress: a lit phosphor track, not a grey hairline */
+.saucer-prog-fill { background-color: #8dff6a;
+               box-shadow: 0 0 8px rgba(141, 255, 106, 0.9); }
+
+/* woofer pulse discs - geometry + colour come from the inline CAVA_BASS style */
+.boombox-cone { border-radius: 999px; background-color: transparent; }
+
+/* ====================================================================
+   NYXUS RAILS v2 - "NEON SPINE"  (redesign, 2026-07-26)
+   Hand-designed, no external art, so nothing here depends on an asset
+   aspect ratio or a keyed PNG. Three ideas:
+     1. a glowing tube runs the rail behind the caps, drawn purely with
+        gradient colour STOPS (never background-size, which the compile
+        step strips) - the caps read as beads on a lit wire instead of
+        loose floating tiles.
+     2. caps are slanted graffiti keycaps (asymmetric radius) with a
+        chrome bevel, not plain rounded squares.
+     3. glow carries state: idle dim, hover bloom, active full bloom.
+   Per-hue rules are GENERATED from the accent colours already resolved
+   in this sheet, so the accent engine keeps control of the palette and
+   nothing is hardcoded to today's purple.
+   ==================================================================== */
+.ws-rail, .app-rail {
+  padding: 20px 0;
+  background-color: transparent;
+  background-image: linear-gradient(90deg,
+    rgba(0, 0, 0, 0) 0%,          rgba(0, 0, 0, 0) 44%,
+    rgba(125, 61, 255, 0.22) 44%, rgba(125, 61, 255, 0.22) 46.5%,
+    rgba(206, 158, 255, 0.72) 46.5%, rgba(206, 158, 255, 0.72) 53.5%,
+    rgba(125, 61, 255, 0.22) 53.5%, rgba(125, 61, 255, 0.22) 56%,
+    rgba(0, 0, 0, 0) 56%,         rgba(0, 0, 0, 0) 100%);
+}
+.float-island { margin-bottom: 10px; background-color: transparent; }
+
+.ws-pill, .app-pill {
+  min-width: 42px;
+  min-height: 42px;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 16px 5px 16px 5px;
+  background-color: rgba(9, 3, 20, 0.55);
+  background-image: linear-gradient(152deg,
+    rgba(255, 255, 255, 0.17) 0%,
+    rgba(255, 255, 255, 0.02) 38%,
+    rgba(0, 0, 0, 0.32) 100%);
+  transition: all 190ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+
+.app-pill-blue {
+  border-color: rgba(77, 159, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(77, 159, 255, 0.38),
+    0 0 30px rgba(77, 159, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-blue:hover {
+  border-color: rgba(77, 159, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(77, 159, 255, 0.85),
+    0 0 54px rgba(77, 159, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-gold {
+  border-color: rgba(255, 138, 30, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 138, 30, 0.38),
+    0 0 30px rgba(255, 138, 30, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-gold:hover {
+  border-color: rgba(255, 138, 30, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 138, 30, 0.85),
+    0 0 54px rgba(255, 138, 30, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-green {
+  border-color: rgba(255, 45, 173, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 45, 173, 0.38),
+    0 0 30px rgba(255, 45, 173, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-green:hover {
+  border-color: rgba(255, 45, 173, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 45, 173, 0.85),
+    0 0 54px rgba(255, 45, 173, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-orange {
+  border-color: rgba(255, 138, 30, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 138, 30, 0.38),
+    0 0 30px rgba(255, 138, 30, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-orange:hover {
+  border-color: rgba(255, 138, 30, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 138, 30, 0.85),
+    0 0 54px rgba(255, 138, 30, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-pink {
+  border-color: rgba(125, 61, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(125, 61, 255, 0.38),
+    0 0 30px rgba(125, 61, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-pink:hover {
+  border-color: rgba(125, 61, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(125, 61, 255, 0.85),
+    0 0 54px rgba(125, 61, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.app-pill-purple {
+  border-color: rgba(57, 255, 20, 0.82);
+  box-shadow:
+    0 0 15px rgba(57, 255, 20, 0.38),
+    0 0 30px rgba(57, 255, 20, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.app-pill-purple:hover {
+  border-color: rgba(57, 255, 20, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(57, 255, 20, 0.85),
+    0 0 54px rgba(57, 255, 20, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-blue {
+  border-color: rgba(77, 159, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(77, 159, 255, 0.38),
+    0 0 30px rgba(77, 159, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-blue:hover {
+  border-color: rgba(77, 159, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(77, 159, 255, 0.85),
+    0 0 54px rgba(77, 159, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-cyan {
+  border-color: rgba(255, 45, 85, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 45, 85, 0.38),
+    0 0 30px rgba(255, 45, 85, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-cyan:hover {
+  border-color: rgba(255, 45, 85, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 45, 85, 0.85),
+    0 0 54px rgba(255, 45, 85, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-gold {
+  border-color: rgba(255, 138, 30, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 138, 30, 0.38),
+    0 0 30px rgba(255, 138, 30, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-gold:hover {
+  border-color: rgba(255, 138, 30, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 138, 30, 0.85),
+    0 0 54px rgba(255, 138, 30, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-green {
+  border-color: rgba(255, 45, 173, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 45, 173, 0.38),
+    0 0 30px rgba(255, 45, 173, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-green:hover {
+  border-color: rgba(255, 45, 173, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 45, 173, 0.85),
+    0 0 54px rgba(255, 45, 173, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-occupied {
+  border-color: rgba(125, 61, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(125, 61, 255, 0.38),
+    0 0 30px rgba(125, 61, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-occupied:hover {
+  border-color: rgba(125, 61, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(125, 61, 255, 0.85),
+    0 0 54px rgba(125, 61, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-orange {
+  border-color: rgba(255, 138, 30, 0.82);
+  box-shadow:
+    0 0 15px rgba(255, 138, 30, 0.38),
+    0 0 30px rgba(255, 138, 30, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-orange:hover {
+  border-color: rgba(255, 138, 30, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(255, 138, 30, 0.85),
+    0 0 54px rgba(255, 138, 30, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-pink {
+  border-color: rgba(125, 61, 255, 0.82);
+  box-shadow:
+    0 0 15px rgba(125, 61, 255, 0.38),
+    0 0 30px rgba(125, 61, 255, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-pink:hover {
+  border-color: rgba(125, 61, 255, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(125, 61, 255, 0.85),
+    0 0 54px rgba(125, 61, 255, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+.ws-pill-purple {
+  border-color: rgba(57, 255, 20, 0.82);
+  box-shadow:
+    0 0 15px rgba(57, 255, 20, 0.38),
+    0 0 30px rgba(57, 255, 20, 0.13),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+}
+.ws-pill-purple:hover {
+  border-color: rgba(57, 255, 20, 1);
+  background-color: rgba(20, 8, 38, 0.68);
+  box-shadow:
+    0 0 26px rgba(57, 255, 20, 0.85),
+    0 0 54px rgba(57, 255, 20, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.40);
+}
+
+/* the live workspace: a lit spray-tag, not just a tinted tile */
+.ws-pill-active {
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.92);
+  border-radius: 16px 5px 16px 5px;
+  color: #0a0410;
+  background-color: rgba(255, 45, 173, 1);
+  background-image: linear-gradient(140deg,
+    rgba(125, 61, 255, 1) 0%,
+    rgba(255, 45, 173, 1) 55%,
+    rgba(255, 138, 30, 1) 100%);
+  box-shadow:
+    0 0 26px rgba(255, 45, 173, 0.78),
+    0 0 56px rgba(125, 61, 255, 0.42),
+    inset 0 2px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.32);
+}
+.ws-pill-occupied { background-color: rgba(24, 10, 44, 0.62); }
+
+/* -- TOP TICKER: a lit rail under the crawl -------------------------- */
+.bar-top-ticker-only {
+  background-image: linear-gradient(180deg,
+    rgba(0, 0, 0, 0) 0%,          rgba(0, 0, 0, 0) 84%,
+    rgba(125, 61, 255, 0.30) 88%, rgba(206, 158, 255, 0.68) 94%,
+    rgba(255, 45, 173, 0.55) 97%, rgba(0, 0, 0, 0) 100%);
+}
+.ticker-label {
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-shadow: 0 0 9px rgba(255, 45, 173, 0.50), 0 0 20px rgba(125, 61, 255, 0.28);
+}
+
+/* -- BOTTOM METRICS: same shape, more phosphor ----------------------- */
+.mon-trace  { text-shadow: 0 0 8px rgba(255, 255, 255, 0.20); }
+.mon-glyph  { text-shadow: 0 0 10px rgba(255, 45, 173, 0.45); }
+

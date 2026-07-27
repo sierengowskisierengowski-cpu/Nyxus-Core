@@ -535,7 +535,49 @@
 ;; old fragile padding that read as see-through.
 (defwidget saucer_base []
   (box :class "saucer-frame"
-       :style "background-image: url('assets/nyxus-saucer-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 430px; min-height: 116px;"))
+       :style "background-image: url('assets/nyxus-saucer-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 551px; min-height: 150px;"))
+
+;; MUSIC-FACE BASE (rev 2026-07-26): the 1980s ALIEN BOOMBOX. Same 1351x368
+;; band geometry as nyxus-saucer-band.png so it is a pixel-exact drop-in and
+;; the `contain` fit renders identically (426x116 inside the 430x116 slot).
+;; Built from Meshy_AI_nyxus-boombox-transparent-v4.png: that source is NOT
+;; actually transparent (solid black backdrop), so the backdrop was keyed with
+;; a four-corner alpha floodfill -- a global black-to-transparent would have
+;; eaten the boombox's own dark chrome body. Cropped to the speaker+screen
+;; band (twin woofers flanking the display) at y468 h342.
+;;
+;; CROP, MEASURED OFF A GRID OVERLAY (rev 2): the speaker deck runs y470..850
+;; in the 1254px source. The first cut stopped at y810 and sliced the bottom
+;; off both woofers -- that was the visible "cut off at the bottom". Now
+;; cropped 1254x380 at y470 and centre-extended to 1254x400 so there is ~10px
+;; of transparent breathing room top and bottom and no edge ever touches art.
+;;
+;; APERTURE, MEASURED (do not eyeball -- see the saucer note below):
+;;   saucer  cockpit window = 646x192 of 1351x368 -> renders 204x61, centre
+;;                            11.8px left / 8.2px BELOW the band centre.
+;;   boombox display window = 424x294 of 1254x400 -> renders 119x82, centre
+;;                            4.2px ABOVE the band centre.
+;; The band is height-limited in the slot (ratio 3.13 vs the slot's 3.71), so
+;; it renders 351x112 inside the 430x116 box and centres itself; min-width
+;; stays 430 so the bar does not jump width when the face flips.
+;; The boombox's display glass is opaque black in the art (it is enclosed, so
+;; the corner floodfill never reached it), which is exactly the solid backing
+;; the overlay wants.
+;; The woofers are baked into the PNG, so they cannot animate on their own.
+;; These two overlay discs sit exactly on the cones (measured, see above) and
+;; swell + brighten with CAVA_BASS, which makes the speakers themselves appear
+;; to pump with the track. RINGS, not filled discs -- a filled disc painted
+;; flat colour straight over the cone art and washed the woofers out.
+(defwidget boombox_cone [side]
+  (box :class "boombox-cone" :valign "center"
+       :halign {side == "l" ? "start" : "end"}
+       :style {side == "l"
+         ? "margin-left: ${81 - (30 + CAVA_BASS / 7)}px; min-width: ${2 * (30 + CAVA_BASS / 7)}px; min-height: ${2 * (30 + CAVA_BASS / 7)}px; background-color: transparent; border: ${2 + CAVA_BASS / 45}px solid rgba(255, 45, 173, ${0.30 + CAVA_BASS / 200}); box-shadow: 0 0 ${8 + CAVA_BASS / 4}px rgba(255, 45, 173, ${0.30 + CAVA_BASS / 230});"
+         : "margin-right: ${83 - (30 + CAVA_BASS / 7)}px; min-width: ${2 * (30 + CAVA_BASS / 7)}px; min-height: ${2 * (30 + CAVA_BASS / 7)}px; background-color: transparent; border: ${2 + CAVA_BASS / 45}px solid rgba(141, 255, 106, ${0.30 + CAVA_BASS / 200}); box-shadow: 0 0 ${8 + CAVA_BASS / 4}px rgba(141, 255, 106, ${0.30 + CAVA_BASS / 230});"}))
+
+(defwidget boombox_base []
+  (box :class "saucer-frame boombox-base"
+       :style "background-image: url('assets/nyxus-boombox-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 495px; min-height: 150px;"))
 
 ;; Bigger, livelier CAVA strip for the music face (full 14-bar spectrum,
 ;; taller glyphs + neon gradient glow) — the "bad-ass" beat graph.
@@ -554,7 +596,7 @@
   (overlay
     (saucer_base)
     (box :class "saucer-screen" :halign "center" :valign "center"
-         :style "margin-top: 10px;"
+         :style "margin-top: 11px;"
       (box :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
         (label :class "bar-hub-time" :halign "center" :text "${TIME.hm}")
         (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))))
@@ -568,38 +610,45 @@
 ;; only ~235px wide, so this is accents on the existing layout, not a
 ;; wider redesign that would overflow the transparent window into the
 ;; painted hull art.
+;; Re-laid out for the boombox display window (146x100 rendered) instead of
+;; the saucer's wide oval (204x61): the twin speaker dots moved OUT of the
+;; title row (the art already has two huge woofers either side of the glass,
+;; so repeating them inside was redundant and stole ~34px of the narrower
+;; window). Title and artist now stack, and the transport row loses the LED
+;; spacers -- all to buy horizontal room. Four stacked rows in 100px of
+;; height, which the old 61px oval could never have held.
 (defwidget bar_hub_music []
   (overlay
-    (saucer_base)
+    (boombox_base)
+    (boombox_cone :side "l")
+    (boombox_cone :side "r")
+    ;; Bass-reactive glow: the display glass breathes with the music the same
+    ;; way the rest of the system reacts to CAVA_BASS (0-100 from the lowest
+    ;; two bars). Green core + magenta bloom, both radius and alpha driven, so
+    ;; it pulses rather than just sitting lit. margin-bottom nudges the panel
+    ;; up onto the MEASURED aperture centre (4.2px above the band centre).
     (box :class "saucer-screen saucer-screen-music boombox-frame" :halign "center" :valign "center"
-         :style "margin-top: 10px;"
+         :style "margin-bottom: 6px; box-shadow: 0 0 ${8 + CAVA_BASS / 7}px rgba(125, 255, 94, ${0.30 + CAVA_BASS / 320}), 0 0 ${16 + CAVA_BASS / 4}px rgba(255, 45, 173, ${0.14 + CAVA_BASS / 520}), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 18px rgba(0, 0, 0, 0.85);"
       (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
-        (box :class "boombox-display" :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
-          (box :class "boombox-title-row" :orientation "h" :space-evenly false :spacing 5 :halign "center" :valign "center"
-            (box :class "boombox-speaker" :valign "center"
-                 :style "min-width: ${12 + CAVA_BASS / 17}px; min-height: ${12 + CAVA_BASS / 17}px; box-shadow: 0 0 ${6 + CAVA_BASS / 8}px rgba(125, 61, 255, ${0.45 + CAVA_BASS / 250}), inset 0 0 0 2px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(255, 45, 173, 0.35);")
-            (label :class "bar-hub-music-title" :limit-width 26 :truncate "end"
-                   :halign "center"
-                   :text "${PLAYER.icon}  ${PLAYER.title}"
-                   :tooltip "${PLAYER.tooltip}")
-            (box :class "boombox-speaker" :valign "center"
-                 :style "min-width: ${12 + CAVA_BASS / 17}px; min-height: ${12 + CAVA_BASS / 17}px; box-shadow: 0 0 ${6 + CAVA_BASS / 8}px rgba(125, 61, 255, ${0.45 + CAVA_BASS / 250}), inset 0 0 0 2px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(255, 45, 173, 0.35);"))
-          (label :class "bar-hub-music-artist" :limit-width 30 :truncate "end"
+        (box :class "boombox-display" :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
+          (label :class "bar-hub-music-title" :limit-width 24 :truncate "end"
+                 :halign "center"
+                 :text "${PLAYER.title}"
+                 :tooltip "${PLAYER.tooltip}")
+          (label :class "bar-hub-music-artist" :limit-width 26 :truncate "end"
                  :halign "center"
                  :visible {PLAYER.artist != ""}
                  :text "${PLAYER.artist}")
           (cava_saucer))
-        (box :class "saucer-prog-row" :orientation "h" :space-evenly false :spacing 6 :halign "center" :valign "center"
+        (box :class "saucer-prog-row" :orientation "h" :space-evenly false :spacing 4 :halign "center" :valign "center"
           (label :class "saucer-time" :text "${PLAYER.pos}")
           (box :class "saucer-prog" :hexpand true :valign "center"
             (box :class "saucer-prog-fill"
                  :style "background-size: ${PLAYER.progress}% 100%;"))
           (label :class "saucer-time" :text "${PLAYER.len}"))
-        (box :class "boombox-controls" :orientation "h" :space-evenly false :spacing 10 :halign "center"
+        (box :class "boombox-controls" :orientation "h" :space-evenly false :spacing 6 :halign "center"
           (button :class "saucer-btn" :onclick "playerctl previous &" :tooltip "Previous" "󰒮")
-          (box :class "boombox-led" :valign "center")
           (button :class "saucer-btn saucer-btn-main" :onclick "playerctl play-pause &" :tooltip "Play / pause" "${PLAYER.icon}")
-          (box :class "boombox-led" :valign "center")
           (button :class "saucer-btn" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))))
 
 ;; The idle<->music "flip". rotate-left-right is GTK's real card-flip
@@ -628,7 +677,7 @@
   ;; gpu + net (down/up) right.
   (centerbox :class "bar-bottom-minimal" :orientation "h" :valign "center"
     (box :class "bar-metrics-left mon-cluster" :orientation "h" :halign "start"
-         :space-evenly false :spacing 14 :valign "center"
+         :space-evenly false :spacing 26 :valign "center"
       (mon_stack2 :hue "orange" :glyph "󰈐"
                   :l1_spark "${FANGRAPH.spark1}" :l1_val "${FANGRAPH.fan1}"
                   :l2_spark "${FANGRAPH.spark2}" :l2_val "${FANGRAPH.fan2}"
@@ -639,7 +688,7 @@
                 :spark "${SYSGRAPH.cpu.spark}" :tip "CPU load" :alert {SYSGRAPH.cpu.hot}))
     (box :halign "center" :valign "center" (bar_hub_trigger))
     (box :class "bar-metrics-right mon-cluster" :orientation "h" :halign "end"
-         :space-evenly false :spacing 14 :valign "center"
+         :space-evenly false :spacing 26 :valign "center"
       (mon_cell :hue "blue" :glyph "󰢮"
                 :value "${SYSGRAPH.gpu.present ? SYSGRAPH.gpu.val + '%' : 'off'}"
                 :spark "${SYSGRAPH.gpu.spark}"
