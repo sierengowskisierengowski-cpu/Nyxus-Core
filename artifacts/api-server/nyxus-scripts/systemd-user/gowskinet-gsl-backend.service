@@ -4,6 +4,8 @@ After=network-online.target
 
 [Service]
 Type=simple
+# start.sh defaults to 0.0.0.0; keep the lab backend off the LAN.
+Environment=GSL_HOST=127.0.0.1
 WorkingDirectory=/home/cosmic/GowskiNet-Vault/Security/GSL/gsl-backend
 ExecStart=/bin/bash /home/cosmic/GowskiNet-Vault/Security/GSL/gsl-backend/start.sh
 Restart=on-failure

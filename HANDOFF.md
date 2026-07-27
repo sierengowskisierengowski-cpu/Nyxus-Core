@@ -7,6 +7,9 @@
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
 >
+> **★ Security inventory (Jul 27):**  
+> [`docs/SECURITY_INVENTORY_2026-07-27.md`](./docs/SECURITY_INVENTORY_2026-07-27.md) — full Arsenal / modes / GodsApp / Intel / Vault / local Projects / BlackArch list.
+>
 > **★ NEWEST — HOME + START STATIONS (Jul 27) — READ FIRST:**  
 > [`docs/HOME_AND_START_STATIONS_BRIEF_2026-07-27.md`](./docs/HOME_AND_START_STATIONS_BRIEF_2026-07-27.md)  
 > The home page is the eww **`home-deck`** window on the **HOME** station
