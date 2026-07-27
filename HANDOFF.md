@@ -1,13 +1,26 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-26 ~22:00 EDT (login FIXED · bars redesigned)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-27 ~02:00 EDT (HOME + START stations live)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
 >
-> **★ NEWEST — LOGIN FIXED + BARS REDESIGNED (Jul 26 eve) — READ FIRST:**  
+> **★ NEWEST — HOME + START STATIONS (Jul 27) — READ FIRST:**  
+> [`docs/HOME_AND_START_STATIONS_BRIEF_2026-07-27.md`](./docs/HOME_AND_START_STATIONS_BRIEF_2026-07-27.md)  
+> The home page is the eww **`home-deck`** window on the **HOME** station
+> (`Super+Home`), and the NYXUS Start menu is now the eww **`start-panel`**
+> window on its own **START** station (`Super+End`) — it **replaces** the
+> `nyxus-start` GTK4 app, which sat on the OVERLAY layer and could be neither
+> closed nor moved when it lost keyboard focus. Left rail reads HOME / START /
+> 1-9. Contains the eww traps that cost real time: **a window is sized to its
+> CONTENT** (oversized surfaces get parked at a negative y), **`:focusable
+> true` is a session-wide keyboard grab** in eww 0.5, and `pkill -f` from an
+> inline `bash -c` kills its own shell. Verify layout with `hyprctl layers -j`,
+> never by eye.
+>
+> **★ PREVIOUS — LOGIN FIXED + BARS REDESIGNED (Jul 26 eve) — READ FIRST:**  
 > [`docs/BARS_AND_LOGIN_BRIEF_2026-07-26.md`](./docs/BARS_AND_LOGIN_BRIEF_2026-07-26.md)  
 > The **"no login screen"** bug is finally dead: `/etc/sddm.conf.d/nyxus.conf`
 > was regenerated on every run by `sddm-theme/install.sh` — fixed at the source,
