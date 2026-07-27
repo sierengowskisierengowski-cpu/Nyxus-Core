@@ -4293,180 +4293,276 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 .mon-trace  { text-shadow: 0 0 8px rgba(255, 255, 255, 0.20); }
 .mon-glyph  { text-shadow: 0 0 10px rgba(255, 45, 173, 0.45); }
 
-/* -- LIVE LIQUID v2 -------------------------------------------------
-   v1 animated a SOFT gradient and just looked like a colour wash. Real
-   liquid needs a HARD surface line: two stops at the SAME position give a
-   crisp meniscus, and animating that position makes the fluid visibly rise
-   and fall inside the cap. A bright band sits just under the surface as
-   the shine. GTK 3.24 interpolates background-image between gradients as
-   long as the stop COUNT matches - all frames below are 5 stops.
-   Each hue gets its OWN fluid colour and its own phase offset, so the rail
-   ripples like a row of filled vials instead of blinking in lockstep. */
+/* -- LIVE LIQUID v5 (CSS) -------------------------------------------
+   REVERTED here from a v6 attempt that used real pre-rendered fluid-sim
+   GIFs in an eww `image` widget. The sim itself looked great, but eight
+   30-frame animated GIFs driven by GdkPixbufAnimation STALLED the whole
+   eww main loop (every bar stopped updating), and the image widget also
+   blew the caps up far past their 42px box. Do NOT re-wire animated GIFs
+   into the rails without solving both of those first.
+   This CSS version animates a linear-gradient edge: level swings 80->16%
+   and the angle tilts 164->196deg, so the fluid rises, falls and rocks. */
 @keyframes liquid-pink {
-  0%   { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(125,61,255,0.95) 67%,
-           rgba(56,27,114,0.98) 100%); }
-  50%  { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
-           rgba(255,255,255,0.85) 24%, rgba(125,61,255,0.95) 31%,
-           rgba(56,27,114,0.98) 100%); }
-  100% { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(125,61,255,0.95) 67%,
-           rgba(56,27,114,0.98) 100%); }
+  0%   { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(125,61,255,0.92) 84%, rgba(68,33,140,0.95) 100%); }
+  20%  { background-image: linear-gradient(196deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
+             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
+             rgba(125,61,255,0.92) 56%, rgba(68,33,140,0.95) 100%); }
+  40%  { background-image: linear-gradient(182deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
+             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
+             rgba(125,61,255,0.92) 26%, rgba(68,33,140,0.95) 100%); }
+  60%  { background-image: linear-gradient(164deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
+             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
+             rgba(125,61,255,0.92) 20%, rgba(68,33,140,0.95) 100%); }
+  80%  { background-image: linear-gradient(190deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
+             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
+             rgba(125,61,255,0.92) 52%, rgba(68,33,140,0.95) 100%); }
+  100% { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(125,61,255,0.92) 84%, rgba(68,33,140,0.95) 100%); }
 }
 .ws-pill-pink, .app-pill-pink {
   animation-name: liquid-pink;
-  animation-duration: 4200ms;
+  animation-duration: 3400ms;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
   animation-delay: 0ms;
 }
 @keyframes liquid-green {
-  0%   { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(255,45,173,0.95) 67%,
-           rgba(114,20,77,0.98) 100%); }
-  50%  { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
-           rgba(255,255,255,0.85) 24%, rgba(255,45,173,0.95) 31%,
-           rgba(114,20,77,0.98) 100%); }
-  100% { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(255,45,173,0.95) 67%,
-           rgba(114,20,77,0.98) 100%); }
+  0%   { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(255,45,173,0.92) 84%, rgba(140,24,95,0.95) 100%); }
+  20%  { background-image: linear-gradient(196deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
+             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
+             rgba(255,45,173,0.92) 56%, rgba(140,24,95,0.95) 100%); }
+  40%  { background-image: linear-gradient(182deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
+             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
+             rgba(255,45,173,0.92) 26%, rgba(140,24,95,0.95) 100%); }
+  60%  { background-image: linear-gradient(164deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
+             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
+             rgba(255,45,173,0.92) 20%, rgba(140,24,95,0.95) 100%); }
+  80%  { background-image: linear-gradient(190deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
+             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
+             rgba(255,45,173,0.92) 52%, rgba(140,24,95,0.95) 100%); }
+  100% { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(255,45,173,0.92) 84%, rgba(140,24,95,0.95) 100%); }
 }
 .ws-pill-green, .app-pill-green {
   animation-name: liquid-green;
-  animation-duration: 4200ms;
+  animation-duration: 3400ms;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-delay: -900ms;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-delay: -700ms;
 }
 @keyframes liquid-purple {
-  0%   { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(57,255,20,0.95) 67%,
-           rgba(25,114,9,0.98) 100%); }
-  50%  { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
-           rgba(255,255,255,0.85) 24%, rgba(57,255,20,0.95) 31%,
-           rgba(25,114,9,0.98) 100%); }
-  100% { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(57,255,20,0.95) 67%,
-           rgba(25,114,9,0.98) 100%); }
+  0%   { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(57,255,20,0.92) 84%, rgba(31,140,11,0.95) 100%); }
+  20%  { background-image: linear-gradient(196deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
+             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
+             rgba(57,255,20,0.92) 56%, rgba(31,140,11,0.95) 100%); }
+  40%  { background-image: linear-gradient(182deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
+             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
+             rgba(57,255,20,0.92) 26%, rgba(31,140,11,0.95) 100%); }
+  60%  { background-image: linear-gradient(164deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
+             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
+             rgba(57,255,20,0.92) 20%, rgba(31,140,11,0.95) 100%); }
+  80%  { background-image: linear-gradient(190deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
+             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
+             rgba(57,255,20,0.92) 52%, rgba(31,140,11,0.95) 100%); }
+  100% { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(57,255,20,0.92) 84%, rgba(31,140,11,0.95) 100%); }
 }
 .ws-pill-purple, .app-pill-purple {
   animation-name: liquid-purple;
-  animation-duration: 4200ms;
+  animation-duration: 3400ms;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-delay: -1800ms;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-delay: -1400ms;
 }
 @keyframes liquid-gold {
-  0%   { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(255,138,30,0.95) 67%,
-           rgba(114,62,13,0.98) 100%); }
-  50%  { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
-           rgba(255,255,255,0.85) 24%, rgba(255,138,30,0.95) 31%,
-           rgba(114,62,13,0.98) 100%); }
-  100% { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(255,138,30,0.95) 67%,
-           rgba(114,62,13,0.98) 100%); }
+  0%   { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(255,138,30,0.92) 84%, rgba(140,75,16,0.95) 100%); }
+  20%  { background-image: linear-gradient(196deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
+             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
+             rgba(255,138,30,0.92) 56%, rgba(140,75,16,0.95) 100%); }
+  40%  { background-image: linear-gradient(182deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
+             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
+             rgba(255,138,30,0.92) 26%, rgba(140,75,16,0.95) 100%); }
+  60%  { background-image: linear-gradient(164deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
+             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
+             rgba(255,138,30,0.92) 20%, rgba(140,75,16,0.95) 100%); }
+  80%  { background-image: linear-gradient(190deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
+             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
+             rgba(255,138,30,0.92) 52%, rgba(140,75,16,0.95) 100%); }
+  100% { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(255,138,30,0.92) 84%, rgba(140,75,16,0.95) 100%); }
 }
 .ws-pill-gold, .app-pill-gold {
   animation-name: liquid-gold;
-  animation-duration: 4200ms;
+  animation-duration: 3400ms;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-delay: -2700ms;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-delay: -2100ms;
 }
 @keyframes liquid-orange {
-  0%   { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(255,138,30,0.95) 67%,
-           rgba(114,62,13,0.98) 100%); }
-  50%  { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
-           rgba(255,255,255,0.85) 24%, rgba(255,138,30,0.95) 31%,
-           rgba(114,62,13,0.98) 100%); }
-  100% { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(255,138,30,0.95) 67%,
-           rgba(114,62,13,0.98) 100%); }
+  0%   { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(255,138,30,0.92) 84%, rgba(140,75,16,0.95) 100%); }
+  20%  { background-image: linear-gradient(196deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
+             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
+             rgba(255,138,30,0.92) 56%, rgba(140,75,16,0.95) 100%); }
+  40%  { background-image: linear-gradient(182deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
+             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
+             rgba(255,138,30,0.92) 26%, rgba(140,75,16,0.95) 100%); }
+  60%  { background-image: linear-gradient(164deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
+             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
+             rgba(255,138,30,0.92) 20%, rgba(140,75,16,0.95) 100%); }
+  80%  { background-image: linear-gradient(190deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
+             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
+             rgba(255,138,30,0.92) 52%, rgba(140,75,16,0.95) 100%); }
+  100% { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(255,138,30,0.92) 84%, rgba(140,75,16,0.95) 100%); }
 }
 .ws-pill-orange, .app-pill-orange {
   animation-name: liquid-orange;
-  animation-duration: 4200ms;
+  animation-duration: 3400ms;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-delay: -450ms;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-delay: -350ms;
 }
 @keyframes liquid-blue {
-  0%   { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(77,159,255,0.95) 67%,
-           rgba(34,71,114,0.98) 100%); }
-  50%  { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
-           rgba(255,255,255,0.85) 24%, rgba(77,159,255,0.95) 31%,
-           rgba(34,71,114,0.98) 100%); }
-  100% { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(77,159,255,0.95) 67%,
-           rgba(34,71,114,0.98) 100%); }
+  0%   { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(77,159,255,0.92) 84%, rgba(42,87,140,0.95) 100%); }
+  20%  { background-image: linear-gradient(196deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
+             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
+             rgba(77,159,255,0.92) 56%, rgba(42,87,140,0.95) 100%); }
+  40%  { background-image: linear-gradient(182deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
+             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
+             rgba(77,159,255,0.92) 26%, rgba(42,87,140,0.95) 100%); }
+  60%  { background-image: linear-gradient(164deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
+             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
+             rgba(77,159,255,0.92) 20%, rgba(42,87,140,0.95) 100%); }
+  80%  { background-image: linear-gradient(190deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
+             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
+             rgba(77,159,255,0.92) 52%, rgba(42,87,140,0.95) 100%); }
+  100% { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(77,159,255,0.92) 84%, rgba(42,87,140,0.95) 100%); }
 }
 .ws-pill-blue, .app-pill-blue {
   animation-name: liquid-blue;
-  animation-duration: 4200ms;
+  animation-duration: 3400ms;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-delay: -1350ms;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-delay: -1050ms;
 }
 @keyframes liquid-cyan {
-  0%   { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(255,45,85,0.95) 67%,
-           rgba(114,20,38,0.98) 100%); }
-  50%  { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
-           rgba(255,255,255,0.85) 24%, rgba(255,45,85,0.95) 31%,
-           rgba(114,20,38,0.98) 100%); }
-  100% { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(255,45,85,0.95) 67%,
-           rgba(114,20,38,0.98) 100%); }
+  0%   { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(255,45,85,0.92) 84%, rgba(140,24,46,0.95) 100%); }
+  20%  { background-image: linear-gradient(196deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
+             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
+             rgba(255,45,85,0.92) 56%, rgba(140,24,46,0.95) 100%); }
+  40%  { background-image: linear-gradient(182deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
+             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
+             rgba(255,45,85,0.92) 26%, rgba(140,24,46,0.95) 100%); }
+  60%  { background-image: linear-gradient(164deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
+             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
+             rgba(255,45,85,0.92) 20%, rgba(140,24,46,0.95) 100%); }
+  80%  { background-image: linear-gradient(190deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
+             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
+             rgba(255,45,85,0.92) 52%, rgba(140,24,46,0.95) 100%); }
+  100% { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(255,45,85,0.92) 84%, rgba(140,24,46,0.95) 100%); }
 }
 .ws-pill-cyan, .app-pill-cyan {
   animation-name: liquid-cyan;
-  animation-duration: 4200ms;
+  animation-duration: 3400ms;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-delay: -2250ms;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-delay: -1750ms;
 }
 @keyframes liquid-occupied {
-  0%   { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(125,61,255,0.95) 67%,
-           rgba(56,27,114,0.98) 100%); }
-  50%  { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 24%,
-           rgba(255,255,255,0.85) 24%, rgba(125,61,255,0.95) 31%,
-           rgba(56,27,114,0.98) 100%); }
-  100% { background-image: linear-gradient(180deg,
-           rgba(4,1,12,0.30) 0%, rgba(4,1,12,0.30) 60%,
-           rgba(255,255,255,0.85) 60%, rgba(125,61,255,0.95) 67%,
-           rgba(56,27,114,0.98) 100%); }
+  0%   { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(125,61,255,0.92) 84%, rgba(68,33,140,0.95) 100%); }
+  20%  { background-image: linear-gradient(196deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
+             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
+             rgba(125,61,255,0.92) 56%, rgba(68,33,140,0.95) 100%); }
+  40%  { background-image: linear-gradient(182deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
+             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
+             rgba(125,61,255,0.92) 26%, rgba(68,33,140,0.95) 100%); }
+  60%  { background-image: linear-gradient(164deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
+             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
+             rgba(125,61,255,0.92) 20%, rgba(68,33,140,0.95) 100%); }
+  80%  { background-image: linear-gradient(190deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
+             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
+             rgba(125,61,255,0.92) 52%, rgba(68,33,140,0.95) 100%); }
+  100% { background-image: linear-gradient(176deg,
+             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
+             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
+             rgba(125,61,255,0.92) 84%, rgba(68,33,140,0.95) 100%); }
 }
 .ws-pill-occupied, .app-pill-occupied {
   animation-name: liquid-occupied;
-  animation-duration: 4200ms;
+  animation-duration: 3400ms;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
-  animation-delay: -600ms;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-delay: -500ms;
 }
