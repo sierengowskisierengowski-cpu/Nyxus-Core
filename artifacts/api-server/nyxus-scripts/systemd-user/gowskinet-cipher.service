@@ -1,0 +1,18 @@
+[Unit]
+Description=GowskiNet CIPHER — crypto / opsec console
+# CIPHER's .env carries no PORT, so it is pinned here rather than editing a
+# file that holds secrets. Serves its built SPA from the same process.
+After=postgresql.service network-online.target
+Wants=postgresql.service
+
+[Service]
+Type=simple
+Environment=PORT=8080
+WorkingDirectory=/home/cosmic/GowskiNet-Vault/Security/CIPHER/artifacts/api-server
+EnvironmentFile=/home/cosmic/GowskiNet-Vault/Security/CIPHER/.env
+ExecStart=/usr/bin/node --enable-source-maps ./dist/index.mjs
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
