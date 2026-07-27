@@ -59,8 +59,26 @@ fi
 # check PipeWire/Pulse directly for any live sink-input (any app actively
 # rendering audio) and treat that as "Playing" so the flip still fires —
 # just without real track metadata to show.
+# UI-CHIME GUARD (2026-07-27): the old test counted ANY sink-input, so the
+# NYXUS login/hotkey chime (nyxus-sound -> pw-play) flipped the bottom bar to
+# the boombox for the ~1s the sound lasted and back again. The owner saw this
+# as "the boombox appears and goes away when I use my Super key". These
+# one-shot players announce media.role=music like anything else, so role is
+# useless here - discriminate on the PLAYER BINARY instead and ignore streams
+# owned by fire-and-forget sound tools.
+_real_audio() {
+  # Key off application.name: it is the ONE field both cases actually set.
+  # (mpv publishes application.name but NOT application.process.binary, so
+  # matching on the binary silently missed real playback.)
+  pactl list sink-inputs 2>/dev/null | awk '
+    /application\.name = / {
+      n = $0; sub(/.*= "/, "", n); sub(/".*/, "", n)
+      if (n ~ /^(pw-play|paplay|aplay|canberra-gtk-play|speech-dispatcher|pw-cat|ffplay)$/) next
+      print n
+    }' | grep -q .
+}
 if [[ "$status" == "Stopped" ]] && command -v pactl >/dev/null 2>&1; then
-  if pactl list short sink-inputs 2>/dev/null | grep -q .; then
+  if _real_audio; then
     status="Playing"
     title="Now Playing"
     artist=""
