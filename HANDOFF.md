@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-27 ~02:00 EDT (HOME + START stations live)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-27 ~02:45 EDT (HOME + START + GHOST stations live)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -11,7 +11,8 @@
 > [`docs/HOME_AND_START_STATIONS_BRIEF_2026-07-27.md`](./docs/HOME_AND_START_STATIONS_BRIEF_2026-07-27.md)  
 > The home page is the eww **`home-deck`** window on the **HOME** station
 > (`Super+Home`), and the NYXUS Start menu is now the eww **`start-panel`**
-> window on its own **START** station (`Super+End`) — it **replaces** the
+> window on its own **START** station (`Super+End`), and **GHOST** (`Super+3`)
+> is a live security console. START **replaces** the
 > `nyxus-start` GTK4 app, which sat on the OVERLAY layer and could be neither
 > closed nor moved when it lost keyboard focus. Left rail reads HOME / START /
 > 1-9. Contains the eww traps that cost real time: **a window is sized to its

@@ -16,6 +16,7 @@ named workspace and shown/hidden by one watcher:
 |---|---|---|---|
 | **HOME** | `Super+Home` | `home-deck` | Scattered desktop widgets (the home page) |
 | **START** | `Super+End` | `start-panel` | The Start menu, replacing the GTK4 app |
+| **GHOST** | `Super+3` | `ghost-deck` | Security console (defence, honeypots, exposure) |
 
 The left rail now reads **HOME**, **START**, then numbered stations **1–9**.
 
@@ -97,6 +98,52 @@ So the search box lives in its own short-lived `start-search` window that
 takes the keyboard only while open and closes on Enter, on the X, on leaving
 START, or via `Super+Shift+S`. Those escape hatches deliberately do **not**
 depend on the window's own key handling.
+
+---
+
+## 2b. The GHOST station — the pattern proving itself
+
+Third station, and the first built **entirely on the shared `.nyx-surface`
+language**: a whole station for ~45 lines of its own CSS. That is the return
+on the refactor, and stations 4–9 should cost about the same.
+
+Shows, all probed live by `ghost-feed.py` in ~0.14s: threat posture
+(hacker/ghost/panic rollup), the three defence daemons, the 10-container
+honeypot stack, cowrie attack feed, listening-port exposure, ufw + docker
+bridges, established connections with remote peer count, failed logins, and
+scanner readiness.
+
+**Honest by construction.** The honeypots have seen nothing in 24h, so it
+reports `0` and says "pots quiet" rather than inventing activity.
+`rkhunter`/`clamav` are surfaced as **"never run" / "no db"** instead of
+hidden — installed-but-never-run is a real finding, and a console that
+flatters you is worse than none.
+
+**Every row is a button.** A read-only security panel makes you leave it to
+do anything. Each defence row opens that unit's journal, each container
+opens its `docker logs`, the attack feed opens cowrie, exposure opens
+`ss -tulnp`, auth opens the filtered journal, and the posture chips toggle
+hacker/ghost mode (plus a PANIC chip). All targets verified to resolve.
+
+**Two more yuck constraints, found here:**
+* **Escaped quotes inside a `${...}` interpolation are not valid yuck**
+  (`Invalid token`). Per-daemon `journalctl` args moved into the feed, where
+  that data belonged anyway.
+* **A `(for ...)` cannot be passed straight into a defwidget slot** — eww
+  wants a container — so each loop is wrapped in a box.
+
+### The shared surface language
+
+`.nyx-surface` (defined *before* the deck/start blocks in `eww.css` /
+`eww.scss.source`) carries background, gradient, rim and radius for every
+station surface. A new station opts in by adding the class.
+
+**Scope is deliberate: it does NOT set `box-shadow`.** `deck_card`,
+`start_panel` and `ghost_card` all set `box-shadow` from an inline `:style`
+(the `CAVA_BASS` reactive rim), and an inline style beats any stylesheet
+rule — anything declared there would be dead on exactly the widgets that
+matter. It also sits *before* the depth-tier and accent blocks so those stay
+free to override it.
 
 ---
 
@@ -222,6 +269,14 @@ Three surfaces must stay in sync: live `~/.config/`, repo
 * **`main` is not pushed.** Commits are on branch
   **`home-deck-scatter-20260727`** (agent cannot push `main`). Owner
   fast-forwards with `git -C ~/Nyxus-Core push origin main`.
+* **Stations 4-9 are the obvious next move** (OPS, FORGE, PULSE, WAVE, CORE,
+  MESH, SCRIBE, BLAST). Each has a defined identity in `stations.json` and
+  should now be mostly data wiring on top of `.nyx-surface`.
+* **`nyxus_clipboard.py` uses `KeyboardMode.EXCLUSIVE`** with only an Escape
+  handler - a *stricter* keyboard grab than the one that trapped the owner in
+  `nyxus-start`, and with no compositor-level escape hatch. `nyxus-panel` has
+  the ON_DEMAND variant. Worth hardening before either gets used more.
+* `BLAST` (station 9) has no `launch` command in `stations.json`.
 * The deck shows **only on HOME** by design. Owner was offered an
   everywhere mode and has not asked for it.
 * eww has **no multiline editable text**, so the scratchpad is read-only
