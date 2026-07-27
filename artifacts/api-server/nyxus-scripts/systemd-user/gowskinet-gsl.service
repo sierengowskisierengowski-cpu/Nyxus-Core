@@ -1,0 +1,17 @@
+[Unit]
+Description=GowskiNet GSL — console (serves API + built SPA)
+After=network-online.target gowskinet-gsl-backend.service
+Wants=gowskinet-gsl-backend.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cosmic/GowskiNet-Vault/Security/GSL/artifacts/api-server
+# env(1) at exec time, not Environment=: systemd applies EnvironmentFile after
+# Environment= regardless of order, so exec-time is the only override that
+# always wins. GSL has no .env today, but this keeps it correct if one lands.
+ExecStart=/usr/bin/env PORT=19670 NODE_ENV=production /usr/bin/node --enable-source-maps ./dist/index.mjs
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

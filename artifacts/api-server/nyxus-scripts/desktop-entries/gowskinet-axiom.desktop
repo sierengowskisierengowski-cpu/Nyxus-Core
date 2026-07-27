@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Axiom
+GenericName=AI Assistant
+Comment=Axiom — desktop AI assistant (Electron)
+Exec=/home/cosmic/.local/bin/axiom
+Icon=axiom
+Terminal=false
+Categories=Utility;Development;
+StartupWMClass=Axiom

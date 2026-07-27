@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=RedForge
+GenericName=Offensive Security Workbench
+Comment=GowskiNet RedForge — native desktop app
+Exec=/home/cosmic/.local/bin/redforge
+Icon=redforge
+Terminal=false
+Categories=Security;Development;
+StartupWMClass=RedForge

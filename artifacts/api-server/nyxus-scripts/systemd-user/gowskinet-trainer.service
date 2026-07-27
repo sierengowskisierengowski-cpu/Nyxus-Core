@@ -1,0 +1,24 @@
+[Unit]
+Description=GowskiNet AI Cyber Defense Trainer
+# Its api-server already had the static block, but gated on
+# NODE_ENV=production - unset, so `/` 404'd while /api worked. PORT is pinned
+# here too: the .env says 8080, which CIPHER now owns; 20508 is the port the
+# app is registered under in nyxus-webapp.
+After=postgresql.service network-online.target
+Wants=postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cosmic/GowskiNet-Vault/AI/AI-Cyber-Defense-Trainer/artifacts/api-server
+EnvironmentFile=/home/cosmic/GowskiNet-Vault/AI/AI-Cyber-Defense-Trainer/.env
+# PORT/NODE_ENV are set at EXEC time via env(1), not with Environment=.
+# systemd applies EnvironmentFile= AFTER Environment= no matter what order
+# they appear in, so the .env's PORT=8080 always won and Trainer kept
+# colliding with CIPHER on 8080 (restart-looped 21 times). env(1) is applied
+# last, by the kernel, so it cannot be overridden.
+ExecStart=/usr/bin/env PORT=20508 NODE_ENV=production /usr/bin/node --enable-source-maps ./dist/index.mjs
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

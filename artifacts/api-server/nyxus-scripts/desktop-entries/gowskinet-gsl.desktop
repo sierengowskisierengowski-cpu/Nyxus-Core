@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=GSL
+GenericName=GowskiNet Security Lab
+Comment=GowskiNet GSL — native desktop app
+Exec=/home/cosmic/.local/bin/gsl
+Icon=gsl
+Terminal=false
+Categories=Security;
+StartupWMClass=GSL

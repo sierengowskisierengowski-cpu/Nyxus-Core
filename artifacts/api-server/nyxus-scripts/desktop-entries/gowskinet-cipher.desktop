@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=CIPHER
+GenericName=Crypto / OpSec Console
+Comment=GowskiNet CIPHER — native desktop app
+Exec=/home/cosmic/.local/bin/cipher
+Icon=cipher
+Terminal=false
+Categories=Security;
+StartupWMClass=CIPHER

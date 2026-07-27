@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AI Defense Trainer
+GenericName=Cyber Defense Training
+Comment=GowskiNet AI Cyber Defense Trainer — native desktop app
+Exec=/home/cosmic/.local/bin/nyxus-trainer
+Icon=nyxus-trainer
+Terminal=false
+Categories=Security;Education;
+StartupWMClass=AI Defense Trainer

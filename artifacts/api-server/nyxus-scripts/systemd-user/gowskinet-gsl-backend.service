@@ -1,0 +1,13 @@
+[Unit]
+Description=GowskiNet GSL — FastAPI backend
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cosmic/GowskiNet-Vault/Security/GSL/gsl-backend
+ExecStart=/bin/bash /home/cosmic/GowskiNet-Vault/Security/GSL/gsl-backend/start.sh
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
