@@ -58,6 +58,50 @@ echo
 say "verdicts now being produced:"
 journalctl --since '20 sec ago' -u bifrost-guardian --no-pager -o cat 2>/dev/null \
   | grep -oE 'action=[A-Z]+ effective=[A-Z]+ severity=[A-Z]+' | sort | uniq -c | sed 's/^/     /' | head -5
+# ── jeTT: telemetry, not the model ──────────────────────────────────
+# SECOND, SEPARATE FAILURE (found 2026-07-27). jeTT runs the OWNER'S OWN
+# trained model (models/jett-r6-q4_k_m.gguf per JETT_MODEL; r2..r11 exist).
+# Nothing was wrong with the model - its EYES were shut:
+#
+#   [!] eBPF sensor thread exited: ringbuf poll: Interrupted system call (os error 4)
+#
+# The sensor died at 10:35 on 2026-07-27 after the daemon had been up since
+# 00:21, and never recovered. Its other source, auditd, is inactive - while
+# JETT_TELEMETRY=both says it expects BOTH. Proven by probe: a script executed
+# from /tmp (which jeTT's own SYSTEM_CONTEXT says to QUARANTINE) was never
+# logged at all, and there were ZERO bash/sh events in 10 minutes on an active
+# desktop. Everything it still logged was short-lived spawns from the eww
+# polling - consistent with a /proc poller, not exec hooks.
+#
+# NOTE the 0ms verdicts are NOT the bug: config/allowlist.conf documents a
+# "Daemon Trusted disposition (0ms, no model)" fast path. That is by design.
+# The bug is that nothing UNKNOWN ever reaches the model, because the
+# telemetry that would surface it is dead.
+say "5/6 restarting jett-daemon so its eBPF sensor re-attaches"
+sudo systemctl restart jett-daemon
+sleep 8
+if journalctl --since '30 sec ago' -u jett-daemon --no-pager 2>/dev/null | grep -qi 'eBPF sensor thread exited'; then
+  say "    WARNING: eBPF sensor exited again - check kernel/BPF perms:"
+  say "    journalctl -u jett-daemon | grep -i ebpf"
+else
+  say "    no eBPF exit in the first 30s"
+fi
+
+say "6/6 enabling auditd (jeTT's second telemetry source)"
+# Also fixes the AI Cyber Defense Trainer, whose log hub fails EACCES on
+# /var/log/audit/audit.log, and closes the audit-trail gap on this box.
+if sudo systemctl enable --now auditd 2>/dev/null; then
+  say "    auditd active"
+else
+  say "    auditd unavailable - install it: sudo pacman -S audit"
+fi
+
+echo
+say "PROVE jeTT can see again - run an unknown binary from /tmp:"
+say '    printf "#!/bin/bash\nsleep 3\n" > /tmp/probe.sh && chmod +x /tmp/probe.sh && /tmp/probe.sh'
+say "    journalctl --since '1 min ago' -u jett-daemon -o cat | grep -i probe"
+say "  If that shows nothing, the sensor is still down and jeTT is blind."
+
 echo
 say "NOTE: jeTT and Bifrost log ~100k lines/hour at INFO, ~97% of this box's"
 say "journal. If that is more than you want in Loki, tune their log level"
