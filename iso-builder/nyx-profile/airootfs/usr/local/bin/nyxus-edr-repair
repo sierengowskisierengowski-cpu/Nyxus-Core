@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-edr-repair · rev 2026-07-27
+#
+# Bifrost's AI EDR was running BLIND and had been for a long time.
+#
+# WHAT WAS WRONG (measured, 2026-07-27):
+#   heimdall.guardian calls Ollama at http://127.0.0.1:11434/api/chat with
+#   model qwen2.5:1.5b-instruct on every event. Ollama was installed but
+#   DISABLED and never started, so every call returned
+#   "<urlopen error [Errno 111] Connection refused"'.
+#   Consequences, all visible in the journal:
+#     - CircuitBreaker guardian_extractor: OPEN (permanently)
+#     - "Extractor degraded mode: extractor_circuit_open"
+#     - "[!] AI queue full - dropped suspicious event"  ~15,000 per hour
+#     - every verdict downgraded to action=LOG effective=LOG severity=INFO
+#   i.e. the EDR logged everything, analysed nothing, and threw away the
+#   suspicious events it could not process.
+#
+# THE FIX needs root (system unit + service restart), which is why this is a
+# script you run rather than something done for you.
+# ════════════════════════════════════════════════════════════════════
+set -euo pipefail
+say() { printf '\033[36m  %s\033[0m\n' "$*"; }
+
+MODEL="${NYXUS_EDR_MODEL:-qwen2.5:1.5b-instruct}"
+
+say "1/4 enabling ollama as a system service (it was installed but disabled)"
+sudo systemctl enable --now ollama
+
+say "2/4 waiting for :11434"
+for _ in $(seq 1 30); do
+  curl -fsS -o /dev/null --max-time 2 http://127.0.0.1:11434/api/tags 2>/dev/null && break
+  sleep 1
+done
+curl -fsS -o /dev/null --max-time 3 http://127.0.0.1:11434/api/tags \
+  && say "    ollama is up" \
+  || { say "    ollama did not come up - check: journalctl -u ollama -n 40"; exit 1; }
+
+say "3/4 ensuring the model Bifrost asks for is present ($MODEL)"
+if ! ollama list 2>/dev/null | awk '{print $1}' | grep -qx "$MODEL"; then
+  ollama pull "$MODEL"
+else
+  say "    already present"
+fi
+
+say "4/4 restarting bifrost-guardian so its circuit breaker closes"
+sudo systemctl restart bifrost-guardian
+sleep 20
+
+echo
+say "verify (should be zero / near-zero):"
+printf '    circuit-open lines, last 20s : %s\n' \
+  "$(journalctl --since '20 sec ago' -u bifrost-guardian --no-pager -o cat 2>/dev/null | grep -c 'CircuitBreaker.*OPEN' || echo 0)"
+printf '    dropped suspicious, last 20s : %s\n' \
+  "$(journalctl --since '20 sec ago' --no-pager -o cat 2>/dev/null | grep -c 'AI queue full' || echo 0)"
+echo
+say "verdicts now being produced:"
+journalctl --since '20 sec ago' -u bifrost-guardian --no-pager -o cat 2>/dev/null \
+  | grep -oE 'action=[A-Z]+ effective=[A-Z]+ severity=[A-Z]+' | sort | uniq -c | sed 's/^/     /' | head -5
+echo
+say "NOTE: jeTT and Bifrost log ~100k lines/hour at INFO, ~97% of this box's"
+say "journal. If that is more than you want in Loki, tune their log level"
+say "rather than filtering at the shipper - the severity is in the message"
+say "text, not the syslog priority, so a priority filter would drop real"
+say "detections along with the noise."
