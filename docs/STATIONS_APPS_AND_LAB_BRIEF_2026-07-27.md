@@ -11,6 +11,142 @@
 
 ---
 
+---
+
+## ★★ CRITICAL — BIFROST'S AI EDR WAS RUNNING BLIND (found 2026-07-27)
+
+**Read this before trusting any EDR verdict from before 2026-07-27.**
+
+### What was wrong
+
+`heimdall.guardian` (bifrost-guardian.service) calls Ollama on **every event**:
+
+```
+http://127.0.0.1:11434/api/chat   model=qwen2.5:1.5b-instruct
+```
+
+**Ollama was installed but `disabled` and had never been started.** Nothing was
+listening on 11434, so every call returned:
+
+```
+<urlopen error [Errno 111] Connection refused>
+```
+
+### What that did — straight from the journal
+
+```
+[WARNING] Attempt 2/3 failed for guardian_extractor: <urlopen error [Errno 111] Connection refused>
+[ERROR]   All 3 attempts failed for guardian_extractor.
+[WARNING] Extractor degraded mode: extractor_error
+[WARNING] CircuitBreaker guardian_extractor: OPEN          <- then stayed open
+[!] AI queue full - dropped suspicious event               <- ~15,000 per hour
+          action=LOG effective=LOG severity=INFO           <- EVERY verdict
+```
+
+Measured rates on a quiet desktop:
+* **2,604 suspicious events dropped in a single 10-minute sample**
+* ~15,000 dropped per hour
+* In a 45-second window post-fix-attempt: 22 circuit-open lines, 198 dropped
+* **100% of verdicts** were `action=LOG effective=LOG severity=INFO` — i.e. the
+  engine never produced a real decision, only "logged it"
+
+**So: the AI EDR logged everything, analysed nothing, and discarded the
+suspicious events it could not process.** For however long Ollama has been
+disabled.
+
+### Why nothing caught it
+
+`systemctl is-active bifrost-guardian` returns **active**. It *is* running —
+it just can't think. Every health check in this build (including the GHOST
+deck's DEFENSE card and the ARSENAL live dots) reports it green, because they
+check the unit state, not whether its analysis pipeline works. It was found
+only by asking why the host journal was 97% EDR chatter.
+
+**Lesson for the deck design:** "unit is active" is not "component is
+healthy". A future GHOST deck card could watch for
+`CircuitBreaker.*OPEN` / `AI queue full` in the journal and show Bifrost as
+DEGRADED rather than live — that check is now cheap, because the host journal
+is in Loki.
+
+### The fix
+
+```
+nyxus-edr-repair
+```
+
+Needs root. It enables the ollama system unit, waits for :11434, pulls
+`qwen2.5:1.5b-instruct` if missing, restarts bifrost-guardian, then prints
+before/after counts of circuit-open lines, dropped events and verdict types.
+
+Verified during the session: after starting ollama in userspace and pulling
+the model, the exact endpoint Bifrost calls answered correctly. The circuit
+breaker will not close until the daemon restarts.
+
+### Watch after applying
+
+```bash
+# should be zero / near zero
+journalctl --since '5 min ago' -u bifrost-guardian | grep -c 'CircuitBreaker.*OPEN'
+journalctl --since '5 min ago' | grep -c 'AI queue full'
+
+# should show more than just severity=INFO
+journalctl --since '5 min ago' -u bifrost-guardian -o cat \
+  | grep -oE 'action=[A-Z]+ effective=[A-Z]+ severity=[A-Z]+' | sort | uniq -c
+```
+
+`gowskinet-forge.service` also declares `Wants=ollama.service`, so Forge's AI
+features were affected by the same root cause.
+
+### ⚠ Do NOT trim EDR log volume with a priority filter
+
+jeTT + Bifrost emit **~100,000 lines/hour** and are **97% of this machine's
+journal**. But they log *everything* at **priority 6 (INFO)** — severity lives
+in the **message text** (`[WARNING]`, `[!]`, `✅ ALLOW`). Measured:
+`journalctl --priority=5` keeps **1.3%** of lines, and would discard real
+detections along with the ALLOW spam. **Tune the daemons' own log level
+instead of filtering at the shipper.**
+
+Note also that a large share of jeTT's ALLOW spam is NYXUS itself — the
+station decks poll `hyprctl`, `jq` and `pgrep` on timers, and each spawn is a
+process event jeTT evaluates.
+
+### UPDATE — after Ollama came up (same evening)
+
+Bifrost **recovered on its own retry**, no restart needed. The journal now
+shows real work:
+
+```
+[INFO] heimdall.guardian - Ollama inference model=qwen2.5:1.5b-instruct duration_ms=2947
+```
+
+Circuit-open lines: **0**. But events are still being dropped, and the reason
+is now completely different — **throughput, not connectivity**:
+
+* 63 inferences in 5 minutes, **avg 3,270ms**, max 4,263ms (on the RTX 3060)
+* that is **~18 events/minute of capacity**
+* against **~302 events/minute arriving**
+
+So ~94% still can't be analysed. Two things follow:
+
+1. **`heimdall_config.json` sets `llm_timeout_seconds = 5.0`** while real
+   inferences take 3.3s average / 4.3s peak. That is uncomfortably close —
+   any slowdown starts timing out.
+2. **A large share of the event load is NYXUS itself.** Top process events in
+   a 2-minute sample: `sleep` 165, `jq` 51, `pgrep` 48, `hyprctl` 45,
+   `sort` 42, `sensors` 22, `nmcli` 20, `timeout` 18 — i.e. the eww bar
+   scripts and the station decks polling on timers. The new GHOST/FORGE/LAB
+   decks added to this.
+
+**The right fix is a pre-filter, not a faster model.** An AI EDR should not be
+asked to reason about every `sleep` the desktop spawns. Either allowlist the
+NYXUS polling binaries in Bifrost, or lengthen the deck poll intervals, or
+both. Throwing a bigger model at 300 events/minute of `jq` will not help.
+
+⚠ **Ollama persistence:** during the session it was served by a *userspace*
+`ollama serve`, which dies on reboot. It must be `sudo systemctl enable --now
+ollama` or Bifrost goes blind again at next boot — with no warning, because
+the unit still reports `active`.
+
 ## 1. The station system — six now
 
 | Station | Key | Window | What it is |
