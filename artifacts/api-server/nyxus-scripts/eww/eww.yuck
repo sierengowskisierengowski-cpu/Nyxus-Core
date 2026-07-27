@@ -116,7 +116,7 @@
                                    "python3 ~/.config/eww/scripts/start-feed.py meta")
 (defvar STARTQ "")
 (defvar STARTFOUND '{"rows":[],"n":0}')
-(defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0}}'
+(defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0},"hive":{"up":false,"total":0,"ips":0,"pots":0,"h1":0,"countries":0,"rows":[],"quiet":true}}'
                                 "python3 ~/.config/eww/scripts/ghost-feed.py")
 (defpoll STARTARS :interval "12s" :initial '{"groups":[],"live":0,"total":0}'
                                    "python3 ~/.config/eww/scripts/start-feed.py arsenal")
@@ -1695,13 +1695,13 @@
       (label :class "deck-sub" :halign "start" :text cap))))
 
 (defwidget ghost_deck []
-  (box :class "gh-root" :orientation "v" :space-evenly false :spacing 12
+  (box :class "gh-root" :orientation "v" :space-evenly false :spacing 8
     (label :class "deck-brand" :halign "center"
            :text "G H O S T   ·   S E C U R I T Y   S T A T I O N")
 
-    (box :orientation "h" :space-evenly true :spacing 14 :valign "start"
+    (box :orientation "h" :space-evenly true :spacing 12 :valign "start"
       ;; ---- column 1 : posture + defence daemons -------------------
-      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+      (box :orientation "v" :space-evenly false :spacing 10 :hexpand true
         (ghost_card :title "THREAT STATE" :glyph "" :tone "green" :hint "click to arm"
           (button :class "gh-posture-btn" :tooltip "Toggle hacker mode"
                   :onclick "sh -c 'nyxus-hacker-mode $([ \"$(nyxus-hacker-mode status)\" = on ] && echo off || echo on)' &"
@@ -1730,24 +1730,45 @@
                       :cmd "kitty --title Sessions -e sh -c 'who -a; echo; last -n 20; read _' &")))
 
       ;; ---- column 2 : honeypot stack ------------------------------
-      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+      (box :orientation "v" :space-evenly false :spacing 10 :hexpand true
         (ghost_card :title "HONEYPOT STACK" :glyph "" :tone "gold"
                     :hint "${GHOST_.pots_up}/${GHOST_.pots_total} up"
-          (box :orientation "v" :space-evenly false :spacing 5
-            (for pot in {GHOST_.pots}
-              (ghost_row :name {pot.name} :ok {pot.ok} :tip "tail ${pot.name} logs"
-                         :cmd "kitty --title ${pot.name} -e sh -c 'docker logs -f --tail 200 ${pot.name}; read _' &")))))
+          ;; scrolled: ten rows is the tallest block in the deck and pushed
+          ;; the surface past the 882px gap once HONEYHIVE landed
+          (scroll :class "start-scroll" :vscroll true :hscroll false :height 196
+            (box :orientation "v" :space-evenly false :spacing 5 :valign "start"
+              (for pot in {GHOST_.pots}
+                (ghost_row :name {pot.name} :ok {pot.ok} :tip "tail ${pot.name} logs"
+                           :cmd "kitty --title ${pot.name} -e sh -c 'docker logs -f --tail 200 ${pot.name}; read _' &"))))))
 
       ;; ---- column 3 : attack feed + exposure ----------------------
-      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
-        (ghost_card :title "ATTACK FEED" :glyph "" :tone "pink" :hint "cowrie 24h"
-          (ghost_stat :val "${GHOST_.attacks.total}"
-                      :cap {GHOST_.attacks.quiet ? "no hits - pots quiet" : "probes logged"}
-                      :tone {GHOST_.attacks.quiet ? "ok" : "hot"} :tip "open cowrie log"
-                      :cmd "kitty --title Cowrie -e sh -c 'docker logs -f --tail 300 cowrie; read _' &")
+      (box :orientation "v" :space-evenly false :spacing 10 :hexpand true
+        ;; HONEYHIVE - the live attacker map's own API, not a log scrape.
+        ;; eww cannot embed the Leaflet map, so the deck renders the same
+        ;; data natively and the card opens the real map on click.
+        (ghost_card :title "HONEYHIVE" :glyph "" :tone "pink"
+                    :hint {GHOST_.hive.up ? "live . click for map" : "hive down"}
+          (box :orientation "h" :space-evenly true :spacing 8
+            (ghost_stat :val "${GHOST_.hive.h1}" :cap "hits 1h"
+                        :tone {GHOST_.hive.h1 > 0 ? "hot" : "ok"} :tip "open the HoneyHive map"
+                        :cmd "xdg-open http://localhost:8888 &")
+            (ghost_stat :val "${GHOST_.hive.ips}" :cap "src ips" :tone "warn"
+                        :tip "open the HoneyHive map"
+                        :cmd "xdg-open http://localhost:8888 &")
+            (ghost_stat :val "${GHOST_.hive.countries}" :cap "countries" :tone "ok"
+                        :tip "open the HoneyHive map"
+                        :cmd "xdg-open http://localhost:8888 &"))
+          (box :class "deck-rule" :height 1)
+          (label :class "deck-sub" :halign "start"
+                 :visible {GHOST_.hive.quiet} :text "no events recorded yet")
           (box :orientation "v" :space-evenly false :spacing 3
-            (for a in {GHOST_.attacks.recent}
-              (label :class "gh-feed" :halign "start" :text "▸ ${a.ip}  ${a.note}"))))
+            (for h in {GHOST_.hive.rows}
+              (button :class "gh-hive" :tooltip "${h.pot} . ${h.kind} . ${h.country}"
+                      :onclick "xdg-open http://localhost:8888 &"
+                (box :orientation "h" :space-evenly false :spacing 8
+                  (label :class "gh-hive-ip" :halign "start" :hexpand true :text {h.ip})
+                  (label :class "gh-hive-meta" :text "${h.proto}:${h.port}")
+                  (label :class "gh-hive-pot" :text {h.pot}))))))
         (ghost_card :title "EXPOSURE" :glyph "" :tone "blue" :hint "listening"
           (ghost_stat :val "${GHOST_.exposure.count}" :cap "open ports" :tone "warn"
                       :tip "list listening sockets"
@@ -1762,7 +1783,7 @@
                      :cmd "kitty --title Firewall -e sh -c 'sudo ufw status verbose; echo; read _' &")))
 
       ;; ---- column 4 : connections, auth, scanners -----------------
-      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+      (box :orientation "v" :space-evenly false :spacing 10 :hexpand true
         (ghost_card :title "CONNECTIONS" :glyph "" :tone "cyan"
                     :hint "${GHOST_.conns.foreign} remote"
           (ghost_stat :val "${GHOST_.conns.count}" :cap "established" :tone "ok"
@@ -1789,7 +1810,7 @@
     ;; Lives in space the columns were already reserving (they valign to the
     ;; top), so it costs no extra window height - which matters, because the
     ;; surface must stay inside the 882px gap between the bars.
-    (box :orientation "h" :space-evenly false :spacing 14 :vexpand true
+    (box :orientation "h" :space-evenly false :spacing 12 :vexpand true
       ;; ARSENAL is the centrepiece down here: all 14 tools, four categories
       ;; side by side, each one launchable.
       (box :orientation "v" :space-evenly false :hexpand false :vexpand true
@@ -1849,7 +1870,7 @@
   :namespace "nyxus-ghost-deck"
   ;; must fit the 882px free area between the bars - verify with
   ;; `hyprctl layers -j`, never by eye (see the home-deck y=-59 note)
-  :geometry (geometry :x "0" :y "0" :width "1780px" :height "790px" :anchor "center")
+  :geometry (geometry :x "0" :y "0" :width "1780px" :height "770px" :anchor "center")
   (ghost_deck))
 
 (defwindow bar-bottom

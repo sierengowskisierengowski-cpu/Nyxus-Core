@@ -192,6 +192,53 @@ def arsenal():
         return {"groups": [], "live": 0, "total": 0}
 
 
+HIVE = "http://localhost:8888"
+
+
+def _hive(path, timeout=3):
+    raw = _run(["curl", "-fsS", "--max-time", str(timeout), HIVE + path], timeout + 1)
+    try:
+        return json.loads(raw)
+    except Exception:
+        return None
+
+
+def hive():
+    """GowskiNet HoneyHive - the live attacker map's own API.
+
+    Richer than scraping cowrie's log: every event carries source IP, port,
+    protocol, which honeypot caught it and the event type. eww cannot embed
+    the Leaflet map, so the deck renders the same data natively and the card
+    opens the real map on click.
+    """
+    st = _hive("/api/stats") or {}
+    feed = _hive("/api/feed?since=0&limit=4") or []
+    rows = []
+    for e in feed[:4]:
+        if not isinstance(e, dict):
+            continue
+        et = (e.get("event_type") or "").split(".")[-1]
+        rows.append({
+            "ip": e.get("src_ip") or "?",
+            "pot": e.get("honeypot") or "?",
+            "proto": (e.get("protocol") or "").upper(),
+            "port": str(e.get("dst_port") or ""),
+            "kind": et[:14],
+            "country": e.get("country") or "--",
+        })
+    up = st != {}
+    return {
+        "up": up,
+        "total": st.get("total", 0),
+        "ips": st.get("unique_ips", 0),
+        "pots": st.get("active_pots", 0),
+        "h1": st.get("hits_1h", 0),
+        "countries": st.get("countries", 0),
+        "rows": rows,
+        "quiet": not rows,
+    }
+
+
 if __name__ == "__main__":
     fallback = {
         "state": {"hacker": False, "ghost": False, "panic": "idle",
@@ -206,6 +253,8 @@ if __name__ == "__main__":
         "units": {"count": 0, "rows": [], "clean": True},
         "events": {"count": 0, "recent": [], "quiet": True},
         "arsenal": {"groups": [], "live": 0, "total": 0},
+        "hive": {"up": False, "total": 0, "ips": 0, "pots": 0, "h1": 0,
+                 "countries": 0, "rows": [], "quiet": True},
     }
     try:
         rows, up, total = pots()
@@ -223,6 +272,7 @@ if __name__ == "__main__":
             "units": units(),
             "events": events(),
             "arsenal": arsenal(),
+            "hive": hive(),
         }))
     except Exception:
         print(json.dumps(fallback))

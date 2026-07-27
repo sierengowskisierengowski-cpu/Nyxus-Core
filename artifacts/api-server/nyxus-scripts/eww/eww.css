@@ -6716,3 +6716,17 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 /* fixed-width tool buttons: without this they stretch to fill the column and
    the four categories drift apart with dead space between them */
 .gh-tool { min-width: 168px; }
+
+.gh-hive { padding: 4px 8px; border-radius: 7px;
+           background-color: rgba(18,7,34,0.42);
+           border: 1px solid rgba(255,45,173,0.16); }
+.gh-hive:hover { border-color: rgba(255,45,173,0.9); background-color: rgba(44,16,78,0.82);
+                 box-shadow: 0 0 14px rgba(255,45,173,0.45); }
+.gh-hive-ip   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                color: rgba(255,255,255,0.86); }
+.gh-hive-meta { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+                color: rgba(77,238,255,0.8); }
+.gh-hive-pot  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+                color: rgba(255,255,255,0.34); }
+.gh-root .deck-brand { margin-bottom: 0; font-size: 17px; }
+.gh-root { padding: 2px 14px 6px 14px; }
