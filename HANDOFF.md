@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-27 ~02:45 EDT (HOME + START + GHOST stations live)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-27 ~16:30 EDT (6 stations · vault apps are real apps)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -10,7 +10,17 @@
 > **★ Security inventory (Jul 27):**  
 > [`docs/SECURITY_INVENTORY_2026-07-27.md`](./docs/SECURITY_INVENTORY_2026-07-27.md) — full Arsenal / modes / GodsApp / Intel / Vault / local Projects / BlackArch list.
 >
-> **★ NEWEST — HOME + START STATIONS (Jul 27) — READ FIRST:**  
+> **★ NEWEST — STATIONS, APPS & HOME LAB (Jul 27 pm) — READ FIRST:**  
+> [`docs/STATIONS_APPS_AND_LAB_BRIEF_2026-07-27.md`](./docs/STATIONS_APPS_AND_LAB_BRIEF_2026-07-27.md)  
+> Six stations now (HOME/START/GHOST/FORGE/LAB/ARSENAL), and the GowskiNet
+> vault consoles are **real apps**: each serves API + built SPA from one
+> process under a systemd unit, opened by a native Tauri shell. Axiom is
+> Electron and must be PACKAGED. **Contains a real security fix — all six
+> console backends were listening on 0.0.0.0 and reachable from the LAN.**
+> Also lists the measured gaps on this box (auditd inactive, no fail2ban /
+> usbguard / MAC, Secure Boot off, no disk encryption).
+>
+> **★ PREVIOUS — HOME + START STATIONS (Jul 27) — READ FIRST:**  
 > [`docs/HOME_AND_START_STATIONS_BRIEF_2026-07-27.md`](./docs/HOME_AND_START_STATIONS_BRIEF_2026-07-27.md)  
 > The home page is the eww **`home-deck`** window on the **HOME** station
 > (`Super+Home`), and the NYXUS Start menu is now the eww **`start-panel`**
