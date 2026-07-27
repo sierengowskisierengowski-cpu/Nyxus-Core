@@ -10,7 +10,7 @@ export LC_ALL=C.UTF-8
 
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus-fan-graph"
 STATE="${STATE_DIR}/hist.csv"
-HIST_LEN=24
+HIST_LEN=34
 MAX_RPM=9000
 mkdir -p "${STATE_DIR}"
 BLOCKS=( "▁" "▂" "▃" "▄" "▅" "▆" "▇" "█" )

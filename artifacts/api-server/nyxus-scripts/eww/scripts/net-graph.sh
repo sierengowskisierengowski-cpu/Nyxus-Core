@@ -10,7 +10,7 @@ export LC_ALL=C.UTF-8
 
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus-net-graph"
 STATE="${STATE_DIR}/hist.csv"    # 2 lines: down / up (0..100 log-scaled)
-HIST_LEN=24
+HIST_LEN=34
 mkdir -p "${STATE_DIR}"
 BLOCKS=( "▁" "▂" "▃" "▄" "▅" "▆" "▇" "█" )
 have() { command -v "$1" >/dev/null 2>&1; }

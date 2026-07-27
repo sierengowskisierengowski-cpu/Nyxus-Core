@@ -449,7 +449,10 @@ window, window.background, decoration {
   font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
   font-size: 12px;
   font-weight: 400;
-  letter-spacing: 0.02em;
+  /* stretched 2026-07-26: 24 -> 34 samples in the *-graph.sh scripts plus a
+     wider tracking, so each graph reads longer. Cluster spacing stays 26px
+     so the gap between them is unchanged. */
+  letter-spacing: 0.10em;
 }
 
 .mon-value {

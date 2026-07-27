@@ -18,7 +18,7 @@ export LC_ALL=C.UTF-8
 
 STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/nyxus-sys-graph"
 STATE="${STATE_DIR}/hist.csv"     # 3 lines: cpu / temp(0-100 norm) / gpu
-HIST_LEN=24
+HIST_LEN=34
 mkdir -p "${STATE_DIR}"
 BLOCKS=( "▁" "▂" "▃" "▄" "▅" "▆" "▇" "█" )
 have() { command -v "$1" >/dev/null 2>&1; }

@@ -429,7 +429,7 @@
                     WORKSPACES.home.occupied ? "ws-pill ws-pill-occupied ws-pill-cyan" :
                                               "ws-pill ws-pill-cyan"}
             :style "background-position: center;"
-            :onclick "hyprctl dispatch workspace name:0 &"
+            :onclick "hyprctl dispatch workspace name:HOME &"
             :tooltip "HOME · ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
       "${WORKSPACES.home.code}")))
 
@@ -1003,7 +1003,7 @@
     ;; ── hub cards: HOME + DEEP CORE (live data lives there) ──────────
     (box :class "dash-grid" :orientation "h" :space-evenly true :spacing 16
       (button :class "dash-card dash-hub-card"
-              :onclick "nyxus-hub-close; hyprctl dispatch workspace name:0 &"
+              :onclick "nyxus-hub-close; hyprctl dispatch workspace name:HOME &"
         (box :orientation "v" :space-evenly false :spacing 8
           (label :class "dash-card-big dash-big-cyan" :text "◈")
           (label :class "dash-card-script" :text "HOME · Obsidian Reactor")
