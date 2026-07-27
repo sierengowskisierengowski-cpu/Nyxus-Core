@@ -6150,7 +6150,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   min-width: 210px;
   padding: 13px 17px 15px 17px;
   border-radius: 18px;
-  background-color: rgba(9, 3, 20, 0.62);
+  background-color: rgba(9, 3, 20, 0.44);
   background-image: linear-gradient(150deg,
     rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 34%,
     rgba(0,0,0,0.26) 100%);
@@ -6299,7 +6299,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 .start-root {
   padding: 20px 24px 20px 24px;
   border-radius: 22px;
-  background-color: rgba(9, 3, 20, 0.72);
+  background-color: rgba(9, 3, 20, 0.52);
   background-image: linear-gradient(150deg,
     rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 38%,
     rgba(0,0,0,0.30) 100%);
@@ -6352,14 +6352,14 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
                   color: rgba(255,255,255,0.42); }
 
 .start-col { padding: 4px 2px; }
-.start-col-side { min-width: 250px; }
+
 
 /* pinned tiles */
 .start-tile {
   min-width: 92px; min-height: 84px;
   padding: 10px 8px;
   border-radius: 15px;
-  background-color: rgba(18, 7, 34, 0.62);
+  background-color: rgba(18, 7, 34, 0.44);
   border: 1px solid rgba(125, 61, 255, 0.34);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 12px rgba(125,61,255,0.18);
   transition: all 170ms cubic-bezier(0.16, 1, 0.2, 1);
@@ -6472,3 +6472,153 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
                       color: rgba(255,255,255,0.55); }
 .start-search-kbd   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
                       color: rgba(255,255,255,0.30); }
+
+.start-track { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 11px;
+               font-weight: 800; color: #ffffff; }
+.start-mini {
+  min-width: 30px; min-height: 26px; border-radius: 9px;
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 13px;
+  color: #ffffff;
+  background-color: rgba(18,7,34,0.66);
+  border: 1px solid rgba(255,45,173,0.42);
+}
+.start-mini:hover { border-color: rgba(255,45,173,1); box-shadow: 0 0 16px rgba(255,45,173,0.6); }
+.start-wx-temp { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 22px;
+                 font-weight: 800; color: #4deeff; text-shadow: 0 0 12px rgba(77,238,255,0.7); }
+
+.start-cat { font-family: "Permanent Marker", "Inter Display", sans-serif; font-size: 12px;
+             color: rgba(255,255,255,0.92); text-shadow: 0 0 10px rgba(255,45,173,0.5); }
+.start-cat-count { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+                   color: rgba(214,158,255,0.65); }
+.start-cat-rule { background-color: rgba(125,61,255,0.22); min-height: 1px; }
+
+/* each category is its own inset band so the sections stop reading as one
+   continuous wall of tiles */
+.start-cat-block {
+  padding: 11px 13px 13px 13px;
+  border-radius: 15px;
+  background-color: rgba(255,255,255,0.022);
+  border: 1px solid rgba(125,61,255,0.16);
+}
+.start-win {
+  padding: 6px 10px; border-radius: 9px;
+  background-color: rgba(18,7,34,0.50);
+  border: 1px solid rgba(125,61,255,0.24);
+}
+.start-win:hover { border-color: rgba(77,238,255,0.9); background-color: rgba(44,16,78,0.85);
+                   box-shadow: 0 0 16px rgba(77,238,255,0.45); }
+.start-win-ws { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+                font-weight: 800; color: rgba(77,238,255,0.95); }
+.start-win-title { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                   color: rgba(255,255,255,0.80); }
+.start-place {
+  padding: 6px 10px; border-radius: 9px;
+  background-color: rgba(18,7,34,0.44);
+  border: 1px solid rgba(125,61,255,0.20);
+}
+.start-place:hover { border-color: rgba(255,196,74,0.9); background-color: rgba(44,16,78,0.85);
+                     box-shadow: 0 0 16px rgba(255,196,74,0.42); }
+.start-place-glyph { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 12px;
+                     color: rgba(255,196,74,0.95); }
+.start-place-name  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                     color: rgba(255,255,255,0.78); }
+.start-upd-count { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 24px;
+                   font-weight: 800; color: #ff8a3a; text-shadow: 0 0 12px rgba(255,138,58,0.7); }
+
+/* -- ARSENAL rows (START panel) -------------------------------------- */
+.start-ars-cat { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+                 font-weight: 800; color: rgba(214,158,255,0.62); }
+.start-ars {
+  padding: 5px 9px; border-radius: 8px;
+  background-color: rgba(18,7,34,0.42);
+  border: 1px solid rgba(125,61,255,0.20);
+}
+.start-ars:hover { background-color: rgba(44,16,78,0.82); border-color: rgba(255,45,173,0.85);
+                   box-shadow: 0 0 16px rgba(255,45,173,0.45); }
+.start-ars-name { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                  color: rgba(255,255,255,0.84); }
+.start-ars-if   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+                  color: rgba(255,255,255,0.32); }
+.start-ars-dot  { font-size: 11px; }
+.start-ars-live .start-ars-dot { color: #8dff6a; text-shadow: 0 0 9px rgba(141,255,106,0.9); }
+.start-ars-down .start-ars-dot { color: #ff4d6a; text-shadow: 0 0 9px rgba(255,77,106,0.9); }
+.start-ars-idle .start-ars-dot { color: rgba(255,255,255,0.26); }
+.start-ars-live { border-color: rgba(141,255,106,0.34); }
+
+/* -- idle breathe: the cards stay alive when nothing is playing -------
+   GTK's CSS engine here DOES run @keyframes (proven by boombox-led-pulse). */
+@keyframes nyxus-card-breathe {
+  0%   { border-color: rgba(125, 61, 255, 0.34); }
+  50%  { border-color: rgba(255, 45, 173, 0.62); }
+  100% { border-color: rgba(125, 61, 255, 0.34); }
+}
+.deck-card { animation: nyxus-card-breathe 5.5s ease-in-out infinite; }
+.start-root { animation: nyxus-card-breathe 7s ease-in-out infinite; }
+
+/* -- START search overlay -------------------------------------------- */
+.start-sroot {
+  padding: 16px 18px 18px 18px;
+  border-radius: 20px;
+  background-color: rgba(9, 3, 20, 0.86);
+  background-image: linear-gradient(150deg, rgba(255,255,255,0.09) 0%,
+                    rgba(255,255,255,0.02) 38%, rgba(0,0,0,0.30) 100%);
+  border: 1px solid rgba(255, 45, 173, 0.60);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16),
+              0 0 34px rgba(255, 45, 173, 0.40),
+              0 0 80px rgba(125, 61, 255, 0.24);
+}
+.start-sinput {
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 15px;
+  color: #ffffff;
+  padding: 10px 14px; border-radius: 12px;
+  background-color: rgba(4, 1, 10, 0.80);
+  border: 1px solid rgba(125, 61, 255, 0.50);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.55);
+}
+.start-sinput:focus { border-color: rgba(255,45,173,0.95);
+                      box-shadow: inset 0 2px 8px rgba(0,0,0,0.55), 0 0 22px rgba(255,45,173,0.45); }
+.start-sclose {
+  min-width: 32px; min-height: 30px; border-radius: 10px;
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 13px;
+  color: rgba(255,255,255,0.80);
+  background-color: rgba(18,7,34,0.70);
+  border: 1px solid rgba(255,45,173,0.44);
+}
+.start-sclose:hover { border-color: rgba(255,45,173,1); color: #ffffff;
+                      box-shadow: 0 0 18px rgba(255,45,173,0.65); }
+
+/* keep the ARSENAL scrollbar off the rows it is scrolling */
+
+.start-scroll scrollbar,
+.start-sroot scrollbar { background-color: transparent; border: none; min-width: 6px; }
+.start-scroll scrollbar slider,
+.start-sroot scrollbar slider {
+  background-color: rgba(125,61,255,0.45);
+  border-radius: 6px; min-width: 5px; border: none;
+}
+.start-scroll scrollbar slider:hover { background-color: rgba(255,45,173,0.75); }
+/* the search overlay is docked flush under the bar - square off its top so
+   it reads as one continuous control rather than a separate floating card */
+.start-sroot { border-top-left-radius: 6px; border-top-right-radius: 6px; }
+
+/* GTK3 overlay-scrolling draws the slider ON TOP of the content and cannot be
+   turned off from CSS, so inset the ROWS instead of padding the scroller
+   (padding on the scroll widget does not move its child). */
+.start-scroll .start-ars,
+.start-scroll .start-ars-cat,
+.start-scroll .start-win { margin-right: 14px; }
+
+.start-vdiv {
+  background-color: rgba(125, 61, 255, 0.30);
+  min-width: 1px;
+  margin: 6px 10px 6px 10px;
+}
+/* the system column gets its own inset surface so it reads as a separate
+   pane from the app grid rather than more of the same field */
+.start-col-side {
+  min-width: 300px;
+  padding: 12px 14px 12px 14px;
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.026);
+  border: 1px solid rgba(125, 61, 255, 0.18);
+}

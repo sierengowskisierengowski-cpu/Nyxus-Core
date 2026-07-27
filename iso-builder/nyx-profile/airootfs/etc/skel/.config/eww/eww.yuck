@@ -114,6 +114,12 @@
 ;; desktop entries on demand is what made the first build feel frozen.
 (defpoll STARTMETA :interval "30s" :initial '{"user":{"name":"operator","subtitle":"","initial":"N"},"pins":[],"pin_rows":[],"app_rows":[],"app_total":0,"pin_count":0,"scratch":[],"scratch_empty":true,"scratch_path":""}'
                                    "python3 ~/.config/eww/scripts/start-feed.py meta")
+(defvar STARTQ "")
+(defvar STARTFOUND '{"rows":[],"n":0}')
+(defpoll STARTARS :interval "12s" :initial '{"groups":[],"live":0,"total":0}'
+                                   "python3 ~/.config/eww/scripts/start-feed.py arsenal")
+(defpoll STARTLIVE :interval "4s" :initial '{"running":[],"run_count":0,"recent":[],"places":[]}'
+                                   "python3 ~/.config/eww/scripts/start-feed.py live")
 (defpoll STARTSTAT :interval "6s"  :initial '{"items":[]}'
                                    "python3 ~/.config/eww/scripts/start-feed.py status")
 
@@ -1253,7 +1259,10 @@
 (defwidget vflex [] (box :vexpand true))
 
 (defwidget deck_card [title ?glyph ?tone ?depth]
+  ;; Bass-reactive rim so the deck breathes with the music like the rest of
+  ;; the rig (boombox / reflex layer). Inline because CAVA_BASS interpolates.
   (box :class "deck-card deck-card-${tone ?: 'violet'} deck-${depth ?: 'mid'}" :orientation "v"
+       :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${18 + CAVA_BASS / 3}px rgba(125, 61, 255, ${0.20 + CAVA_BASS / 330}), 0 0 ${44 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 520});"
        :space-evenly false :spacing 8 :valign "start" :hexpand false :vexpand false
     (box :class "deck-card-head" :orientation "h" :space-evenly false :spacing 8
       (label :class "deck-card-glyph" :text {glyph ?: "◈"})
@@ -1365,7 +1374,7 @@
       (button :class "deck-btn" :onclick "alacritty &" :tooltip "Terminal" "")
       (button :class "deck-btn" :onclick "firefox &" :tooltip "Browser" "")
       (button :class "deck-btn" :onclick "thunar &" :tooltip "Files" "")
-      (button :class "deck-btn" :onclick "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py' &" :tooltip "Notepad" ""))))
+      (button :class "deck-btn" :onclick "sh -c 'python3 ~/.nyxus/nyxus_notepad.py || nyxus-notepad' &" :tooltip "Notepad" ""))))
 
 ;; ---------------------------------------------------------------- deck
 (defwidget home_deck []
@@ -1445,7 +1454,11 @@
           :onclick cmd :tooltip tip glyph))
 
 (defwidget start_panel []
+  ;; Bass-reactive rim, same formula the boombox uses (CAVA_BASS 0-100).
+  ;; Applied INLINE because the CSS compile strips background-size and the
+  ;; scalar has to interpolate per frame anyway.
   (box :class "start-root" :orientation "v" :space-evenly false :spacing 12
+       :style "border-color: rgba(255, 45, 173, ${0.30 + CAVA_BASS / 260}); box-shadow: 0 0 ${30 + CAVA_BASS / 2}px rgba(125, 61, 255, ${0.22 + CAVA_BASS / 380}), 0 0 ${70 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 500});"
     ;; ---- header ------------------------------------------------------
     (box :class "start-head" :orientation "h" :space-evenly false :spacing 18
       (box :class "start-ident" :orientation "h" :space-evenly false :spacing 11
@@ -1457,12 +1470,12 @@
       ;; EXCLUSIVE (see the window note), so search hands off to rofi - the
       ;; same launcher Super+Space already uses.
       (button :class "start-search" :hexpand true
-              :onclick "sh -c 'rofi -show drun -theme ~/.config/rofi/nyxus.rasi 2>/dev/null || rofi -show drun' &"
+              :onclick "${EWW_CMD} update STARTQ='' && ${EWW_CMD} open start-search"
         (box :orientation "h" :space-evenly false :spacing 10
           (label :class "start-search-glyph" :text "")
           (label :class "start-search-text" :text "Search apps and commands")
           (box :hexpand true)
-          (label :class "start-search-kbd" :text "Super + Space")))
+          (label :class "start-search-kbd" :text "click to search")))
       (box :orientation "v" :space-evenly false :valign "center"
         (label :class "start-clock" :halign "end" :text "${TIME.hm} ${TIME.ampm}")
         (label :class "start-date"  :halign "end" :text "${TIME.date}")))
@@ -1478,30 +1491,91 @@
         (box :class "start-div" :height 1)
         (box :orientation "h" :space-evenly false
           (label :class "start-sec" :halign "start" :hexpand true :text "ALL APPS")
-          (label :class "start-sec-hint" :halign "end" :text "${STARTMETA.app_total} installed"))
-        ;; scrolls so a big catalogue cannot grow the surface past the 882px
-        ;; free area between the bars (the trap that parked the home deck at y=-59)
+          (label :class "start-sec-hint" :halign "end" :text "${STARTMETA.app_total} installed . browse by category"))
+        ;; Grouped into labelled category sections rather than one flat grid -
+        ;; ~80 identical tiles in a row read as an undifferentiated wall.
+        ;; Scrolls so a big catalogue cannot grow the surface past the 882px
+        ;; free area between the bars (the trap that parked the home deck at y=-59).
         (scroll :vscroll true :hscroll false :vexpand true
-          (box :orientation "v" :space-evenly false :spacing 9 :valign "start"
-            (for row in {STARTMETA.app_rows} (start_row :row row)))))
+          (box :orientation "v" :space-evenly false :spacing 16 :valign "start"
+            (for sec in {STARTMETA.cat_sections}
+              (box :class "start-cat-block" :orientation "v" :space-evenly false :spacing 7
+                (box :orientation "h" :space-evenly false :spacing 9
+                  (label :class "start-cat" :text {sec.label})
+                  (label :class "start-cat-count" :text "${sec.count}")
+                  (box :class "start-cat-rule" :hexpand true :valign "center" :height 1))
+                (for row in {sec.rows} (start_row :row row)))))))
 
+      ;; vertical rule so the app grid and the system column stop reading as
+      ;; one cluttered field
+      (box :class "start-vdiv" :width 1)
+
+      ;; RIGHT COLUMN - deliberately NOT the machine vitals / weather /
+      ;; media the HOME deck already carries. Duplicating those would make
+      ;; the two stations interchangeable. This is launcher-context only:
+      ;; what is running, where to go, what is pending.
       (box :class "start-col start-col-side" :orientation "v" :space-evenly false :spacing 8
-        (label :class "start-sec" :halign "start" :text "SYSTEM")
-        (box :orientation "v" :space-evenly false :spacing 6
-          (for it in {STARTSTAT.items}
-            (start_statchip :label {it.label} :value {it.value} :ok {it.ok})))
+        (box :orientation "h" :space-evenly false
+          (label :class "start-sec" :halign "start" :hexpand true :text "RUNNING")
+          (label :class "start-sec-hint" :halign "end" :text "${STARTLIVE.run_count} windows"))
+        (scroll :class "start-scroll" :vscroll true :hscroll false :height 96
+          (box :orientation "v" :space-evenly false :spacing 5 :valign "start"
+            (label :class "start-scratch-empty" :halign "start"
+                   :visible {STARTLIVE.run_count == 0} :text "nothing open")
+            (for w in {STARTLIVE.running}
+              (button :class "start-win" :tooltip "${w.cls} on ${w.ws}"
+                      :onclick "hyprctl dispatch focuswindow address:${w.addr} &"
+                (box :orientation "h" :space-evenly false :spacing 8
+                  (label :class "start-win-ws" :text {w.ws})
+                  (label :class "start-win-title" :halign "start" :hexpand true
+                         :limit-width 24 :text {w.title}))))))
+
         (box :class "start-div" :height 1)
-        (label :class "start-sec" :halign "start" :text "MACHINE")
-        (box :orientation "v" :space-evenly false :spacing 6
-          (start_statchip :label "CPU"  :value "${SYSGRAPH.cpu.val}%"  :ok true)
-          (start_statchip :label "RAM"  :value "${SYSGRAPH.mem.val}%"  :ok true)
-          (start_statchip :label "TEMP" :value "${SYSGRAPH.temp.val}°" :ok true)
-          (start_statchip :label "DISK" :value "${BARTILES.disk}%"     :ok true)
-          (start_statchip :label "UP"   :value "${BARTILES.up}"        :ok true))
+        ;; GowskiNet toolkit, live off the same ~/Arsenal/registry.toml the
+        ;; Arsenal TUI reads - add a [[tool]] block there and it appears here.
+        (box :orientation "h" :space-evenly false
+          (label :class "start-sec" :halign "start" :hexpand true :text "ARSENAL")
+          (label :class "start-sec-hint" :halign "end" :text "${STARTARS.live}/${STARTARS.total} live"))
+        (scroll :class "start-scroll" :vscroll true :hscroll false :height 128
+          (box :orientation "v" :space-evenly false :spacing 7 :valign "start"
+            (for g in {STARTARS.groups}
+              (box :orientation "v" :space-evenly false :spacing 4
+                (label :class "start-ars-cat" :halign "start" :text {g.label})
+                (for t in {g.items}
+                  (button :class "start-ars start-ars-${t.state}" :tooltip {t.desc}
+                          :onclick "${t.launch} &"
+                    (box :orientation "h" :space-evenly false :spacing 8
+                      (label :class "start-ars-dot" :text "*")
+                      (label :class "start-ars-name" :halign "start" :hexpand true
+                             :limit-width 22 :text {t.name})
+                      (label :class "start-ars-if" :text {t.iface}))))))))
+
+        (box :class "start-div" :height 1)
+        (label :class "start-sec" :halign "start" :text "PLACES")
+        (box :orientation "v" :space-evenly false :spacing 5
+          (for prow in {STARTLIVE.place_rows}
+            (box :orientation "h" :space-evenly true :spacing 5
+              (for pl in {prow.cells}
+                (button :class "start-place" :onclick "thunar ${pl.path} &" :tooltip {pl.path}
+                  (box :orientation "h" :space-evenly false :spacing 7
+                    (label :class "start-place-glyph" :text {pl.glyph})
+                    (label :class "start-place-name" :halign "start" :text {pl.name})))))))
+
+        (box :class "start-div" :height 1)
+        (box :orientation "h" :space-evenly false
+          (label :class "start-sec" :halign "start" :hexpand true :text "PENDING")
+          (label :class "start-sec-hint" :halign "end" :text "checked ${UPDATESLIST.checked}"))
+        (box :orientation "h" :space-evenly false :spacing 9
+          (label :class "start-upd-count" :text "${UPDATES.count}")
+          (box :orientation "v" :space-evenly false :valign "center" :hexpand true
+            (label :class "start-scratch" :halign "start" :text "updates ready")
+            (label :class "start-search-kbd" :halign "start" :text "${UPDATESLIST.source}")))
+
         (box :class "start-div" :height 1)
         (box :orientation "h" :space-evenly false
           (label :class "start-sec" :halign "start" :hexpand true :text "SCRATCHPAD")
-          (button :class "start-edit-mini" :onclick "nyxus-notepad &" :tooltip "Edit in notepad" ""))
+          (button :class "start-edit-mini" :tooltip "Edit in notepad"
+                  :onclick "sh -c 'python3 ~/.nyxus/nyxus_notepad.py || nyxus-notepad' &" ""))
         (scroll :vscroll true :hscroll false :vexpand true
           (box :orientation "v" :space-evenly false :spacing 4 :valign "start"
             (label :class "start-scratch-empty" :halign "start"
@@ -1522,6 +1596,49 @@
       (start_action :glyph ""  :tip "Lock"          :cmd "hyprlock &"       :tone "blue")
       (start_action :glyph ""  :tip "Power menu"    :cmd "${EWW_CMD} open --toggle powermenu" :tone "gold"))))
 
+;; -- START search overlay ---------------------------------------------
+;; A text field needs keyboard focus, and eww 0.5 only offers EXCLUSIVE
+;; keyboard interactivity on a layer surface - so the search box lives in
+;; its own SHORT-LIVED window instead of inside the panel. It takes the
+;; keyboard only while it is open and closes itself on Enter or Escape.
+;; Escape hatches that do NOT depend on this window: the station watcher
+;; closes it whenever you leave START, and Super+Shift+S force-closes it.
+(defwidget start_hit [name cmd glyph tagline]
+  (button :class "start-hit"
+          :onclick "${cmd} & ${EWW_CMD} update STARTQ='' && ${EWW_CMD} close start-search"
+          :tooltip tagline
+    (box :orientation "h" :space-evenly false :spacing 12
+      (label :class "start-hit-glyph" :text glyph)
+      (box :orientation "v" :space-evenly false :hexpand true :halign "start"
+        (label :class "start-hit-name" :halign "start" :limit-width 46 :text name)
+        (label :class "start-hit-sub"  :halign "start" :limit-width 56 :text tagline)))))
+
+(defwidget start_search_overlay []
+  (box :class "start-sroot" :orientation "v" :space-evenly false :spacing 10
+    (box :orientation "h" :space-evenly false :spacing 12
+      (label :class "start-search-glyph" :text "")
+      (input :class "start-sinput" :hexpand true :value STARTQ
+             :onchange "python3 ~/.config/eww/scripts/start-search.py {} &"
+             :onaccept "python3 ~/.config/eww/scripts/start-search.py --run {} &")
+      (button :class "start-sclose" :tooltip "Close (Esc)"
+              :onclick "${EWW_CMD} update STARTQ='' && ${EWW_CMD} close start-search" ""))
+    (box :class "start-div" :height 1)
+    (label :class "start-scratch-empty" :halign "start"
+           :visible {STARTFOUND.n == 0} :text "start typing to search installed apps")
+    (box :orientation "v" :space-evenly false :spacing 6
+      (for r in {STARTFOUND.rows}
+        (start_hit :name {r.name} :cmd {r.cmd} :glyph {r.glyph} :tagline {r.tagline})))))
+
+(defwindow start-search
+  :monitor 0 :stacking "overlay" :exclusive false :focusable true
+  :namespace "nyxus-start-search"
+  ;; Docked to the panel's search bar, not floating: the panel is 1660px
+  ;; wide centred, so the bar spans roughly x 318..1622 (centre ~970, i.e.
+  ;; +10 off screen centre) and its underside sits near y=150. Measured with
+  ;; `hyprctl layers -j`, not eyeballed.
+  :geometry (geometry :x "10px" :y "150px" :width "1300px" :height "420px" :anchor "top center")
+  (start_search_overlay))
+
 (defwindow start-panel
   :monitor 0 :stacking "bottom" :exclusive false :focusable false
   ;; FOCUSABLE MUST STAY FALSE. eww 0.5 exposes :focusable as a bool that maps
@@ -1530,7 +1647,7 @@
   ;; every keystroke session-wide. That reads exactly like a freeze, and it is
   ;; the same trap that made the old nyxus-start GTK app impossible to dismiss.
   :namespace "nyxus-start-panel"
-  :geometry (geometry :x "0" :y "0" :width "1660px" :height "780px" :anchor "center")
+  :geometry (geometry :x "0" :y "0" :width "1660px" :height "800px" :anchor "center")
   (start_panel))
 
 (defwindow bar-bottom

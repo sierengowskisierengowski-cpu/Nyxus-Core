@@ -62,6 +62,7 @@ def _icon_glyph(app):
 
 def _app_row(a):
     return {
+        "cats": (a.get("categories") or ["Other"]),
         "id": a.get("id", ""),
         "name": a.get("name", "?"),
         "cmd": a.get("exec") or a.get("id") or "",
@@ -99,6 +100,33 @@ def catalogue(force=False):
     return rows
 
 
+CAT_ORDER = ["Internet", "Development", "Media", "Games", "Security",
+             "Settings", "System", "Other"]
+
+
+def sections(rows, per_cat=10, per_row=10):
+    """Group the catalogue into labelled category sections.
+
+    A flat grid of ~80 tiles reads as an undifferentiated wall - the owner's
+    words: "looks like a ton of apps bunched together". Grouping gives the
+    eye somewhere to land, and each category is capped to one row so the
+    panel stays scannable; rofi covers the long tail.
+    """
+    buckets = {}
+    for r in rows:
+        cat = next((c for c in CAT_ORDER if c in r.get("cats", [])), "Other")
+        buckets.setdefault(cat, []).append(r)
+    out = []
+    for cat in CAT_ORDER:
+        items = buckets.get(cat) or []
+        if not items:
+            continue
+        out.append({"label": cat.upper(),
+                    "count": len(items),
+                    "rows": chunk(items[:per_cat], per_row)})
+    return out
+
+
 def chunk(rows, per):
     """eww has no wrapping grid - emit explicit rows so the panel fills its
     width instead of running one long line into a scroller."""
@@ -107,7 +135,7 @@ def chunk(rows, per):
 
 def mode_apps():
     rows = catalogue()
-    return {"apps": rows, "rows": chunk(rows, 6), "count": len(rows)}
+    return {"apps": rows, "rows": chunk(rows, 10), "count": len(rows)}
 
 
 def mode_status():
@@ -136,7 +164,7 @@ def mode_meta():
         pins_raw = pins_raw.get("pinned", [])
     if pins_raw:
         import apps as A
-        for pid in pins_raw[:18]:
+        for pid in pins_raw[:30]:
             a = _safe(lambda p=pid: A.find_app_by_id(p), None)
             if a:
                 pins.append(_app_row(a))
@@ -149,8 +177,8 @@ def mode_meta():
     others = [a for a in allrows if a["id"] not in pinned_ids]
 
     return {
-        "pin_rows": chunk(pins, 6),
-        "app_rows": chunk(others[:36], 6),
+        "pin_rows": chunk(pins, 10),
+        "cat_sections": sections(others),
         "app_total": len(allrows),
         "user": {
             "name": cfg.get("user_name") or os.environ.get("USER", "operator"),
@@ -165,7 +193,137 @@ def mode_meta():
     }
 
 
-MODES = {"meta": mode_meta, "status": mode_status, "apps": mode_apps}
+
+PLACES = [
+    ("Home",      "~",              "\uf015"),
+    ("Downloads", "~/Downloads",    "\uf019"),
+    ("Documents", "~/Documents",    "\uf0f6"),
+    ("Pictures",  "~/Pictures",     "\uf03e"),
+    ("Projects",  "~/Projects",     "\uf121"),
+    ("Config",    "~/.config",      "\uf013"),
+]
+
+
+def mode_live():
+    """START-only content: what is running, what was launched recently, and
+    quick places. Deliberately NOT the machine vitals / weather / media that
+    the HOME deck already shows - duplicating those makes the two stations
+    interchangeable, which is the opposite of the point."""
+    import subprocess
+
+    running = []
+    try:
+        raw = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True,
+                             text=True, timeout=3).stdout
+        for c in json.loads(raw):
+            title = (c.get("title") or "").strip()
+            if not title:
+                continue
+            running.append({
+                "title": title[:34],
+                "cls": (c.get("class") or "?")[:18],
+                "ws": (c.get("workspace") or {}).get("name", "?"),
+                "addr": c.get("address", ""),
+            })
+    except Exception:
+        pass
+
+    recent = []
+    try:
+        import settings as S
+        import apps as A
+        raw = json.loads(S.RECENT_FILE.read_text())
+        for r in raw[:8]:
+            a = _safe(lambda i=r.get("id"): A.find_app_by_id(i), None)
+            if a:
+                recent.append(_app_row(a))
+    except Exception:
+        pass
+
+    return {
+        "running": running,
+        "run_count": len(running),
+        "recent": recent,
+        # two-up so PLACES costs 3 rows of height instead of 6 - the panel
+        # is sized to its content and must fit the 882px gap between bars
+        "place_rows": chunk([{"name": n, "path": p, "glyph": g}
+                             for n, p, g in PLACES], 2),
+    }
+
+
+
+ARSENAL_REGISTRY = Path.home() / "Arsenal" / "registry.toml"
+ARSENAL_CATS = {"defense": "DEFENSE", "offense": "OFFENSE",
+                "ai": "AI", "infra": "INFRA"}
+
+
+def _probe(spec):
+    """Resolve a registry `status =` spec to a live bool. Mirrors what the
+    Arsenal TUI does. Every probe is short-timeout: this runs on a poll and
+    must never stall the panel."""
+    import subprocess
+    if not spec or spec == "none":
+        return None
+    try:
+        kind, _, arg = spec.partition("=")
+        if kind == "service_system":
+            r = subprocess.run(["systemctl", "is-active", arg],
+                               capture_output=True, text=True, timeout=2)
+            return r.stdout.strip() == "active"
+        if kind == "service_user":
+            r = subprocess.run(["systemctl", "--user", "is-active", arg],
+                               capture_output=True, text=True, timeout=2)
+            return r.stdout.strip() == "active"
+        if kind == "docker":
+            r = subprocess.run(["docker", "ps", "--filter", f"name={arg}",
+                                "--format", "{{.Names}}"],
+                               capture_output=True, text=True, timeout=3)
+            return bool(r.stdout.strip())
+        if kind == "web":
+            r = subprocess.run(["curl", "-fsS", "-o", "/dev/null",
+                                "--max-time", "2", arg],
+                               capture_output=True, timeout=3)
+            return r.returncode == 0
+    except Exception:
+        return False
+    return None
+
+
+def mode_arsenal():
+    """GowskiNet toolkit (jeTT / Bifrost / Meli / Honeypot / ...) with live
+    state, straight off the same ~/Arsenal/registry.toml the Arsenal TUI
+    reads - so adding a [[tool]] block shows up here too, no code change."""
+    try:
+        import tomllib
+        data = tomllib.loads(ARSENAL_REGISTRY.read_text())
+    except Exception:
+        return {"groups": [], "live": 0, "total": 0}
+
+    tools = data.get("tool", []) or []
+    rows, live = [], 0
+    for t in tools:
+        ok = _probe(t.get("status"))
+        if ok:
+            live += 1
+        rows.append({
+            "id": t.get("id", ""),
+            "name": t.get("name", "?"),
+            "desc": (t.get("desc") or "")[:60],
+            "cat": t.get("category", "infra"),
+            "iface": t.get("interface", ""),
+            "launch": t.get("launch", ""),
+            "state": "live" if ok else ("down" if ok is False else "idle"),
+        })
+
+    groups = []
+    for key, label in ARSENAL_CATS.items():
+        items = [r for r in rows if r["cat"] == key]
+        if items:
+            groups.append({"label": label, "items": items, "n": len(items)})
+    return {"groups": groups, "live": live, "total": len(rows)}
+
+
+MODES = {"meta": mode_meta, "status": mode_status, "apps": mode_apps, "live": mode_live, "arsenal": mode_arsenal}
 
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "meta"
@@ -174,6 +332,8 @@ if __name__ == "__main__":
                  "pins": [], "pin_count": 0, "scratch": [],
                  "scratch_empty": True, "scratch_path": ""},
         "status": {"items": []},
+        "live": {"running": [], "run_count": 0, "recent": [], "places": []},
+        "arsenal": {"groups": [], "live": 0, "total": 0},
         "apps": {"apps": [], "count": 0},
     }
     try:

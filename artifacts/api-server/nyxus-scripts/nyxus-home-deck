@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════
-# nyxus-home-deck  ·  rev 2026-07-27
+# nyxus-home-deck  ·  rev 2026-07-27c
 # Maps STATION -> eww window and keeps exactly the right one on screen.
 #
 #   HOME  -> home-deck    (scattered desktop widgets)
@@ -10,28 +10,50 @@
 # workspace, so they cannot hide themselves. This follows Hyprland's socket2
 # event stream and opens/closes them on every workspace change.
 #
-# Name kept as nyxus-home-deck so the existing exec-once and Super+Shift+Home
-# bind keep working.
+# Name kept as nyxus-home-deck so the existing exec-once and the
+# Super+Shift+Home bind keep working.
+#
+# TWO CORRECTNESS RULES, both learned from windows overlapping in practice:
+#   1. SINGLETON. Two watchers fight each other - one opens what the other
+#      just closed. flock makes a second instance exit immediately.
+#   2. UNCONDITIONAL sync. The old code did `active-windows | grep -q` before
+#      opening/closing. `eww active-windows` lags its own open/close, so a
+#      fast station switch read stale state and left BOTH windows mapped.
+#      `eww open` on an already-open window is a no-op and `eww close` on a
+#      closed one is harmless, so just assert the desired state every time.
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
 
-# station name -> eww window name
-declare -A STATIONS=(
-  ["${NYXUS_HOME_STATION:-HOME}"]="home-deck"
-  ["${NYXUS_START_STATION:-START}"]="start-panel"
-)
+LOCK="${XDG_RUNTIME_DIR:-/tmp}/nyxus-home-deck.lock"
+exec 9>"$LOCK"
+if ! flock -n 9; then
+  echo "another nyxus-home-deck already holds $LOCK - exiting" >&2
+  exit 0
+fi
 
-_open()  { eww active-windows 2>/dev/null | grep -q "^${1}:" || eww open  "$1" 2>/dev/null; }
-_close() { eww active-windows 2>/dev/null | grep -q "^${1}:" && eww close "$1" 2>/dev/null; }
+HOME_STATION="${NYXUS_HOME_STATION:-HOME}"
+START_STATION="${NYXUS_START_STATION:-START}"
 
 _sync() {
-  local ws; ws="$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.name // empty')"
-  local station win
-  for station in "${!STATIONS[@]}"; do
-    win="${STATIONS[$station]}"
-    if [[ "${ws}" == "${station}" ]]; then _open "$win"; else _close "$win"; fi
-  done
+  local ws
+  ws="$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.name // empty')"
+  [[ -z "$ws" ]] && return 0
+
+  # Assert desired state unconditionally - never branch on active-windows.
+  if [[ "$ws" == "$HOME_STATION" ]]; then
+    eww close start-panel >/dev/null 2>&1
+    eww open  home-deck   >/dev/null 2>&1
+  elif [[ "$ws" == "$START_STATION" ]]; then
+    eww close home-deck   >/dev/null 2>&1
+    eww open  start-panel >/dev/null 2>&1
+  else
+    eww close home-deck   >/dev/null 2>&1
+    eww close start-panel >/dev/null 2>&1
+  fi
+  # the search overlay holds EXCLUSIVE keyboard - never leave it mapped once
+  # the owner has navigated away from START
+  [[ "$ws" == "$START_STATION" ]] || eww close start-search >/dev/null 2>&1
 }
 
 # settle first: eww may still be coming up at login
