@@ -1,0 +1,16 @@
+[Unit]
+Description=NYXUS — ship host journal into the honeypot Loki stack
+Documentation=man:journalctl(1)
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/nyxus-journal-ship
+Restart=on-failure
+RestartSec=5
+# read-only work: it only reads the journal and appends to one log dir
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

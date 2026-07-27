@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-journal-ship · rev 2026-07-27
+#
+# Streams the HOST systemd journal into a file that the honeypot stack's
+# existing promtail already tails, so the machine's own logs land in the
+# Loki you are already running. Before this, promtail shipped honeypot logs
+# only - the NOC could see attackers but not the host they were hitting.
+#
+# WHY NOT promtail's native journal scrape: the official grafana/promtail
+# image is NOT compiled with journal support ("support for reading the
+# systemd journal is not compiled into this build"). The Arch package IS,
+# but that means a second agent and a root install. Streaming journalctl to
+# a file promtail already watches needs neither.
+#
+# Rotation is handled here on purpose: an unbounded append would fill the
+# disk. The file is rotated at MAXBYTES and only one .1 generation is kept,
+# because promtail has already shipped anything older.
+# ════════════════════════════════════════════════════════════════════
+set -u
+
+OUT_DIR="${NYXUS_JOURNAL_DIR:-$HOME/Projects/honeypot/logs/host}"
+OUT="$OUT_DIR/journal.json"
+MAXBYTES="${NYXUS_JOURNAL_MAXBYTES:-33554432}"   # 32 MiB
+CHECK_EVERY=500                                   # lines between size checks
+
+mkdir -p "$OUT_DIR"
+
+rotate_if_big() {
+  local sz
+  sz=$(stat -c %s "$OUT" 2>/dev/null || echo 0)
+  if [ "$sz" -gt "$MAXBYTES" ]; then
+    mv -f "$OUT" "$OUT.1" 2>/dev/null || true
+    : > "$OUT"
+  fi
+}
+
+# --cursor-file makes this resumable: a restart picks up where it left off
+# instead of replaying the whole journal into Loki.
+CURSOR="$OUT_DIR/.journal-cursor"
+
+n=0
+journalctl --follow --output=json --no-pager \
+           --cursor-file="$CURSOR" 2>/dev/null | \
+while IFS= read -r line; do
+  printf '%s\n' "$line" >> "$OUT"
+  n=$((n + 1))
+  if [ "$n" -ge "$CHECK_EVERY" ]; then
+    n=0
+    rotate_if_big
+  fi
+done

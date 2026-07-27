@@ -1,0 +1,66 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: cowrie
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: cowrie
+          __path__: /var/log/honeypot/cowrie/*.json
+
+  - job_name: heralding
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: heralding
+          __path__: /var/log/honeypot/heralding/*.log
+
+  - job_name: dionaea
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: dionaea
+          __path__: /var/log/honeypot/dionaea/*.log
+
+  # ── HOST JOURNAL ────────────────────────────────────────────────────
+  # The stack shipped honeypot logs to Loki but not the MACHINE's own, so
+  # the NOC could see attackers and not the host they were hitting.
+  #
+  # This is a FILE scrape, not promtail's native `journal:` scrape, because
+  # the official grafana/promtail image is not compiled with journal support
+  # ("support for reading the systemd journal is not compiled into this
+  # build"). nyxus-journal-ship streams `journalctl -o json` into this file
+  # (rotating at 32MiB) and promtail tails it like any other log.
+  - job_name: host-journal
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: host-journal
+          host: nyx-cosmic
+          __path__: /var/log/honeypot/host/journal.json
+    pipeline_stages:
+      - json:
+          expressions:
+            message: MESSAGE
+            unit: _SYSTEMD_UNIT
+            priority: PRIORITY
+            comm: _COMM
+            hostname: _HOSTNAME
+      - labels:
+          unit:
+          priority:
+          comm:
+      - output:
+          source: message
