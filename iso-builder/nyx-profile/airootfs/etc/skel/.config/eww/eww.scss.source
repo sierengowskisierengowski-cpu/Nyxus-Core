@@ -351,8 +351,8 @@ window, window.background, decoration {
  * kept compact so it still nests inside the saucer body (rings visible
  * above and below) instead of floating over the hull. */
 .saucer-screen-music {
-  min-width: 158px;
-  min-height: 108px;
+  min-width: 148px;
+  min-height: 98px;
   border-radius: 8px;
   padding: 4px 8px 5px 8px;
   /* NO border: the boombox art already paints a green+magenta neon bezel
@@ -831,12 +831,9 @@ window, window.background, decoration {
 
 /* Side rails are transparent columns — glass lives on .float-island only. */
 .ws-rail, .app-rail {
-  background: transparent;
+  padding: 18px 0;
+  background-color: transparent;
   background-image: none;
-  background-blend-mode: normal;
-  border: none;
-  box-shadow: none;
-  padding: 0;
 }
 .bar-bottom > *, .bar-top > * { min-height: 0; min-width: 0; }
 .bar-bottom .bar-cluster { min-height: 0; }
@@ -3749,7 +3746,8 @@ scale slider {
   background-clip:   padding-box, padding-box, padding-box, padding-box, padding-box, padding-box, border-box;
 }
 .ws-rail, .app-rail {
-  background: transparent;
+  padding: 18px 0;
+  background-color: transparent;
   background-image: none;
 }
 
@@ -3925,10 +3923,10 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
    the readout looks like a real lit display. The bass-reactive outer glow
    is applied inline in eww.yuck (it needs the CAVA_BASS variable). */
 .saucer-screen-music {
-  min-width: 158px;
-  min-height: 108px;
-  border-radius: 10px;
-  padding: 3px 7px 4px 7px;
+  min-width: 148px;
+  min-height: 98px;
+  border-radius: 8px;
+  padding: 2px 6px 3px 6px;
   background-color: rgba(2, 1, 6, 0.97);
   background-image: linear-gradient(180deg,
       rgba(125, 255, 94, 0.10) 0%,
@@ -3947,17 +3945,17 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   padding: 0 2px;
   box-shadow: none;
 }
-.bar-hub-music-title  { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: #ffffff;
+.bar-hub-music-title  { font-size: 11px; font-weight: 700; letter-spacing: 0.02em; color: #ffffff;
                         text-shadow: 0 0 10px rgba(125, 255, 94, 0.85), 0 0 20px rgba(255, 45, 173, 0.45); }
 .bar-hub-music-artist { font-size: 10px; letter-spacing: 0.10em; color: rgba(125, 255, 94, 0.92);
                         text-shadow: 0 0 8px rgba(125, 255, 94, 0.5); }
-.cava-saucer          { font-size: 16px; letter-spacing: 0.02em; color: #8dff6a;
+.cava-saucer          { font-size: 15px; letter-spacing: 0.02em; color: #8dff6a;
                         text-shadow: 0 0 8px rgba(125, 255, 94, 0.95), 0 0 18px rgba(125, 255, 94, 0.5); }
 
 /* 108px of progress bar + two time labels overflowed the 112px glass */
-.saucer-prog { min-width: 70px; min-height: 4px; }
+.saucer-prog { min-width: 58px; min-height: 4px; border-radius: 999px; }
 .saucer-time { font-size: 9px; color: rgba(255, 255, 255, 0.85); }
-.saucer-btn  { min-width: 27px; min-height: 20px; font-size: 12px; padding: 0 3px;
+.saucer-btn  { min-width: 24px; min-height: 17px; font-size: 12px; padding: 0 3px;
                border-radius: 6px;
                color: #eafff2;
                background-color: rgba(158, 255, 130, 0.10);
@@ -4002,14 +4000,9 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
    nothing is hardcoded to today's purple.
    ==================================================================== */
 .ws-rail, .app-rail {
-  padding: 20px 0;
+  padding: 18px 0;
   background-color: transparent;
-  background-image: linear-gradient(90deg,
-    rgba(0, 0, 0, 0) 0%,          rgba(0, 0, 0, 0) 44%,
-    rgba(125, 61, 255, 0.22) 44%, rgba(125, 61, 255, 0.22) 46.5%,
-    rgba(206, 158, 255, 0.72) 46.5%, rgba(206, 158, 255, 0.72) 53.5%,
-    rgba(125, 61, 255, 0.22) 53.5%, rgba(125, 61, 255, 0.22) 56%,
-    rgba(0, 0, 0, 0) 56%,         rgba(0, 0, 0, 0) 100%);
+  background-image: none;
 }
 .float-island { margin-bottom: 10px; background-color: transparent; }
 
@@ -4019,7 +4012,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   border-width: 2px;
   border-style: solid;
   border-radius: 16px 5px 16px 5px;
-  background-color: rgba(9, 3, 20, 0.55);
+  background-color: rgba(9, 3, 20, 0.38);
   background-image: linear-gradient(152deg,
     rgba(255, 255, 255, 0.17) 0%,
     rgba(255, 255, 255, 0.02) 38%,
@@ -4288,10 +4281,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 
 /* -- TOP TICKER: a lit rail under the crawl -------------------------- */
 .bar-top-ticker-only {
-  background-image: linear-gradient(180deg,
-    rgba(0, 0, 0, 0) 0%,          rgba(0, 0, 0, 0) 84%,
-    rgba(125, 61, 255, 0.30) 88%, rgba(206, 158, 255, 0.68) 94%,
-    rgba(255, 45, 173, 0.55) 97%, rgba(0, 0, 0, 0) 100%);
+  background-image: none;
 }
 .ticker-label {
   font-weight: 700;
@@ -4303,3 +4293,29 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 .mon-trace  { text-shadow: 0 0 8px rgba(255, 255, 255, 0.20); }
 .mon-glyph  { text-shadow: 0 0 10px rgba(255, 45, 173, 0.45); }
 
+
+/* -- LIVE LIQUID INSIDE THE CAPS ------------------------------------
+   GTK3's CSS engine interpolates background-image between gradients when
+   the stop COUNT matches, so animating the stop POSITIONS reads as fluid
+   sloshing inside the keycap. No background-size (the compile step strips
+   it), no images, no extra widgets. Staggered delays make the rail ripple
+   rather than pulse in lockstep. */
+@keyframes nyxus-liquid {
+  0%   { background-image: linear-gradient(180deg,
+           rgba(255,255,255,0.20) 0%, rgba(125,61,255,0.20) 24%,
+           rgba(255,45,173,0.85) 34%, rgba(90,20,150,0.90) 100%); }
+  50%  { background-image: linear-gradient(180deg,
+           rgba(255,255,255,0.20) 0%, rgba(125,61,255,0.20) 66%,
+           rgba(255,45,173,0.85) 76%, rgba(90,20,150,0.90) 100%); }
+  100% { background-image: linear-gradient(180deg,
+           rgba(255,255,255,0.20) 0%, rgba(125,61,255,0.20) 24%,
+           rgba(255,45,173,0.85) 34%, rgba(90,20,150,0.90) 100%); }
+}
+.ws-pill, .app-pill {
+  animation-name: nyxus-liquid;
+  animation-duration: 3800ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+}
+.ws-pill:nth-child(even), .app-pill:nth-child(even) { animation-delay: -2600ms; }
+.ws-pill-active { animation-duration: 2400ms; }

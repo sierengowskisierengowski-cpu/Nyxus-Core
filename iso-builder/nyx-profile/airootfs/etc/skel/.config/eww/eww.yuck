@@ -441,7 +441,7 @@
             :style "background-position: center;"
             :onclick "hyprctl dispatch workspace ${st.id} &"
             :tooltip "${st.name} · ${st.tagline}"
-      "${st.code}")))
+      "${st.id}")))
 
 ;; Transparent column — each pill is its own float-island (no rail slab).
 (defwidget workspaces_rail []
@@ -577,7 +577,7 @@
 
 (defwidget boombox_base []
   (box :class "saucer-frame boombox-base"
-       :style "background-image: url('assets/nyxus-boombox-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 495px; min-height: 150px;"))
+       :style "background-image: url('assets/nyxus-boombox-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 495px; min-height: 150px; box-shadow: 0 ${8 + CAVA_BASS / 12}px ${20 + CAVA_BASS / 3}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 400}), 0 0 ${26 + CAVA_BASS / 2}px rgba(125, 61, 255, ${0.08 + CAVA_BASS / 500});"))
 
 ;; Bigger, livelier CAVA strip for the music face (full 14-bar spectrum,
 ;; taller glyphs + neon gradient glow) — the "bad-ass" beat graph.
