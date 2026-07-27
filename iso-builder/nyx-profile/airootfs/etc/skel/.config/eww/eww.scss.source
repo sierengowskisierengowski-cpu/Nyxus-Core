@@ -5132,3 +5132,59 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   background-color: rgba(255, 255, 255, 0.026);
   border: 1px solid rgba(125, 61, 255, 0.18);
 }
+
+/* == GHOST station ====================================================
+   Deliberately thin: the cards are .nyx-surface + .deck-card, so GHOST
+   only adds what is genuinely its own. This is the shared-surface refactor
+   paying off - a whole new station for ~30 lines of CSS. */
+.gh-root { background-color: transparent; padding: 6px 14px 10px 14px; }
+.gh-hint { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+           color: rgba(255,255,255,0.34); }
+.gh-posture { font-family: "Permanent Marker", "Inter Display", sans-serif;
+              font-size: 30px; color: #8dff6a;
+              text-shadow: 0 0 16px rgba(141,255,106,0.75); }
+.gh-posture-ok   { color: #8dff6a; text-shadow: 0 0 16px rgba(141,255,106,0.75); }
+.gh-posture-warn { color: #ffc44a; text-shadow: 0 0 16px rgba(255,196,74,0.75); }
+.gh-posture-hot  { color: #ff4d6a; text-shadow: 0 0 18px rgba(255,77,106,0.85); }
+.gh-posture-cool { color: rgba(255,255,255,0.55); }
+.gh-row { padding: 4px 9px; border-radius: 8px;
+          background-color: rgba(18,7,34,0.42);
+          border: 1px solid rgba(125,61,255,0.18); }
+.gh-row-ok   { border-color: rgba(141,255,106,0.30); }
+.gh-row-down { border-color: rgba(255,77,106,0.30); }
+.gh-dot { font-size: 10px; }
+.gh-row-ok   .gh-dot { color: #8dff6a; text-shadow: 0 0 8px rgba(141,255,106,0.9); }
+.gh-row-down .gh-dot { color: #ff4d6a; text-shadow: 0 0 8px rgba(255,77,106,0.9); }
+.gh-name  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+            color: rgba(255,255,255,0.82); }
+.gh-state { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+            color: rgba(255,255,255,0.40); }
+.gh-big { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 26px;
+          font-weight: 800; color: #8dff6a; }
+.gh-big-ok   { color: #8dff6a; text-shadow: 0 0 12px rgba(141,255,106,0.7); }
+.gh-big-warn { color: #ffc44a; text-shadow: 0 0 12px rgba(255,196,74,0.7); }
+.gh-big-hot  { color: #ff4d6a; text-shadow: 0 0 12px rgba(255,77,106,0.8); }
+.gh-feed  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+            color: rgba(255,255,255,0.62); }
+.gh-ports { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+            color: rgba(96,150,255,0.85); }
+.gh-bar { padding-top: 2px; }
+
+.gh-stat { padding: 2px 4px; border-radius: 9px; background-color: transparent; border: none; }
+.gh-stat:hover { background-color: rgba(255,255,255,0.05); }
+.gh-posture-btn { padding: 0; background-color: transparent; border: none; }
+.gh-posture-btn:hover { background-color: rgba(255,255,255,0.05); border-radius: 10px; }
+.gh-chip {
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+  color: rgba(255,255,255,0.72);
+  padding: 5px 8px; border-radius: 8px;
+  background-color: rgba(18,7,34,0.55);
+  border: 1px solid rgba(125,61,255,0.26);
+}
+.gh-chip:hover { border-color: rgba(255,45,173,0.9); color: #ffffff;
+                 box-shadow: 0 0 14px rgba(255,45,173,0.5); }
+.gh-chip-hot { border-color: rgba(255,77,106,0.38); color: rgba(255,150,165,0.9); }
+.gh-chip-hot:hover { border-color: rgba(255,77,106,1); color: #ffffff;
+                     box-shadow: 0 0 18px rgba(255,77,106,0.7); }
+.gh-row:hover { border-color: rgba(255,45,173,0.85); background-color: rgba(44,16,78,0.8);
+                box-shadow: 0 0 14px rgba(255,45,173,0.4); }

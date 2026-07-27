@@ -116,6 +116,8 @@
                                    "python3 ~/.config/eww/scripts/start-feed.py meta")
 (defvar STARTQ "")
 (defvar STARTFOUND '{"rows":[],"n":0}')
+(defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0}}'
+                                "python3 ~/.config/eww/scripts/ghost-feed.py")
 (defpoll STARTARS :interval "12s" :initial '{"groups":[],"live":0,"total":0}'
                                    "python3 ~/.config/eww/scripts/start-feed.py arsenal")
 (defpoll STARTLIVE :interval "4s" :initial '{"running":[],"run_count":0,"recent":[],"places":[]}'
@@ -1649,6 +1651,158 @@
   :namespace "nyxus-start-panel"
   :geometry (geometry :x "0" :y "0" :width "1660px" :height "800px" :anchor "center")
   (start_panel))
+
+;; == GHOST STATION DECK ===============================================
+;; Security . Intel . Recon. Built entirely on the shared .nyx-surface
+;; language - a whole station for ~30 lines of its own CSS, which was the
+;; point of that refactor.
+;;
+;; Every figure is PROBED LIVE by ghost-feed.py. When the honeypots have seen
+;; nothing it reports zero rather than inventing activity, and "installed but
+;; never run" scanners are shown as a finding rather than hidden - a security
+;; console that flatters you is worse than no console.
+;;
+;; EVERY ROW IS A BUTTON. A read-only security panel makes you leave it to do
+;; anything; each row opens the log, unit or tool behind the number it shows.
+
+(defwidget ghost_card [title ?glyph ?tone ?hint]
+  (box :class "nyx-surface deck-card deck-card-${tone ?: 'green'} deck-mid"
+       :orientation "v" :space-evenly false :spacing 7 :valign "start" :hexpand true
+       :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${16 + CAVA_BASS / 3}px rgba(125, 61, 255, ${0.18 + CAVA_BASS / 340});"
+    (box :class "deck-card-head" :orientation "h" :space-evenly false :spacing 8
+      (label :class "deck-card-glyph" :text {glyph ?: "◈"})
+      (label :class "deck-card-title" :halign "start" :hexpand true :text title)
+      (label :class "gh-hint" :text {hint ?: ""}))
+    (box :class "deck-card-body" :orientation "v" :space-evenly false :spacing 5
+      (children))))
+
+;; one clickable status row: dot + name + state, opens `cmd`
+(defwidget ghost_row [name ok cmd ?tip ?state]
+  (button :class "gh-row ${ok ? 'gh-row-ok' : 'gh-row-down'}"
+          :onclick cmd :tooltip {tip ?: "open ${name}"}
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "gh-dot" :text "●")
+      (label :class "gh-name" :halign "start" :hexpand true :text name)
+      (label :class "gh-state" :text {state ?: (ok ? "live" : "down")}))))
+
+;; a big number that is itself a button
+(defwidget ghost_stat [val cap cmd ?tone ?tip]
+  (button :class "gh-stat" :onclick cmd :tooltip {tip ?: cap}
+    (box :orientation "v" :space-evenly false :spacing 1
+      (label :class "gh-big gh-big-${tone ?: 'ok'}" :halign "start" :text val)
+      (label :class "deck-sub" :halign "start" :text cap))))
+
+(defwidget ghost_deck []
+  (box :class "gh-root" :orientation "v" :space-evenly false :spacing 12
+    (label :class "deck-brand" :halign "center"
+           :text "G H O S T   ·   S E C U R I T Y   S T A T I O N")
+
+    (box :orientation "h" :space-evenly true :spacing 14 :vexpand true
+      ;; ---- column 1 : posture + defence daemons -------------------
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "THREAT STATE" :glyph "" :tone "green" :hint "click to arm"
+          (button :class "gh-posture-btn" :tooltip "Toggle hacker mode"
+                  :onclick "sh -c 'nyxus-hacker-mode $([ \"$(nyxus-hacker-mode status)\" = on ] && echo off || echo on)' &"
+            (label :class "gh-posture gh-posture-${GHOST_.state.tone}" :halign "start"
+                   :text {GHOST_.state.label}))
+          (box :orientation "h" :space-evenly true :spacing 6
+            (button :class "gh-chip" :tooltip "Toggle hacker mode"
+                    :onclick "sh -c 'nyxus-hacker-mode $([ \"$(nyxus-hacker-mode status)\" = on ] && echo off || echo on)' &"
+              "HACKER ${GHOST_.state.hacker ? 'ON' : 'off'}")
+            (button :class "gh-chip" :tooltip "Toggle ghost mode"
+                    :onclick "sh -c 'nyxus-ghost $([ \"$(nyxus-ghost status)\" = on ] && echo off || echo on)' &"
+              "GHOST ${GHOST_.state.ghost ? 'ON' : 'off'}")
+            (button :class "gh-chip gh-chip-hot" :tooltip "PANIC - lock everything down"
+                    :onclick "nyxus-panic on &"
+              "PANIC")))
+        (ghost_card :title "DEFENSE" :glyph "" :tone "cyan" :hint "daemons"
+          ;; a (for) cannot be passed straight into a defwidget slot - eww
+          ;; requires a container - so each loop is wrapped in a box.
+          (box :orientation "v" :space-evenly false :spacing 5
+            (for d in {GHOST_.defense}
+              (ghost_row :name {d.name} :ok {d.ok} :tip "follow ${d.name} journal"
+                         :cmd "kitty --title ${d.name} -e sh -c 'journalctl ${d.jargs} -n 200 -f; read _' &"))))
+        (ghost_card :title "SESSIONS" :glyph "" :tone "violet" :hint "logged in"
+          (ghost_stat :val "${GHOST_.sessions.count}" :cap "${GHOST_.sessions.who}"
+                      :tone "ok" :tip "who is logged in"
+                      :cmd "kitty --title Sessions -e sh -c 'who -a; echo; last -n 20; read _' &")))
+
+      ;; ---- column 2 : honeypot stack ------------------------------
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "HONEYPOT STACK" :glyph "" :tone "gold"
+                    :hint "${GHOST_.pots_up}/${GHOST_.pots_total} up"
+          (box :orientation "v" :space-evenly false :spacing 5
+            (for pot in {GHOST_.pots}
+              (ghost_row :name {pot.name} :ok {pot.ok} :tip "tail ${pot.name} logs"
+                         :cmd "kitty --title ${pot.name} -e sh -c 'docker logs -f --tail 200 ${pot.name}; read _' &")))))
+
+      ;; ---- column 3 : attack feed + exposure ----------------------
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "ATTACK FEED" :glyph "" :tone "pink" :hint "cowrie 24h"
+          (ghost_stat :val "${GHOST_.attacks.total}"
+                      :cap {GHOST_.attacks.quiet ? "no hits - pots quiet" : "probes logged"}
+                      :tone {GHOST_.attacks.quiet ? "ok" : "hot"} :tip "open cowrie log"
+                      :cmd "kitty --title Cowrie -e sh -c 'docker logs -f --tail 300 cowrie; read _' &")
+          (box :orientation "v" :space-evenly false :spacing 3
+            (for a in {GHOST_.attacks.recent}
+              (label :class "gh-feed" :halign "start" :text "▸ ${a.ip}  ${a.note}"))))
+        (ghost_card :title "EXPOSURE" :glyph "" :tone "blue" :hint "listening"
+          (ghost_stat :val "${GHOST_.exposure.count}" :cap "open ports" :tone "warn"
+                      :tip "list listening sockets"
+                      :cmd "kitty --title Exposure -e sh -c 'ss -tulnp; echo; read _' &")
+          (box :class "deck-rule" :height 1)
+          (label :class "gh-ports" :halign "start" :wrap true
+                 :text "${GHOST_.exposure.ports_str}"))
+        (ghost_card :title "FIREWALL" :glyph "" :tone "green"
+                    :hint "${GHOST_.firewall.bridges} bridges"
+          (ghost_row :name "ufw" :ok {GHOST_.firewall.ufw} :tip "ufw status (asks for root)"
+                     :state {GHOST_.firewall.ufw ? "active" : "down"}
+                     :cmd "kitty --title Firewall -e sh -c 'sudo ufw status verbose; echo; read _' &")))
+
+      ;; ---- column 4 : connections, auth, scanners -----------------
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "CONNECTIONS" :glyph "" :tone "cyan"
+                    :hint "${GHOST_.conns.foreign} remote"
+          (ghost_stat :val "${GHOST_.conns.count}" :cap "established" :tone "ok"
+                      :tip "live socket table"
+                      :cmd "kitty --title Connections -e sh -c 'ss -tnp state established; echo; read _' &")
+          (box :class "deck-rule" :height 1)
+          (label :class "gh-ports" :halign "start" :wrap true :text "${GHOST_.conns.top}"))
+        (ghost_card :title "AUTH" :glyph "" :tone "violet" :hint "24h"
+          (ghost_stat :val "${GHOST_.auth.failed}" :cap "failed logins"
+                      :tone {GHOST_.auth.failed > 0 ? "hot" : "ok"} :tip "auth journal"
+                      :cmd "kitty --title Auth -e sh -c 'journalctl --since \"24 hours ago\" | grep -iE \"authentication failure|failed password|invalid user\" | tail -80; echo; read _' &"))
+        (ghost_card :title "SCANNERS" :glyph "" :tone "orange"
+                    :hint {GHOST_.scanners.stale ? "never run" : "ready"}
+          (ghost_row :name "rkhunter" :ok {GHOST_.scanners.rk_run}
+                     :state {GHOST_.scanners.rk ? (GHOST_.scanners.rk_run ? "run" : "never") : "absent"}
+                     :tip "run a rootkit check"
+                     :cmd "kitty --title rkhunter -e sh -c 'sudo rkhunter --check --sk; read _' &")
+          (ghost_row :name "clamav" :ok {GHOST_.scanners.cl_db}
+                     :state {GHOST_.scanners.cl ? (GHOST_.scanners.cl_db ? "db ok" : "no db") : "absent"}
+                     :tip "update signatures then scan $HOME"
+                     :cmd "kitty --title clamav -e sh -c 'sudo freshclam; clamscan -ri $HOME; read _' &"))))
+
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (button :class "start-action start-action-cyan" :tooltip "Arsenal hub"
+              :onclick "kitty --title Arsenal -e arsenal &" "")
+      (button :class "start-action start-action-gold" :tooltip "Grafana dashboards"
+              :onclick "xdg-open http://localhost:3000 &" "")
+      (button :class "start-action start-action-pink" :tooltip "NYXUS Security"
+              :onclick "sh -c 'command -v nyxus-security >/dev/null && nyxus-security || python3 ~/.nyxus/nyxus_security.py' &" "")
+      (button :class "start-action start-action-violet" :tooltip "Honeypot compose status"
+              :onclick "kitty --title Honeypot -e sh -c 'cd ~/Projects/honeypot && docker compose ps; echo; exec bash' &" "")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center"
+             :text "Super+3  GHOST     every row opens its log or tool     probes refresh 15s"))))
+
+(defwindow ghost-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-ghost-deck"
+  ;; must fit the 882px free area between the bars - verify with
+  ;; `hyprctl layers -j`, never by eye (see the home-deck y=-59 note)
+  :geometry (geometry :x "0" :y "0" :width "1780px" :height "790px" :anchor "center")
+  (ghost_deck))
 
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
