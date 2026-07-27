@@ -4293,276 +4293,313 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 .mon-trace  { text-shadow: 0 0 8px rgba(255, 255, 255, 0.20); }
 .mon-glyph  { text-shadow: 0 0 10px rgba(255, 45, 173, 0.45); }
 
-/* -- LIVE LIQUID v5 (CSS) -------------------------------------------
-   REVERTED here from a v6 attempt that used real pre-rendered fluid-sim
-   GIFs in an eww `image` widget. The sim itself looked great, but eight
-   30-frame animated GIFs driven by GdkPixbufAnimation STALLED the whole
-   eww main loop (every bar stopped updating), and the image widget also
-   blew the caps up far past their 42px box. Do NOT re-wire animated GIFs
-   into the rails without solving both of those first.
-   This CSS version animates a linear-gradient edge: level swings 80->16%
-   and the angle tilts 164->196deg, so the fluid rises, falls and rocks. */
-@keyframes liquid-pink {
-  0%   { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(125,61,255,0.92) 84%, rgba(68,33,140,0.95) 100%); }
-  20%  { background-image: linear-gradient(196deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
-             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
-             rgba(125,61,255,0.92) 56%, rgba(68,33,140,0.95) 100%); }
-  40%  { background-image: linear-gradient(182deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
-             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
-             rgba(125,61,255,0.92) 26%, rgba(68,33,140,0.95) 100%); }
-  60%  { background-image: linear-gradient(164deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
-             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
-             rgba(125,61,255,0.92) 20%, rgba(68,33,140,0.95) 100%); }
-  80%  { background-image: linear-gradient(190deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
-             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
-             rgba(125,61,255,0.92) 52%, rgba(68,33,140,0.95) 100%); }
-  100% { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(125,61,255,0.92) 84%, rgba(68,33,140,0.95) 100%); }
+/* -- RAILS v4 : NAKED NEON --------------------------------------------
+   No plate, no rim, no fill. The caps are fully transparent and the only
+   thing on screen is the CONTENT - the station number on the left rail and
+   the app glyph on the right - burning in neon straight on the wallpaper.
+   Character comes from a 5-layer text-shadow (lifted core -> hue mid ->
+   wide bloom), which is cheap and does not animate per-frame across ten
+   widgets the way the liquid experiments did.
+   NOTE: every state here MUST re-clear background/border/box-shadow. The
+   hue rules earlier in this sheet set a background and shadow on :hover,
+   and leaving those alone is what made a grey box appear under the cursor.
+   Colours are generated from the accents already resolved in this sheet. */
+.ws-rail, .app-rail { padding: 16px 0; background-color: transparent; background-image: none; }
+.float-island { margin-bottom: 6px; background-color: transparent; box-shadow: none; border: none; }
+.float-island:hover { background-color: transparent; box-shadow: none; border: none; }
+
+.ws-pill, .app-pill {
+  min-width: 44px;
+  min-height: 42px;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  font-weight: 800;
+  transition: all 170ms cubic-bezier(0.16, 1, 0.2, 1);
 }
+.ws-pill  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 22px; }
+.app-pill { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 26px; }
+.ws-pill:hover, .app-pill:hover, .ws-pill:active, .app-pill:active {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+}
+
+.ws-pill-pink:hover, .app-pill-pink:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(183, 148, 255, 1),
+    0 0 36px rgba(125, 61, 255, 1),
+    0 0 70px rgba(125, 61, 255, 0.75),
+    0 0 110px rgba(125, 61, 255, 0.40);
+}
+.ws-pill-pink:active, .app-pill-pink:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+}
+.ws-pill-green:hover, .app-pill-green:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(255, 139, 209, 1),
+    0 0 36px rgba(255, 45, 173, 1),
+    0 0 70px rgba(255, 45, 173, 0.75),
+    0 0 110px rgba(255, 45, 173, 0.40);
+}
+.ws-pill-green:active, .app-pill-green:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+}
+.ws-pill-purple:hover, .app-pill-purple:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(146, 255, 125, 1),
+    0 0 36px rgba(57, 255, 20, 1),
+    0 0 70px rgba(57, 255, 20, 0.75),
+    0 0 110px rgba(57, 255, 20, 0.40);
+}
+.ws-pill-purple:active, .app-pill-purple:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+}
+.ws-pill-gold:hover, .app-pill-gold:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(255, 190, 131, 1),
+    0 0 36px rgba(255, 138, 30, 1),
+    0 0 70px rgba(255, 138, 30, 0.75),
+    0 0 110px rgba(255, 138, 30, 0.40);
+}
+.ws-pill-gold:active, .app-pill-gold:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+}
+.ws-pill-orange:hover, .app-pill-orange:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(255, 190, 131, 1),
+    0 0 36px rgba(255, 138, 30, 1),
+    0 0 70px rgba(255, 138, 30, 0.75),
+    0 0 110px rgba(255, 138, 30, 0.40);
+}
+.ws-pill-orange:active, .app-pill-orange:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+}
+.ws-pill-blue:hover, .app-pill-blue:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(157, 202, 255, 1),
+    0 0 36px rgba(77, 159, 255, 1),
+    0 0 70px rgba(77, 159, 255, 0.75),
+    0 0 110px rgba(77, 159, 255, 0.40);
+}
+.ws-pill-blue:active, .app-pill-blue:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+}
+.ws-pill-cyan:hover, .app-pill-cyan:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(255, 139, 161, 1),
+    0 0 36px rgba(255, 45, 85, 1),
+    0 0 70px rgba(255, 45, 85, 0.75),
+    0 0 110px rgba(255, 45, 85, 0.40);
+}
+.ws-pill-cyan:active, .app-pill-cyan:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+}
+
 .ws-pill-pink, .app-pill-pink {
-  animation-name: liquid-pink;
-  animation-duration: 3400ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-  animation-delay: 0ms;
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: rgb(148, 95, 255);
+  text-shadow:
+    0 0 3px rgba(148, 95, 255, 1),
+    0 0 9px rgba(125, 61, 255, 1),
+    0 0 20px rgba(125, 61, 255, 0.95),
+    0 0 42px rgba(125, 61, 255, 0.70),
+    0 0 76px rgba(125, 61, 255, 0.40);
 }
-@keyframes liquid-green {
-  0%   { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(255,45,173,0.92) 84%, rgba(140,24,95,0.95) 100%); }
-  20%  { background-image: linear-gradient(196deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
-             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
-             rgba(255,45,173,0.92) 56%, rgba(140,24,95,0.95) 100%); }
-  40%  { background-image: linear-gradient(182deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
-             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
-             rgba(255,45,173,0.92) 26%, rgba(140,24,95,0.95) 100%); }
-  60%  { background-image: linear-gradient(164deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
-             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
-             rgba(255,45,173,0.92) 20%, rgba(140,24,95,0.95) 100%); }
-  80%  { background-image: linear-gradient(190deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
-             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
-             rgba(255,45,173,0.92) 52%, rgba(140,24,95,0.95) 100%); }
-  100% { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(255,45,173,0.92) 84%, rgba(140,24,95,0.95) 100%); }
+.ws-pill-pink:hover, .app-pill-pink:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(148, 95, 255, 1),
+    0 0 36px rgba(125, 61, 255, 1),
+    0 0 72px rgba(125, 61, 255, 0.80),
+    0 0 118px rgba(125, 61, 255, 0.45);
+}
+.ws-pill-pink:active, .app-pill-pink:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
 }
 .ws-pill-green, .app-pill-green {
-  animation-name: liquid-green;
-  animation-duration: 3400ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-  animation-delay: -700ms;
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: rgb(255, 82, 187);
+  text-shadow:
+    0 0 3px rgba(255, 82, 187, 1),
+    0 0 9px rgba(255, 45, 173, 1),
+    0 0 20px rgba(255, 45, 173, 0.95),
+    0 0 42px rgba(255, 45, 173, 0.70),
+    0 0 76px rgba(255, 45, 173, 0.40);
 }
-@keyframes liquid-purple {
-  0%   { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(57,255,20,0.92) 84%, rgba(31,140,11,0.95) 100%); }
-  20%  { background-image: linear-gradient(196deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
-             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
-             rgba(57,255,20,0.92) 56%, rgba(31,140,11,0.95) 100%); }
-  40%  { background-image: linear-gradient(182deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
-             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
-             rgba(57,255,20,0.92) 26%, rgba(31,140,11,0.95) 100%); }
-  60%  { background-image: linear-gradient(164deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
-             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
-             rgba(57,255,20,0.92) 20%, rgba(31,140,11,0.95) 100%); }
-  80%  { background-image: linear-gradient(190deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
-             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
-             rgba(57,255,20,0.92) 52%, rgba(31,140,11,0.95) 100%); }
-  100% { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(57,255,20,0.92) 84%, rgba(31,140,11,0.95) 100%); }
+.ws-pill-green:hover, .app-pill-green:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(255, 82, 187, 1),
+    0 0 36px rgba(255, 45, 173, 1),
+    0 0 72px rgba(255, 45, 173, 0.80),
+    0 0 118px rgba(255, 45, 173, 0.45);
+}
+.ws-pill-green:active, .app-pill-green:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
 }
 .ws-pill-purple, .app-pill-purple {
-  animation-name: liquid-purple;
-  animation-duration: 3400ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-  animation-delay: -1400ms;
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: rgb(92, 255, 62);
+  text-shadow:
+    0 0 3px rgba(92, 255, 62, 1),
+    0 0 9px rgba(57, 255, 20, 1),
+    0 0 20px rgba(57, 255, 20, 0.95),
+    0 0 42px rgba(57, 255, 20, 0.70),
+    0 0 76px rgba(57, 255, 20, 0.40);
 }
-@keyframes liquid-gold {
-  0%   { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(255,138,30,0.92) 84%, rgba(140,75,16,0.95) 100%); }
-  20%  { background-image: linear-gradient(196deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
-             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
-             rgba(255,138,30,0.92) 56%, rgba(140,75,16,0.95) 100%); }
-  40%  { background-image: linear-gradient(182deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
-             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
-             rgba(255,138,30,0.92) 26%, rgba(140,75,16,0.95) 100%); }
-  60%  { background-image: linear-gradient(164deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
-             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
-             rgba(255,138,30,0.92) 20%, rgba(140,75,16,0.95) 100%); }
-  80%  { background-image: linear-gradient(190deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
-             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
-             rgba(255,138,30,0.92) 52%, rgba(140,75,16,0.95) 100%); }
-  100% { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(255,138,30,0.92) 84%, rgba(140,75,16,0.95) 100%); }
+.ws-pill-purple:hover, .app-pill-purple:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(92, 255, 62, 1),
+    0 0 36px rgba(57, 255, 20, 1),
+    0 0 72px rgba(57, 255, 20, 0.80),
+    0 0 118px rgba(57, 255, 20, 0.45);
+}
+.ws-pill-purple:active, .app-pill-purple:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
 }
 .ws-pill-gold, .app-pill-gold {
-  animation-name: liquid-gold;
-  animation-duration: 3400ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-  animation-delay: -2100ms;
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: rgb(255, 159, 70);
+  text-shadow:
+    0 0 3px rgba(255, 159, 70, 1),
+    0 0 9px rgba(255, 138, 30, 1),
+    0 0 20px rgba(255, 138, 30, 0.95),
+    0 0 42px rgba(255, 138, 30, 0.70),
+    0 0 76px rgba(255, 138, 30, 0.40);
 }
-@keyframes liquid-orange {
-  0%   { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(255,138,30,0.92) 84%, rgba(140,75,16,0.95) 100%); }
-  20%  { background-image: linear-gradient(196deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
-             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
-             rgba(255,138,30,0.92) 56%, rgba(140,75,16,0.95) 100%); }
-  40%  { background-image: linear-gradient(182deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
-             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
-             rgba(255,138,30,0.92) 26%, rgba(140,75,16,0.95) 100%); }
-  60%  { background-image: linear-gradient(164deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
-             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
-             rgba(255,138,30,0.92) 20%, rgba(140,75,16,0.95) 100%); }
-  80%  { background-image: linear-gradient(190deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
-             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
-             rgba(255,138,30,0.92) 52%, rgba(140,75,16,0.95) 100%); }
-  100% { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(255,138,30,0.92) 84%, rgba(140,75,16,0.95) 100%); }
+.ws-pill-gold:hover, .app-pill-gold:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(255, 159, 70, 1),
+    0 0 36px rgba(255, 138, 30, 1),
+    0 0 72px rgba(255, 138, 30, 0.80),
+    0 0 118px rgba(255, 138, 30, 0.45);
+}
+.ws-pill-gold:active, .app-pill-gold:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
 }
 .ws-pill-orange, .app-pill-orange {
-  animation-name: liquid-orange;
-  animation-duration: 3400ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-  animation-delay: -350ms;
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: rgb(255, 159, 70);
+  text-shadow:
+    0 0 3px rgba(255, 159, 70, 1),
+    0 0 9px rgba(255, 138, 30, 1),
+    0 0 20px rgba(255, 138, 30, 0.95),
+    0 0 42px rgba(255, 138, 30, 0.70),
+    0 0 76px rgba(255, 138, 30, 0.40);
 }
-@keyframes liquid-blue {
-  0%   { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(77,159,255,0.92) 84%, rgba(42,87,140,0.95) 100%); }
-  20%  { background-image: linear-gradient(196deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
-             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
-             rgba(77,159,255,0.92) 56%, rgba(42,87,140,0.95) 100%); }
-  40%  { background-image: linear-gradient(182deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
-             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
-             rgba(77,159,255,0.92) 26%, rgba(42,87,140,0.95) 100%); }
-  60%  { background-image: linear-gradient(164deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
-             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
-             rgba(77,159,255,0.92) 20%, rgba(42,87,140,0.95) 100%); }
-  80%  { background-image: linear-gradient(190deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
-             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
-             rgba(77,159,255,0.92) 52%, rgba(42,87,140,0.95) 100%); }
-  100% { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(77,159,255,0.92) 84%, rgba(42,87,140,0.95) 100%); }
+.ws-pill-orange:hover, .app-pill-orange:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(255, 159, 70, 1),
+    0 0 36px rgba(255, 138, 30, 1),
+    0 0 72px rgba(255, 138, 30, 0.80),
+    0 0 118px rgba(255, 138, 30, 0.45);
+}
+.ws-pill-orange:active, .app-pill-orange:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
 }
 .ws-pill-blue, .app-pill-blue {
-  animation-name: liquid-blue;
-  animation-duration: 3400ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-  animation-delay: -1050ms;
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: rgb(109, 176, 255);
+  text-shadow:
+    0 0 3px rgba(109, 176, 255, 1),
+    0 0 9px rgba(77, 159, 255, 1),
+    0 0 20px rgba(77, 159, 255, 0.95),
+    0 0 42px rgba(77, 159, 255, 0.70),
+    0 0 76px rgba(77, 159, 255, 0.40);
 }
-@keyframes liquid-cyan {
-  0%   { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(255,45,85,0.92) 84%, rgba(140,24,46,0.95) 100%); }
-  20%  { background-image: linear-gradient(196deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
-             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
-             rgba(255,45,85,0.92) 56%, rgba(140,24,46,0.95) 100%); }
-  40%  { background-image: linear-gradient(182deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
-             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
-             rgba(255,45,85,0.92) 26%, rgba(140,24,46,0.95) 100%); }
-  60%  { background-image: linear-gradient(164deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
-             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
-             rgba(255,45,85,0.92) 20%, rgba(140,24,46,0.95) 100%); }
-  80%  { background-image: linear-gradient(190deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
-             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
-             rgba(255,45,85,0.92) 52%, rgba(140,24,46,0.95) 100%); }
-  100% { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(255,45,85,0.92) 84%, rgba(140,24,46,0.95) 100%); }
+.ws-pill-blue:hover, .app-pill-blue:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(109, 176, 255, 1),
+    0 0 36px rgba(77, 159, 255, 1),
+    0 0 72px rgba(77, 159, 255, 0.80),
+    0 0 118px rgba(77, 159, 255, 0.45);
+}
+.ws-pill-blue:active, .app-pill-blue:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
 }
 .ws-pill-cyan, .app-pill-cyan {
-  animation-name: liquid-cyan;
-  animation-duration: 3400ms;
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: rgb(255, 82, 115);
+  text-shadow:
+    0 0 3px rgba(255, 82, 115, 1),
+    0 0 9px rgba(255, 45, 85, 1),
+    0 0 20px rgba(255, 45, 85, 0.95),
+    0 0 42px rgba(255, 45, 85, 0.70),
+    0 0 76px rgba(255, 45, 85, 0.40);
+}
+.ws-pill-cyan:hover, .app-pill-cyan:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 16px rgba(255, 82, 115, 1),
+    0 0 36px rgba(255, 45, 85, 1),
+    0 0 72px rgba(255, 45, 85, 0.80),
+    0 0 118px rgba(255, 45, 85, 0.45);
+}
+.ws-pill-cyan:active, .app-pill-cyan:active {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+}
+
+@keyframes nyxus-cap-breathe {
+  0%   { text-shadow: 0 0 7px #ffffff, 0 0 18px rgba(255,45,173,0.95),
+                      0 0 40px rgba(125,61,255,0.60), 0 0 78px rgba(125,61,255,0.30); }
+  50%  { text-shadow: 0 0 11px #ffffff, 0 0 30px rgba(255,45,173,1),
+                      0 0 66px rgba(125,61,255,0.85), 0 0 118px rgba(125,61,255,0.45); }
+  100% { text-shadow: 0 0 7px #ffffff, 0 0 18px rgba(255,45,173,0.95),
+                      0 0 40px rgba(125,61,255,0.60), 0 0 78px rgba(125,61,255,0.30); }
+}
+.ws-pill-active, .ws-pill-active:hover {
+  background-color: transparent; background-image: none; border: none; box-shadow: none;
+  color: #ffffff;
+  font-size: 25px;
+  animation-name: nyxus-cap-breathe;
+  animation-duration: 2600ms;
   animation-iteration-count: infinite;
   animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-  animation-delay: -1750ms;
 }
-@keyframes liquid-occupied {
-  0%   { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(125,61,255,0.92) 84%, rgba(68,33,140,0.95) 100%); }
-  20%  { background-image: linear-gradient(196deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 52%,
-             rgba(255,255,255,0.62) 52%, rgba(255,255,255,0.20) 54%,
-             rgba(125,61,255,0.92) 56%, rgba(68,33,140,0.95) 100%); }
-  40%  { background-image: linear-gradient(182deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 22%,
-             rgba(255,255,255,0.62) 22%, rgba(255,255,255,0.20) 24%,
-             rgba(125,61,255,0.92) 26%, rgba(68,33,140,0.95) 100%); }
-  60%  { background-image: linear-gradient(164deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 16%,
-             rgba(255,255,255,0.62) 16%, rgba(255,255,255,0.20) 18%,
-             rgba(125,61,255,0.92) 20%, rgba(68,33,140,0.95) 100%); }
-  80%  { background-image: linear-gradient(190deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 48%,
-             rgba(255,255,255,0.62) 48%, rgba(255,255,255,0.20) 50%,
-             rgba(125,61,255,0.92) 52%, rgba(68,33,140,0.95) 100%); }
-  100% { background-image: linear-gradient(176deg,
-             rgba(6,2,16,0.16) 0%, rgba(6,2,16,0.16) 80%,
-             rgba(255,255,255,0.62) 80%, rgba(255,255,255,0.20) 82%,
-             rgba(125,61,255,0.92) 84%, rgba(68,33,140,0.95) 100%); }
+.ws-pill-occupied, .ws-pill-occupied:hover {
+  background-color: transparent; background-image: none; box-shadow: none;
 }
-.ws-pill-occupied, .app-pill-occupied {
-  animation-name: liquid-occupied;
-  animation-duration: 3400ms;
-  animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-  animation-delay: -500ms;
-}
+
