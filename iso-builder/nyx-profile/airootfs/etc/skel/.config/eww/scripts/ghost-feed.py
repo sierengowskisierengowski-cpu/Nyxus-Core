@@ -156,6 +156,42 @@ def scanners():
     }
 
 
+def units():
+    """Failed systemd units - system and user. A failed unit is a real
+    finding, so it is surfaced rather than rolled into a health score."""
+    rows = []
+    for scope, cmd in (("sys", ["systemctl", "--failed", "--no-legend"]),
+                       ("usr", ["systemctl", "--user", "--failed", "--no-legend"])):
+        for line in _run(cmd, 4).splitlines():
+            parts = line.replace("\u25cf", "").split()
+            if parts:
+                rows.append({"name": parts[0][:30], "scope": scope})
+    return {"count": len(rows), "rows": rows[:6], "clean": not rows}
+
+
+def events():
+    """Security-relevant journal lines in the last 24h. Honest zero."""
+    log = _run(["journalctl", "--since", "24 hours ago", "-q", "-n", "3000"], 6)
+    pat = re.compile(r"(sudo:|sshd|denied|refused|segfault|audit)", re.I)
+    hits = [l for l in log.splitlines() if pat.search(l)]
+    recent = []
+    for l in hits[-4:]:
+        # strip the timestamp/host prefix so the card shows the message
+        recent.append({"line": l.split(": ", 1)[-1][:44] if ": " in l else l[:44]})
+    return {"count": len(hits), "recent": recent, "quiet": not hits}
+
+
+def arsenal():
+    """Full GowskiNet toolkit, reusing the START feed's registry reader so
+    there is exactly one parser for ~/Arsenal/registry.toml."""
+    try:
+        sys.path.insert(0, str(HOME / ".config/eww/scripts"))
+        from start_feed import mode_arsenal
+        return mode_arsenal()
+    except Exception:
+        return {"groups": [], "live": 0, "total": 0}
+
+
 if __name__ == "__main__":
     fallback = {
         "state": {"hacker": False, "ghost": False, "panic": "idle",
@@ -167,6 +203,9 @@ if __name__ == "__main__":
         "conns": {"count": 0, "foreign": 0, "top": ""},
         "sessions": {"count": 0, "who": ""},
         "scanners": {"rk": False, "rk_run": False, "cl": False, "cl_db": False, "stale": False},
+        "units": {"count": 0, "rows": [], "clean": True},
+        "events": {"count": 0, "recent": [], "quiet": True},
+        "arsenal": {"groups": [], "live": 0, "total": 0},
     }
     try:
         rows, up, total = pots()
@@ -181,6 +220,9 @@ if __name__ == "__main__":
             "conns": conns(),
             "sessions": sessions(),
             "scanners": scanners(),
+            "units": units(),
+            "events": events(),
+            "arsenal": arsenal(),
         }))
     except Exception:
         print(json.dumps(fallback))

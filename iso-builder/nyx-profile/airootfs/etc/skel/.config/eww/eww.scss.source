@@ -5188,3 +5188,19 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
                      box-shadow: 0 0 18px rgba(255,77,106,0.7); }
 .gh-row:hover { border-color: rgba(255,45,173,0.85); background-color: rgba(44,16,78,0.8);
                 box-shadow: 0 0 14px rgba(255,45,173,0.4); }
+
+.gh-cat { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+          font-weight: 800; color: rgba(214,158,255,0.62); }
+.gh-tool { padding: 4px 8px; border-radius: 7px;
+           background-color: rgba(18,7,34,0.40);
+           border: 1px solid rgba(125,61,255,0.16); }
+.gh-tool:hover { border-color: rgba(255,45,173,0.85); background-color: rgba(44,16,78,0.8);
+                 box-shadow: 0 0 14px rgba(255,45,173,0.4); }
+.gh-tool-live .gh-dot { color: #8dff6a; text-shadow: 0 0 8px rgba(141,255,106,0.9); }
+.gh-tool-down .gh-dot { color: #ff4d6a; text-shadow: 0 0 8px rgba(255,77,106,0.9); }
+.gh-tool-idle .gh-dot { color: rgba(255,255,255,0.24); }
+.gh-tool-live { border-color: rgba(141,255,106,0.28); }
+
+/* fixed-width tool buttons: without this they stretch to fill the column and
+   the four categories drift apart with dead space between them */
+.gh-tool { min-width: 168px; }

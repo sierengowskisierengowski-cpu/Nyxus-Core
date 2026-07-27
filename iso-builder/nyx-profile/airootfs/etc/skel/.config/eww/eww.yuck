@@ -116,7 +116,7 @@
                                    "python3 ~/.config/eww/scripts/start-feed.py meta")
 (defvar STARTQ "")
 (defvar STARTFOUND '{"rows":[],"n":0}')
-(defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0}}'
+(defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0}}'
                                 "python3 ~/.config/eww/scripts/ghost-feed.py")
 (defpoll STARTARS :interval "12s" :initial '{"groups":[],"live":0,"total":0}'
                                    "python3 ~/.config/eww/scripts/start-feed.py arsenal")
@@ -1533,24 +1533,22 @@
                          :limit-width 24 :text {w.title}))))))
 
         (box :class "start-div" :height 1)
-        ;; GowskiNet toolkit, live off the same ~/Arsenal/registry.toml the
-        ;; Arsenal TUI reads - add a [[tool]] block there and it appears here.
+        ;; RECENT, not ARSENAL: the toolkit moved to the GHOST security
+        ;; station, which is where it belongs. Repeating the same panel on
+        ;; every station is what made them feel interchangeable.
         (box :orientation "h" :space-evenly false
-          (label :class "start-sec" :halign "start" :hexpand true :text "ARSENAL")
-          (label :class "start-sec-hint" :halign "end" :text "${STARTARS.live}/${STARTARS.total} live"))
-        (scroll :class "start-scroll" :vscroll true :hscroll false :height 128
-          (box :orientation "v" :space-evenly false :spacing 7 :valign "start"
-            (for g in {STARTARS.groups}
-              (box :orientation "v" :space-evenly false :spacing 4
-                (label :class "start-ars-cat" :halign "start" :text {g.label})
-                (for t in {g.items}
-                  (button :class "start-ars start-ars-${t.state}" :tooltip {t.desc}
-                          :onclick "${t.launch} &"
-                    (box :orientation "h" :space-evenly false :spacing 8
-                      (label :class "start-ars-dot" :text "*")
-                      (label :class "start-ars-name" :halign "start" :hexpand true
-                             :limit-width 22 :text {t.name})
-                      (label :class "start-ars-if" :text {t.iface}))))))))
+          (label :class "start-sec" :halign "start" :hexpand true :text "RECENT")
+          (label :class "start-sec-hint" :halign "end" :text "last launched"))
+        (scroll :class "start-scroll" :vscroll true :hscroll false :height 118
+          (box :orientation "v" :space-evenly false :spacing 5 :valign "start"
+            (label :class "start-scratch-empty" :halign "start"
+                   :visible {arraylength(STARTLIVE.recent) == 0} :text "nothing launched yet")
+            (for r in {STARTLIVE.recent}
+              (button :class "start-win" :onclick "${r.cmd} &" :tooltip {r.tagline}
+                (box :orientation "h" :space-evenly false :spacing 8
+                  (label :class "start-hit-glyph" :text {r.glyph})
+                  (label :class "start-win-title" :halign "start" :hexpand true
+                         :limit-width 24 :text {r.name}))))))
 
         (box :class "start-div" :height 1)
         (label :class "start-sec" :halign "start" :text "PLACES")
@@ -1665,15 +1663,19 @@
 ;; EVERY ROW IS A BUTTON. A read-only security panel makes you leave it to do
 ;; anything; each row opens the log, unit or tool behind the number it shows.
 
-(defwidget ghost_card [title ?glyph ?tone ?hint]
+(defwidget ghost_card [title ?glyph ?tone ?hint ?fill]
+  ;; `fill` lets a card take the height it is given instead of hugging its
+  ;; content - without it a scroll inside collapses to a single row.
   (box :class "nyx-surface deck-card deck-card-${tone ?: 'green'} deck-mid"
-       :orientation "v" :space-evenly false :spacing 7 :valign "start" :hexpand true
+       :orientation "v" :space-evenly false :spacing 7
+       :valign {fill ? "fill" : "start"} :vexpand {fill ?: false} :hexpand true
        :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${16 + CAVA_BASS / 3}px rgba(125, 61, 255, ${0.18 + CAVA_BASS / 340});"
     (box :class "deck-card-head" :orientation "h" :space-evenly false :spacing 8
       (label :class "deck-card-glyph" :text {glyph ?: "◈"})
       (label :class "deck-card-title" :halign "start" :hexpand true :text title)
       (label :class "gh-hint" :text {hint ?: ""}))
     (box :class "deck-card-body" :orientation "v" :space-evenly false :spacing 5
+         :vexpand {fill ?: false}
       (children))))
 
 ;; one clickable status row: dot + name + state, opens `cmd`
@@ -1697,7 +1699,7 @@
     (label :class "deck-brand" :halign "center"
            :text "G H O S T   ·   S E C U R I T Y   S T A T I O N")
 
-    (box :orientation "h" :space-evenly true :spacing 14 :vexpand true
+    (box :orientation "h" :space-evenly true :spacing 14 :valign "start"
       ;; ---- column 1 : posture + defence daemons -------------------
       (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
         (ghost_card :title "THREAT STATE" :glyph "" :tone "green" :hint "click to arm"
@@ -1782,6 +1784,52 @@
                      :state {GHOST_.scanners.cl ? (GHOST_.scanners.cl_db ? "db ok" : "no db") : "absent"}
                      :tip "update signatures then scan $HOME"
                      :cmd "kitty --title clamav -e sh -c 'sudo freshclam; clamscan -ri $HOME; read _' &"))))
+
+    ;; ---- lower band: the whole toolkit + what broke -----------------
+    ;; Lives in space the columns were already reserving (they valign to the
+    ;; top), so it costs no extra window height - which matters, because the
+    ;; surface must stay inside the 882px gap between the bars.
+    (box :orientation "h" :space-evenly false :spacing 14 :vexpand true
+      ;; ARSENAL is the centrepiece down here: all 14 tools, four categories
+      ;; side by side, each one launchable.
+      (box :orientation "v" :space-evenly false :hexpand false :vexpand true
+        (ghost_card :title "ARSENAL" :glyph "" :tone "cyan" :fill true
+                    :hint "${GHOST_.arsenal.live}/${GHOST_.arsenal.total} live . click to launch"
+          ;; space-evenly stretched the four categories across the whole card
+          ;; and left big gaps between them - natural widths, left-aligned,
+          ;; with the tool buttons on a fixed width instead.
+          (box :orientation "h" :space-evenly false :spacing 16 :valign "start"
+               :halign "start" :vexpand true
+            (for g in {GHOST_.arsenal.groups}
+              (box :orientation "v" :space-evenly false :spacing 4
+                   :hexpand false :valign "start"
+                (label :class "gh-cat" :halign "start" :text {g.label})
+                (for t in {g.items}
+                  (button :class "gh-tool gh-tool-${t.state}" :tooltip {t.desc}
+                          :onclick "${t.launch} &"
+                    (box :orientation "h" :space-evenly false :spacing 7
+                      (label :class "gh-dot" :text "●")
+                      (label :class "gh-name" :halign "start"
+                             :limit-width 18 :text {t.name})))))))))
+
+      (box :orientation "v" :space-evenly false :spacing 12 :vexpand true
+           :style "min-width: 320px;"
+        (ghost_card :title "FAILED UNITS" :glyph "" :tone "orange"
+                    :hint {GHOST_.units.clean ? "all clean" : "needs a look"}
+          (ghost_stat :val "${GHOST_.units.count}" :cap "failed"
+                      :tone {GHOST_.units.clean ? "ok" : "warn"} :tip "systemctl --failed"
+                      :cmd "kitty --title Failed -e sh -c 'systemctl --failed; echo; systemctl --user --failed; echo; read _' &")
+          (box :orientation "v" :space-evenly false :spacing 3
+            (for u in {GHOST_.units.rows}
+              (label :class "gh-feed" :halign "start" :limit-width 30 :text "▸ ${u.name}"))))
+        (ghost_card :title "EVENTS" :glyph "" :tone "pink" :hint "journal 24h" :fill true
+          (ghost_stat :val "${GHOST_.events.count}"
+                      :cap {GHOST_.events.quiet ? "nothing flagged" : "sudo / ssh / denied"}
+                      :tone {GHOST_.events.quiet ? "ok" : "warn"} :tip "open the security journal"
+                      :cmd "kitty --title Events -e sh -c 'journalctl --since \"24 hours ago\" | grep -iE \"sudo:|sshd|denied|refused|segfault|audit\" | tail -100; echo; read _' &")
+          (box :orientation "v" :space-evenly false :spacing 3
+            (for e in {GHOST_.events.recent}
+              (label :class "gh-feed" :halign "start" :limit-width 32 :text "▸ ${e.line}"))))))
 
     (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
       (button :class "start-action start-action-cyan" :tooltip "Arsenal hub"
