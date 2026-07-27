@@ -1,14 +1,14 @@
 {
-  "_comment": "NYXUS Station Matrix \u2014 single source of truth for workspace 0 (HOME) + stations 1\u201310. ALIEN THEME ONLY wallpapers (2026-07-23). Synced to workspaces.json, Hyprland defaultName rules, EWW left rail, and nyxus-workspace-wallpaperd.",
+  "_comment": "NYXUS Station Matrix — single source of truth for workspace 0 (HOME) + stations 1–10. ALIEN THEME ONLY wallpapers (2026-07-23). Synced to workspaces.json, Hyprland defaultName rules, EWW left rail, and nyxus-workspace-wallpaperd.",
   "wall_dir": "~/.config/hypr/walls",
   "unified_wallpaper": "nyxus-urban-alien.png",
   "home": {
     "id": 0,
-    "hypr": "name:0",
+    "hypr": "name:HOME",
     "name": "HOME",
-    "code": "\u25c8",
+    "code": "◈",
     "hue": "cyan",
-    "tagline": "Obsidian Reactor \u00b7 Command Deck",
+    "tagline": "Obsidian Reactor · Command Deck",
     "wallpaper": "nyxus-urban-alien.png"
   },
   "stations": [
@@ -17,7 +17,7 @@
       "name": "OPS",
       "code": "OP",
       "hue": "pink",
-      "tagline": "Command \u00b7 Terminal \u00b7 Control",
+      "tagline": "Command · Terminal · Control",
       "wallpaper": "nyxus-urban-alien.png",
       "launch": "alacritty"
     },
@@ -26,7 +26,7 @@
       "name": "FORGE",
       "code": "FG",
       "hue": "purple",
-      "tagline": "Build \u00b7 Code \u00b7 Ship",
+      "tagline": "Build · Code · Ship",
       "wallpaper": "nyxus-login-wall.png",
       "launch": "cursor"
     },
@@ -35,7 +35,7 @@
       "name": "GHOST",
       "code": "GH",
       "hue": "green",
-      "tagline": "Security \u00b7 Intel \u00b7 Recon",
+      "tagline": "Security · Intel · Recon",
       "wallpaper": "nyxus-desktop-hero.png",
       "launch": "sh -c 'command -v nyxus-security >/dev/null && nyxus-security || alacritty -e btop'"
     },
@@ -44,7 +44,7 @@
       "name": "PULSE",
       "code": "PL",
       "hue": "gold",
-      "tagline": "Comms \u00b7 Signal \u00b7 Chat",
+      "tagline": "Comms · Signal · Chat",
       "wallpaper": "nyxus-graffiti-space.png",
       "launch": "firefox"
     },
@@ -53,7 +53,7 @@
       "name": "WAVE",
       "code": "WV",
       "hue": "orange",
-      "tagline": "Media \u00b7 Sound \u00b7 Stream",
+      "tagline": "Media · Sound · Stream",
       "wallpaper": "nyxus-graffiti-01.png",
       "launch": "sh -c 'playerctl play-pause 2>/dev/null; true'"
     },
@@ -62,7 +62,7 @@
       "name": "CORE",
       "code": "CR",
       "hue": "blue",
-      "tagline": "Files \u00b7 Data \u00b7 Vault",
+      "tagline": "Files · Data · Vault",
       "wallpaper": "nyxus-graffiti-04.png",
       "launch": "thunar"
     },
@@ -71,7 +71,7 @@
       "name": "MESH",
       "code": "MS",
       "hue": "pink",
-      "tagline": "Network \u00b7 NOC \u00b7 Mesh",
+      "tagline": "Network · NOC · Mesh",
       "wallpaper": "nyxus-graffiti-08.png",
       "launch": "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'"
     },
@@ -80,7 +80,7 @@
       "name": "SCRIBE",
       "code": "SC",
       "hue": "purple",
-      "tagline": "Notes \u00b7 Docs \u00b7 Scribe",
+      "tagline": "Notes · Docs · Scribe",
       "wallpaper": "nyxus-graffiti-11.png",
       "launch": "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'"
     },
@@ -89,17 +89,8 @@
       "name": "BLAST",
       "code": "BL",
       "hue": "gold",
-      "tagline": "Games \u00b7 Arena \u00b7 Blast",
+      "tagline": "Games · Arena · Blast",
       "wallpaper": "nyxus-graffiti-16.png",
-      "launch": ""
-    },
-    {
-      "id": 10,
-      "name": "EDGE",
-      "code": "ED",
-      "hue": "green",
-      "tagline": "Lab \u00b7 Edge \u00b7 Experimental",
-      "wallpaper": "nyxus-graffiti-20.png",
       "launch": ""
     }
   ]

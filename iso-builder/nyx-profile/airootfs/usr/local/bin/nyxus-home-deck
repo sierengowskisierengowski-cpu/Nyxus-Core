@@ -1,23 +1,37 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════
-# nyxus-home-deck  ·  rev 2026-07-26
-# Shows the eww `home-deck` desktop widgets ONLY on the HOME station.
+# nyxus-home-deck  ·  rev 2026-07-27
+# Maps STATION -> eww window and keeps exactly the right one on screen.
+#
+#   HOME  -> home-deck    (scattered desktop widgets)
+#   START -> start-panel  (the big Start panel that replaced the GTK app)
+#
 # eww windows are layer-shell surfaces: they are bound to a MONITOR, not a
-# workspace, so the deck has no way to hide itself. This follows Hyprland's
-# socket2 event stream and opens/closes it on every workspace change.
-# Replaces the nyxus-home GTK app, which painted an empty window.
+# workspace, so they cannot hide themselves. This follows Hyprland's socket2
+# event stream and opens/closes them on every workspace change.
+#
+# Name kept as nyxus-home-deck so the existing exec-once and Super+Shift+Home
+# bind keep working.
 # ════════════════════════════════════════════════════════════════════
 set -u
 export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
-STATION="${NYXUS_HOME_STATION:-HOME}"
+
+# station name -> eww window name
+declare -A STATIONS=(
+  ["${NYXUS_HOME_STATION:-HOME}"]="home-deck"
+  ["${NYXUS_START_STATION:-START}"]="start-panel"
+)
+
+_open()  { eww active-windows 2>/dev/null | grep -q "^${1}:" || eww open  "$1" 2>/dev/null; }
+_close() { eww active-windows 2>/dev/null | grep -q "^${1}:" && eww close "$1" 2>/dev/null; }
 
 _sync() {
   local ws; ws="$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.name // empty')"
-  if [[ "${ws}" == "${STATION}" ]]; then
-    eww active-windows 2>/dev/null | grep -q '^home-deck' || eww open home-deck 2>/dev/null
-  else
-    eww active-windows 2>/dev/null | grep -q '^home-deck' && eww close home-deck 2>/dev/null
-  fi
+  local station win
+  for station in "${!STATIONS[@]}"; do
+    win="${STATIONS[$station]}"
+    if [[ "${ws}" == "${station}" ]]; then _open "$win"; else _close "$win"; fi
+  done
 }
 
 # settle first: eww may still be coming up at login

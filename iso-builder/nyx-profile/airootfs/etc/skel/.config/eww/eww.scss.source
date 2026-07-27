@@ -4779,3 +4779,184 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), inset 0 -5px 13px rgba(0,0,0,0.36),
               0 0 13px rgba(125,61,255,0.16); }
 
+/* -- START STATION PANEL ---------------------------------------------
+   One big widget replacing the nyxus-start GTK4 app. Same obsidian-glass
+   language as the HOME deck so the two stations read as one build: dark
+   glass, neon hairline rim, per-hue accents. Alphas stay above the
+   layerrule ignore_alpha 0.2 threshold so Hyprland's blur frosts it. */
+.start-root {
+  padding: 20px 24px 20px 24px;
+  border-radius: 22px;
+  background-color: rgba(9, 3, 20, 0.72);
+  background-image: linear-gradient(150deg,
+    rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 38%,
+    rgba(0,0,0,0.30) 100%);
+  border: 1px solid rgba(125, 61, 255, 0.46);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -8px 20px rgba(0,0,0,0.44),
+    0 0 30px rgba(125, 61, 255, 0.28),
+    0 0 70px rgba(255, 45, 173, 0.13);
+}
+.start-head { padding-bottom: 4px; }
+.start-avatar {
+  min-width: 44px; min-height: 44px;
+  border-radius: 22px;
+  font-family: "Permanent Marker", sans-serif; font-size: 21px;
+  color: #ffffff;
+  background-color: rgba(38, 14, 68, 0.85);
+  border: 1px solid rgba(255, 45, 173, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 0 18px rgba(255,45,173,0.42);
+  text-shadow: 0 0 10px rgba(255,45,173,0.8);
+}
+.start-name { font-family: "Permanent Marker", sans-serif; font-size: 17px;
+              color: #ffffff; text-shadow: 0 0 12px rgba(255,45,173,0.6); }
+.start-role { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+              color: rgba(214,158,255,0.80); }
+.start-clock { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 19px;
+               font-weight: 800; color: #ffffff;
+               text-shadow: 0 0 12px rgba(125,61,255,0.6); }
+.start-date  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+               color: rgba(255,255,255,0.55); }
+
+.start-search {
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 13px;
+  color: #ffffff;
+  padding: 11px 16px;
+  border-radius: 13px;
+  background-color: rgba(4, 1, 10, 0.78);
+  border: 1px solid rgba(125, 61, 255, 0.46);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.55);
+}
+.start-search:focus {
+  border-color: rgba(255, 45, 173, 0.95);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.55), 0 0 22px rgba(255,45,173,0.45);
+}
+
+.start-sec { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+             font-weight: 800; color: rgba(214,158,255,0.92);
+             text-shadow: 0 0 9px rgba(125,61,255,0.6); }
+.start-sec-hint { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+                  color: rgba(255,255,255,0.42); }
+
+.start-col { padding: 4px 2px; }
+.start-col-side { min-width: 250px; }
+
+/* pinned tiles */
+.start-tile {
+  min-width: 92px; min-height: 84px;
+  padding: 10px 8px;
+  border-radius: 15px;
+  background-color: rgba(18, 7, 34, 0.62);
+  border: 1px solid rgba(125, 61, 255, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 0 12px rgba(125,61,255,0.18);
+  transition: all 170ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+.start-tile:hover {
+  background-color: rgba(44, 16, 78, 0.86);
+  border-color: rgba(255, 45, 173, 0.95);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 0 26px rgba(255,45,173,0.72),
+              0 0 56px rgba(125,61,255,0.42);
+}
+.start-tile-glyph { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 25px;
+                    color: #ff2dad; text-shadow: 0 0 12px rgba(255,45,173,0.8); }
+.start-tile-name  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+                    color: rgba(255,255,255,0.82); }
+
+/* search result rows */
+.start-hit {
+  padding: 9px 13px; border-radius: 12px;
+  background-color: rgba(18, 7, 34, 0.55);
+  border: 1px solid rgba(125, 61, 255, 0.30);
+  transition: all 150ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+.start-hit:hover {
+  background-color: rgba(44, 16, 78, 0.88);
+  border-color: rgba(255, 45, 173, 0.9);
+  box-shadow: 0 0 22px rgba(255,45,173,0.55);
+}
+.start-hit-glyph { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 19px;
+                   color: #4deeff; text-shadow: 0 0 10px rgba(77,238,255,0.7); }
+.start-hit-name  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 12px;
+                   font-weight: 800; color: #ffffff; }
+.start-hit-sub   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+                   color: rgba(255,255,255,0.48); }
+
+/* scratchpad */
+.start-scratch { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                 color: rgba(255,255,255,0.72); }
+.start-scratch-empty { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                       color: rgba(255,255,255,0.34); }
+.start-edit {
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+  color: rgba(214,158,255,0.95);
+  padding: 8px 12px; border-radius: 11px;
+  background-color: rgba(18, 7, 34, 0.66);
+  border: 1px solid rgba(125, 61, 255, 0.44);
+  transition: all 160ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+.start-edit:hover { border-color: rgba(255,45,173,0.9); color: #ffffff;
+                    box-shadow: 0 0 20px rgba(255,45,173,0.5); }
+
+/* gowskinet status chips */
+.start-status { padding-top: 2px; }
+.start-chip {
+  padding: 7px 13px; border-radius: 11px;
+  background-color: rgba(12, 4, 24, 0.62);
+  border: 1px solid rgba(125, 61, 255, 0.30);
+}
+.start-chip-label { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                    font-weight: 800; color: rgba(255,255,255,0.86); }
+.start-chip-value { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+                    color: rgba(255,255,255,0.50); }
+.start-chip-dot   { font-size: 9px; }
+.start-chip-ok  .start-chip-dot { color: #8dff6a; text-shadow: 0 0 9px rgba(141,255,106,0.85); }
+.start-chip-off .start-chip-dot { color: #ff4d6a; text-shadow: 0 0 9px rgba(255,77,106,0.85); }
+.start-chip-ok  { border-color: rgba(141,255,106,0.36); }
+.start-chip-off { border-color: rgba(255,77,106,0.30); }
+
+/* action bar */
+.start-bar { padding-top: 2px; }
+.start-action {
+  min-width: 46px; min-height: 42px;
+  border-radius: 13px;
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 19px;
+  color: #ffffff;
+  background-color: rgba(18, 7, 34, 0.68);
+  border: 1px solid rgba(125, 61, 255, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16);
+  transition: all 170ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+.start-action:hover { background-color: rgba(44, 16, 78, 0.88); color: #ffffff; }
+.start-action-pink:hover   { border-color: rgba(255,45,173,1);  box-shadow: 0 0 24px rgba(255,45,173,0.75); }
+.start-action-violet:hover { border-color: rgba(125,61,255,1);  box-shadow: 0 0 24px rgba(125,61,255,0.75); }
+.start-action-cyan:hover   { border-color: rgba(77,238,255,1);  box-shadow: 0 0 24px rgba(77,238,255,0.75); }
+.start-action-blue:hover   { border-color: rgba(96,150,255,1);  box-shadow: 0 0 24px rgba(96,150,255,0.75); }
+.start-action-gold:hover   { border-color: rgba(255,196,74,1);  box-shadow: 0 0 24px rgba(255,196,74,0.75); }
+
+.start-div { background-color: rgba(125,61,255,0.26); min-height: 1px; margin: 4px 0 4px 0; }
+.start-hint { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+              color: rgba(255,255,255,0.34); }
+.start-edit-mini {
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 12px;
+  color: rgba(214,158,255,0.9);
+  min-width: 26px; min-height: 22px; border-radius: 8px;
+  background-color: rgba(18,7,34,0.6);
+  border: 1px solid rgba(125,61,255,0.40);
+}
+.start-edit-mini:hover { border-color: rgba(255,45,173,0.95); color: #ffffff;
+                         box-shadow: 0 0 16px rgba(255,45,173,0.55); }
+
+/* word pills (HOME / START) on the left rail - same display face as the
+   home-page brand so the rail and the deck read as one type system. */
+.ws-word {
+  font-family: "Permanent Marker", "Inter Display", sans-serif;
+  font-size: 9px;
+  padding: 9px 2px;
+}
+.start-search-glyph { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 14px;
+                      color: rgba(214,158,255,0.9); }
+.start-search-text  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 12px;
+                      color: rgba(255,255,255,0.55); }
+.start-search-kbd   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+                      color: rgba(255,255,255,0.30); }

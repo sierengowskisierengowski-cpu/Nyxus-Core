@@ -39,7 +39,7 @@
                                      "~/.config/eww/scripts/mic.sh")
 (defpoll BACKLIGHT  :interval "5s"   :initial '{"percent":50}'
                                      "~/.config/eww/scripts/brightness.sh")
-(defpoll WORKSPACES :interval "1s"   :initial '{"active":1,"home_active":false,"home":{"code":"◈","name":"HOME","hue":"cyan","occupied":false},"stations":[]}'
+(defpoll WORKSPACES :interval "1s"   :initial '{"active":1,"home_active":false,"home":{"code":"HOME","name":"HOME","hue":"cyan","occupied":false},"start":{"active":false,"occupied":false},"stations":[]}'
                                      "~/.config/eww/scripts/workspaces.sh")
 (defpoll APP_RAIL   :interval "0.5s" :initial '{"active":"","terminal":{"active":false,"occupied":false},"browser":{"active":false,"occupied":false},"files":{"active":false,"occupied":false},"sysmon":{"active":false,"occupied":false},"notepad":{"active":false,"occupied":false},"stickies":{"active":false,"occupied":false},"mixer":{"active":false,"occupied":false},"bluetooth":{"active":false,"occupied":false}}'
                                      "~/.config/eww/scripts/app-rail.sh")
@@ -107,6 +107,16 @@
                                      "~/.config/eww/scripts/bar-tiles.sh")
 
 ;; wifi panel view: "nearby" (scan results) | "saved" (profiles + link info)
+;; -- START station feed ------------------------------------------------
+;; Backs the big Start panel. Reuses ~/.nyxus/nyxus-start's own apps.py /
+;; status.py / settings.py rather than reimplementing app discovery.
+;; The app catalogue is CACHED (see start-feed.py) - re-scanning ~400
+;; desktop entries on demand is what made the first build feel frozen.
+(defpoll STARTMETA :interval "30s" :initial '{"user":{"name":"operator","subtitle":"","initial":"N"},"pins":[],"pin_rows":[],"app_rows":[],"app_total":0,"pin_count":0,"scratch":[],"scratch_empty":true,"scratch_path":""}'
+                                   "python3 ~/.config/eww/scripts/start-feed.py meta")
+(defpoll STARTSTAT :interval "6s"  :initial '{"items":[]}'
+                                   "python3 ~/.config/eww/scripts/start-feed.py status")
+
 (defvar WIFI_VIEW "nearby")
 
 ;; live notification payload — fed by nyxus-notif-to-eww (dunst bridge) and
@@ -425,13 +435,23 @@
 ;; ── workspaces: HOME + stations 1..10 (from stations.json) ─────────
 (defwidget workspace_home_pill []
   (eventbox :class "float-island"
-    (button :class {WORKSPACES.home_active ? "ws-pill ws-pill-active ws-pill-cyan" :
-                    WORKSPACES.home.occupied ? "ws-pill ws-pill-occupied ws-pill-cyan" :
-                                              "ws-pill ws-pill-cyan"}
+    (button :class {WORKSPACES.home_active ? "ws-pill ws-word ws-pill-active ws-pill-cyan" :
+                    WORKSPACES.home.occupied ? "ws-pill ws-word ws-pill-occupied ws-pill-cyan" :
+                                               "ws-pill ws-word ws-pill-cyan"}
             :style "background-position: center;"
             :onclick "hyprctl dispatch workspace name:HOME &"
-            :tooltip "HOME · ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
-      "${WORKSPACES.home.code}")))
+            :tooltip "HOME . ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
+      "HOME")))
+
+(defwidget workspace_start_pill []
+  (eventbox :class "float-island"
+    (button :class {WORKSPACES.start.active ? "ws-pill ws-word ws-pill-active ws-pill-pink" :
+                    WORKSPACES.start.occupied ? "ws-pill ws-word ws-pill-occupied ws-pill-pink" :
+                                                "ws-pill ws-word ws-pill-pink"}
+            :style "background-position: center;"
+            :onclick "hyprctl dispatch workspace name:START &"
+            :tooltip "START . launcher, apps and system"
+      "START")))
 
 (defwidget station_pill [st]
   (eventbox :class "float-island"
@@ -443,10 +463,12 @@
             :tooltip "${st.name} · ${st.tagline}"
       "${st.id}")))
 
-;; Transparent column — each pill is its own float-island (no rail slab).
 (defwidget workspaces_rail []
   (box :class "ws-rail ws-rail-float" :orientation "v" :space-evenly false :spacing 10 :valign "center" :halign "center"
     (workspace_home_pill)
+    (workspace_start_pill)
+    ;; numbered stations 1-9 only (station 10 dropped 2026-07-27 to make room
+    ;; for the two word pills without lengthening the rail)
     (for st in {WORKSPACES.stations}
       (station_pill :st st))))
 
@@ -1390,6 +1412,126 @@
   ;; (measured with `hyprctl layers -j`, 2026-07-27 - do not use 100%.)
   :geometry (geometry :x "0" :y "0" :width "98%" :height "846px" :anchor "center")
   (home_deck))
+
+;; == START STATION PANEL ==============================================
+;; One big eww widget replacing the nyxus-start GTK4 app. That app sat on
+;; the OVERLAY layer with a single keyboard-dependent dismissal path, so
+;; when it did not hold focus it could be neither closed nor moved - which
+;; is exactly what happened to the owner. This window is layer "bottom" and
+;; NEVER focusable, so it cannot trap anything.
+;; Visibility: nyxus-home-deck watches socket2 and maps station -> window
+;; (HOME -> home-deck, START -> start-panel).
+
+(defwidget start_tile [name cmd glyph ?tagline]
+  (button :class "start-tile" :onclick "${cmd} &" :tooltip "${tagline ?: name}"
+    (box :orientation "v" :space-evenly false :spacing 5 :halign "center"
+      (label :class "start-tile-glyph" :text glyph)
+      (label :class "start-tile-name" :limit-width 13 :text name))))
+
+(defwidget start_row [row]
+  (box :orientation "h" :space-evenly false :spacing 9 :halign "start"
+    (for a in {row.cells}
+      (start_tile :name {a.name} :cmd {a.cmd} :glyph {a.glyph} :tagline {a.tagline}))))
+
+(defwidget start_statchip [label value ok]
+  (box :class "start-chip ${ok ? 'start-chip-ok' : 'start-chip-off'}"
+       :orientation "h" :space-evenly false :spacing 8
+    (label :class "start-chip-dot" :text "●")
+    (label :class "start-chip-label" :text label)
+    (label :class "start-chip-value" :hexpand true :halign "end" :text value)))
+
+(defwidget start_action [glyph tip cmd ?tone]
+  (button :class "start-action start-action-${tone ?: 'violet'}"
+          :onclick cmd :tooltip tip glyph))
+
+(defwidget start_panel []
+  (box :class "start-root" :orientation "v" :space-evenly false :spacing 12
+    ;; ---- header ------------------------------------------------------
+    (box :class "start-head" :orientation "h" :space-evenly false :spacing 18
+      (box :class "start-ident" :orientation "h" :space-evenly false :spacing 11
+        (label :class "start-avatar" :text "${STARTMETA.user.initial}")
+        (box :orientation "v" :space-evenly false :valign "center"
+          (label :class "start-name" :halign "start" :text "${STARTMETA.user.name}")
+          (label :class "start-role" :halign "start" :text "${STARTMETA.user.subtitle}")))
+      ;; A GtkEntry would need keyboard focus, and on this layer focus is
+      ;; EXCLUSIVE (see the window note), so search hands off to rofi - the
+      ;; same launcher Super+Space already uses.
+      (button :class "start-search" :hexpand true
+              :onclick "sh -c 'rofi -show drun -theme ~/.config/rofi/nyxus.rasi 2>/dev/null || rofi -show drun' &"
+        (box :orientation "h" :space-evenly false :spacing 10
+          (label :class "start-search-glyph" :text "")
+          (label :class "start-search-text" :text "Search apps and commands")
+          (box :hexpand true)
+          (label :class "start-search-kbd" :text "Super + Space")))
+      (box :orientation "v" :space-evenly false :valign "center"
+        (label :class "start-clock" :halign "end" :text "${TIME.hm} ${TIME.ampm}")
+        (label :class "start-date"  :halign "end" :text "${TIME.date}")))
+
+    ;; ---- body --------------------------------------------------------
+    (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+      (box :class "start-col" :orientation "v" :space-evenly false :spacing 8 :hexpand true
+        (box :orientation "h" :space-evenly false
+          (label :class "start-sec" :halign "start" :hexpand true :text "PINNED")
+          (label :class "start-sec-hint" :halign "end" :text "${STARTMETA.pin_count} apps"))
+        (box :orientation "v" :space-evenly false :spacing 9
+          (for row in {STARTMETA.pin_rows} (start_row :row row)))
+        (box :class "start-div" :height 1)
+        (box :orientation "h" :space-evenly false
+          (label :class "start-sec" :halign "start" :hexpand true :text "ALL APPS")
+          (label :class "start-sec-hint" :halign "end" :text "${STARTMETA.app_total} installed"))
+        ;; scrolls so a big catalogue cannot grow the surface past the 882px
+        ;; free area between the bars (the trap that parked the home deck at y=-59)
+        (scroll :vscroll true :hscroll false :vexpand true
+          (box :orientation "v" :space-evenly false :spacing 9 :valign "start"
+            (for row in {STARTMETA.app_rows} (start_row :row row)))))
+
+      (box :class "start-col start-col-side" :orientation "v" :space-evenly false :spacing 8
+        (label :class "start-sec" :halign "start" :text "SYSTEM")
+        (box :orientation "v" :space-evenly false :spacing 6
+          (for it in {STARTSTAT.items}
+            (start_statchip :label {it.label} :value {it.value} :ok {it.ok})))
+        (box :class "start-div" :height 1)
+        (label :class "start-sec" :halign "start" :text "MACHINE")
+        (box :orientation "v" :space-evenly false :spacing 6
+          (start_statchip :label "CPU"  :value "${SYSGRAPH.cpu.val}%"  :ok true)
+          (start_statchip :label "RAM"  :value "${SYSGRAPH.mem.val}%"  :ok true)
+          (start_statchip :label "TEMP" :value "${SYSGRAPH.temp.val}°" :ok true)
+          (start_statchip :label "DISK" :value "${BARTILES.disk}%"     :ok true)
+          (start_statchip :label "UP"   :value "${BARTILES.up}"        :ok true))
+        (box :class "start-div" :height 1)
+        (box :orientation "h" :space-evenly false
+          (label :class "start-sec" :halign "start" :hexpand true :text "SCRATCHPAD")
+          (button :class "start-edit-mini" :onclick "nyxus-notepad &" :tooltip "Edit in notepad" ""))
+        (scroll :vscroll true :hscroll false :vexpand true
+          (box :orientation "v" :space-evenly false :spacing 4 :valign "start"
+            (label :class "start-scratch-empty" :halign "start"
+                   :visible {STARTMETA.scratch_empty} :text "nothing written yet")
+            (for l in {STARTMETA.scratch}
+              (label :class "start-scratch" :halign "start" :limit-width 30 :text l))))))
+
+    ;; ---- action bar --------------------------------------------------
+    (box :class "start-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph "󰣇" :tip "NYXUS Store"   :cmd "nyxus-store &"    :tone "pink")
+      (start_action :glyph ""  :tip "Settings"      :cmd "nyxus-settings &" :tone "violet")
+      (start_action :glyph ""  :tip "Files"         :cmd "thunar &"         :tone "gold")
+      (start_action :glyph ""  :tip "Terminal"      :cmd "alacritty &"      :tone "cyan")
+      (start_action :glyph ""  :tip "Notifications" :cmd "${EWW_CMD} open --toggle notifications" :tone "cyan")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center" :text "Super+Home  HOME     Super+End  START")
+      (box :hexpand true)
+      (start_action :glyph ""  :tip "Lock"          :cmd "hyprlock &"       :tone "blue")
+      (start_action :glyph ""  :tip "Power menu"    :cmd "${EWW_CMD} open --toggle powermenu" :tone "gold"))))
+
+(defwindow start-panel
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  ;; FOCUSABLE MUST STAY FALSE. eww 0.5 exposes :focusable as a bool that maps
+  ;; to wlr-layer-shell EXCLUSIVE keyboard interactivity - there is no
+  ;; on-demand option in this version - so a focusable layer surface swallows
+  ;; every keystroke session-wide. That reads exactly like a freeze, and it is
+  ;; the same trap that made the old nyxus-start GTK app impossible to dismiss.
+  :namespace "nyxus-start-panel"
+  :geometry (geometry :x "0" :y "0" :width "1660px" :height "780px" :anchor "center")
+  (start_panel))
 
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
