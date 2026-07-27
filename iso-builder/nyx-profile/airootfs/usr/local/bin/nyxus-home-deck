@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# ════════════════════════════════════════════════════════════════════
+# nyxus-home-deck  ·  rev 2026-07-26
+# Shows the eww `home-deck` desktop widgets ONLY on the HOME station.
+# eww windows are layer-shell surfaces: they are bound to a MONITOR, not a
+# workspace, so the deck has no way to hide itself. This follows Hyprland's
+# socket2 event stream and opens/closes it on every workspace change.
+# Replaces the nyxus-home GTK app, which painted an empty window.
+# ════════════════════════════════════════════════════════════════════
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
+STATION="${NYXUS_HOME_STATION:-HOME}"
+
+_sync() {
+  local ws; ws="$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.name // empty')"
+  if [[ "${ws}" == "${STATION}" ]]; then
+    eww active-windows 2>/dev/null | grep -q '^home-deck' || eww open home-deck 2>/dev/null
+  else
+    eww active-windows 2>/dev/null | grep -q '^home-deck' && eww close home-deck 2>/dev/null
+  fi
+}
+
+# settle first: eww may still be coming up at login
+for _ in $(seq 1 30); do eww ping >/dev/null 2>&1 && break; sleep 1; done
+_sync
+
+SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+[[ -S "${SOCK}" ]] || SOCK="/tmp/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+if [[ -S "${SOCK}" ]] && command -v socat >/dev/null 2>&1; then
+  socat -U - "UNIX-CONNECT:${SOCK}" | while read -r line; do
+    case "${line}" in workspace\>*|focusedmon\>*) _sync ;; esac
+  done
+else
+  # no socat -> cheap poll, still correct just less instant
+  while sleep 1; do _sync; done
+fi

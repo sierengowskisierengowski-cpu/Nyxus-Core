@@ -1108,7 +1108,7 @@
         (cheatkey :chord "Super + V"        :action "Toggle floating")
         (cheatkey :chord "Super + F"        :action "Fullscreen")
         (cheatkey :chord "Super + T"        :action "Toggle split")
-        (cheatkey :chord "Super + 0"        :action "HOME · Obsidian Reactor")
+        (cheatkey :chord "Super + Home"    :action "HOME · Obsidian Reactor")
         (cheatkey :chord "Super + 1..0"     :action "Stations OP FG GH PL WV CR MS SC BL ED")
         (cheatkey :chord "Super + Shift +#" :action "Move to workspace"))
       (box :class "cheat-col" :orientation "v" :space-evenly false :spacing 6
@@ -1202,6 +1202,195 @@
 ;; horizontal bars back on "fg".
 ;; The symmetric floating inset on both bars comes from the CSS margin
 ;; on .bar-bottom / .bar-top, NOT from a <100% surface width.
+
+
+;; == HOME STATION DECK ================================================
+;; Persistent desktop widgets pinned to the HOME workspace. This replaces
+;; the nyxus-home GTK app, which built its grid fine but never painted
+;; (see the DISABLED autostart note in hyprland.conf).
+;;
+;; LAYOUT (rev 2026-07-27, owner picked "loose scatter"): the cards are
+;; deliberately NOT on a grid. Flexible (box :hexpand true) struts push
+;; them apart while fixed-width shims bias each row left or right, so the
+;; wallpaper's alien (x ~350-760) and the UFO (top right) stay visible
+;; through the middle. Rows are separated by vexpand struts so the whole
+;; set breathes over the full height instead of clustering in the centre.
+;;
+;; Every card reads an eww var the bars ALREADY poll, so the deck adds no
+;; new polling cost.
+;; Layer is "bottom": above the wallpaper, below real windows, so it reads
+;; as part of the desktop and never steals focus or traps the screen.
+;; Visibility is driven by nyxus-home-deck (a socket2 watcher) which opens
+;; it on HOME and closes it everywhere else - layer-shell surfaces are
+;; per-monitor, not per-workspace, so it cannot self-limit.
+
+;; horizontal shim of a fixed width - biases a row left/right
+(defwidget hshim [?w] (box :hexpand false :vexpand false :style "min-width: ${w ?: 40}px;"))
+;; flexible struts - eat the remaining space and push cards apart
+(defwidget hflex [] (box :hexpand true))
+(defwidget vflex [] (box :vexpand true))
+
+(defwidget deck_card [title ?glyph ?tone ?depth]
+  (box :class "deck-card deck-card-${tone ?: 'violet'} deck-${depth ?: 'mid'}" :orientation "v"
+       :space-evenly false :spacing 8 :valign "start" :hexpand false :vexpand false
+    (box :class "deck-card-head" :orientation "h" :space-evenly false :spacing 8
+      (label :class "deck-card-glyph" :text {glyph ?: "◈"})
+      (label :class "deck-card-title" :halign "start" :text title))
+    (box :class "deck-card-body" :orientation "v" :space-evenly false :spacing 4
+      (children))))
+
+;; -- one metric column: big value over a small caps caption -----------
+(defwidget deck_stat [val cap ?tone]
+  (box :orientation "v" :space-evenly false :hexpand false
+    (label :class "deck-big deck-big-${tone ?: 'green'}" :text val)
+    (label :class "deck-sub" :text cap)))
+
+;; ---------------------------------------------------------------- cards
+(defwidget dcard_clock []
+  (deck_card :title "CLOCK" :glyph "󰥔" :tone "pink" :depth "near"
+    (box :orientation "h" :space-evenly false :spacing 7 :halign "start"
+      (label :class "deck-clock" :text "${TIME.hm}")
+      (label :class "deck-ampm" :valign "center" :text "${TIME.ampm}"))
+    (label :class "deck-sub" :halign "start" :text "${TIME.date}")))
+
+(defwidget dcard_weather []
+  (deck_card :title "WEATHER" :glyph "󰖐" :tone "cyan" :depth "far"
+    (label :class "deck-big deck-big-cyan" :halign "start" :text "${WEATHER.temp}")
+    (label :class "deck-sub" :halign "start" :text "${WEATHER.summary}")
+    (box :class "deck-rule" :height 1)
+    (box :orientation "h" :space-evenly false :spacing 8 :halign "start"
+      (label :class "deck-moon" :text "${MOON.glyph}")
+      (label :class "deck-sub" :text "${MOON.name} ${MOON.pct}%"))))
+
+(defwidget dcard_vitals []
+  (deck_card :title "VITALS" :glyph "󰍛" :tone "green" :depth "mid"
+    (box :orientation "h" :space-evenly false :spacing 18
+      (deck_stat :val "${SYSGRAPH.cpu.val}%"  :cap "CPU")
+      (deck_stat :val "${SYSGRAPH.mem.val}%"  :cap "RAM")
+      (deck_stat :val "${SYSGRAPH.temp.val}°" :cap "TEMP"))
+    (label :class "deck-spark" :halign "start" :text "${SYSGRAPH.cpu.spark}")))
+
+(defwidget dcard_media []
+  (deck_card :title "NOW PLAYING" :glyph "" :tone "pink" :depth "near"
+    (label :class "deck-track" :halign "start" :limit-width 26 :text "${PLAYER.title}")
+    (label :class "deck-sub" :halign "start" :limit-width 30 :text "${PLAYER.artist}")
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "deck-time" :text "${PLAYER.pos}")
+      (progress :class "deck-prog" :hexpand true :valign "center"
+                :value {PLAYER.progress} :orientation "h")
+      (label :class "deck-time" :text "${PLAYER.len}"))
+    (box :orientation "h" :space-evenly false :spacing 8 :halign "start"
+      (button :class "deck-btn deck-btn-sm" :onclick "playerctl previous &" :tooltip "Previous" "󰒮")
+      (button :class "deck-btn deck-btn-sm" :onclick "playerctl play-pause &" :tooltip "Play / pause" "${PLAYER.icon}")
+      (button :class "deck-btn deck-btn-sm" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))
+
+(defwidget dcard_network []
+  (deck_card :title "NETWORK" :glyph "" :tone "blue" :depth "mid"
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "deck-big deck-big-blue" :text "${NETGRAPH.ssid}")
+      (label :class "deck-netglyph" :text "${NETGRAPH.icon}"))
+    (label :class "deck-sub" :halign "start" :text "${BARTILES.ip}  gw ${BARTILES.gw}")
+    (box :class "deck-rule" :height 1)
+    (box :orientation "h" :space-evenly false :spacing 10
+      (label :class "deck-sub" :text "↑ ${NETGRAPH.up_fmt}")
+      (label :class "deck-sub" :text "↓ ${NETGRAPH.down_fmt}"))
+    (label :class "deck-spark deck-spark-blue" :halign "start" :text "${NETGRAPH.down_spark}")))
+
+(defwidget dcard_calendar []
+  (deck_card :title "CALENDAR" :glyph "󰃭" :tone "violet" :depth "far"
+    (label :class "deck-sub" :halign "start" :text "${CALENDAR.month}")
+    (label :class "deck-cal" :halign "start" :text "${CALENDAR.grid}")))
+
+(defwidget dcard_power []
+  (deck_card :title "POWER" :glyph "" :tone "gold" :depth "far"
+    (box :orientation "h" :space-evenly false :spacing 10
+      (label :class "deck-big deck-big-gold" :text "${BATTERY.capacity}%")
+      (label :class "deck-battglyph" :text "${BATTERY.icon}"))
+    (label :class "deck-sub" :halign "start" :text "${BATTERY.status}")
+    (box :class "deck-rule" :height 1)
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "deck-sub" :text "PROFILE")
+      (label :class "deck-sub deck-sub-hot" :text "${POWERPROF.label}"))))
+
+(defwidget dcard_updates []
+  (deck_card :title "SYSTEM" :glyph "" :tone "orange" :depth "mid"
+    (box :orientation "h" :space-evenly false :spacing 18
+      (deck_stat :val "${UPDATES.count}" :cap "UPDATES" :tone "orange")
+      (deck_stat :val "${BARTILES.disk}%" :cap "DISK" :tone "orange"))
+    (box :class "deck-rule" :height 1)
+    (label :class "deck-sub" :halign "start" :text "${BARTILES.pkgs} pkgs · up ${BARTILES.up}")
+    (label :class "deck-sub" :halign "start" :text "${BARTILES.host} · ${BARTILES.kern}")))
+
+(defwidget dcard_notifs []
+  (deck_card :title "ALERTS" :glyph "" :tone "pink" :depth "far"
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "deck-big deck-big-pink" :text "${NOTIFLIST.total}")
+      (label :class "deck-sub" :valign "center" :text "waiting"))
+    (box :class "deck-rule" :height 1)
+    ;; FIXED HEIGHT on purpose: an unbounded feed grows the whole deck
+    ;; surface, and eww sizes the window to its content - a busy day would
+    ;; push the top row back under bar-top. Scroll instead of grow.
+    (scroll :height 52 :vscroll true :hscroll false
+      (box :class "deck-feed" :orientation "v" :space-evenly false :spacing 3
+        (for it in {NOTIFLIST.items}
+          (label :class "deck-feed-line" :halign "start" :limit-width 30
+                 :text "▸ ${it.summary}"))))))
+
+(defwidget dcard_launch []
+  (deck_card :title "LAUNCH" :glyph "󰀻" :tone "violet" :depth "near"
+    (box :orientation "h" :space-evenly false :spacing 10
+      (button :class "deck-btn" :onclick "nyxus-start &" :tooltip "NYXUS Start" "󰣇")
+      (button :class "deck-btn" :onclick "alacritty &" :tooltip "Terminal" "")
+      (button :class "deck-btn" :onclick "firefox &" :tooltip "Browser" "")
+      (button :class "deck-btn" :onclick "thunar &" :tooltip "Files" "")
+      (button :class "deck-btn" :onclick "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py' &" :tooltip "Notepad" ""))))
+
+;; ---------------------------------------------------------------- deck
+(defwidget home_deck []
+  (box :class "deck-root" :orientation "v" :space-evenly false :spacing 0
+       :hexpand true :vexpand true
+    ;; brand sits top-centre, above the scatter
+    (label :class "deck-brand" :halign "center" :text "N Y X U S   ·   H O M E   S T A T I O N")
+    (vflex)
+    ;; The alien occupies x ~350-760 at full height, so the "inward" slots
+    ;; are the sky band (x ~800-1250) and the city band (x ~1250-1800).
+    ;; row 1 - clock near/left, weather far and pulled in off the corner
+    (box :orientation "h" :space-evenly false :valign "start"
+      (hshim :w 18) (dcard_clock) (hflex) (dcard_weather) (hshim :w 210))
+    (vflex)
+    ;; row 2 - media is the hero: near, big, dead centre of the sky band
+    (box :orientation "h" :space-evenly false :valign "start"
+      (hflex) (dcard_media) (hshim :w 430))
+    (vflex)
+    ;; row 3 - vitals left, network pulled inward from the right rail
+    (box :orientation "h" :space-evenly false :valign "start"
+      (hshim :w 34) (dcard_vitals) (hflex) (dcard_network) (hshim :w 150))
+    (vflex)
+    ;; row 4 - two FAR cards deep in the middle
+    (box :orientation "h" :space-evenly false :valign "start"
+      (hflex) (dcard_notifs) (hshim :w 250) (dcard_power) (hshim :w 300))
+    (vflex)
+    ;; row 5 - calendar far/left, launch near/centre, system mid inward.
+    ;; LAUNCH shares this row rather than owning a sixth one: the surface
+    ;; auto-sizes to content, and a 6th row pushed it past the 882px free
+    ;; area (bar-top 40 + bar-bottom 158), which is what parked it at y=-15.
+    (box :orientation "h" :space-evenly false :valign "end"
+      (hshim :w 96) (dcard_calendar) (hshim :w 120) (dcard_launch)
+      (hflex) (dcard_updates) (hshim :w 170))))
+
+(defwindow home-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-home-deck"
+  ;; HEIGHT MUST FIT THE FREE AREA. bar-top reserves 40px and bar-bottom
+  ;; 158px, leaving 882px of 1080. A "100%" (=1080px) surface does not
+  ;; shrink to fit - Hyprland centres it in the free area and parks it at
+  ;; y=-59, which silently ate the brand line and slid the top row under
+  ;; bar-top. A PERCENT height is not the free area either (eww resolved
+  ;; "80%" to 959px, still 77px too tall) - so this is pinned in pixels.
+  ;; (measured with `hyprctl layers -j`, 2026-07-27 - do not use 100%.)
+  :geometry (geometry :x "0" :y "0" :width "98%" :height "846px" :anchor "center")
+  (home_deck))
+
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
   :geometry (geometry :x "0" :y "8" :width "100%" :height "74px" :anchor "bottom center")

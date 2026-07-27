@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # NYXUS · EWW · weather (wttr.in JSON, single-line, 15-min cache)
+# Fahrenheit (owner request 2026-07-27) - temp_F straight from wttr.in.
 # Honours NYXUS_WEATHER_LOCATION from ~/.config/eww/nyxus.conf
 # (empty → wttr.in geo-IP guess).
 set -u
@@ -22,7 +23,7 @@ if $stale; then
   raw=$(curl -fsS --max-time 5 "$url" 2>/dev/null || echo "")
   if [[ -n "$raw" ]] && command -v jq >/dev/null 2>&1; then
     jq -c \
-      '{temp: ((.current_condition[0].temp_C // "—") + "°C"),
+      '{temp: ((.current_condition[0].temp_F // "—") + "°F"),
         summary: (.current_condition[0].weatherDesc[0].value // "—")}' \
       <<<"$raw" > "$CACHE" 2>/dev/null || true
   fi

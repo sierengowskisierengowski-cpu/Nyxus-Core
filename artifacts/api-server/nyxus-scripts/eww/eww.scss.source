@@ -4606,3 +4606,176 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   background-color: transparent; background-image: none; box-shadow: none;
 }
 
+
+/* -- HOME STATION DECK ----------------------------------------------
+   Desktop widgets pinned to the HOME workspace (see the home-deck window
+   in eww.yuck). Same obsidian-glass language as the bars so the station
+   reads as part of the build, not a bolted-on dashboard: dark glass over
+   the wallpaper, neon hairline rim, accent glow, graffiti display face on
+   the headings. Alphas stay above the layerrule ignore_alpha 0.2 threshold
+   so Hyprland's dual-kawase blur frosts the wallpaper behind each card.
+
+   ELLIPSIZE GOTCHA (fixed 2026-07-27): .deck-card-title used to carry
+   letter-spacing, which Pango does NOT add to a label's natural width
+   request - the label asks for the unspaced width, renders wider, and GTK
+   ellipsizes it ("CLOC..."). Lowering the value did not help; the tracked
+   look is now baked into the title STRINGS instead. Do not reintroduce
+   letter-spacing on any label that is not free to take its full width. */
+/* bar-top is 36px at y=4 and bar-bottom renders ~150px tall; the deck is a
+   full-size surface, so pad it in rather than letting a row slide under a bar. */
+.deck-root { background-color: transparent; padding: 6px 16px 10px 16px; }
+.deck-brand {
+  font-family: "Permanent Marker", "Inter Display", sans-serif;
+  font-size: 19px;
+  /* No top margin: the surface is auto-sized to content and centred in the
+     free area between the bars, so once the content FITS (<=882px) the brand
+     already lands well below bar-top. Margin here just regrows the surface. */
+  margin-bottom: 10px;
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba(255,45,173,0.85), 0 0 34px rgba(125,61,255,0.55);
+}
+.deck-card {
+  min-width: 210px;
+  padding: 13px 17px 15px 17px;
+  border-radius: 18px;
+  background-color: rgba(9, 3, 20, 0.62);
+  background-image: linear-gradient(150deg,
+    rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 34%,
+    rgba(0,0,0,0.26) 100%);
+  border: 1px solid rgba(125, 61, 255, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -6px 16px rgba(0,0,0,0.42),
+    0 0 22px rgba(125, 61, 255, 0.26),
+    0 0 52px rgba(255, 45, 173, 0.12);
+}
+/* per-card accent: rim + outer glow pick up the card's own hue so the
+   scatter reads as a set of separate objects, not one repeated tile */
+.deck-card-pink   { border-color: rgba(255,45,173,0.50);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -6px 16px rgba(0,0,0,0.42),
+              0 0 22px rgba(255,45,173,0.30), 0 0 54px rgba(255,45,173,0.13); }
+.deck-card-cyan   { border-color: rgba(77,238,255,0.46);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -6px 16px rgba(0,0,0,0.42),
+              0 0 22px rgba(77,238,255,0.26), 0 0 54px rgba(77,238,255,0.12); }
+.deck-card-green  { border-color: rgba(141,255,106,0.42);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -6px 16px rgba(0,0,0,0.42),
+              0 0 22px rgba(141,255,106,0.24), 0 0 54px rgba(141,255,106,0.10); }
+.deck-card-blue   { border-color: rgba(96,150,255,0.46);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -6px 16px rgba(0,0,0,0.42),
+              0 0 22px rgba(96,150,255,0.26), 0 0 54px rgba(96,150,255,0.12); }
+.deck-card-gold   { border-color: rgba(255,196,74,0.46);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -6px 16px rgba(0,0,0,0.42),
+              0 0 22px rgba(255,196,74,0.26), 0 0 54px rgba(255,196,74,0.12); }
+.deck-card-orange { border-color: rgba(255,138,58,0.46);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -6px 16px rgba(0,0,0,0.42),
+              0 0 22px rgba(255,138,58,0.26), 0 0 54px rgba(255,138,58,0.12); }
+
+.deck-card-glyph { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 15px;
+                   color: #ff2dad; text-shadow: 0 0 10px rgba(255,45,173,0.85); }
+.deck-card-title { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                   font-weight: 800;
+                   color: rgba(214,158,255,0.92);
+                   text-shadow: 0 0 9px rgba(125,61,255,0.6); }
+/* hairline divider inside a card */
+.deck-rule { background-color: rgba(125,61,255,0.30); min-height: 1px; margin: 3px 0 3px 0; }
+
+.deck-clock { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 40px;
+              font-weight: 800; color: #ffffff;
+              text-shadow: 0 0 16px rgba(255,45,173,0.75), 0 0 38px rgba(125,61,255,0.45); }
+.deck-ampm  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 13px;
+              font-weight: 800; color: rgba(255,45,173,0.95);
+              text-shadow: 0 0 10px rgba(255,45,173,0.7); }
+.deck-big   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 22px;
+              font-weight: 800; color: #8dff6a;
+              text-shadow: 0 0 12px rgba(141,255,106,0.75); }
+.deck-big-green  { color: #8dff6a; text-shadow: 0 0 12px rgba(141,255,106,0.75); }
+.deck-big-cyan   { color: #4deeff; text-shadow: 0 0 12px rgba(77,238,255,0.75); }
+.deck-big-pink   { color: #ff2dad; text-shadow: 0 0 12px rgba(255,45,173,0.75); }
+.deck-big-blue   { color: #6096ff; text-shadow: 0 0 12px rgba(96,150,255,0.75); }
+.deck-big-gold   { color: #ffc44a; text-shadow: 0 0 12px rgba(255,196,74,0.75); }
+.deck-big-orange { color: #ff8a3a; text-shadow: 0 0 12px rgba(255,138,58,0.75); }
+
+.deck-sub   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+              color: rgba(255,255,255,0.62); }
+.deck-sub-hot { color: rgba(255,196,74,0.95); text-shadow: 0 0 8px rgba(255,196,74,0.55); }
+.deck-cal   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 11px;
+              color: rgba(255,255,255,0.80); }
+.deck-spark { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 12px;
+              color: rgba(141,255,106,0.80); text-shadow: 0 0 8px rgba(141,255,106,0.5); }
+.deck-spark-blue { color: rgba(96,150,255,0.85); text-shadow: 0 0 8px rgba(96,150,255,0.5); }
+.deck-moon  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 15px;
+              color: rgba(226,214,255,0.95); text-shadow: 0 0 10px rgba(180,150,255,0.7); }
+.deck-netglyph  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 15px;
+                  color: rgba(96,150,255,0.95); text-shadow: 0 0 10px rgba(96,150,255,0.7); }
+.deck-battglyph { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 15px;
+                  color: rgba(255,196,74,0.95); text-shadow: 0 0 10px rgba(255,196,74,0.7); }
+
+/* now-playing */
+.deck-track { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 13px;
+              font-weight: 800; color: #ffffff;
+              text-shadow: 0 0 10px rgba(255,45,173,0.55); }
+.deck-time  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+              color: rgba(255,255,255,0.55); }
+.deck-prog trough {
+  min-height: 4px; min-width: 110px; border-radius: 4px;
+  background-color: rgba(255,255,255,0.10);
+}
+.deck-prog progress {
+  min-height: 4px; border-radius: 4px;
+  background-image: linear-gradient(90deg, #7d3dff 0%, #ff2dad 100%);
+  box-shadow: 0 0 10px rgba(255,45,173,0.65);
+}
+
+/* alert feed */
+.deck-feed-line { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 10px;
+                  color: rgba(255,255,255,0.66); }
+
+.deck-btn {
+  min-width: 42px; min-height: 40px;
+  border-radius: 12px;
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 19px;
+  color: #ffffff;
+  background-color: rgba(18, 7, 34, 0.66);
+  border: 1px solid rgba(255, 45, 173, 0.46);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 12px rgba(255,45,173,0.26);
+  text-shadow: 0 0 9px rgba(255,45,173,0.7);
+  transition: all 170ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+.deck-btn-sm { min-width: 32px; min-height: 28px; font-size: 14px; border-radius: 9px; }
+.deck-btn:hover {
+  background-color: rgba(38, 14, 68, 0.80);
+  border-color: rgba(255, 45, 173, 1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 0 26px rgba(255,45,173,0.8),
+              0 0 54px rgba(125,61,255,0.4);
+}
+
+/* -- DEPTH TIERS ------------------------------------------------------
+   The owner asked for cards that read as "some close, some further away".
+   GTK3 CSS has no transform:scale, so distance is faked the way a painter
+   does it: NEAR cards are bigger, brighter and glow harder; FAR cards are
+   smaller, dimmer and sit back into the wallpaper. Sizes are driven by
+   descendant selectors off the tier class on .deck-card. */
+.deck-near { min-width: 252px; padding: 17px 22px 19px 22px; opacity: 1; }
+.deck-mid  { min-width: 206px; padding: 13px 17px 15px 17px; opacity: 0.96; }
+.deck-far  { min-width: 158px; padding: 9px 13px 11px 13px;  opacity: 0.80; }
+
+.deck-near .deck-clock { font-size: 46px; }
+.deck-near .deck-big   { font-size: 25px; }
+.deck-near .deck-sub, .deck-near .deck-card-title { font-size: 11px; }
+.deck-near .deck-card-glyph { font-size: 17px; }
+.deck-near .deck-btn { min-width: 46px; min-height: 44px; font-size: 21px; }
+
+.deck-mid .deck-big  { font-size: 21px; }
+.deck-mid .deck-sub, .deck-mid .deck-card-title { font-size: 10px; }
+
+.deck-far .deck-big   { font-size: 16px; }
+.deck-far .deck-clock { font-size: 30px; }
+.deck-far .deck-sub, .deck-far .deck-card-title,
+.deck-far .deck-cal, .deck-far .deck-feed-line { font-size: 9px; }
+.deck-far .deck-card-glyph { font-size: 12px; }
+.deck-far .deck-moon, .deck-far .deck-netglyph, .deck-far .deck-battglyph { font-size: 12px; }
+/* far cards sit back: softer rim, less bloom */
+.deck-far { border-color: rgba(125,61,255,0.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), inset 0 -5px 13px rgba(0,0,0,0.36),
+              0 0 13px rgba(125,61,255,0.16); }
+
