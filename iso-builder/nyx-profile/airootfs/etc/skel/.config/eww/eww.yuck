@@ -1261,7 +1261,7 @@
 (defwidget deck_card [title ?glyph ?tone ?depth]
   ;; Bass-reactive rim so the deck breathes with the music like the rest of
   ;; the rig (boombox / reflex layer). Inline because CAVA_BASS interpolates.
-  (box :class "deck-card deck-card-${tone ?: 'violet'} deck-${depth ?: 'mid'}" :orientation "v"
+  (box :class "nyx-surface deck-card deck-card-${tone ?: 'violet'} deck-${depth ?: 'mid'}" :orientation "v"
        :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${18 + CAVA_BASS / 3}px rgba(125, 61, 255, ${0.20 + CAVA_BASS / 330}), 0 0 ${44 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 520});"
        :space-evenly false :spacing 8 :valign "start" :hexpand false :vexpand false
     (box :class "deck-card-head" :orientation "h" :space-evenly false :spacing 8
@@ -1457,7 +1457,7 @@
   ;; Bass-reactive rim, same formula the boombox uses (CAVA_BASS 0-100).
   ;; Applied INLINE because the CSS compile strips background-size and the
   ;; scalar has to interpolate per frame anyway.
-  (box :class "start-root" :orientation "v" :space-evenly false :spacing 12
+  (box :class "nyx-surface start-root" :orientation "v" :space-evenly false :spacing 12
        :style "border-color: rgba(255, 45, 173, ${0.30 + CAVA_BASS / 260}); box-shadow: 0 0 ${30 + CAVA_BASS / 2}px rgba(125, 61, 255, ${0.22 + CAVA_BASS / 380}), 0 0 ${70 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 500});"
     ;; ---- header ------------------------------------------------------
     (box :class "start-head" :orientation "h" :space-evenly false :spacing 18
