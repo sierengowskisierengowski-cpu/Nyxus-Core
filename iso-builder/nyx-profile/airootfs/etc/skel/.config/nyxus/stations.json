@@ -92,6 +92,15 @@
       "tagline": "Guardian · EDR · Watch",
       "wallpaper": "nyxus-graffiti-16.png",
       "launch": "nyxus-webapp bifrost"
+    },
+    {
+      "id": 10,
+      "name": "ARSENAL",
+      "code": "AR",
+      "hue": "cyan",
+      "tagline": "Consoles · RedForge · CIPHER · GSL · Trainer",
+      "wallpaper": "nyxus-urban-alien.png",
+      "launch": "nyxus-consoles"
     }
   ]
 }

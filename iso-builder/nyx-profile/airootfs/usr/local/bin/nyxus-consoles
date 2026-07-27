@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Open all four GowskiNet security consoles on the GHOST station as a 2x2.
+#
+# The apps are Tauri shells over local servers; the servers are systemd user
+# units, so this makes sure those are up first - otherwise a console opens on
+# a dead port and shows a blank window.
+set -u
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+
+units=(gowskinet-redforge gowskinet-cipher gowskinet-trainer gowskinet-gsl)
+for u in "${units[@]}"; do
+  systemctl --user is-active --quiet "$u" || systemctl --user start "$u" 2>/dev/null
+done
+
+# wait for the ports so the windows do not race the servers
+for p in 5000 8080 20508 19670; do
+  for _ in $(seq 1 30); do
+    curl -fsS -o /dev/null --max-time 1 "http://127.0.0.1:$p/" 2>/dev/null && break
+    sleep 1
+  done
+done
+
+hyprctl dispatch workspace 10 >/dev/null 2>&1
+for app in redforge cipher gsl nyxus-trainer; do
+  pgrep -x "$app" >/dev/null 2>&1 || setsid "$app" >/dev/null 2>&1 </dev/null &
+  sleep 1.2
+done

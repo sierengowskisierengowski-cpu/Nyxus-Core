@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Axiom desktop launcher.
+#
+# Axiom is an ELECTRON app (its own artifacts/desktop workspace), unlike the
+# GowskiNet security consoles which are Tauri shells over a local server. It
+# is launched from the workspace rather than a packaged AppImage: electron
+# lives in the pnpm store, and electron-builder packaging is a separate step.
+#
+# NOTE: the project's root `preinstall` guard rejects pnpm's own internal
+# invocation (npm_config_user_agent is not propagated), so `pnpm run` cannot
+# build or start this - call electron directly.
+set -euo pipefail
+APP="$HOME/Projects/axiom/artifacts/desktop"
+ELECTRON=""
+[ -x "$ELECTRON" ] || { echo "electron missing - run: cd ~/Projects/axiom && pnpm rebuild electron" >&2; exit 1; }
+exec "$ELECTRON" "$APP" "$@"

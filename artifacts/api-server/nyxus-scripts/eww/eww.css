@@ -6762,3 +6762,36 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 .gh-root .deck-brand { margin-bottom: 8px; }
 .fg-repo .fg-name   { font-size: 12px; }
 .fg-repo .fg-branch { font-size: 9px; }
+
+/* == LAB station ====================================================== */
+.lab-vm { padding: 12px 15px 13px 15px; }
+.lab-vm-on  { border-color: rgba(141,255,106,0.42); }
+.lab-vm-off { border-color: rgba(125,61,255,0.26); }
+.lab-vm-bad { border-color: rgba(255,77,106,0.42); }
+.lab-dot { font-size: 11px; }
+.lab-vm-on  .lab-dot { color: #8dff6a; text-shadow: 0 0 9px rgba(141,255,106,0.9); }
+.lab-vm-off .lab-dot { color: rgba(255,255,255,0.26); }
+.lab-vm-bad .lab-dot { color: #ff4d6a; text-shadow: 0 0 9px rgba(255,77,106,0.9); }
+.lab-name  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 13px;
+             font-weight: 800; color: #ffffff; }
+.lab-role  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+             font-weight: 800; color: rgba(214,158,255,0.8); }
+.lab-note  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+             color: rgba(255,255,255,0.46); }
+.lab-meta  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+             color: rgba(255,255,255,0.40); }
+.lab-state { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+             color: rgba(255,255,255,0.62); }
+.lab-btn {
+  font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+  color: rgba(255,255,255,0.82);
+  padding: 6px 11px; border-radius: 8px;
+  background-color: rgba(18,7,34,0.60);
+  border: 1px solid rgba(125,61,255,0.30);
+  transition: all 150ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+.lab-btn:hover { border-color: rgba(255,45,173,0.95); color: #ffffff;
+                 box-shadow: 0 0 16px rgba(255,45,173,0.55); }
+.lab-btn-go { border-color: rgba(141,255,106,0.44); color: #8dff6a; }
+.lab-btn-go:hover { border-color: rgba(141,255,106,1); color: #ffffff;
+                    box-shadow: 0 0 18px rgba(141,255,106,0.6); }

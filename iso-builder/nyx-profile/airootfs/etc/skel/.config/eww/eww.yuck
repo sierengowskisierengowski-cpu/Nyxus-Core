@@ -116,6 +116,8 @@
                                    "python3 ~/.config/eww/scripts/start-feed.py meta")
 (defvar STARTQ "")
 (defvar STARTFOUND '{"rows":[],"n":0}')
+(defpoll LAB_ :interval "8s" :initial '{"vms":[],"vms_up":0,"attack":{"up":false,"h1":0,"total":0,"ips":0,"rows":[],"quiet":true},"net":{"iface":"none","ip":"-","up":false}}'
+                              "python3 ~/.config/eww/scripts/lab-feed.py")
 (defpoll FORGE_ :interval "30s" :initial '{"repos":[],"total":0,"dirty":0,"dirty_rows":[],"unpushed":0,"unpushed_rows":[],"prs":[]}'
                                 "python3 ~/.config/eww/scripts/forge-feed.py")
 (defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0},"hive":{"up":false,"total":0,"ips":0,"pots":0,"h1":0,"countries":0,"rows":[],"quiet":true}}'
@@ -477,8 +479,8 @@
   (box :class "ws-rail ws-rail-float" :orientation "v" :space-evenly false :spacing 10 :valign "center" :halign "center"
     (workspace_home_pill)
     (workspace_start_pill)
-    ;; numbered stations 1-9 only (station 10 dropped 2026-07-27 to make room
-    ;; for the two word pills without lengthening the rail)
+    ;; numbered stations 1-10. Station 10 came back as ARSENAL (the four
+    ;; security consoles) after briefly being dropped.
     (for st in {WORKSPACES.stations}
       (station_pill :st st))))
 
@@ -1969,6 +1971,115 @@
   ;; must fit the 882px free area - verify with `hyprctl layers -j`
   :geometry (geometry :x "0" :y "0" :width "1560px" :height "740px" :anchor "center")
   (forge_deck))
+
+;; == LAB STATION DECK =================================================
+;; Home lab: the VirtualBox guests, the live attacker view off the
+;; honeypots, and the tools for working them - all in one place so opening
+;; the station gives you the whole lab.
+;;
+;; The attacker feed comes from the SAME HoneyHive API the GHOST deck uses
+;; (one source, not a second scraper). lab-attacker is the box you drive;
+;; the bifrost-* guests are what it hits.
+
+(defwidget lab_vm [v]
+  (box :class "nyxus-surface lab-vm ${v.on ? 'lab-vm-on' : (v.aborted ? 'lab-vm-bad' : 'lab-vm-off')}"
+       :orientation "v" :space-evenly false :spacing 6
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "lab-dot" :text "●")
+      (label :class "lab-name" :halign "start" :hexpand true :text {v.name})
+      (label :class "lab-role" :text {v.role}))
+    (label :class "lab-note" :halign "start" :text {v.note})
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "lab-meta" :hexpand true :halign "start"
+             :text "${v.os}  ·  ${v.mem}  ·  ${v.net}${v.snaps > 0 ? '  ·  ' + v.snaps + ' snap' : ''}")
+      (label :class "lab-state" :text {v.state}))
+    (box :orientation "h" :space-evenly false :spacing 7
+      (button :class "lab-btn lab-btn-go" :visible {!v.on}
+              :tooltip "Boot ${v.name} with a console window"
+              :onclick "VBoxManage startvm ${v.name} --type gui &" "start")
+      (button :class "lab-btn" :visible {v.on}
+              :tooltip "Send ACPI shutdown to ${v.name}"
+              :onclick "VBoxManage controlvm ${v.name} acpipowerbutton &" "shut down")
+      (button :class "lab-btn" :visible {v.on}
+              :tooltip "Save state and stop"
+              :onclick "VBoxManage controlvm ${v.name} savestate &" "save")
+      (button :class "lab-btn" :visible {v.aborted}
+              :tooltip "Clear the aborted state"
+              :onclick "VBoxManage discardstate ${v.name} &" "reset")
+      (button :class "lab-btn" :tooltip "Snapshots for ${v.name}"
+              :onclick "kitty --title ${v.name} -e sh -c 'VBoxManage snapshot ${v.name} list; echo; read _' &" "snaps"))))
+
+(defwidget lab_deck []
+  (box :class "gh-root" :orientation "v" :space-evenly false :spacing 14
+    (label :class "deck-brand" :halign "center"
+           :text "L A B   ·   H O M E   L A B   S T A T I O N")
+
+    (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+      ;; ---- the guests ---------------------------------------------
+      (box :orientation "v" :space-evenly false :spacing 10 :hexpand true
+        (box :orientation "h" :space-evenly false
+          (label :class "start-sec" :halign "start" :hexpand true :text "VIRTUAL MACHINES")
+          (label :class "start-sec-hint" :halign "end" :text "${LAB_.vms_up} running"))
+        (box :orientation "v" :space-evenly false :spacing 10
+          (for v in {LAB_.vms} (lab_vm :v v)))
+        (ghost_card :title "LAB NETWORK" :glyph "" :tone "blue"
+                    :hint {LAB_.net.up ? "up" : "down"}
+          (box :orientation "h" :space-evenly false :spacing 10
+            (label :class "gh-big gh-big-${LAB_.net.up ? 'ok' : 'warn'}" :text {LAB_.net.iface})
+            (box :orientation "v" :space-evenly false :valign "center" :hexpand true
+              (label :class "deck-sub" :halign "start" :text {LAB_.net.ip})
+              (label :class "start-search-kbd" :halign "start"
+                     :text {LAB_.net.up ? "host-only . guests reachable" : "host-only . bring it up to reach guests"})))))
+
+      ;; ---- live attackers -----------------------------------------
+      (box :orientation "v" :space-evenly false :spacing 10 :style "min-width: 470px;"
+        (ghost_card :title "LIVE ATTACKERS" :glyph "" :tone "pink" :fill true
+                    :hint {LAB_.attack.up ? "honeyhive . click for map" : "hive down"}
+          (box :orientation "h" :space-evenly true :spacing 8
+            (ghost_stat :val "${LAB_.attack.h1}" :cap "hits 1h"
+                        :tone {LAB_.attack.h1 > 0 ? "hot" : "ok"}
+                        :tip "open the HoneyHive map"
+                        :cmd "xdg-open http://localhost:8888 &")
+            (ghost_stat :val "${LAB_.attack.ips}" :cap "src ips" :tone "warn"
+                        :tip "open the HoneyHive map"
+                        :cmd "xdg-open http://localhost:8888 &")
+            (ghost_stat :val "${LAB_.attack.total}" :cap "total" :tone "ok"
+                        :tip "open the HoneyHive map"
+                        :cmd "xdg-open http://localhost:8888 &"))
+          (box :class "deck-rule" :height 1)
+          (label :class "start-scratch-empty" :halign "start"
+                 :visible {LAB_.attack.quiet} :text "no events recorded yet")
+          (scroll :class "start-scroll" :vscroll true :hscroll false :vexpand true
+            (box :orientation "v" :space-evenly false :spacing 4 :valign "start"
+              (for a in {LAB_.attack.rows}
+                (button :class "gh-hive" :tooltip "${a.pot} . ${a.kind}"
+                        :onclick "xdg-open http://localhost:8888 &"
+                  (box :orientation "h" :space-evenly false :spacing 8
+                    (label :class "gh-hive-ip" :halign "start" :hexpand true :text {a.ip})
+                    (label :class "gh-hive-meta" :text "${a.proto}:${a.port}")
+                    (label :class "gh-hive-pot" :text {a.pot})))))))))
+
+    ;; ---- lab tools ---------------------------------------------------
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph ""   :tip "VirtualBox manager" :cmd "virtualbox &" :tone "blue")
+      (start_action :glyph ""  :tip "Arsenal hub"
+                    :cmd "kitty --title Arsenal -e arsenal &" :tone "cyan")
+      (start_action :glyph "" :tip "Grafana" :cmd "xdg-open http://localhost:3000 &" :tone "gold")
+      (start_action :glyph "" :tip "HoneyHive map" :cmd "xdg-open http://localhost:8888 &" :tone "pink")
+      (start_action :glyph ""   :tip "Watch lab traffic on vboxnet0"
+                    :cmd "kitty --title lab-traffic -e sh -c 'sudo tcpdump -ni ${LAB_.net.iface} -q; read _' &" :tone "violet")
+      (start_action :glyph ""   :tip "Honeypot compose status"
+                    :cmd "kitty --title Honeypot -e sh -c 'cd ~/Projects/honeypot && docker compose ps; echo; exec bash' &" :tone "gold")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center"
+             :text "LAB     lab-attacker is the box you drive     refreshed every 8s"))))
+
+(defwindow lab-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-lab-deck"
+  ;; must fit the 882px free area - verify with `hyprctl layers -j`
+  :geometry (geometry :x "0" :y "0" :width "1640px" :height "760px" :anchor "center")
+  (lab_deck))
 
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
