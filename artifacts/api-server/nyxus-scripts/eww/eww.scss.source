@@ -4610,7 +4610,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 /* == NYX SURFACE =====================================================
    The one glass language every station surface shares: HOME deck cards and
    the START panel were carrying byte-identical background/gradient/rim
-   declarations. Adding a station now means adding `nyx-surface` to its
+   declarations. Adding a station now means adding `nyxus-surface` to its
    class list, not copying twelve lines.
 
    SCOPE IS DELIBERATE - background, gradient, rim and radius ONLY.
@@ -4622,7 +4622,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
    Placed BEFORE the deck/start blocks on purpose: those follow in source
    order and must stay free to override (the depth tiers and per-card accent
    hues are later rules and would otherwise be flattened by this base). */
-.nyx-surface {
+.nyxus-surface {
   background-color: rgba(9, 3, 20, 0.44);
   background-image: linear-gradient(150deg,
     rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 34%,
@@ -4658,7 +4658,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   color: #ffffff;
   text-shadow: 0 0 14px rgba(255,45,173,0.85), 0 0 34px rgba(125,61,255,0.55);
 }
-/* background / gradient / rim / radius now come from .nyx-surface, which
+/* background / gradient / rim / radius now come from .nyxus-surface, which
    every deck card carries. Only what is genuinely card-specific lives here.
    (.start-root deliberately KEEPS its own alpha + 22px radius: a full-screen
    panel wants a heavier, softer body than a small floating card.) */
@@ -5134,7 +5134,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 }
 
 /* == GHOST station ====================================================
-   Deliberately thin: the cards are .nyx-surface + .deck-card, so GHOST
+   Deliberately thin: the cards are .nyxus-surface + .deck-card, so GHOST
    only adds what is genuinely its own. This is the shared-surface refactor
    paying off - a whole new station for ~30 lines of CSS. */
 .gh-root { background-color: transparent; padding: 6px 14px 10px 14px; }
@@ -5218,3 +5218,35 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
                 color: rgba(255,255,255,0.34); }
 .gh-root .deck-brand { margin-bottom: 0; font-size: 17px; }
 .gh-root { padding: 2px 14px 6px 14px; }
+
+/* == FORGE station ==================================================== */
+.fg-repo { padding: 7px 11px; border-radius: 9px;
+           background-color: rgba(18,7,34,0.44);
+           border: 1px solid rgba(125,61,255,0.20); }
+.fg-repo:hover { border-color: rgba(255,45,173,0.85); background-color: rgba(44,16,78,0.82);
+                 box-shadow: 0 0 16px rgba(255,45,173,0.42); }
+.fg-repo-dirty { border-color: rgba(255,196,74,0.34); }
+.fg-repo-clean { border-color: rgba(141,255,106,0.22); }
+.fg-name   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 11px;
+             font-weight: 800; color: rgba(255,255,255,0.88); }
+.fg-branch { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+             color: rgba(214,158,255,0.72); }
+.fg-when   { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 8px;
+             color: rgba(255,255,255,0.34); }
+.fg-dirty  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+             color: #ffc44a; text-shadow: 0 0 8px rgba(255,196,74,0.6); }
+.fg-ahead  { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 9px;
+             color: #4deeff; text-shadow: 0 0 8px rgba(77,238,255,0.6); }
+.fg-mini { padding: 5px 9px; border-radius: 7px;
+           background-color: rgba(18,7,34,0.40);
+           border: 1px solid rgba(125,61,255,0.16); }
+.fg-mini:hover { border-color: rgba(255,196,74,0.85); background-color: rgba(44,16,78,0.8);
+                 box-shadow: 0 0 14px rgba(255,196,74,0.4); }
+
+/* FORGE breathing room: the rows and their two text lines were reading as
+   one block. Taller rows, looser internals, more air under the brand. */
+.fg-repo { padding: 11px 14px; }
+.fg-mini { padding: 8px 11px; }
+.gh-root .deck-brand { margin-bottom: 8px; }
+.fg-repo .fg-name   { font-size: 12px; }
+.fg-repo .fg-branch { font-size: 9px; }

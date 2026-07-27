@@ -6,6 +6,7 @@
 #   HOME  -> home-deck    (scattered desktop widgets)
 #   START -> start-panel  (the big Start panel that replaced the GTK app)
 #   GHOST -> ghost-deck   (security console: defence, honeypots, exposure)
+#   FORGE -> forge-deck   (build station: repo state, dirty/unpushed, PRs)
 #
 # eww windows are layer-shell surfaces: they are bound to a MONITOR, not a
 # workspace, so they cannot hide themselves. This follows Hyprland's socket2
@@ -36,6 +37,7 @@ fi
 HOME_STATION="${NYXUS_HOME_STATION:-HOME}"
 START_STATION="${NYXUS_START_STATION:-START}"
 GHOST_STATION="${NYXUS_GHOST_STATION:-GHOST}"
+FORGE_STATION="${NYXUS_FORGE_STATION:-FORGE}"
 
 _sync() {
   local ws
@@ -46,19 +48,28 @@ _sync() {
   if [[ "$ws" == "$HOME_STATION" ]]; then
     eww close start-panel >/dev/null 2>&1
     eww close ghost-deck  >/dev/null 2>&1
+    eww close forge-deck  >/dev/null 2>&1
     eww open  home-deck   >/dev/null 2>&1
   elif [[ "$ws" == "$START_STATION" ]]; then
     eww close home-deck   >/dev/null 2>&1
     eww close ghost-deck  >/dev/null 2>&1
+    eww close forge-deck  >/dev/null 2>&1
     eww open  start-panel >/dev/null 2>&1
   elif [[ "$ws" == "$GHOST_STATION" ]]; then
     eww close home-deck   >/dev/null 2>&1
     eww close start-panel >/dev/null 2>&1
+    eww close forge-deck  >/dev/null 2>&1
     eww open  ghost-deck  >/dev/null 2>&1
+  elif [[ "$ws" == "$FORGE_STATION" ]]; then
+    eww close home-deck   >/dev/null 2>&1
+    eww close start-panel >/dev/null 2>&1
+    eww close ghost-deck  >/dev/null 2>&1
+    eww open  forge-deck  >/dev/null 2>&1
   else
     eww close home-deck   >/dev/null 2>&1
     eww close start-panel >/dev/null 2>&1
     eww close ghost-deck  >/dev/null 2>&1
+    eww close forge-deck  >/dev/null 2>&1
   fi
   # the search overlay holds EXCLUSIVE keyboard - never leave it mapped once
   # the owner has navigated away from START
@@ -73,6 +84,7 @@ _sync() {
   [[ "$ws" == "$HOME_STATION"  ]] && want="home-deck"
   [[ "$ws" == "$START_STATION" ]] && want="start-panel"
   [[ "$ws" == "$GHOST_STATION" ]] && want="ghost-deck"
+  [[ "$ws" == "$FORGE_STATION" ]] && want="forge-deck"
   if [[ -n "$want" ]]; then
     if ! eww active-windows 2>/dev/null | grep -q "^${want}:"; then
       sleep 1

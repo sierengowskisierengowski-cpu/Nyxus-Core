@@ -116,6 +116,8 @@
                                    "python3 ~/.config/eww/scripts/start-feed.py meta")
 (defvar STARTQ "")
 (defvar STARTFOUND '{"rows":[],"n":0}')
+(defpoll FORGE_ :interval "30s" :initial '{"repos":[],"total":0,"dirty":0,"dirty_rows":[],"unpushed":0,"unpushed_rows":[],"prs":[]}'
+                                "python3 ~/.config/eww/scripts/forge-feed.py")
 (defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0},"hive":{"up":false,"total":0,"ips":0,"pots":0,"h1":0,"countries":0,"rows":[],"quiet":true}}'
                                 "python3 ~/.config/eww/scripts/ghost-feed.py")
 (defpoll STARTARS :interval "12s" :initial '{"groups":[],"live":0,"total":0}'
@@ -1263,7 +1265,7 @@
 (defwidget deck_card [title ?glyph ?tone ?depth]
   ;; Bass-reactive rim so the deck breathes with the music like the rest of
   ;; the rig (boombox / reflex layer). Inline because CAVA_BASS interpolates.
-  (box :class "nyx-surface deck-card deck-card-${tone ?: 'violet'} deck-${depth ?: 'mid'}" :orientation "v"
+  (box :class "nyxus-surface deck-card deck-card-${tone ?: 'violet'} deck-${depth ?: 'mid'}" :orientation "v"
        :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${18 + CAVA_BASS / 3}px rgba(125, 61, 255, ${0.20 + CAVA_BASS / 330}), 0 0 ${44 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 520});"
        :space-evenly false :spacing 8 :valign "start" :hexpand false :vexpand false
     (box :class "deck-card-head" :orientation "h" :space-evenly false :spacing 8
@@ -1459,7 +1461,7 @@
   ;; Bass-reactive rim, same formula the boombox uses (CAVA_BASS 0-100).
   ;; Applied INLINE because the CSS compile strips background-size and the
   ;; scalar has to interpolate per frame anyway.
-  (box :class "nyx-surface start-root" :orientation "v" :space-evenly false :spacing 12
+  (box :class "nyxus-surface start-root" :orientation "v" :space-evenly false :spacing 12
        :style "border-color: rgba(255, 45, 173, ${0.30 + CAVA_BASS / 260}); box-shadow: 0 0 ${30 + CAVA_BASS / 2}px rgba(125, 61, 255, ${0.22 + CAVA_BASS / 380}), 0 0 ${70 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 500});"
     ;; ---- header ------------------------------------------------------
     (box :class "start-head" :orientation "h" :space-evenly false :spacing 18
@@ -1651,7 +1653,7 @@
   (start_panel))
 
 ;; == GHOST STATION DECK ===============================================
-;; Security . Intel . Recon. Built entirely on the shared .nyx-surface
+;; Security . Intel . Recon. Built entirely on the shared .nyxus-surface
 ;; language - a whole station for ~30 lines of its own CSS, which was the
 ;; point of that refactor.
 ;;
@@ -1666,7 +1668,7 @@
 (defwidget ghost_card [title ?glyph ?tone ?hint ?fill]
   ;; `fill` lets a card take the height it is given instead of hugging its
   ;; content - without it a scroll inside collapses to a single row.
-  (box :class "nyx-surface deck-card deck-card-${tone ?: 'green'} deck-mid"
+  (box :class "nyxus-surface deck-card deck-card-${tone ?: 'green'} deck-mid"
        :orientation "v" :space-evenly false :spacing 7
        :valign {fill ? "fill" : "start"} :vexpand {fill ?: false} :hexpand true
        :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${16 + CAVA_BASS / 3}px rgba(125, 61, 255, ${0.18 + CAVA_BASS / 340});"
@@ -1872,6 +1874,101 @@
   ;; `hyprctl layers -j`, never by eye (see the home-deck y=-59 note)
   :geometry (geometry :x "0" :y "0" :width "1780px" :height "770px" :anchor "center")
   (ghost_deck))
+
+;; == FORGE STATION DECK ===============================================
+;; Build . Code . Ship. Fourth station, same shared .nyxus-surface language.
+;;
+;; Repo state across ~/Projects. `git status` over ~20 repos is far too slow
+;; for a poll, so forge-feed.py CACHES for 60s (cold 1.2s -> warm 0.03s) -
+;; the same lesson the START app catalogue taught when it froze the search
+;; box by rescanning on every keystroke.
+;;
+;; Every row opens that repo: click = editor, right-click = terminal there.
+
+(defwidget forge_repo [r]
+  (eventbox :class "fg-repo-box"
+    (button :class "fg-repo ${r.clean ? 'fg-repo-clean' : 'fg-repo-dirty'}"
+            :onclick "cursor ${r.path} &"
+            :tooltip "${r.subject}  .  click: editor"
+      (box :orientation "v" :space-evenly false :spacing 6
+        (box :orientation "h" :space-evenly false :spacing 8
+          (label :class "fg-name" :halign "start" :hexpand true :text {r.name})
+          (label :class "fg-dirty" :visible {r.dirty > 0} :text "${r.dirty}")
+          (label :class "fg-ahead" :visible {r.ahead > 0} :text "${r.ahead}↑"))
+        (box :orientation "h" :space-evenly false :spacing 8
+          (label :class "fg-branch" :halign "start" :hexpand true :text {r.branch})
+          (label :class "fg-when" :text {r.when}))))))
+
+(defwidget forge_mini [r]
+  (button :class "fg-mini" :onclick "kitty --title ${r.name} -e sh -c 'cd ${r.path} && git status && exec bash' &"
+          :tooltip "${r.path}  .  open a shell there"
+    (box :orientation "h" :space-evenly false :spacing 8
+      (label :class "fg-name" :halign "start" :hexpand true :limit-width 18 :text {r.name})
+      (label :class "fg-dirty" :text "${r.dirty}"))))
+
+(defwidget forge_deck []
+  (box :class "gh-root" :orientation "v" :space-evenly false :spacing 16
+    (label :class "deck-brand" :halign "center"
+           :text "F O R G E   ·   B U I L D   S T A T I O N")
+
+    (box :orientation "h" :space-evenly false :spacing 18 :vexpand true
+      ;; ---- active repos ------------------------------------------
+      (ghost_card :title "REPOS" :glyph "" :tone "violet" :fill true
+                  :hint "${FORGE_.total} tracked . newest first . click to open"
+        (scroll :class "start-scroll" :vscroll true :hscroll false :vexpand true
+          (box :orientation "v" :space-evenly false :spacing 10 :valign "start"
+            (label :class "start-scratch-empty" :halign "start"
+                   :visible {FORGE_.total == 0} :text "no git repos under ~/Projects")
+            (for r in {FORGE_.repos} (forge_repo :r r)))))
+
+      ;; ---- what needs attention ----------------------------------
+      (box :orientation "v" :space-evenly false :spacing 16 :style "min-width: 340px;"
+        (ghost_card :title "UNCOMMITTED" :glyph "" :tone "orange"
+                    :hint {FORGE_.dirty > 0 ? "needs a commit" : "all clean"}
+          (ghost_stat :val "${FORGE_.dirty}" :cap "dirty repos"
+                      :tone {FORGE_.dirty > 0 ? "warn" : "ok"}
+                      :tip "repos with uncommitted changes"
+                      :cmd "kitty --title Dirty -e sh -c 'for d in ~/Projects/*/; do [ -d \"$d/.git\" ] || continue; n=$(git -C \"$d\" status --porcelain | wc -l); [ \"$n\" -gt 0 ] && printf \"%-28s %s\\n\" \"$(basename $d)\" \"$n\"; done; echo; read _' &")
+          (box :orientation "v" :space-evenly false :spacing 7
+            (for r in {FORGE_.dirty_rows} (forge_mini :r r))))
+
+        (ghost_card :title "UNPUSHED" :glyph "" :tone "gold"
+                    :hint {FORGE_.unpushed > 0 ? "ahead of remote" : "in sync"}
+          (ghost_stat :val "${FORGE_.unpushed}" :cap "ahead of origin"
+                      :tone {FORGE_.unpushed > 0 ? "warn" : "ok"}
+                      :tip "commits not on the remote"
+                      :cmd "kitty --title Unpushed -e sh -c 'for d in ~/Projects/*/; do [ -d \"$d/.git\" ] || continue; a=$(git -C \"$d\" rev-list --count @{u}..HEAD 2>/dev/null || echo 0); [ \"$a\" -gt 0 ] && printf \"%-28s +%s\\n\" \"$(basename $d)\" \"$a\"; done; echo; read _' &")
+          (box :orientation "v" :space-evenly false :spacing 7
+            (for r in {FORGE_.unpushed_rows} (forge_mini :r r))))
+
+        (ghost_card :title "PULL REQUESTS" :glyph "" :tone "cyan" :fill true
+                    :hint "open . yours"
+          (label :class "start-scratch-empty" :halign "start"
+                 :visible {arraylength(FORGE_.prs) == 0} :text "none open")
+          (box :orientation "v" :space-evenly false :spacing 4
+            (for pr in {FORGE_.prs}
+              (button :class "fg-mini" :onclick "gh pr view ${pr.n} --web &"
+                      :tooltip {pr.title}
+                (box :orientation "h" :space-evenly false :spacing 8
+                  (label :class "fg-branch" :text "#${pr.n}")
+                  (label :class "fg-name" :halign "start" :hexpand true
+                         :limit-width 20 :text {pr.title}))))))))
+
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph "" :tip "Editor"    :cmd "cursor &"                       :tone "violet")
+      (start_action :glyph "" :tip "Terminal in ~/Projects"
+                    :cmd "kitty --title Projects -e sh -c 'cd ~/Projects && exec bash' &"  :tone "cyan")
+      (start_action :glyph ""  :tip "Browse ~/Projects" :cmd "thunar ~/Projects &"     :tone "gold")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center"
+             :text "Super+2  FORGE     click a repo to open it     refreshed every 30s"))))
+
+(defwindow forge-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-forge-deck"
+  ;; must fit the 882px free area - verify with `hyprctl layers -j`
+  :geometry (geometry :x "0" :y "0" :width "1560px" :height "740px" :anchor "center")
+  (forge_deck))
 
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"

@@ -86,12 +86,12 @@
     },
     {
       "id": 9,
-      "name": "BLAST",
-      "code": "BL",
-      "hue": "gold",
-      "tagline": "Games · Arena · Blast",
+      "name": "BIFROST",
+      "code": "BF",
+      "hue": "green",
+      "tagline": "Guardian · EDR · Watch",
       "wallpaper": "nyxus-graffiti-16.png",
-      "launch": ""
+      "launch": "nyxus-webapp bifrost"
     }
   ]
 }
