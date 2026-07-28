@@ -437,6 +437,14 @@ question, and it touches the fragile rail).
    keybind, since LAB was keyboard- and rail-unreachable. If you want permanent
    extra stations, add named annex stations a couple at a time; for transient
    space, `Super+S` scratchpad already exists.
+8. **Full project inventory → [`docs/PROJECT_INVENTORY_2026-07-28.md`](./docs/PROJECT_INVENTORY_2026-07-28.md).**
+   47 GitHub repos + local checkouts cross-referenced against what the build
+   ships. Headlines: **~18 `Nyxus-*` micro-repos are superseded** by Nyxus-Core
+   (archive on GitHub); **5 AI-assistant repos are one idea renamed** (pick one);
+   **3 EDRs** jeTT/Bifrost/Cerberus overlap (decide the split); **axiom exists 3×**
+   and **c2 == ghost-relay** and **BAASIC/android-hub are double checkouts**;
+   the **39-tool shark suite is unversioned** and should be put under git;
+   **Bifrost has 58 uncommitted files** locally. All advisory — nothing deleted.
 
 ---
 
