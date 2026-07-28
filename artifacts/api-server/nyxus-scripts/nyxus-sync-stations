@@ -1,16 +1,33 @@
 #!/usr/bin/env bash
 # Sync stations.json → workspaces.json (for wallpaper daemon + QS)
+#
+# Emits ABSOLUTE wallpaper paths (2026-07-28). Both matrices set
+# "wall_dir": "~/.config/hypr/walls", and this used to concatenate that
+# straight into the output, so workspaces.json carried a LITERAL tilde.
+# nyxus-workspace-wallpaperd passes that value to nyxus-set-wallpaper as a
+# variable, and bash does not perform tilde expansion on variable contents —
+# so every lookup resolved to a path that does not exist, nyxus-set-wallpaper
+# failed, and the daemon silently kept the previous image. That is why a
+# hacker-mode flip changed the decks but never the background.
 set -euo pipefail
 CONF="${HOME}/.config/nyxus/stations.json"
 OUT="${HOME}/.config/nyxus/workspaces.json"
-jq -n --slurpfile s "$CONF" '
+
+WALL_DIR="$(jq -r '.wall_dir // empty' "$CONF" 2>/dev/null)"
+case "${WALL_DIR}" in
+  '~')    WALL_DIR="${HOME}" ;;
+  '~/'*)  WALL_DIR="${HOME}/${WALL_DIR#\~/}" ;;
+  '')     WALL_DIR="${HOME}/.config/hypr/walls" ;;
+esac
+
+jq -n --slurpfile s "$CONF" --arg wall_dir "${WALL_DIR%/}" '
   {
     "_comment": "Auto-generated from stations.json by nyxus-sync-stations. Do not hand-edit.",
     "workspaces": [
       $s[0].stations[] | {
         id: .id,
         name: .name,
-        wallpaper: ($s[0].wall_dir + "/" + .wallpaper)
+        wallpaper: ($wall_dir + "/" + .wallpaper)
       }
     ]
   }

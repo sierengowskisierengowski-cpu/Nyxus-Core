@@ -569,7 +569,7 @@
 ;; old fragile padding that read as see-through.
 (defwidget saucer_base []
   (box :class "saucer-frame"
-       :style "background-image: url('assets/nyxus-saucer-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 551px; min-height: 150px;"))
+       :style "background-image: url('assets/nyxus-saucer-band${SECSTATE.hacker == 'on' ? '-mono' : ''}.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 551px; min-height: 150px;"))
 
 ;; MUSIC-FACE BASE (rev 2026-07-26): the 1980s ALIEN BOOMBOX. Same 1351x368
 ;; band geometry as nyxus-saucer-band.png so it is a pixel-exact drop-in and
@@ -611,7 +611,7 @@
 
 (defwidget boombox_base []
   (box :class "saucer-frame boombox-base"
-       :style "background-image: url('assets/nyxus-boombox-band.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 495px; min-height: 150px; box-shadow: 0 ${8 + CAVA_BASS / 12}px ${20 + CAVA_BASS / 3}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 400}), 0 0 ${26 + CAVA_BASS / 2}px rgba(125, 61, 255, ${0.08 + CAVA_BASS / 500});"))
+       :style "background-image: url('assets/nyxus-boombox-band${SECSTATE.hacker == 'on' ? '-mono' : ''}.png'); background-size: contain; background-repeat: no-repeat; background-position: center; min-width: 495px; min-height: 150px; box-shadow: 0 ${8 + CAVA_BASS / 12}px ${20 + CAVA_BASS / 3}px rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '255, 45, 173'}, ${0.10 + CAVA_BASS / 400}), 0 0 ${26 + CAVA_BASS / 2}px rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '125, 61, 255'}, ${0.08 + CAVA_BASS / 500});"))
 
 ;; Bigger, livelier CAVA strip for the music face (full 14-bar spectrum,
 ;; taller glyphs + neon gradient glow) — the "bad-ass" beat graph.
@@ -1464,7 +1464,7 @@
   ;; Applied INLINE because the CSS compile strips background-size and the
   ;; scalar has to interpolate per frame anyway.
   (box :class "nyxus-surface start-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 12
-       :style "border-color: rgba(255, 45, 173, ${0.30 + CAVA_BASS / 260}); box-shadow: 0 0 ${30 + CAVA_BASS / 2}px rgba(125, 61, 255, ${0.22 + CAVA_BASS / 380}), 0 0 ${70 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 500});"
+       :style "border-color: rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '255, 45, 173'}, ${0.30 + CAVA_BASS / 260}); box-shadow: 0 0 ${SECSTATE.hacker == 'on' ? 0 : 30 + CAVA_BASS / 2}px rgba(125, 61, 255, ${0.22 + CAVA_BASS / 380}), 0 0 ${SECSTATE.hacker == 'on' ? 0 : 70 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 500});"
     ;; ---- header ------------------------------------------------------
     (box :class "start-head" :orientation "h" :space-evenly false :spacing 18
       (box :class "start-ident" :orientation "h" :space-evenly false :spacing 11
@@ -2583,7 +2583,7 @@
 ;; is the visible notification.
 (defwidget notif_popup_card []
   (overlay
-    (image :class "notif-ufo-frame" :path "assets/nyxus-notif-frame.png"
+    (image :class "notif-ufo-frame" :path "assets/nyxus-notif-frame${SECSTATE.hacker == 'on' ? '-mono' : ''}.png"
            :image-width 470 :image-height 314)
     (box :class "notif-ufo" :orientation "v" :space-evenly false :halign "fill" :valign "fill"
          :style "padding: 96px 108px 132px 108px;"

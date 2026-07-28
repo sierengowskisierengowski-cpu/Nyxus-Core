@@ -15,6 +15,8 @@ nyxus-bg-13	Bg 13
 nyxus-bg-14	Bg 14
 nyxus-bg-15	Bg 15
 nyxus-bg-16	Bg 16
+nyxus-demon	Demon
+nyxus-desktop-hero	NYXUS Desktop Hero
 nyxus-frost-tile-glyphs	Frost Tile Glyphs
 nyxus-frost-tile-grid	Frost Tile Grid
 nyxus-graffiti-01	Graffiti 01
@@ -42,17 +44,16 @@ nyxus-graffiti-22	Graffiti 22
 nyxus-graffiti-23	Graffiti 23
 nyxus-graffiti-24	Graffiti 24
 nyxus-graffiti-space	Graffiti Space
-nyxus-hyprlock-eye	Hyprlock Eye
-nyxus-login-stars	Login Stars
-nyxus-monogram-mist	Monogram Mist
-nyxus-rightbar-bg	Rightbar Bg
-nyxus-taskbar-bg	Taskbar Bg
-nyxus-topbar-mist	Topbar Mist
-nyxus-waybar-stars	Waybar Stars
-nyxus-desktop-hero	NYXUS Desktop Hero
-nyxus-login-wall	NYXUS Login Wall
-nyxus-splash-emblem	NYXUS Splash Emblem
-nyxus-urban-alien	NYXUS Urban Alien
-nyxus-demon	Demon
 nyxus-hacker-mode-a	Hacker Mode A
 nyxus-hacker-mode-b	Hacker Mode B
+nyxus-hyprlock-eye	Hyprlock Eye
+nyxus-login-stars	Login Stars
+nyxus-login-wall	NYXUS Login Wall
+nyxus-monogram-mist	Monogram Mist
+nyxus-rightbar-bg	Rightbar Bg
+nyxus-splash-emblem	NYXUS Splash Emblem
+nyxus-taskbar-bg	Taskbar Bg
+nyxus-topbar-mist	Topbar Mist
+nyxus-urban-alien-mono	NYXUS Urban Alien (Hacker Mono)
+nyxus-urban-alien	NYXUS Urban Alien
+nyxus-waybar-stars	Waybar Stars

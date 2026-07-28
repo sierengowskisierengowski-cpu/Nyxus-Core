@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-27 ~16:30 EDT (6 stations · vault apps are real apps)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-28 ~02:40 EDT (07.27 ISO was broken · all causes fixed · REBAKE REQUIRED · hacker mode is monochrome)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -84,7 +84,136 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-27 · bake READY (new ISO)
+## WHERE WE STAND — 2026-07-28 · REBAKE REQUIRED (the 07.27 stick is broken)
+
+> The `nyxus-2026.07.27` ISO booted with real faults. All root causes are found
+> and fixed on `main`; **none of the fixes are in a baked ISO yet.**
+
+### ⛔ Why the 2026.07.27 ISO booted broken — read before touching the bake
+
+**The bake wipes `skel/.config/hypr` and repopulates it from
+`artifacts/api-server/nyxus-scripts` (NS) via a hand-maintained whitelist.**
+Committing a shard in `airootfs` is NOT enough to ship it. Three fell through:
+
+| Shard | State in the shipped ISO | Symptom the owner saw |
+|---|---|---|
+| `nyxus-consoles.conf` | **absent** (not in NS, not in the whitelist) | Hyprland error banner: `source= ... found no match` at **line 592** |
+| `nyxus-stations.conf` | **Jul 17 revision** | no `name:HOME` / `name:START` / `name:LAB`; 9=BLAST, 10=EDGE. Rail pills rendered (eww was current) but switched to workspaces the compositor never knew |
+| `nyxus-hyprland-layerblur.conf` | **Jul 26 revision** | the five station decks shipped with no `blur`/`ignore_alpha`, falling through to the `^(nyxus.*)$` catch-all |
+
+This is the **third** time this exact bug shipped (`nyxus-arsenal-apps.conf`,
+Jul 24 W6). So `verify-profile.sh` gained **gate 13w**, which does *not* read
+the whitelist — it derives the requirement from `hyprland.conf` itself and
+fails if the bake cannot satisfy it. Adding a shard needs no edit there.
+
+**⏱ The 102-second wait between splash and the login screen** —
+`nyxus-firstboot.service` was `Type=oneshot` + `WantedBy=multi-user.target`, so
+`multi-user.target` could not complete until ExecStart *returned*, and
+`graphical.target` is `Requires`+`After multi-user.target` with greetd behind
+it. Fragment `06-honeypot-stack.sh` does a **~1 GB `docker load`** off the USB
+plus `docker compose up -d` on **ten containers** — all of it in front of the
+greeter. `build-iso.sh` had already raised `TimeoutStartSec` to 900s for that
+work; nobody noticed the budget sat on the critical path to login. It also ran
+on *every* live boot (nothing pre-creates the marker, and on live media it
+lands in the tmpfs overlay). Now `Type=simple` + a live-media guard.
+
+**🧨 No installer on either stick.** `pkglist.x86_64.txt` inside both the 07.26
+and 07.27 ISOs contains **no calamares, no yay, no howdy, no pamtester**. The
+AUR fix (`6b264be1`) landed at 23:27; the ISO finished at 23:36, long past that
+stage. Committed, needs a rebake. **Verify after the next bake.**
+
+**⚠ Hyprland VERSION SKEW — this invalidates "verified live".** The ISO ships
+**0.56.1**; this builder box runs **0.55.4**. The bake pulls Hyprland from the
+Arch repos at bake time, so config is developed and "verified" against a
+compositor that is *not* the one that boots. That is why `hyprctl configerrors`
+is clean here and the ISO showed a banner. **Either pin Hyprland in the ISO
+(the `[nyxus-local]` + `repo-add` mechanism already used for Kage-Ryu — and
+`hyprland-0.56.1-2` is already in the pacman cache) or bring this box up to the
+ISO's version. Until one of those happens, live verification means little.**
+
+**☠️ hyprlang is being REMOVED in Hyprland 0.57.** Lua configs landed in 0.55
+and the old `.conf` syntax is supported for "1-2 releases" after that. NYXUS is
+`hyprland.conf` + 17 hyprlang shards, so when Arch ships 0.57 a fresh bake
+produces an ISO where **the entire desktop config stops loading**. Migration is
+big-bang (if `hyprland.lua` exists, `hyprland.conf` is never read) and the hard
+part is that three shards are *generated at runtime* — `nyxus-stations.conf`
+(nyxus-hacker-mode), `nyxus-freeform.conf` (nyxus-freeform),
+`nyxus-monitors.conf` (Settings). **Owner decision (2026-07-28): do NOT migrate
+yet — pin the version first, stabilise the build, migrate on a branch after
+0.57 actually ships.** `hyprlock`/`hypridle` keep hyprlang indefinitely, so
+only the compositor entry point moves.
+
+### 🕶 HACKER MODE — real mode flip, now MONOCHROME (2026-07-28)
+
+Owner's brief: **near-black with very little white — thin white lines, just
+enough to see what you are doing.** One colour survives: `#ff2d55` for genuine
+danger, so a red thing is the *only* colour on screen. The earlier
+matrix-green pass is superseded (kept in history at `cd45a2ac`).
+
+`.nyx-hacker` is wired onto all **nine** surface roots (4 bar layouts + 5 deck
+roots). Layered blacks: `#000000` root, `#08080a` cards, `1px
+rgba(255,255,255,0.14)` hairlines, text at `.92/.72/.44/.26`. No glow —
+emphasis is brightness only.
+
+**Four separate bugs were why it "never felt finished":**
+1. **The background never flipped.** `workspaces.json` carried a **literal
+   `~`** (`wall_dir` is `~/.config/hypr/walls`), and the wallpaper daemon
+   passes that to `nyxus-set-wallpaper` *as a variable* — bash does not expand
+   a tilde in a variable. Every lookup missed, the daemon silently kept the
+   previous image. `nyxus-sync-stations` + `sync_workspaces` now emit
+   **absolute** paths.
+2. `matrix_wallpaper` never searched **`walls/rotation/`**, where every
+   `nyxus-rot-*.png` actually lives — 8 of 10 station wallpapers plus the
+   hacker `unified_wallpaper` failed to resolve. Path list extended.
+3. **The green halo was the window DROP SHADOW**, not the border.
+   `decoration:shadow:color` is `#39ff14` at range 42 in normal mode and
+   hacker mode never touched it (`col.active_border` was already monochrome —
+   `getoption` proved it). Now set + restored with the borders.
+4. **GTK3 CSS has no `filter: grayscale()`**, and the saucer/boombox/notif art
+   paths are set via **inline `:style`**, which outranks any stylesheet rule.
+   So `*-mono.png` variants ship and the paths are swapped **conditionally in
+   eww.yuck**, not in CSS.
+
+Background is `nyxus-urban-alien-mono.png` — the same alien graffiti art,
+greyscaled and gamma-pulled (mean luma 33, 4% highlights). Verified live:
+wallpaper sampled **R=32 G=32 B=32**.
+
+**Station identity must never differ between the matrices.** `stations-hacker.json`
+still had 9=BLAST/10=EDGE, and it ships from a **third** tree
+(`artifacts/nyxus-config`, not skel) — so fixing only the skel copy was
+silently discarded at bake. Gate 13w now asserts both trees match and that
+normal/hacker names are identical.
+
+**Also fixed: hacker mode used to destroy the named stations.**
+`nyxus-stations.conf` is regenerated from scratch on every flip and its
+generator only emits the numbered matrix, so HOME/START/LAB and the Bifrost
+window pins — hand-appended to a generated file — were deleted on the first
+toggle. They now live in **`nyxus-stations-named.conf`**, which no generator
+writes. Verified: a full on→off cycle leaves all three intact.
+
+### 🔜 OWNER QUEUE (next session)
+
+1. **REBAKE** from clean `main`, then verify: calamares present, no line-592
+   banner, HOME/START/LAB switch, login screen inside ~15s not 102s.
+2. **Pin Hyprland 0.56.1** in the ISO before anything else config-related.
+3. **Ten-app login storm** — every station 1-10 has an `on-created-empty`, several
+   pointing at dev-only services (`localhost:5173/3000/8080`) and station 5 runs
+   `sudo bandwhich`, which prompts for a password at login. Live-proven: a
+   "Unable to connect — localhost:5173" Firefox window appeared during a hacker
+   flip. Likely contributor to the ~3-minute bar delay. **Behaviour decision
+   still owner's — not changed.**
+4. **NOT STARTED — owner asked 2026-07-28:** (a) white outlines on the saucer and
+   other key art so it reads against the black; (b) an **urban alien throwing a
+   peace sign** inside the bottom-bar saucer window (where time/date sits) that
+   appears only occasionally, flickers like lightning so only its outline shows,
+   then vanishes; (c) **1980s boombox redesign** — same era, much better design.
+5. Unmerged on `babysit/land-open-prs` (Jul 13, never landed): login/lock
+   **anti-lockout recovery gate**, a path-traversal fix in the nyxus-web static
+   server, offline GTK4 app deploy fix.
+
+---
+
+## WHERE WE STAND — 2026-07-27 · bake READY (superseded by the block above)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
