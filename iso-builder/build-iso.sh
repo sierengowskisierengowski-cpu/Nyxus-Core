@@ -768,7 +768,21 @@ for _station in nyxus-home-deck nyxus-consoles nyxus-edr-repair \
     install -m 0755 "${NS}/${_station}" "${LBIN}/${_station}"
   fi
 done
-ok "helpers: wallpaper-rotate / nyxus-eww-launch / hub+escape set / greeter / stations"
+
+# SharkFin mini-NOC (2026-07-28) — the compact GowskiNet NOC the owner wanted on
+# the MESH station (workspace 7, "Network · NOC · Mesh"). Pure-stdlib and
+# defensive about missing honeypot/hardware dirs, so on a fresh install with no
+# lab it simply reports zeros/offline rather than erroring. sharkdash_core.py +
+# sharkdash_health.py are its only deps and MUST land in the SAME dir as the
+# sharknoc launcher, because sharknoc adds its own dirname to sys.path. The MESH
+# station launch is fail-safe (falls back to btop) so a bake that ever omits
+# these is degraded, never broken.
+for _shark in sharknoc sharkdash_core.py sharkdash_health.py; do
+  if [[ -f "${NS}/${_shark}" ]]; then
+    install -m 0755 "${NS}/${_shark}" "${LBIN}/${_shark}"
+  fi
+done
+ok "helpers: wallpaper-rotate / nyxus-eww-launch / hub+escape set / greeter / stations / sharknoc"
 
 # ── Security mode scripts (rev 2026-07-17) ──────────────────────────────
 # nyxus-ghost, nyxus-panic, nyxus-hacker-mode, nyxus-blackarch-full

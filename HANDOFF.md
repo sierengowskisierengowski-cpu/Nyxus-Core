@@ -373,6 +373,18 @@ terminal monitors flip. **Not started.**
 5. Unmerged on `babysit/land-open-prs` (Jul 13, never landed): login/lock
    **anti-lockout recovery gate**, a path-traversal fix in the nyxus-web static
    server, offline GTK4 app deploy fix.
+6. **SharkFin mini-NOC — DONE + shipped on MESH (station 7).** `sharknoc` was
+   broken (f-string `\"` SyntaxError on the GPU line; and `read_health()`,
+   `human_bytes()`, `maze_stats()`, plus jeTT/health keys that no longer
+   existed). Rewritten against the real `sharkdash_core`/`sharkdash_health`
+   API; all three modes (plain / `--json` / `--watch`) render clean.
+   It + its two stdlib-only deps (`sharkdash_core.py`, `sharkdash_health.py`)
+   now stage to `/usr/local/bin`, and MESH's `on-created-empty` opens it
+   **fail-safe** (`command -v sharknoc … || btop`), so a bake without them
+   degrades to btop rather than a dangling command. This shipped a slice of the
+   otherwise-unversioned `~/.local/bin` shark suite (39 tools) into the ISO —
+   flagged as an owner call in `docs/PROJECT_INVENTORY_2026-07-28.md`; easy to
+   pull (drop the staging block + revert station 7) if unwanted.
 
 ---
 

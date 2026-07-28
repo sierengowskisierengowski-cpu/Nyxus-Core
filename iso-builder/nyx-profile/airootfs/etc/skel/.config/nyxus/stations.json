@@ -73,7 +73,7 @@
       "hue": "pink",
       "tagline": "Network · NOC · Mesh",
       "wallpaper": "nyxus-graffiti-08.png",
-      "launch": "sh -c 'command -v nyxus-sysmon >/dev/null && nyxus-sysmon || python3 ~/.nyxus/nyxus_sysmon_gtk.py'"
+      "launch": "sh -c 'alacritty --title \"GowskiNet NOC\" -e sh -c \"command -v sharknoc >/dev/null && exec sharknoc --watch || exec btop\"'"
     },
     {
       "id": 8,

@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+# sharknoc — GowskiNet NOC (Network Operations Console), compact reporter
+# Usage: sharknoc [--json] [--watch]
+#
+# The COMPACT NOC the owner wanted on a workstation — a scrollback-friendly
+# status dump, NOT the full-screen curses TUI (sharknoc.py) that takes the
+# whole terminal. Reads the same sharkdash_core / sharkdash_health modules the
+# dashboard uses, so it always agrees with them.
+#
+# 2026-07-28: repaired end to end. The Python heredoc had f-strings with
+# backslash-escaped quotes (nv[\"temp\"]) that are a SyntaxError, and three
+# sections called functions/keys that no longer exist:
+#   - H.read_health()            -> read_state() (cached) / assess() (live)
+#   - C.human_bytes()            -> local helper (never existed in core)
+#   - C.maze_stats()             -> honeypots()['pots']['gowski-maze']
+#   - jett_status() keys running/mode/dry_run/would -> up/verdicts/block/model
+#   - health 'overall'/'area'    -> 'state' / alerts have level+msg only
+set -euo pipefail
+
+BIN_DIR="$(dirname "$(realpath "$0")")"
+PYTHON="${PYTHON:-python3}"
+
+_report() {
+SHARKFIN_BIN="$BIN_DIR" "$PYTHON" - <<'PYEOF'
+import sys, os, time
+# sys.argv[0] is '-' in heredoc mode, so the module dir comes from the caller.
+_bin = os.environ.get('SHARKFIN_BIN', os.path.expanduser('~/.local/bin'))
+sys.path.insert(0, _bin)
+sys.argv = ['sharknoc']
+
+try:
+    import sharkdash_core as C
+    import sharkdash_health as H
+except ImportError as e:
+    print(f"sharknoc: cannot import backend ({e})")
+    sys.exit(1)
+
+def col(s, on): return f"\033[{on}m{s}\033[0m"
+def good(s): return col(s, "1;32")
+def warn(s): return col(s, "1;33")
+def bad(s):  return col(s, "1;31")
+def cyan(s): return col(s, "1;36")
+def dim(s):  return col(s, "2")
+
+# sharkdash_health exposes read_state() (last state the daemon wrote) and
+# assess() (evaluate live). Prefer the cache so a refresh is cheap; fall back
+# to a live assess() so the HEALTH block is never blank when the daemon is off.
+def health_state():
+    try:
+        d = H.read_state()
+    except Exception:
+        d = {}
+    if not d:
+        try:
+            d = H.assess()
+        except Exception:
+            d = {}
+    return d or {}
+
+# core has no byte formatter; a NOC dump does not justify widening its API.
+def human_bytes(n):
+    try:
+        n = float(n or 0)
+    except (TypeError, ValueError):
+        return "0B"
+    for unit in ("B", "K", "M", "G", "T"):
+        if abs(n) < 1024 or unit == "T":
+            return f"{n:.0f}{unit}" if unit == "B" else f"{n:.1f}{unit}"
+        n /= 1024.0
+
+def g(d, *keys, default=0):
+    """Safe nested get so one renamed key never aborts the whole report."""
+    for k in keys:
+        if not isinstance(d, dict):
+            return default
+        d = d.get(k, default if k == keys[-1] else {})
+    return d
+
+print()
+print(col("═" * 60, "1;36"))
+print(col("  GowskiNet NOC — nyx-cosmic", "1;37") + dim(f"  {time.strftime('%Y-%m-%d %H:%M:%S')}"))
+print(col("═" * 60, "1;36"))
+
+# ── SYSTEM ────────────────────────────────────────────────────────────
+tp = C.temps(); fans = C.fans(); m = C.mem()
+pkg = tp.get("cpu_pkg", 0)
+tcol = bad if pkg >= 90 else warn if pkg >= 75 else good
+# cpu_freq_ghz() is PER-CORE (a list) - average it for a single headline figure.
+_freqs = C.cpu_freq_ghz()
+_freq = (sum(_freqs) / len(_freqs)) if isinstance(_freqs, (list, tuple)) and _freqs else (_freqs or 0)
+print(f"\n{cyan('SYSTEM')}")
+print(f"  CPU pkg : {tcol(f'{pkg:.0f}°C')}   Freq: {_freq:.2f}GHz avg")
+nv = C.gpu().get("nvidia")
+if nv:
+    gt = nv.get("temp", 0)
+    gcol = bad if gt >= 88 else warn if gt >= 75 else good
+    print(f"  GPU     : {gcol(f'{gt:.0f}°C')}  {nv.get('util',0):.0f}% util  "
+          f"{nv.get('watts',0):.0f}W  VRAM {nv.get('vram_used',0):.0f}/{nv.get('vram_total',0):.0f}M")
+if fans:
+    print(f"  Fans    : {' '.join(f'{f}rpm' for f in fans)}")
+mcol = bad if m["pct"] >= 90 else warn if m["pct"] >= 80 else good
+mpct = f"{m['pct']:.0f}%"
+print(f"  RAM     : {mcol(mpct)}  {human_bytes(m.get('used',0))}/{human_bytes(m.get('total',0))}")
+for d in C.disks():
+    dcol = bad if d["pct"] >= 92 else warn if d["pct"] >= 80 else good
+    dpct = f"{d['pct']:.0f}%"
+    print(f"  Disk {d['mount']:<5}: {dcol(dpct)}  {human_bytes(d['free'])} free")
+
+# ── SERVICES ──────────────────────────────────────────────────────────
+# Search user + system + docker so a unit reports correctly regardless of which
+# scope owns it (honeyhive is a user unit, http-honeypot/loki are containers).
+print(f"\n{cyan('SERVICES')}")
+svcs = C.services()
+def svc_state(name):
+    # user/system units report 'active'; docker containers report 'state'
+    # (running). Check both so a container is not falsely 'not found'.
+    for scope in ("user", "system", "docker"):
+        d = svcs.get(scope, {})
+        if name in d:
+            v = d[name]
+            if isinstance(v, dict):
+                return v.get("active") or v.get("state") or ""
+            return str(v)
+    return ""
+WATCH = ["gowskinet-honeyhive", "honeypot-ledger", "meli-ingest",
+         "gowski-maze", "rclone-gdrive", "loki"]
+for name in WATCH:
+    active = svc_state(name)
+    dot = good("●") if active in ("active", "running") else bad("○")
+    print(f"  {dot} {name:<26} {active or 'not found'}")
+
+# ── jeTT EDR ──────────────────────────────────────────────────────────
+print(f"\n{cyan('jeTT EDR')}")
+jett = C.jett_status()
+up = jett.get("up", False)
+print(f"  Status   : {(good('RUNNING') if up else bad('STOPPED'))}"
+      f"   eBPF: {(good('yes') if jett.get('ebpf') else bad('no'))}")
+print(f"  Model    : {jett.get('model','?')}   Latency: {jett.get('latency_ms',0)}ms")
+q = jett.get("quarantine", 0)
+print(f"  Verdicts={jett.get('verdicts',0)}  Allow={jett.get('allow',0)}  "
+      f"Block={jett.get('block',0)}  "
+      f"{bad('Quarantine='+str(q)) if q else good('Quarantine=0')}")
+
+# ── HONEYPOTS ─────────────────────────────────────────────────────────
+print(f"\n{cyan('HONEYPOTS')}")
+hp = C.honeypots()
+print(f"  Up: {good(str(hp.get('up',0))+'/'+str(hp.get('total',0)))}  "
+      f"Hits today: {hp.get('hits_today',0)}")
+for name, data in hp.get("pots", {}).items():
+    dot = good("●") if data.get("up") else bad("○")
+    today = data.get("today")
+    print(f"  {dot} {name:<18} hits:{('?' if today is None else today)}")
+
+# ── GOWSKINET MAZE (a pot inside honeypots(), not a standalone module) ─
+print(f"\n{cyan('GOWSKINET MAZE')}")
+maze = hp.get("pots", {}).get("gowski-maze", {})
+if maze.get("up"):
+    print(f"  {good('ACTIVE')}  Today: {maze.get('today',0)}  "
+          f"Total: {maze.get('recent',0)}  Live: {maze.get('active',0)}")
+    print(f"  Sent: {human_bytes(maze.get('bytes_sent',0))}  {dim(maze.get('notes',''))}")
+else:
+    print(f"  {bad('OFFLINE')}  {dim(maze.get('notes','no maze pot reported'))}")
+try:
+    tops = C.top_attacking_ips()[:4]
+    if tops:
+        def _ip(t): return t.get("ip") if isinstance(t, dict) else str(t)
+        print(f"  Top IPs: {', '.join(_ip(t) for t in tops)}")
+except Exception:
+    pass
+
+# ── HEALTH ────────────────────────────────────────────────────────────
+print(f"\n{cyan('HEALTH')}")
+health = health_state()
+state = health.get("state", "?")            # NOT 'overall'
+scol = bad if state == "crit" else warn if state == "warn" else good
+print(f"  Overall: {scol(state.upper())}")
+for a in health.get("alerts", [])[:5]:       # alerts have level + msg, no area
+    lvl = (a.get("level") or "warn").lower()
+    acol = bad if lvl == "crit" else warn
+    print(f"  {acol('['+lvl.upper()+']')} {a.get('msg','')[:64]}")
+
+print()
+print(col("═" * 60, "1;36"))
+print()
+PYEOF
+}
+
+case "${1:-}" in
+    --json|-j)
+        SHARKFIN_BIN="$BIN_DIR" "$PYTHON" - <<'PYEOF'
+import sys, os, json, time
+_bin = os.environ.get('SHARKFIN_BIN', os.path.expanduser('~/.local/bin'))
+sys.path.insert(0, _bin)
+sys.argv = ['sharknoc']
+import sharkdash_core as C
+import sharkdash_health as H
+try:
+    health = H.read_state() or H.assess()
+except Exception:
+    health = {}
+hp = C.honeypots()
+print(json.dumps({
+    'ts': time.time(),
+    'health': health,
+    'jett': C.jett_status(),
+    'honeypots': hp,
+    'maze': hp.get('pots', {}).get('gowski-maze', {}),
+}, indent=2, default=str))
+PYEOF
+        ;;
+    --watch|-w)
+        while true; do clear; _report; sleep 30; done ;;
+    -h|--help)
+        echo "sharknoc — compact GowskiNet NOC"
+        echo "  sharknoc           one-shot status report"
+        echo "  sharknoc --json    machine-readable snapshot"
+        echo "  sharknoc --watch   refresh every 30s" ;;
+    *)
+        _report ;;
+esac
