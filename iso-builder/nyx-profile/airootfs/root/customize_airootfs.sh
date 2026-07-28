@@ -590,12 +590,51 @@ fi
 # These can't be pacstrapped from official repos; we build/install in the
 # chroot so the live ISO + every fresh install ships with them ready.
 # ─────────────────────────────────────────────────────────────────────
+# ── AUR build prerequisites (rev 2026-07-28 — the interactive-password fix) ──
+# THE BUG: this used `sudo -u nobody makepkg -s`. `-s` makes makepkg shell out
+# to `sudo pacman` to install missing dependencies, and `nobody` is a LOCKED
+# system account with no password — so the bake stopped dead on
+# "[sudo] password for nobody:", failed 3 times, and marked the package
+# "FAILED (non-fatal)". It did that for EVERY AUR package with dependencies,
+# which is why the 07.26 and 07.27 ISOs both shipped with NO CALAMARES: the
+# installer silently never built. Nothing the operator could type would work.
+#
+# `nobody` was also the wrong build user regardless: its $HOME is `/`, which
+# makepkg writes into, and its shell is nologin.
+#
+# THE FIX, three parts:
+#   1. A real unprivileged build user with a writable home.
+#   2. A scoped NOPASSWD sudoers rule for pacman ONLY, so `makepkg -s` can
+#      resolve dependencies non-interactively. Removed again at teardown.
+#   3. CheckSpace disabled: inside the chroot pacman cannot resolve the real
+#      root mount, so `pacman -U` aborted with "could not determine root mount
+#      point /" and "not enough free disk space" on a host with 240G+ free.
+_NYX_BUILDUSER=nyxbuild
+_aur_setup() {
+  chmod 1777 /tmp 2>/dev/null || true
+  if ! id -u "${_NYX_BUILDUSER}" >/dev/null 2>&1; then
+    useradd -m -d "/var/tmp/${_NYX_BUILDUSER}" -s /bin/bash "${_NYX_BUILDUSER}" 2>/dev/null || true
+  fi
+  install -d -o "${_NYX_BUILDUSER}" -g "${_NYX_BUILDUSER}" -m 0755 "/var/tmp/${_NYX_BUILDUSER}"
+  # pacman only — not blanket root. Removed in _aur_teardown.
+  printf '%s ALL=(root) NOPASSWD: /usr/bin/pacman\n' "${_NYX_BUILDUSER}" \
+    > /etc/sudoers.d/99-nyxus-aur-build
+  chmod 0440 /etc/sudoers.d/99-nyxus-aur-build
+  # Chroot pacman cannot stat the real root; CheckSpace must be off for the bake.
+  cp -f /etc/pacman.conf /etc/pacman.conf.nyxbak 2>/dev/null || true
+  sed -i 's/^[[:space:]]*CheckSpace/#CheckSpace/' /etc/pacman.conf
+  echo "[customize_airootfs] AUR: build user ${_NYX_BUILDUSER} ready, CheckSpace off"
+}
+_aur_teardown() {
+  rm -f /etc/sudoers.d/99-nyxus-aur-build
+  [[ -f /etc/pacman.conf.nyxbak ]] && mv -f /etc/pacman.conf.nyxbak /etc/pacman.conf
+  userdel -r "${_NYX_BUILDUSER}" 2>/dev/null || true
+  rm -rf "/var/tmp/${_NYX_BUILDUSER}"
+  echo "[customize_airootfs] AUR: build user removed, CheckSpace restored"
+}
+
 _aur_build() {
   # _aur_build <repo-name> [extra-makepkg-args...]
-  # makepkg must run as an unprivileged user. Root mktemp -d creates a
-  # mode-0700 directory nobody cannot write into — that caused every AUR
-  # package (including calamares) to fail with "Permission denied" on
-  # git clone (seen 2026-07-27 bake). Fix: sticky /tmp + chown the workdir.
   local pkg="$1"; shift || true
   local bin_probe="$pkg"
   case "$pkg" in
@@ -605,13 +644,15 @@ _aur_build() {
     return 0
   fi
   echo "[customize_airootfs] AUR: building ${pkg}..."
-  chmod 1777 /tmp 2>/dev/null || true
-  local _bdir; _bdir=$(mktemp -d)
-  chown nobody:nobody "${_bdir}"
+  local _bdir; _bdir=$(mktemp -d -p "/var/tmp/${_NYX_BUILDUSER}")
+  chown -R "${_NYX_BUILDUSER}:${_NYX_BUILDUSER}" "${_bdir}"
   chmod 755 "${_bdir}"
-  if sudo -u nobody git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "${_bdir}/${pkg}" \
+  # --noconfirm on BOTH makepkg and the pacman it calls; </dev/null guarantees
+  # that if any prompt ever reappears it gets EOF and fails fast instead of
+  # hanging the whole bake waiting on a human.
+  if sudo -u "${_NYX_BUILDUSER}" git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "${_bdir}/${pkg}" \
      && cd "${_bdir}/${pkg}" \
-     && sudo -u nobody makepkg -s --noconfirm "$@" \
+     && sudo -u "${_NYX_BUILDUSER}" makepkg -s --noconfirm --needed "$@" </dev/null \
      && pacman -U --noconfirm --needed ./*.pkg.tar.zst ; then
     echo "[customize_airootfs] AUR: ${pkg} installed"
   else
@@ -620,8 +661,7 @@ _aur_build() {
   cd / && rm -rf "${_bdir}"
 }
 
-# Make /tmp world-writable so nobody-uid makepkg works.
-chmod 1777 /tmp
+_aur_setup
 
 # yay first (AUR helper) so users can install AUR packages post-install.
 _aur_build yay-bin
@@ -645,3 +685,28 @@ _aur_build calamares
 
 # AppImageLauncher — AppImage integration in file manager + launcher.
 _aur_build appimagelauncher
+
+_aur_teardown
+
+# ── The installer is NOT optional ────────────────────────────────────────────
+# Every _aur_build failure above is deliberately non-fatal, because a missing
+# timeshift or appimagelauncher should not sink a whole bake. Calamares is
+# different: without it the ISO cannot install NYXUS to disk at all, it is
+# live-only. That failed SILENTLY on the 2026.07.26 and 2026.07.27 bakes and
+# nobody noticed until the sticks were flashed and the owner went looking for
+# an installer. So assert it loudly here, at the end, where the message is not
+# buried under 6000 lines of pacstrap output.
+if pacman -Qi calamares >/dev/null 2>&1 || command -v calamares >/dev/null 2>&1; then
+  echo "[customize_airootfs] ✅ INSTALLER OK — calamares is installed in the ISO"
+else
+  echo "[customize_airootfs] ############################################################"
+  echo "[customize_airootfs] ## ❌ CALAMARES DID NOT INSTALL — THIS ISO IS LIVE-ONLY.  ##"
+  echo "[customize_airootfs] ##    It will boot and run, but CANNOT install to disk.   ##"
+  echo "[customize_airootfs] ##    Scroll up for the 'AUR: calamares build FAILED'     ##"
+  echo "[customize_airootfs] ##    line and the real error above it.                   ##"
+  echo "[customize_airootfs] ############################################################"
+  # Leave a marker inside the ISO so a flashed stick can be checked without
+  # re-reading the build log: test -f /etc/nyxus-no-installer
+  echo "calamares failed to build at bake time; this image is live-only" \
+    > /etc/nyxus-no-installer
+fi
