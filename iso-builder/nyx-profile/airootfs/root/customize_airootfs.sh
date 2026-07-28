@@ -347,6 +347,7 @@ if ! command -v pamtester >/dev/null 2>&1; then
         -o "$_pdir/pamtester.tar.gz" \
      && tar -xzf "$_pdir/pamtester.tar.gz" -C "$_pdir" \
      && cd "$_pdir/pamtester-0.1.2" \
+     && { grep -q 'stdlib.h' src/expr_parser.c || sed -i '1i#include <stdlib.h>' src/expr_parser.c; } \
      && ./configure --prefix=/usr \
      && make \
      && make install; then
@@ -358,25 +359,27 @@ if ! command -v pamtester >/dev/null 2>&1; then
 fi
 
 # ── Build howdy (face authentication) from source ──────────────────────
-# rev r2 — AUR-only PAM module that does IR-camera face match.  Runtime
-# deps: python-opencv + v4l2loopback-dkms come from packages.x86_64;
-# python-dlib is pulled in by howdy's own ./debian/install.sh (since it
-# is AUR-only and was failing pacstrap).  We install into /lib/security/howdy where the PAM
-# rules in /etc/pam.d/sddm and /etc/pam.d/hyprlock expect to find pam.py.
-# If the build fails (e.g. dlib model download blocked), the PAM line
-# `auth sufficient pam_python.so /lib/security/howdy/pam.py` becomes a
-# no-op (pam_python returns FAIL, control falls through to the next
-# `sufficient` line) — fingerprint + passphrase still work.
+# rev r3 (2026-07-27) — upstream dropped debian/install.sh; howdy is now
+# meson-based. Runtime deps (opencv / v4l) come from packages.x86_64.
+# PAM rules expect /lib/security/howdy/pam.py. On failure we drop a no-op
+# stub so fingerprint + passphrase still work.
 if [ ! -f /lib/security/howdy/pam.py ]; then
-  echo "[customize_airootfs] building howdy from source..."
+  echo "[customize_airootfs] building howdy from source (meson)..."
   _hdir=$(mktemp -d)
   if git clone --depth 1 https://github.com/boltgolt/howdy.git "$_hdir/howdy" \
      && cd "$_hdir/howdy" \
-     && ./debian/install.sh; then
+     && meson setup build --prefix=/usr \
+     && meson compile -C build \
+     && meson install -C build \
+     && { [ -f /lib/security/howdy/pam.py ] || [ -f /usr/lib/security/howdy/pam.py ]; }; then
+    # Normalize to the path our PAM rules use.
+    if [ ! -f /lib/security/howdy/pam.py ] && [ -f /usr/lib/security/howdy/pam.py ]; then
+      mkdir -p /lib/security/howdy
+      ln -sfn /usr/lib/security/howdy/pam.py /lib/security/howdy/pam.py
+    fi
     echo "[customize_airootfs] howdy installed → /lib/security/howdy/"
   else
     echo "[customize_airootfs] WARNING: howdy build failed — face auth disabled, fingerprint + passphrase still work"
-    # Drop a no-op pam.py so the PAM rule doesn't error every boot.
     mkdir -p /lib/security/howdy
     cat > /lib/security/howdy/pam.py <<'PYEOF'
 def pam_sm_authenticate(pamh, flags, args):
@@ -589,16 +592,27 @@ fi
 # ─────────────────────────────────────────────────────────────────────
 _aur_build() {
   # _aur_build <repo-name> [extra-makepkg-args...]
+  # makepkg must run as an unprivileged user. Root mktemp -d creates a
+  # mode-0700 directory nobody cannot write into — that caused every AUR
+  # package (including calamares) to fail with "Permission denied" on
+  # git clone (seen 2026-07-27 bake). Fix: sticky /tmp + chown the workdir.
   local pkg="$1"; shift || true
-  if pacman -Qi "$pkg" >/dev/null 2>&1 || command -v "$pkg" >/dev/null 2>&1; then
+  local bin_probe="$pkg"
+  case "$pkg" in
+    yay-bin) bin_probe=yay ;;
+  esac
+  if pacman -Qi "$pkg" >/dev/null 2>&1 || command -v "$bin_probe" >/dev/null 2>&1; then
     return 0
   fi
   echo "[customize_airootfs] AUR: building ${pkg}..."
+  chmod 1777 /tmp 2>/dev/null || true
   local _bdir; _bdir=$(mktemp -d)
+  chown nobody:nobody "${_bdir}"
+  chmod 755 "${_bdir}"
   if sudo -u nobody git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "${_bdir}/${pkg}" \
      && cd "${_bdir}/${pkg}" \
      && sudo -u nobody makepkg -s --noconfirm "$@" \
-     && pacman -U --noconfirm ./*.pkg.tar.zst ; then
+     && pacman -U --noconfirm --needed ./*.pkg.tar.zst ; then
     echo "[customize_airootfs] AUR: ${pkg} installed"
   else
     echo "[customize_airootfs] AUR: ${pkg} build FAILED (non-fatal)"
