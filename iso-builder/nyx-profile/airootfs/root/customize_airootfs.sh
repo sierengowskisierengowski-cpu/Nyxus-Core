@@ -623,11 +623,56 @@ _aur_setup() {
   # Chroot pacman cannot stat the real root; CheckSpace must be off for the bake.
   cp -f /etc/pacman.conf /etc/pacman.conf.nyxbak 2>/dev/null || true
   sed -i 's/^[[:space:]]*CheckSpace/#CheckSpace/' /etc/pacman.conf
+
+  # ── THE ACTUAL REASON AUR BUILDS NEVER WORKED ─────────────────────────────
+  # airootfs ships NO /etc/pacman.d/mirrorlist, but airootfs/etc/pacman.conf
+  # points [core], [extra] AND [multilib] at `Include =
+  # /etc/pacman.d/mirrorlist`. Archiso leaves it empty on purpose — reflector
+  # populates it on first boot — but that means pacman INSIDE the chroot has
+  # zero servers, so every `makepkg -s` dependency install died with:
+  #     error: no servers configured for repository: extra
+  #     error: failed to commit transaction
+  # calamares needed kpmcore + yaml-cpp, ananicy-cpp needed spdlog,
+  # appimagelauncher needed patchelf + squashfuse — all unreachable. That is
+  # why three ISOs in a row shipped with no installer. The earlier
+  # "[sudo] password for nobody" failure was a second bug stacked on top of
+  # this one; fixing that just let pacman get far enough to reveal this.
+  #
+  # Use the official geo-balanced mirror rather than guessing a country, and
+  # put the file back exactly as it was at teardown so the shipped ISO still
+  # gets a reflector-generated list on first boot.
+  _NYX_WROTE_MIRRORLIST=0
+  if [[ ! -s /etc/pacman.d/mirrorlist ]] \
+     || ! grep -qE '^[[:space:]]*Server' /etc/pacman.d/mirrorlist 2>/dev/null; then
+    [[ -f /etc/pacman.d/mirrorlist ]] \
+      && cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.nyxbak
+    install -d /etc/pacman.d
+    printf 'Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch\n' \
+      > /etc/pacman.d/mirrorlist
+    _NYX_WROTE_MIRRORLIST=1
+    echo "[customize_airootfs] AUR: wrote a temporary build mirrorlist (chroot had none)"
+  fi
+  # Refresh the package DBs against those mirrors or -Sy-less installs still miss.
+  pacman -Sy --noconfirm >/dev/null 2>&1 \
+    && echo "[customize_airootfs] AUR: pacman DBs synced" \
+    || echo "[customize_airootfs] AUR: WARNING pacman -Sy failed (offline build host?)"
+
   echo "[customize_airootfs] AUR: build user ${_NYX_BUILDUSER} ready, CheckSpace off"
 }
 _aur_teardown() {
   rm -f /etc/sudoers.d/99-nyxus-aur-build
   [[ -f /etc/pacman.conf.nyxbak ]] && mv -f /etc/pacman.conf.nyxbak /etc/pacman.conf
+  # Put the mirrorlist back exactly as archiso intended, so the shipped ISO
+  # still builds its own via reflector on first boot instead of being pinned to
+  # whatever single mirror the bake host happened to use.
+  if [[ "${_NYX_WROTE_MIRRORLIST:-0}" == "1" ]]; then
+    if [[ -f /etc/pacman.d/mirrorlist.nyxbak ]]; then
+      mv -f /etc/pacman.d/mirrorlist.nyxbak /etc/pacman.d/mirrorlist
+    else
+      rm -f /etc/pacman.d/mirrorlist
+    fi
+    echo "[customize_airootfs] AUR: temporary build mirrorlist reverted"
+  fi
   userdel -r "${_NYX_BUILDUSER}" 2>/dev/null || true
   rm -rf "/var/tmp/${_NYX_BUILDUSER}"
   echo "[customize_airootfs] AUR: build user removed, CheckSpace restored"
