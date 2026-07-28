@@ -513,10 +513,14 @@ fi
 
 # ── Hyprland conf.d/ overlays (blur/fog/general/opacity/rules/layerblur) ────
 install -m 0644 "${NS}"/nyxus-hyprland-*.conf "${SKEL}/.config/hypr/conf.d/"
-# Station matrix + safemode + signature + arsenal/reactive shards
-# (not matched by nyxus-hyprland-*.conf). MUST include arsenal-apps + reactive
-# or the wipe of skel/.config/hypr above drops them even when committed in
-# airootfs — 2026-07-24 W6 (committed-but-wiped-at-bake).
+# Station matrix + safemode + signature + arsenal/reactive/consoles shards
+# (not matched by nyxus-hyprland-*.conf). MUST list every shard hyprland.conf
+# `source=`s, or the wipe of skel/.config/hypr above drops it even when
+# committed in airootfs — 2026-07-24 W6 (committed-but-wiped-at-bake).
+# 2026-07-28: nyxus-consoles.conf was the same bug a second time. It is
+# sourced at hyprland.conf line 592, so a bake without it boots straight into
+# Hyprland's "source= ... found no match" error banner. verify-profile.sh now
+# derives this requirement from hyprland.conf instead of trusting this list.
 for _shard in \
   nyxus-stations.conf \
   nyxus-safemode.conf \
@@ -524,7 +528,8 @@ for _shard in \
   nyxus-freeform.conf \
   nyxus-cometfire.conf \
   nyxus-reactive.conf \
-  nyxus-arsenal-apps.conf
+  nyxus-arsenal-apps.conf \
+  nyxus-consoles.conf
 do
   if [[ -f "${NS}/${_shard}" ]]; then
     install -m 0644 "${NS}/${_shard}" "${SKEL}/.config/hypr/conf.d/${_shard}"
@@ -745,7 +750,24 @@ fi
 if [[ -f "${NS}/greetd/nyxus-greeter" ]]; then
   install -m 0755 "${NS}/greetd/nyxus-greeter" "${LBIN}/nyxus-greeter"
 fi
-ok "helpers: wallpaper-rotate / nyxus-eww-launch / hub+escape set / greeter"
+
+# ── Station decks + Jul-27 ops scripts (rev 2026-07-28) ─────────────────
+# nyxus-home-deck is the socket2 watcher that maps EVERY station to its eww
+# window (HOME->home-deck, START->start-panel, GHOST/FORGE/LAB->their decks).
+# It was never staged, so the 2026.07.27 ISO shipped a rail whose HOME and
+# START pills switched to workspaces that stayed empty — the eww side was
+# current, only the launcher was missing. hyprland.conf exec-once's it by
+# name, so without this line the whole station layer is dead on a fresh bake.
+#
+# nyxus-edr-repair matters on a fresh install specifically: Bifrost's AI EDR
+# ships blind (Ollama not started) and this is the only thing that fixes it.
+for _station in nyxus-home-deck nyxus-consoles nyxus-edr-repair \
+                nyxus-suricata-setup nyxus-journal-ship nyxus-livewall-flagship; do
+  if [[ -f "${NS}/${_station}" ]]; then
+    install -m 0755 "${NS}/${_station}" "${LBIN}/${_station}"
+  fi
+done
+ok "helpers: wallpaper-rotate / nyxus-eww-launch / hub+escape set / greeter / stations"
 
 # ── Security mode scripts (rev 2026-07-17) ──────────────────────────────
 # nyxus-ghost, nyxus-panic, nyxus-hacker-mode, nyxus-blackarch-full
