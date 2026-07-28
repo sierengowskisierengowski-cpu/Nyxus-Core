@@ -5320,6 +5320,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   background-image: none;
   box-shadow: none;
 }
+.nyx-hacker.deck-root, .nyx-hacker.gh-root, .nyx-hacker.start-root,
 .nyx-hacker .deck-root, .nyx-hacker .gh-root, .nyx-hacker .start-root {
   background-color: #000000;
   background-image: none;
@@ -5616,6 +5617,7 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   text-shadow: 0 0 5px rgba(255, 255, 255, 0.45);
 }
 /* brighter structural hairlines so surfaces are readable, not just present */
+.nyx-hacker.deck-root, .nyx-hacker.gh-root, .nyx-hacker.start-root,
 .nyx-hacker .deck-root, .nyx-hacker .gh-root, .nyx-hacker .start-root {
   border-color: rgba(255, 255, 255, 0.30);
   box-shadow: 0 0 26px rgba(255, 255, 255, 0.10);
@@ -5653,4 +5655,187 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 /* the danger red is the one thing allowed to glow in colour */
 .nyx-hacker .mon-alert, .nyx-hacker .gh-big-hot, .nyx-hacker .fg-dirty {
   text-shadow: 0 0 8px rgba(255, 45, 85, 0.65);
+}
+
+/* ── hacker mode: graphs, icons and ticker read as LIT chrome ────────── */
+/* Owner: "the graphs need to be glowing white number and icons and ticker
+   also". The earlier grey ramp was too polite - at a glance the bottom bar
+   looked switched off. Icons and values go to near-white with a real glow, the
+   sparkline traces come up to match, and the ticker is lit rather than dimmed.
+   Written AFTER the grey-ramp block so these win on source order. */
+.nyx-hacker .mon-glyph,
+.nyx-hacker .mon-glyph-orange, .nyx-hacker .mon-glyph-gold,
+.nyx-hacker .mon-glyph-pink, .nyx-hacker .mon-glyph-blue,
+.nyx-hacker .mon-glyph-green, .nyx-hacker .mon-glyph-secondary {
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.60), 0 0 15px rgba(255, 255, 255, 0.28);
+}
+.nyx-hacker .mon-trace, .nyx-hacker .mon-trace-sm,
+.nyx-hacker .mon-trace-orange, .nyx-hacker .mon-trace-gold,
+.nyx-hacker .mon-trace-pink, .nyx-hacker .mon-trace-blue,
+.nyx-hacker .mon-trace-green, .nyx-hacker .mon-trace-secondary {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.50), 0 0 14px rgba(255, 255, 255, 0.22);
+}
+.nyx-hacker .mon-value, .nyx-hacker .mon-value-sm, .nyx-hacker .mon-updown,
+.nyx-hacker .mon-value-orange, .nyx-hacker .mon-value-gold,
+.nyx-hacker .mon-value-pink, .nyx-hacker .mon-value-blue,
+.nyx-hacker .mon-value-green, .nyx-hacker .mon-value-secondary,
+.nyx-hacker .bar-tile-value {
+  color: #ffffff;
+  text-shadow: 0 0 7px rgba(255, 255, 255, 0.75), 0 0 18px rgba(255, 255, 255, 0.34);
+}
+.nyx-hacker .mon-label, .nyx-hacker .bar-tile-label {
+  color: rgba(255, 255, 255, 0.66);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.30);
+}
+.nyx-hacker .ticker, .nyx-hacker .ticker-text, .nyx-hacker .ticker-hero {
+  color: #ffffff;
+  text-shadow: 0 0 7px rgba(255, 255, 255, 0.62), 0 0 17px rgba(255, 255, 255, 0.28);
+}
+/* cava spectrum: lit, and it still pulses from CAVA_BASS in the yuck */
+.nyx-hacker .cava, .nyx-hacker .cava-saucer, .nyx-hacker .cava-box {
+  color: rgba(255, 255, 255, 0.90);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.48);
+}
+.nyx-hacker .cava-mini, .nyx-hacker .cava-label {
+  color: rgba(255, 255, 255, 0.60);
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.28);
+}
+.nyx-hacker .deck-spark, .nyx-hacker .deck-spark-blue {
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.40);
+}
+/* danger still overrides everything above and is the only colour that glows */
+.nyx-hacker .mon-alert, .nyx-hacker .mon-alert .mon-value,
+.nyx-hacker .mon-alert .mon-glyph, .nyx-hacker .mon-alert .mon-trace {
+  color: #ff2d55;
+  text-shadow: 0 0 8px rgba(255, 45, 85, 0.75), 0 0 20px rgba(255, 45, 85, 0.32);
+}
+
+/* ── hacker mode: the MUSIC face (boombox) goes monochrome too ───────── */
+/* The bottom bar flips to the boombox when audio plays, and that face carries
+   its own colours the deck rules never reached: a magenta speaker ring on the
+   left, a green one on the right, green transport buttons and a green artist
+   line. In hacker mode all of it becomes white-on-black. The speaker rings are
+   still driven by CAVA_BASS from the yuck, so they keep pulsing to the music -
+   only the hue changes. */
+.nyx-hacker .boombox-frame, .nyx-hacker .boombox-display,
+.nyx-hacker .boombox-base, .nyx-hacker .boombox-controls {
+  background-color: rgba(0, 0, 0, 0.72);
+  background-image: none;
+  border-color: rgba(255, 255, 255, 0.30);
+  box-shadow: none;
+}
+.nyx-hacker .boombox-speaker, .nyx-hacker .boombox-cone {
+  background-color: transparent;
+  background-image: none;
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.28);
+}
+.nyx-hacker .boombox-led {
+  background-color: rgba(255, 255, 255, 0.85);
+  background-image: none;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.55);
+}
+.nyx-hacker .bar-hub-music-title {
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.55);
+}
+.nyx-hacker .bar-hub-music-artist {
+  color: rgba(255, 255, 255, 0.66);
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.30);
+}
+.nyx-hacker .saucer-btn, .nyx-hacker .saucer-btn-main {
+  background-color: rgba(0, 0, 0, 0.55);
+  background-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.40);
+  box-shadow: none;
+}
+.nyx-hacker .saucer-btn:hover, .nyx-hacker .saucer-btn-main:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: #ffffff;
+  color: #ffffff;
+  box-shadow: none;
+}
+.nyx-hacker .saucer-prog, .nyx-hacker .saucer-prog-row {
+  background-color: rgba(255, 255, 255, 0.16);
+  background-image: none;
+}
+.nyx-hacker .saucer-prog-fill {
+  background-color: rgba(255, 255, 255, 0.90);
+  background-image: none;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.45);
+}
+.nyx-hacker .saucer-time, .nyx-hacker .saucer-date {
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.32);
+}
+
+/* ── hacker mode: RED as the accent on key features and icons ────────── */
+/* Owner: "throw more red throughout, maybe to key feature or icons - I like
+   that red with the dark". So the scheme is black / white / red: structure and
+   data stay white, and RED marks the things you look for. It still means
+   danger where it means danger - a failed unit and a card icon are both red -
+   but with everything else greyscale, red is the only thing that pulls the eye
+   anywhere on screen, which is the point.
+
+   #ff2d55 is the palette's canon red, not a new colour. */
+
+/* card + section icons: the glyph is the landmark, so it is the accent */
+.nyx-hacker .deck-card-glyph, .nyx-hacker .start-tile-glyph,
+.nyx-hacker .start-hit-glyph, .nyx-hacker .gh-cat, .nyx-hacker .start-sec,
+.nyx-hacker .lab-role, .nyx-hacker .start-ars-cat {
+  color: #ff2d55;
+  text-shadow: 0 0 7px rgba(255, 45, 85, 0.55), 0 0 16px rgba(255, 45, 85, 0.22);
+}
+/* threat posture: the single most important readout on the GHOST deck */
+.nyx-hacker .gh-posture,
+.nyx-hacker .gh-posture-green, .nyx-hacker .gh-posture-warn,
+.nyx-hacker .gh-posture-hot, .nyx-hacker .gh-posture-ok {
+  color: #ff2d55;
+  text-shadow: 0 0 10px rgba(255, 45, 85, 0.70), 0 0 24px rgba(255, 45, 85, 0.30);
+}
+/* the active station is where you ARE - mark it red, not white */
+.nyx-hacker .ws-pill-active {
+  color: #ff2d55;
+  text-shadow: 0 0 9px rgba(255, 45, 85, 0.95), 0 0 22px rgba(255, 45, 85, 0.45);
+}
+/* brand marks + section rules pick up a red edge */
+.nyx-hacker .deck-brand {
+  color: rgba(255, 255, 255, 0.94);
+  text-shadow: 0 0 9px rgba(255, 45, 85, 0.45), 0 0 22px rgba(255, 45, 85, 0.18);
+}
+.nyx-hacker .gh-cat-rule {
+  background-color: rgba(255, 45, 85, 0.34);
+  background-image: none;
+}
+/* status dots: red when down, dim white when fine - the eye finds the red */
+.nyx-hacker .gh-dot, .nyx-hacker .lab-dot, .nyx-hacker .start-chip-dot {
+  color: rgba(255, 255, 255, 0.42);
+  text-shadow: none;
+}
+.nyx-hacker .gh-row-down .gh-dot, .nyx-hacker .lab-vm-bad .lab-dot,
+.nyx-hacker .start-chip-off .start-chip-dot, .nyx-hacker .gh-chip-hot {
+  color: #ff2d55;
+  text-shadow: 0 0 8px rgba(255, 45, 85, 0.80);
+}
+/* progress + transport fill: red reads as "this is live" */
+.nyx-hacker .deck-prog progress, .nyx-hacker .saucer-prog-fill {
+  background-color: #ff2d55;
+  background-image: none;
+  box-shadow: 0 0 7px rgba(255, 45, 85, 0.55);
+}
+/* the play/pause control is the key action on the music face */
+.nyx-hacker .saucer-btn-main {
+  border-color: rgba(255, 45, 85, 0.75);
+  color: #ff2d55;
+  text-shadow: 0 0 7px rgba(255, 45, 85, 0.60);
+}
+.nyx-hacker .saucer-btn-main:hover {
+  border-color: #ff2d55;
+  color: #ffffff;
+  background-color: rgba(255, 45, 85, 0.18);
 }

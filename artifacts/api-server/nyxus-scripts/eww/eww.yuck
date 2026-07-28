@@ -675,7 +675,7 @@
     ;; it pulses rather than just sitting lit. margin-bottom nudges the panel
     ;; up onto the MEASURED aperture centre (4.2px above the band centre).
     (box :class "saucer-screen saucer-screen-music boombox-frame" :halign "center" :valign "center"
-         :style "margin-bottom: 6px; box-shadow: 0 0 ${8 + CAVA_BASS / 7}px rgba(125, 255, 94, ${0.30 + CAVA_BASS / 320}), 0 0 ${16 + CAVA_BASS / 4}px rgba(255, 45, 173, ${0.14 + CAVA_BASS / 520}), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 18px rgba(0, 0, 0, 0.85);"
+         :style "margin-bottom: 6px; box-shadow: 0 0 ${8 + CAVA_BASS / 7}px rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '125, 255, 94'}, ${0.30 + CAVA_BASS / 320}), 0 0 ${16 + CAVA_BASS / 4}px rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '255, 45, 173'}, ${0.14 + CAVA_BASS / 520}), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 18px rgba(0, 0, 0, 0.85);"
       (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
         (box :class "boombox-display" :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
           (label :class "bar-hub-music-title" :limit-width 24 :truncate "end"
@@ -792,9 +792,9 @@
           :onclick "nyxus-hub-launch '${app.id}' &"
           :tooltip "${app.name}"
           :hexpand true
-          :style "padding: 8px 10px; margin: 2px 0; border-radius: 10px; background-color: rgba(125,61,255,0.10);"
+          :style "padding: 8px 10px; margin: 2px 0; border-radius: 10px; background-color: rgba(${SECSTATE.hacker == 'on' ? '255,255,255' : '125,61,255'},0.10);"
     (box :orientation "h" :space-evenly false :spacing 10 :halign "start" :hexpand true
-      (label :text "◆" :style "color: #7d3dff; font-size: 15px;")
+      (label :text "◆" :style "color: ${SECSTATE.hacker == 'on' ? '#ff2d55' : '#7d3dff'}; font-size: 15px;")
       (label :halign "start" :hexpand true
              :text "${app.name}" :style "color: #eef2fa; font-size: 13px;"))))
 
@@ -1281,7 +1281,7 @@
   ;; Bass-reactive rim so the deck breathes with the music like the rest of
   ;; the rig (boombox / reflex layer). Inline because CAVA_BASS interpolates.
   (box :class "nyxus-surface deck-card deck-card-${tone ?: 'violet'} deck-${depth ?: 'mid'}" :orientation "v"
-       :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${18 + CAVA_BASS / 3}px rgba(125, 61, 255, ${0.20 + CAVA_BASS / 330}), 0 0 ${44 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 520});"
+       :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${18 + CAVA_BASS / 3}px rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '125, 61, 255'}, ${0.20 + CAVA_BASS / 330}), 0 0 ${44 + CAVA_BASS}px rgba(${SECSTATE.hacker == 'on' ? '255, 45, 85' : '255, 45, 173'}, ${0.10 + CAVA_BASS / 520});"
        :space-evenly false :spacing 8 :valign "start" :hexpand false :vexpand false
     (box :class "deck-card-head" :orientation "h" :space-evenly false :spacing 8
       (label :class "deck-card-glyph" :text {glyph ?: "◈"})
@@ -1686,7 +1686,7 @@
   (box :class "nyxus-surface deck-card deck-card-${tone ?: 'green'} deck-mid"
        :orientation "v" :space-evenly false :spacing 7
        :valign {fill ? "fill" : "start"} :vexpand {fill ?: false} :hexpand true
-       :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${16 + CAVA_BASS / 3}px rgba(125, 61, 255, ${0.18 + CAVA_BASS / 340});"
+       :style "box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 0 ${16 + CAVA_BASS / 3}px rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '125, 61, 255'}, ${0.18 + CAVA_BASS / 340});"
     (box :class "deck-card-head" :orientation "h" :space-evenly false :spacing 8
       (label :class "deck-card-glyph" :text {glyph ?: "◈"})
       (label :class "deck-card-title" :halign "start" :hexpand true :text title)

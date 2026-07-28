@@ -251,6 +251,55 @@ but a bar that changes height mid-session shifts the desktop; (c) commission a
 genuinely wider (3:1+) boombox composition. Multiply the fractions above by the
 chosen render size to place the overlay — never eyeball it.
 
+### 🩸 Hacker mode rev 2 — BLACK / WHITE / RED (2026-07-28, owner-directed)
+
+Owner refined it live: *"different shades of black so you can see all the
+details"*, *"the graphs need to be glowing white number and icons and ticker"*,
+*"throw more red throughout to key feature or icons — I like that red with the
+dark"*. Result: **black structure, white data, red landmarks.**
+
+- **Art is layered blacks, not flat greyscale.** The first mono pass left the
+  hull mid-grey and the wallpaper's galaxy core blown to white, so a
+  white-outlined ship on a bright background vanished. Now the body is crushed
+  (`luma**3.1 * 0.30`) and only the top ~38% of luma survives as white detail
+  lines, plus a baked 3px white silhouette ring. Reads on light *and* dark.
+- **The wallpaper is genuinely shades of black now**: mean luma **12.3**,
+  **0.000%** above 200, 1.74% above 100. Every white pixel on screen now
+  belongs to the interface, not the background.
+- **Graphs/icons/ticker are lit**, not dimmed — the earlier grey ramp made the
+  bottom bar look switched off.
+- **Red = the landmark colour** (`#ff2d55`, palette canon): card and section
+  glyphs, the GHOST threat readout, the active station pill, status dots when
+  down, progress fill, the play/pause control. Everything else greyscale, so
+  red is the only thing that pulls the eye anywhere on screen.
+- **The music face is monochrome too** — it had its own magenta and green
+  speaker rings, green transport buttons and a green artist line that the deck
+  rules never reached. Measured **0.00%** coloured pixels after.
+
+**TWO TRAPS that cost real time here — read before touching hacker CSS:**
+
+1. **Inline `:style` beats every stylesheet rule.** The violet rim the owner
+   kept pointing at was NOT CSS: `ghost_card` and `deck_card` carry hard-coded
+   `box-shadow: ... rgba(125, 61, 255, ...)` in an inline style, and so did the
+   boombox speaker glow, a row wash and a `◆` marker. An `!important` probe on
+   `.nyx-hacker .nyxus-surface` produced **zero** effect, which is what proved
+   it. All 5 are now `SECSTATE.hacker`-conditional in the yuck; CAVA bass
+   reactivity is preserved, only the hue swaps. Grep for
+   `:style` + a hard-coded hex before assuming CSS can fix a colour.
+2. **`.nyx-hacker` is ON the deck root, so the root needs a COMPOUND selector.**
+   `.nyx-hacker .gh-root` (descendant) never matches the element that carries
+   the class — it must be `.nyx-hacker.gh-root`. Everything *inside* the deck
+   themed correctly while the root itself kept its rim, which is a very
+   misleading symptom. Same applies to `.deck-root` and `.start-root`. The bar
+   roots were already correct (`.nyx-hacker.ws-rail` etc.) — match that form.
+
+**Debugging note:** `eww reload` CLOSES the deck windows, and
+`nyxus-home-deck` only reopens them on the next workspace event. So a
+screenshot straight after a reload can catch an empty station or a stale window
+and produce measurements that contradict each other. Toggle to another
+workspace and back before capturing, or you will chase ghosts — this happened
+repeatedly during this pass.
+
 ### 🛡 verify-profile gate 13x — Hyprland version guard (2026-07-28)
 
 Hard-**FAIL**s the bake if the repos offer Hyprland **≥ 0.57**, because that
