@@ -1298,6 +1298,36 @@ else
              | grep -oE 'nyxus-[a-z0-9-]+\.service' | sort -u)
 fi
 
+# ── the station matrix ships from a THIRD tree, not from skel ───────────────
+# artifacts/nyxus-config/ overwrites skel/.config/nyxus/stations*.json at bake
+# (build-iso.sh NYXUS_CFG). So a fix applied only to the committed skel copy is
+# silently discarded — which is how stations-hacker.json kept 9=BLAST / 10=EDGE
+# after the Jul 27 rename, and why a single hacker-mode flip reverted station
+# identity on a machine that looked correct in git.
+NYXCFG="${HERE}/../artifacts/nyxus-config"
+for _j in stations.json stations-hacker.json; do
+  if [[ ! -f "${NYXCFG}/${_j}" ]]; then
+    warn "artifacts/nyxus-config/${_j} absent — bake will ship whatever is in skel"
+  elif ! cmp -s "${NYXCFG}/${_j}" "${AIROOT}/etc/skel/.config/nyxus/${_j}"; then
+    fail "${_j} DRIFTED between artifacts/nyxus-config and skel — the bake ships the nyxus-config copy"
+  else
+    ok "station matrix in sync: ${_j}"
+  fi
+done
+
+# Station identity must not change between the normal and hacker matrices.
+# Hacker mode themes wallpaper and launch commands, NOT which station is which.
+if [[ -f "${NYXCFG}/stations.json" && -f "${NYXCFG}/stations-hacker.json" ]] \
+   && command -v jq >/dev/null 2>&1; then
+  if diff -q <(jq -r '.stations[]|"\(.id) \(.name)"' "${NYXCFG}/stations.json" 2>/dev/null) \
+             <(jq -r '.stations[]|"\(.id) \(.name)"' "${NYXCFG}/stations-hacker.json" 2>/dev/null) \
+             >/dev/null 2>&1; then
+    ok "station identity identical in normal + hacker matrices"
+  else
+    fail "station names differ between stations.json and stations-hacker.json — a hacker-mode flip will silently rename stations"
+  fi
+fi
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

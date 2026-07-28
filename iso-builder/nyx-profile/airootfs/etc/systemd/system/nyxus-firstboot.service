@@ -10,7 +10,23 @@ After=systemd-machine-id-commit.service network.target
 Wants=network-online.target
 
 [Service]
-Type=oneshot
+# Type=simple, NOT oneshot (changed 2026-07-28). A Type=oneshot unit is only
+# "started" once ExecStart RETURNS, so multi-user.target blocked until every
+# firstboot fragment had finished — and graphical.target is Requires+After
+# multi-user.target, with greetd behind it. The honeypot fragment does a
+# ~1GB `docker load` plus ten container starts, which is why the login screen
+# took 102 seconds to appear on the 2026.07.27 ISO. The 900s TimeoutStartSec
+# below was granted for exactly that work; nobody noticed it was sitting on
+# the critical path to the greeter.
+#
+# With Type=simple the unit counts as started as soon as it forks, so boot
+# proceeds and firstboot runs alongside the desktop coming up. Nothing orders
+# itself after this unit, so nothing regresses.
+#
+# Do NOT add After=network-online.target here. multi-user.target waits for its
+# wanted units to START, and an After= would push that wait back behind
+# NetworkManager-wait-online — reintroducing the delay this change removes.
+Type=simple
 RemainAfterExit=yes
 ExecStart=/usr/local/sbin/nyxus-firstboot
 StandardOutput=journal

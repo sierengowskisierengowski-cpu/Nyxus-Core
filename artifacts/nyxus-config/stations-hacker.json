@@ -1,14 +1,14 @@
 {
-  "_comment": "NYXUS HACKER-MODE Station Matrix \u2014 security layout for `nyxus-hacker-mode on`. Wallpapers are ALIEN DARK only (no hacker-mode / kageryu / demon art). NEVER auto-activated at boot.",
+  "_comment": "NYXUS HACKER-MODE Station Matrix — security layout for `nyxus-hacker-mode on`. Wallpapers are ALIEN DARK only (no hacker-mode / kageryu / demon art). NEVER auto-activated at boot.",
   "wall_dir": "~/.config/hypr/walls",
   "unified_wallpaper": "nyxus-rot-black-void.png",
   "home": {
     "id": 0,
     "hypr": "name:0",
     "name": "HOME",
-    "code": "\u25c8",
+    "code": "◈",
     "hue": "green",
-    "tagline": "Blackout Reactor \u00b7 Command Deck",
+    "tagline": "Blackout Reactor · Command Deck",
     "wallpaper": "nyxus-rot-black-void.png"
   },
   "stations": [
@@ -17,7 +17,7 @@
       "name": "OPS",
       "code": "OP",
       "hue": "green",
-      "tagline": "Arsenal \u00b7 Command \u00b7 Shell",
+      "tagline": "Arsenal · Command · Shell",
       "wallpaper": "nyxus-rot-black-void.png",
       "launch": "sh -c 'command -v arsenal >/dev/null && kitty --title Arsenal -e arsenal || alacritty'"
     },
@@ -26,7 +26,7 @@
       "name": "FORGE",
       "code": "FG",
       "hue": "red",
-      "tagline": "RedForge \u00b7 Offense \u00b7 Trainer",
+      "tagline": "RedForge · Offense · Trainer",
       "wallpaper": "nyxus-rot-deep-void-stars.png",
       "launch": "sh -c 'command -v firefox >/dev/null && firefox --new-window http://localhost:5173 || alacritty'"
     },
@@ -35,7 +35,7 @@
       "name": "GHOST",
       "code": "GH",
       "hue": "green",
-      "tagline": "jeTT \u00b7 Bifrost \u00b7 Live Detections",
+      "tagline": "jeTT · Bifrost · Live Detections",
       "wallpaper": "nyxus-rot-subway-void.png",
       "launch": "sh -c 'command -v bifrost >/dev/null && (bifrost >/dev/null 2>&1 &); alacritty -e sh -c \"journalctl -f -u jett-daemon 2>/dev/null || journalctl -xef\"'"
     },
@@ -44,7 +44,7 @@
       "name": "PULSE",
       "code": "PL",
       "hue": "red",
-      "tagline": "Meli \u00b7 Honeypot \u00b7 Grafana",
+      "tagline": "Meli · Honeypot · Grafana",
       "wallpaper": "nyxus-rot-milkyway-void.png",
       "launch": "sh -c 'command -v meli >/dev/null && (meli >/dev/null 2>&1 &); command -v firefox >/dev/null && firefox --new-window http://localhost:3000 || alacritty'"
     },
@@ -53,7 +53,7 @@
       "name": "WAVE",
       "code": "WV",
       "hue": "orange",
-      "tagline": "Recon \u00b7 Capture \u00b7 Traffic",
+      "tagline": "Recon · Capture · Traffic",
       "wallpaper": "nyxus-rot-empty-lot-saucer.png",
       "launch": "sh -c 'alacritty -e sh -c \"command -v bandwhich >/dev/null && sudo bandwhich || btop\"'"
     },
@@ -62,7 +62,7 @@
       "name": "CORE",
       "code": "CR",
       "hue": "green",
-      "tagline": "CIPHER \u00b7 Crypto \u00b7 Vault",
+      "tagline": "CIPHER · Crypto · Vault",
       "wallpaper": "nyxus-rot-saucer-solo.png",
       "launch": "sh -c '[ -d /opt/arsenal/tools/CIPHER ] && (command -v firefox >/dev/null && firefox --new-window http://localhost:8080 || alacritty) || alacritty -e sh -c \"cd /opt/arsenal/tools 2>/dev/null; bash\"'"
     },
@@ -71,7 +71,7 @@
       "name": "MESH",
       "code": "MS",
       "hue": "green",
-      "tagline": "Tor \u00b7 Ghost \u00b7 Net Recon",
+      "tagline": "Tor · Ghost · Net Recon",
       "wallpaper": "nyxus-rot-beam-down.png",
       "launch": "sh -c 'alacritty -e sh -c \"echo NYXUS GHOST STATUS:; nyxus-ghost status 2>/dev/null; echo; command -v nmap >/dev/null && echo \\\"nmap ready\\\"; exec bash\"'"
     },
@@ -80,25 +80,25 @@
       "name": "SCRIBE",
       "code": "SC",
       "hue": "purple",
-      "tagline": "Loot \u00b7 Notes \u00b7 Evidence",
+      "tagline": "Loot · Notes · Evidence",
       "wallpaper": "nyxus-rot-nebula-cruise.png",
       "launch": "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'"
     },
     {
       "id": 9,
-      "name": "BLAST",
+      "name": "BIFROST",
       "code": "BL",
       "hue": "red",
-      "tagline": "Exploit \u00b7 Payload \u00b7 Blast",
+      "tagline": "Exploit · Payload · Blast",
       "wallpaper": "nyxus-urban-alien.png",
       "launch": "sh -c 'alacritty -e sh -c \"command -v msfconsole >/dev/null && msfconsole || bash\"'"
     },
     {
       "id": 10,
-      "name": "EDGE",
+      "name": "ARSENAL",
       "code": "ED",
       "hue": "green",
-      "tagline": "Lab \u00b7 Reverse \u00b7 Malware",
+      "tagline": "Lab · Reverse · Malware",
       "wallpaper": "nyxus-graffiti-space.png",
       "launch": "sh -c 'alacritty -e sh -c \"command -v r2 >/dev/null && echo radare2 ready; exec bash\"'"
     }
