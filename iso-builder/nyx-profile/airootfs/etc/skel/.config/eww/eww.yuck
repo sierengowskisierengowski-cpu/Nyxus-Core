@@ -466,23 +466,56 @@
       "START")))
 
 (defwidget station_pill [st]
-  (eventbox :class "float-island"
-    (button :class {st.active ? "ws-pill ws-pill-active ws-pill-${st.hue}" :
-                    st.occupied ? "ws-pill ws-pill-occupied ws-pill-${st.hue}" :
-                                  "ws-pill ws-pill-${st.hue}"}
-            :style "background-position: center;"
-            :onclick "hyprctl dispatch workspace ${st.id} &"
-            :tooltip "${st.name} · ${st.tagline}"
-      "${st.id}")))
+  (button :class {st.active ? "ws-pill ws-pill-active ws-pill-${st.hue}" :
+                  st.occupied ? "ws-pill ws-pill-occupied ws-pill-${st.hue}" :
+                                "ws-pill ws-pill-${st.hue}"}
+          :style "background-position: center;"
+          :onclick "hyprctl dispatch workspace ${st.id} &"
+          :tooltip "${st.name} · ${st.tagline}   (Super+${st.id == 10 ? '0' : st.id})"
+    "${st.id}"))
+
+;; ── companion ("half") station mark ─────────────────────────────────────
+;; The small ALIEN GLYPH that sits under its primary number. Deliberately
+;; subordinate: smaller font and dimmer colour than the number, so the eye
+;; reads the primaries as the main row and these as the in-between slots.
+;;
+;; .ws-alien carries its OWN font stack ("DejaVu Sans" first) — it must NOT
+;; inherit .ws-word's "Permanent Marker", a display face with zero coverage
+;; for Tifinagh/Old Italic/Runic/Greek alike, which renders tofu boxes that
+;; look fine in the source and obviously broken on screen.
+;;
+;; The ten glyphs themselves are NOT here — they come from the single
+;; `half_marks.marks` table in stations.json, so swapping the script is a
+;; ten-string edit in one file.
+(defwidget station_half_pill [st]
+  (button :class {st.half.active ? "ws-alien ws-alien-active ws-pill-${st.hue}" :
+                  st.half.occupied ? "ws-alien ws-alien-occupied ws-pill-${st.hue}" :
+                                     "ws-alien ws-pill-${st.hue}"}
+          :onclick "hyprctl dispatch workspace name:${st.half.name} &"
+          :tooltip "${st.half.name} · ${st.half.tagline}   (Super+Alt+${st.id == 10 ? '0' : st.id})"
+          ;; no mark => an older stations.json with no half_marks table. Hide
+          ;; the button entirely so the rail degrades to the plain 1-10 column
+          ;; instead of growing ten blank clickable gaps.
+          :visible {st.half.mark != ""}
+    "${st.half.mark}"))
+
+;; A station and its companion travel together as one cluster, so the glyph
+;; always sits tight under its own number no matter what the rail spacing is.
+(defwidget station_cluster [st]
+  (box :class "ws-cluster" :orientation "v" :space-evenly false :spacing 0
+       :valign "center" :halign "center"
+    (station_pill :st st)
+    (station_half_pill :st st)))
 
 (defwidget workspaces_rail []
-  (box :class "ws-rail ws-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 10 :valign "center" :halign "center"
+  (box :class "ws-rail ws-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 0 :valign "center" :halign "center"
     (workspace_home_pill)
     (workspace_start_pill)
-    ;; numbered stations 1-10. Station 10 came back as ARSENAL (the four
-    ;; security consoles) after briefly being dropped.
+    ;; numbered stations 1-10, each with its companion glyph beneath it.
+    ;; Station 10 came back as ARSENAL (the four security consoles) after
+    ;; briefly being dropped.
     (for st in {WORKSPACES.stations}
-      (station_pill :st st))))
+      (station_cluster :st st))))
 
 ;; `hue` gives every rail icon its own neon hover identity
 ;; (.app-pill-<hue> in eww.scss — HOME-HUD language, rev 2026-07-09).

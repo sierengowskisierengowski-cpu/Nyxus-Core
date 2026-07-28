@@ -2,6 +2,13 @@
   "_comment": "NYXUS HACKER-MODE Station Matrix — security layout for `nyxus-hacker-mode on`. Wallpapers are ALIEN DARK only (no hacker-mode / kageryu / demon art). NEVER auto-activated at boot.",
   "wall_dir": "~/.config/hypr/walls",
   "unified_wallpaper": "nyxus-urban-alien-mono.png",
+  "half_marks": {
+    "_comment": "★ ALIEN GLYPH TABLE — MUST STAY BYTE-IDENTICAL to the `marks` array in stations.json. Hacker mode themes wallpaper and launch commands, never station identity, and the rail must not re-letter itself on a mode flip. Edit stations.json's table and copy it here. Script: Tifinagh (U+2D30), font DejaVu Sans (ships via ttf-dejavu).",
+    "font": "DejaVu Sans",
+    "script": "Tifinagh (U+2D30)",
+    "marks": ["ⵀ", "ⴲ", "ⵣ", "ⴳ", "ⵙ", "ⵍ", "ⴺ", "ⵋ", "ⵖ", "ⴼ"]
+  },
+  "_half_comment": "Companion ('half') station identities — names identical to stations.json so a mode flip cannot rename them. Their Hyprland workspace rules + launches live in conf.d/nyxus-stations-named.conf, which no generator ever rewrites.",
   "home": {
     "id": 0,
     "hypr": "name:0",
@@ -19,7 +26,8 @@
       "hue": "mono",
       "tagline": "Arsenal · Command · Shell",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'command -v arsenal >/dev/null && kitty --title Arsenal -e arsenal || alacritty'"
+      "launch": "sh -c 'command -v arsenal >/dev/null && kitty --title Arsenal -e arsenal || alacritty'",
+      "half": { "name": "RELAY", "code": "RL", "hue": "mono", "tagline": "Relay · Logs · Journal" }
     },
     {
       "id": 2,
@@ -28,7 +36,8 @@
       "hue": "mono",
       "tagline": "RedForge · Offense · Trainer",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'command -v firefox >/dev/null && firefox --new-window http://localhost:5173 || alacritty'"
+      "launch": "sh -c 'command -v firefox >/dev/null && firefox --new-window http://localhost:5173 || alacritty'",
+      "half": { "name": "ANVIL", "code": "AN", "hue": "mono", "tagline": "Anvil · Repos · Build" }
     },
     {
       "id": 3,
@@ -37,7 +46,8 @@
       "hue": "mono",
       "tagline": "jeTT · Bifrost · Live Detections",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'command -v bifrost >/dev/null && (bifrost >/dev/null 2>&1 &); alacritty -e sh -c \"journalctl -f -u jett-daemon 2>/dev/null || journalctl -xef\"'"
+      "launch": "sh -c 'command -v bifrost >/dev/null && (bifrost >/dev/null 2>&1 &); alacritty -e sh -c \"journalctl -f -u jett-daemon 2>/dev/null || journalctl -xef\"'",
+      "half": { "name": "TRACE", "code": "TR", "hue": "mono", "tagline": "Trace · Process · Watch" }
     },
     {
       "id": 4,
@@ -46,7 +56,8 @@
       "hue": "mono",
       "tagline": "Meli · Honeypot · Grafana",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'command -v meli >/dev/null && (meli >/dev/null 2>&1 &); command -v firefox >/dev/null && firefox --new-window http://localhost:3000 || alacritty'"
+      "launch": "sh -c 'command -v meli >/dev/null && (meli >/dev/null 2>&1 &); command -v firefox >/dev/null && firefox --new-window http://localhost:3000 || alacritty'",
+      "half": { "name": "BEACON", "code": "BC", "hue": "mono", "tagline": "Beacon · Feeds · Boards" }
     },
     {
       "id": 5,
@@ -55,7 +66,8 @@
       "hue": "mono",
       "tagline": "Recon · Capture · Traffic",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'alacritty -e sh -c \"command -v bandwhich >/dev/null && sudo bandwhich || btop\"'"
+      "launch": "sh -c 'alacritty -e sh -c \"command -v bandwhich >/dev/null && sudo bandwhich || btop\"'",
+      "half": { "name": "MIXER", "code": "MX", "hue": "mono", "tagline": "Mixer · Levels · Routing" }
     },
     {
       "id": 6,
@@ -64,7 +76,8 @@
       "hue": "mono",
       "tagline": "CIPHER · Crypto · Vault",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c '[ -d /opt/arsenal/tools/CIPHER ] && (command -v firefox >/dev/null && firefox --new-window http://localhost:8080 || alacritty) || alacritty -e sh -c \"cd /opt/arsenal/tools 2>/dev/null; bash\"'"
+      "launch": "sh -c '[ -d /opt/arsenal/tools/CIPHER ] && (command -v firefox >/dev/null && firefox --new-window http://localhost:8080 || alacritty) || alacritty -e sh -c \"cd /opt/arsenal/tools 2>/dev/null; bash\"'",
+      "half": { "name": "VAULT", "code": "VT", "hue": "mono", "tagline": "Vault · Keys · Archive" }
     },
     {
       "id": 7,
@@ -73,7 +86,8 @@
       "hue": "mono",
       "tagline": "Tor · Ghost · Net Recon",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'alacritty -e sh -c \"echo NYXUS GHOST STATUS:; nyxus-ghost status 2>/dev/null; echo; command -v nmap >/dev/null && echo \\\"nmap ready\\\"; exec bash\"'"
+      "launch": "sh -c 'alacritty -e sh -c \"echo NYXUS GHOST STATUS:; nyxus-ghost status 2>/dev/null; echo; command -v nmap >/dev/null && echo \\\"nmap ready\\\"; exec bash\"'",
+      "half": { "name": "SCAN", "code": "SN", "hue": "mono", "tagline": "Scan · Hosts · Routes" }
     },
     {
       "id": 8,
@@ -82,7 +96,8 @@
       "hue": "mono",
       "tagline": "Loot · Notes · Evidence",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'"
+      "launch": "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'",
+      "half": { "name": "BOARD", "code": "BD", "hue": "mono", "tagline": "Board · Tasks · Plan" }
     },
     {
       "id": 9,
@@ -91,7 +106,8 @@
       "hue": "mono",
       "tagline": "Exploit · Payload · Blast",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'alacritty -e sh -c \"command -v msfconsole >/dev/null && msfconsole || bash\"'"
+      "launch": "sh -c 'alacritty -e sh -c \"command -v msfconsole >/dev/null && msfconsole || bash\"'",
+      "half": { "name": "SENTRY", "code": "SY", "hue": "mono", "tagline": "Sentry · Alerts · Feed" }
     },
     {
       "id": 10,
@@ -100,7 +116,8 @@
       "hue": "mono",
       "tagline": "Lab · Reverse · Malware",
       "wallpaper": "nyxus-urban-alien-mono.png",
-      "launch": "sh -c 'alacritty -e sh -c \"command -v r2 >/dev/null && echo radare2 ready; exec bash\"'"
+      "launch": "sh -c 'alacritty -e sh -c \"command -v r2 >/dev/null && echo radare2 ready; exec bash\"'",
+      "half": { "name": "RANGE", "code": "RG", "hue": "mono", "tagline": "Range · Drills · Trainer" }
     }
   ]
 }

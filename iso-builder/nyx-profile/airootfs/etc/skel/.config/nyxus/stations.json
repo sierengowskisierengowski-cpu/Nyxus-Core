@@ -2,6 +2,13 @@
   "_comment": "NYXUS Station Matrix — single source of truth for workspace 0 (HOME) + stations 1–10. ALIEN THEME ONLY wallpapers (2026-07-23). Synced to workspaces.json, Hyprland defaultName rules, EWW left rail, and nyxus-workspace-wallpaperd.",
   "wall_dir": "~/.config/hypr/walls",
   "unified_wallpaper": "nyxus-urban-alien.png",
+  "half_marks": {
+    "_comment": "★ THE ALIEN GLYPH TABLE (2026-07-28) — THE ONLY PLACE THESE TEN LABELS LIVE. Each numbered station 1-10 has a companion ('half') station reached with Super+Alt+<digit>; the EWW left rail draws these glyphs UNDER their primary number, smaller and dimmer. To change the whole look, edit these ten strings and nothing else. Script is TIFINAGH (U+2D30 block) — geometric, genuinely alien, and fully covered by DejaVu Sans, which ships on the ISO via ttf-dejavu. Alternatives scouted and also installed: Old Italic U+10300 (DejaVu Sans), Runic U+16A0 (Noto Sans Runic), Phoenician U+10900, Coptic U+2C81, Glagolitic U+2C00. Greek is covered by JetBrainsMono Nerd Font too, but reads as maths notation rather than alien script. DO NOT let these inherit .ws-word (Permanent Marker) — that display font has ZERO coverage for every one of these blocks and renders tofu boxes.",
+    "font": "DejaVu Sans",
+    "script": "Tifinagh (U+2D30)",
+    "marks": ["ⵀ", "ⴲ", "ⵣ", "ⴳ", "ⵙ", "ⵍ", "ⴺ", "ⵋ", "ⵖ", "ⴼ"]
+  },
+  "_half_comment": "Each station's `half` block is the companion station's IDENTITY ONLY (name/code/hue/tagline). Its Hyprland workspace rule AND its on-created-empty launch live in conf.d/nyxus-stations-named.conf, because nyxus-hacker-mode REGENERATES conf.d/nyxus-stations.conf from scratch on every mode flip and its generator can only emit the numbered matrix — anything it cannot emit must live in the curated shard or the first toggle deletes it. `name` is the real, greppable Hyprland defaultName (nyxus-home-deck maps stations by name); the glyph above is only the rail label.",
   "home": {
     "id": 0,
     "hypr": "name:HOME",
@@ -19,7 +26,8 @@
       "hue": "pink",
       "tagline": "Command · Terminal · Control",
       "wallpaper": "nyxus-urban-alien.png",
-      "launch": "alacritty"
+      "launch": "alacritty",
+      "half": { "name": "RELAY", "code": "RL", "hue": "pink", "tagline": "Relay · Logs · Journal" }
     },
     {
       "id": 2,
@@ -28,7 +36,8 @@
       "hue": "purple",
       "tagline": "Build · Code · Ship",
       "wallpaper": "nyxus-login-wall.png",
-      "launch": "cursor"
+      "launch": "cursor",
+      "half": { "name": "ANVIL", "code": "AN", "hue": "purple", "tagline": "Anvil · Repos · Build" }
     },
     {
       "id": 3,
@@ -37,7 +46,8 @@
       "hue": "green",
       "tagline": "Security · Intel · Recon",
       "wallpaper": "nyxus-desktop-hero.png",
-      "launch": "sh -c 'command -v nyxus-security >/dev/null && nyxus-security || alacritty -e btop'"
+      "launch": "sh -c 'command -v nyxus-security >/dev/null && nyxus-security || alacritty -e btop'",
+      "half": { "name": "TRACE", "code": "TR", "hue": "green", "tagline": "Trace · Process · Watch" }
     },
     {
       "id": 4,
@@ -46,7 +56,8 @@
       "hue": "gold",
       "tagline": "Comms · Signal · Chat",
       "wallpaper": "nyxus-graffiti-space.png",
-      "launch": "firefox"
+      "launch": "firefox",
+      "half": { "name": "BEACON", "code": "BC", "hue": "gold", "tagline": "Beacon · Feeds · Boards" }
     },
     {
       "id": 5,
@@ -55,7 +66,8 @@
       "hue": "orange",
       "tagline": "Media · Sound · Stream",
       "wallpaper": "nyxus-graffiti-01.png",
-      "launch": "sh -c 'playerctl play-pause 2>/dev/null; true'"
+      "launch": "sh -c 'command -v strawberry >/dev/null && exec strawberry; command -v audacious >/dev/null && exec audacious; command -v cava >/dev/null && exec alacritty --title \"NYXUS WAVE\" -e cava; command -v pavucontrol >/dev/null && exec pavucontrol; exec alacritty'",
+      "half": { "name": "MIXER", "code": "MX", "hue": "orange", "tagline": "Mixer · Levels · Routing" }
     },
     {
       "id": 6,
@@ -64,7 +76,8 @@
       "hue": "blue",
       "tagline": "Files · Data · Vault",
       "wallpaper": "nyxus-graffiti-04.png",
-      "launch": "thunar"
+      "launch": "thunar",
+      "half": { "name": "VAULT", "code": "VT", "hue": "blue", "tagline": "Vault · Keys · Archive" }
     },
     {
       "id": 7,
@@ -73,7 +86,8 @@
       "hue": "pink",
       "tagline": "Network · NOC · Mesh",
       "wallpaper": "nyxus-graffiti-08.png",
-      "launch": "sh -c 'alacritty --title \"GowskiNet NOC\" -e sh -c \"command -v sharknoc >/dev/null && exec sharknoc --watch || exec btop\"'"
+      "launch": "sh -c 'alacritty --title \"GowskiNet NOC\" -e sh -c \"command -v sharknoc >/dev/null && exec sharknoc --watch || exec btop\"'",
+      "half": { "name": "SCAN", "code": "SN", "hue": "pink", "tagline": "Scan · Hosts · Routes" }
     },
     {
       "id": 8,
@@ -82,7 +96,8 @@
       "hue": "purple",
       "tagline": "Notes · Docs · Scribe",
       "wallpaper": "nyxus-graffiti-11.png",
-      "launch": "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'"
+      "launch": "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'",
+      "half": { "name": "BOARD", "code": "BD", "hue": "purple", "tagline": "Board · Tasks · Plan" }
     },
     {
       "id": 9,
@@ -91,7 +106,8 @@
       "hue": "green",
       "tagline": "Guardian · EDR · Watch",
       "wallpaper": "nyxus-graffiti-16.png",
-      "launch": "nyxus-webapp bifrost"
+      "launch": "nyxus-webapp bifrost",
+      "half": { "name": "SENTRY", "code": "SY", "hue": "green", "tagline": "Sentry · Alerts · Feed" }
     },
     {
       "id": 10,
@@ -100,7 +116,8 @@
       "hue": "cyan",
       "tagline": "Consoles · RedForge · CIPHER · GSL · Trainer",
       "wallpaper": "nyxus-urban-alien.png",
-      "launch": "nyxus-consoles"
+      "launch": "nyxus-consoles",
+      "half": { "name": "RANGE", "code": "RG", "hue": "cyan", "tagline": "Range · Drills · Trainer" }
     }
   ]
 }

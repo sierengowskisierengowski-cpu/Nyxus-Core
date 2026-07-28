@@ -5839,3 +5839,98 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   color: #ffffff;
   background-color: rgba(255, 45, 85, 0.18);
 }
+
+/* ====================================================================
+   RAIL: PRIMARY STATIONS + ALIEN COMPANION MARKS   (2026-07-28)
+   Every numbered station 1-10 gained a companion station reached with
+   Super+Alt+<digit>. The rail reads: full-size 1, small dim alien glyph,
+   full-size 2, small dim alien glyph, ... through 10.
+
+   MEASURED, NOT GUESSED. bar-left is a 56x756 layer (hyprctl layers -j on
+   1920x1080). The old 12-pill rail used 641px of that. 22 items at the old
+   42px/6px metrics would need ~900px, which overflows the surface - and eww
+   sizes a window to its CONTENT, so an oversized surface gets parked at a
+   negative y and the rail vanishes offscreen. So the numbers stay dominant
+   but shrink slightly, the marks are deliberately small, and the pair
+   travels as one .ws-cluster:
+     primary  38px cap @ 22px type   (cap was 42px)
+     mark     15px cap @ 12px type, 0.46 alpha, no glow
+   -> 2*38 (HOME/START) + 10*(38+17) + gaps  ~= 690px inside 756px.
+
+   FONT: the marks carry their OWN stack with "DejaVu Sans" FIRST. They must
+   never inherit .ws-word's "Permanent Marker" - that display face has ZERO
+   coverage for Tifinagh (and for Greek/Runic/Old Italic), so it renders tofu
+   boxes: invisible in the source, obvious on screen. DejaVu Sans covers the
+   whole U+2D30 Tifinagh block and ships on the ISO via ttf-dejavu.
+   The ten glyphs live in stations.json -> half_marks.marks (one place).
+   ==================================================================== */
+.ws-rail { padding: 10px 0; }
+.ws-rail .float-island { margin-bottom: 4px; }
+
+/* the pair: number + its mark, tight together, air between clusters */
+.ws-cluster {
+  /* tightened from 5px: this is where the marks get their room */
+  margin-bottom: 3px;
+  background-color: transparent;
+  background-image: none;
+}
+
+/* primaries stay the dominant row, just a touch tighter than before */
+.ws-rail .ws-pill {
+  /* ORIGINAL size restored - an earlier pass shrank these to 38px to make
+     room for the marks, but the gaps had the slack, not the numbers. */
+  min-width: 42px;
+  min-height: 42px;
+  font-size: 22px;
+}
+
+/* the alien companion mark - subordinate in size AND weight/opacity */
+.ws-alien {
+  font-family: "DejaVu Sans", "Adwaita Sans", "Noto Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  min-width: 40px;
+  min-height: 15px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.46);
+  text-shadow: none;
+  transition: all 170ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+/* occupied: brighter, still clearly under the number in weight */
+.ws-alien-occupied { color: rgba(255, 255, 255, 0.74); }
+/* active: the mark lights up in white with a small bloom, but never as much
+   as an active primary - the hierarchy has to survive selection */
+.ws-alien-active {
+  color: #ffffff;
+  text-shadow: 0 0 7px rgba(255, 255, 255, 0.75), 0 0 16px rgba(125, 61, 255, 0.55);
+}
+.ws-alien:hover {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.85), 0 0 18px rgba(255, 45, 173, 0.60);
+}
+.ws-alien:active {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+}
+/* hacker mode: the one red is reserved for live/danger, so an active mark
+   picks up the red edge exactly like an active primary does */
+.nyx-hacker .ws-alien { color: rgba(255, 255, 255, 0.44); }
+.nyx-hacker .ws-alien-occupied { color: rgba(255, 255, 255, 0.68); }
+.nyx-hacker .ws-alien-active {
+  color: #ff2d55;
+  text-shadow: 0 0 7px rgba(255, 45, 85, 0.85), 0 0 16px rgba(255, 45, 85, 0.40);
+}
+
+/* rail gap tightening: the marks fit in the spacing, not by shrinking numbers */
+.ws-rail .float-island { margin-bottom: 3px; }
