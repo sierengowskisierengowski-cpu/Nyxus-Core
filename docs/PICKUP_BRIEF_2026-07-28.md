@@ -9,7 +9,20 @@
 
 ## 0. THE ONE THING TO DO FIRST
 
-**A bake was running with the OLD profile. It must be killed and restarted.**
+**A bake (started 18:42, log `~/nyxus-bake-2.log`) was RUNNING when this
+session ended. Its outcome is UNKNOWN.** Check it before anything else:
+
+```bash
+pgrep -af build-iso.sh
+grep -E 'INSTALLER OK|DID NOT INSTALL|installing calamares|exists in filesystem' ~/nyxus-bake-2.log
+```
+
+See "THE ISO INSTALLER SAGA" below for the full history, the three fixes it
+carries, and how to verify properly. The historical note below is kept because
+the trap it describes is what wasted an entire bake:
+
+**A bake in flight uses the profile staged at ITS startup - it never picks up
+a later fix.**
 
 `build-iso.sh` copies the profile to `/var/tmp` **at startup**, so a bake in
 flight does not pick up later fixes. The bake started ~17:08 predates the
@@ -89,6 +102,109 @@ step silently doomed three bakes.** It now prints:
 * a `curl` probe of `geo.mirror.pkgbuild.com` with HTTP code and timing
 
 So if any AUR build fails again, the log says **why**.
+
+---
+
+## ★★ THE ISO INSTALLER SAGA — read before touching the bake
+
+**A bake was RUNNING when this session ended.** Check it first:
+
+```bash
+pgrep -af build-iso.sh                      # still going?
+grep -E 'INSTALLER OK|DID NOT INSTALL|installing calamares|exists in filesystem|failed to commit' \
+     ~/nyxus-bake-2.log
+```
+
+* started **18:42**, log `~/nyxus-bake-2.log`, staged profile verified to carry all three fixes below
+* **outcome unknown at handoff** — do not assume it succeeded
+
+### The failure progression (each attempt died LATER than the last)
+
+| # | Attempt | Died at |
+|---|---|---|
+| 1-3 | 07.26 / 07.27 / 07.28 ISOs | calamares never built — AUR unreachable inside the chroot |
+| 4 | 17:28 bake | calamares **installed**, then hit a file conflict |
+| 5 | 18:42 bake (running at handoff) | collider removed — should clear pacstrap |
+
+### Fix 1 — calamares is a BINARY, not an AUR build  (`9649c943`)
+
+Three earlier fixes were each a real bug at the wrong layer: a locked-`nobody`
+sudo prompt, then an empty chroot mirrorlist. **All three accepted the same
+wrong premise — that calamares must be AUR-built in the chroot.** It must not:
+
+| package | repo |
+|---|---|
+| `calamares` | **blackarch** |
+| `kpmcore` | extra |
+| `yaml-cpp` | extra |
+
+All binaries, and `iso-builder/nyx-profile/pacman.conf` (the **build-time**
+one) already enables `[blackarch]`. `calamares` is now in `packages.x86_64`
+and pacstrap installs it directly — no chroot network, build user, sudoers or
+mirrorlist involved. `_aur_build calamares` stays as a no-op fallback (it
+early-returns when `pacman -Qi calamares` succeeds).
+
+### Fix 2 — the file collision that broke bake #4  (`ff23e317`)
+
+```
+error: failed to commit transaction (conflicting files)
+calamares: /usr/share/applications/calamares.desktop exists in filesystem
+```
+
+Once calamares is a package it **owns** that path, and the profile was
+hand-shipping its own copy. Pacman refuses to overwrite a file it does not
+own, so the whole transaction aborted.
+
+Removed `airootfs/usr/share/applications/calamares.desktop` (Version=1.0).
+It was redundant: `install-nyxus.desktop` (Version=1.5, adds `TryExec` and
+`X-AppStream-Ignore`) says the same thing and is better, and
+`etc/skel/Desktop/install-nyxus.desktop` is the icon the user actually clicks.
+
+**Blast radius was checked first:** pacman lists EVERY conflicting file and
+named only that one, so the **27 files under `etc/calamares/`** (NYXUS
+branding, partition/bootloader/users module configs) are untouched. If a
+future conflict appears, read the full list before deleting anything.
+
+### Fix 3 — the duplicate keybind that failed `validate` for a day  (`6137f9cd`)
+
+`scripts/iso-build-verify.sh` fails the ISO-readiness gate on duplicate bind
+chords. The search-overlay escape hatch was on `$mod SHIFT, S` — already the
+scratchpad. Moving it to `SHIFT, X` collided with nyxus-prism-pulse. It is now
+**`$mod SHIFT, Z`**, verified free against every bind. CI is green.
+
+⚠ The validator inspects **only the skel `hyprland.conf`**, not `conf.d`.
+Three pre-existing duplicates (`$mod,E`, `$mod,M`, `$mod,Q`) live in the live
+`conf.d` tree, are invisible to the gate, predate this work, and were left
+alone deliberately.
+
+### ★ THE TRAP THAT WASTED A WHOLE BAKE
+
+**`build-iso.sh` copies the profile to `/var/tmp/nyxus-profile-bake` at
+STARTUP.** A bake already in flight will NEVER pick up a later fix. Always
+kill and restart after changing the profile, and verify the staged copy:
+
+```bash
+P=/var/tmp/nyxus-profile-bake
+grep -qxE 'calamares' "$P/packages.x86_64"                     && echo "fix1 ok"
+[ ! -f "$P/airootfs/usr/share/applications/calamares.desktop" ] && echo "fix2 ok"
+grep -q 'SHIFT, Z, exec, eww close start-search' \
+    "$P/airootfs/etc/skel/.config/hypr/hyprland.conf"          && echo "fix3 ok"
+```
+
+### If it fails again
+
+`pacman -Sy` in the AUR path no longer discards its output — it now prints the
+real pacman error, the mirrorlist contents, and a curl probe of the mirror. So
+a failure says WHY instead of leaving the next person to re-derive it for a
+fifth time.
+
+### Verifying success properly
+
+* build log: `[customize_airootfs] ✅ INSTALLER OK — calamares is installed in the ISO`
+* booted ISO: an **"Install NYXUS"** desktop icon (`pkexec calamares`)
+
+Do **not** declare it fixed from timestamps or reasoning. Three ISOs were
+called fixed that way and all three shipped broken.
 
 ---
 
