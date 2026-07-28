@@ -7,6 +7,15 @@
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
 >
+> **★★ START HERE — PICKUP BRIEF (Jul 28 evening):**  
+> [`docs/PICKUP_BRIEF_2026-07-28.md`](./docs/PICKUP_BRIEF_2026-07-28.md)  
+> Where the build is, what to do next and in what order. **THE INSTALLER BUG
+> IS SOLVED**: calamares is a binary in [blackarch] and is now pacstrapped
+> directly - four ISOs failed because every previous fix accepted the wrong
+> premise (that it had to be AUR-built in the chroot). Also covers the EDR
+> (Bifrost + jeTT were both blind; connection fixed, throughput still open),
+> the uncommitted vault-repo work, and the traps that cost hours.
+>
 > **★ Security inventory (Jul 27):**  
 > [`docs/SECURITY_INVENTORY_2026-07-27.md`](./docs/SECURITY_INVENTORY_2026-07-27.md) — full Arsenal / modes / GodsApp / Intel / Vault / local Projects / BlackArch list.
 >
