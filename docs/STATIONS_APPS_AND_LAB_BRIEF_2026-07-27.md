@@ -147,6 +147,80 @@ both. Throwing a bigger model at 300 events/minute of `jq` will not help.
 ollama` or Bifrost goes blind again at next boot — with no warning, because
 the unit still reports `active`.
 
+---
+
+## ★★ jeTT WAS BLIND TOO — different cause, same result (found 2026-07-27)
+
+**Both EDRs were degraded at once, for unrelated reasons.** Bifrost's was the
+missing Ollama (above). jeTT's is **telemetry**.
+
+### WHICH jeTT — there are TWO installs, check before you touch anything
+
+| | Path | Built | Running? |
+|---|---|---|---|
+| **LIVE** | `~/Projects/jeTT/target/release/jett-daemon` | **2026-07-17** (680M) | ✅ what `jett-daemon.service` executes |
+| Dormant | `/usr/lib/jett/jett-daemon` | 2026-06-12 (656M) | ❌ no unit starts it |
+
+Different builds (`cmp` differs), 5 weeks apart, and `/usr/lib/jett` is owned
+by **no package**. Always confirm with:
+
+```bash
+systemctl show jett-daemon -p ExecStart --value
+```
+
+### WHICH ALLOWLIST — the source copy is not the live one
+
+The binary reads **`/etc/jett/allowlist.conf`** (130 lines) and
+**`~/.config/jett/allowlist.txt`** (sha256 pins — currently one entry for
+`~/.cache/test/mytool`). The 139-line
+`~/Projects/jeTT/config/allowlist.conf` is the **source/example**. Editing
+that one has no effect on the running daemon.
+
+### The actual failure
+
+```
+[!] eBPF sensor thread exited: ringbuf poll: Interrupted system call (os error 4)
+```
+
+The sensor died **2026-07-27 10:35** after the daemon had been up since 00:21,
+and never recovered. Its other source, `auditd`, is **inactive** — while the
+unit env says `JETT_TELEMETRY=both`. So it has **neither**.
+
+**Proven by probe, not inferred:** a script executed from `/tmp` — which
+jeTT's own `SYSTEM_CONTEXT` says to **QUARANTINE** — was never logged at all,
+and there were **zero `bash`/`sh` events in 10 minutes** on an active desktop.
+Everything it still logged (`sleep`, `jq`, `hyprctl`, `pgrep`) is short-lived
+spawns consistent with a `/proc` poller, not exec hooks.
+
+### What is NOT the bug
+
+The `0ms` verdicts are **by design**. `Trusted GowskiNet process` resolves to
+`own-stack (hard allow)`, a fast path compiled into the binary, and the
+allowlist docs describe a *"Daemon Trusted disposition (0ms, no model)"*.
+That is correct behaviour. The bug is that nothing **unknown** ever reaches
+the model, because the telemetry that would surface it is dead.
+
+Mode is `JETT_MODE=learn` (observes, does not kill), so probing it is safe.
+
+### ★ SEPARATE GAP — the best model is not deployed
+
+`JETT_MODEL` points at `models/jett-r6-q4_k_m.gguf`. **r11 was trained** — but
+only `jett-r11-bf16.gguf` exists on disk, and `jett-pull-r11` expects
+**`r11-q4_k_m`**, which is **not present**. So the unit running r6 is not a
+misconfiguration: the quantized r11 was never produced or pulled. Quantize or
+pull it, then update `JETT_MODEL` in the unit.
+
+(Note `main.rs` hardcodes `jeTT-r3-q4.gguf` as a default, but the unit's
+`JETT_MODEL` env overrides it — the daemon runs **r6**, not r3.)
+
+### Fix
+
+`nyxus-edr-repair` restarts `jett-daemon` so the eBPF sensor re-attaches,
+enables `auditd` (which also fixes the AI Cyber Defense Trainer's `EACCES` on
+`/var/log/audit/audit.log` and closes the audit-trail gap), and prints the
+`/tmp` probe to verify. If the sensor exits again, it is a kernel/BPF
+permission problem rather than a crash — chase that separately.
+
 ## 1. The station system — six now
 
 | Station | Key | Window | What it is |
@@ -178,6 +252,31 @@ BLAST/EDGE until renamed live with `hyprctl dispatch renameworkspace`.
 **`windowrulev2` is DEPRECATED in this Hyprland** and throws a visible
 config-error banner. Use the unified `windowrule = <rule>, match:class ...`.
 Always `hyprctl configerrors` after touching rules.
+
+### ★ The recurring "two decks at once" bug — root cause found
+
+Symptom: FORGE's cards bleeding through GHOST (and earlier, HOME through
+START). It kept coming back after each fix because the fixes addressed the
+wrong layer.
+
+**Root cause: the flock singleton guard used `$XDG_RUNTIME_DIR`.** That
+variable is set in a login shell but **not** in some exec-once/systemd
+contexts, so two watcher instances resolved two *different* lock files, both
+acquired successfully, and then fought — one opening the deck the other had
+just closed. Confirmed live: two parents (pids 6290 and 7007) running at once.
+
+Fixed by pinning the lock to a path that always resolves the same way:
+
+```bash
+LOCK="${HOME}/.cache/nyxus-home-deck.lock"
+```
+
+Verified: a second instance now refuses with *"another nyxus-home-deck
+already holds …"*, and a full station cycle (FORGE→GHOST→LAB→HOME→START→
+GHOST→FORGE) gives exactly one window each.
+
+**Lesson:** `$XDG_RUNTIME_DIR` is not dependable for lock paths in anything
+launched by the compositor. Use a fixed path.
 
 ---
 

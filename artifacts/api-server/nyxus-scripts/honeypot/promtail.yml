@@ -64,3 +64,29 @@ scrape_configs:
           comm:
       - output:
           source: message
+
+  # ── SURICATA (host wire visibility) ─────────────────────────────────
+  # Alerts + flow records for the machine's OWN traffic, landing in the same
+  # Loki as the honeypot feed and the host journal.
+  - job_name: suricata
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: suricata
+          host: nyx-cosmic
+          __path__: /var/log/honeypot/suricata/eve.json
+    pipeline_stages:
+      - json:
+          expressions:
+            event_type: event_type
+            src_ip: src_ip
+            dest_ip: dest_ip
+            dest_port: dest_port
+            proto: proto
+            signature: 'alert.signature'
+            severity: 'alert.severity'
+      - labels:
+          event_type:
+          proto:
+          severity:

@@ -60,8 +60,22 @@ journalctl --since '20 sec ago' -u bifrost-guardian --no-pager -o cat 2>/dev/nul
   | grep -oE 'action=[A-Z]+ effective=[A-Z]+ severity=[A-Z]+' | sort | uniq -c | sed 's/^/     /' | head -5
 # ── jeTT: telemetry, not the model ──────────────────────────────────
 # SECOND, SEPARATE FAILURE (found 2026-07-27). jeTT runs the OWNER'S OWN
-# trained model (models/jett-r6-q4_k_m.gguf per JETT_MODEL; r2..r11 exist).
-# Nothing was wrong with the model - its EYES were shut:
+# trained model. Nothing was wrong with the model - its EYES were shut.
+#
+# WHICH jeTT: there are TWO installs on this box.
+#   LIVE     ~/Projects/jeTT/target/release/jett-daemon  built 2026-07-17 (680M)
+#            <- this is what jett-daemon.service executes
+#   DORMANT  /usr/lib/jett/jett-daemon                   built 2026-06-12 (656M)
+#            <- no unit starts it, 5 weeks older, different build (cmp differs)
+# Check `systemctl show jett-daemon -p ExecStart` before believing any path.
+#
+# WHICH ALLOWLIST: the binary reads /etc/jett/allowlist.conf (130 lines) and
+# ~/.config/jett/allowlist.txt (sha256 pins). The 139-line copy in
+# ~/Projects/jeTT/config/allowlist.conf is the SOURCE/example, not the live
+# file - do not edit that one expecting it to take effect.
+#
+# "Trusted GowskiNet process" is `own-stack (hard allow)`, a fast path
+# compiled into the binary - 0ms verdicts on it are BY DESIGN, not a fault.
 #
 #   [!] eBPF sensor thread exited: ringbuf poll: Interrupted system call (os error 4)
 #
@@ -96,6 +110,11 @@ else
   say "    auditd unavailable - install it: sudo pacman -S audit"
 fi
 
+echo
+say "SEPARATE GAP - your best model is not deployed:"
+say "  JETT_MODEL points at models/jett-r6-q4_k_m.gguf, but r11 was trained."
+say "  Only jett-r11-bf16.gguf exists; jett-pull-r11 expects r11-q4_k_m, which"
+say "  is NOT on disk. Quantize or pull it, then update JETT_MODEL in the unit."
 echo
 say "PROVE jeTT can see again - run an unknown binary from /tmp:"
 say '    printf "#!/bin/bash\nsleep 3\n" > /tmp/probe.sh && chmod +x /tmp/probe.sh && /tmp/probe.sh'

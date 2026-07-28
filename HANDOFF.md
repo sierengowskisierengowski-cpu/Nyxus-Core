@@ -16,6 +16,12 @@
 > **~15,000 suspicious events dropped per hour**, and 100% of verdicts
 > downgraded to `severity=INFO`. It reported **`active`** to every health
 > check in this build the whole time. **Run `nyxus-edr-repair`** (needs root).
+> **jeTT was blind too, unrelated cause:** its eBPF sensor crashed
+> (`ringbuf poll: Interrupted system call`) and `auditd` is off, so it sees
+> almost no execs — a `/tmp` script it is meant to QUARANTINE went unlogged.
+> NOTE there are **two jeTT installs**; the live one is
+> `~/Projects/jeTT/target/release/jett-daemon`, and the live allowlist is
+> `/etc/jett/allowlist.conf`, not the copy in the Projects tree.
 > Full evidence + verification commands in the brief below.
 >
 >

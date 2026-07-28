@@ -28,7 +28,12 @@
 set -u
 export PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
 
-LOCK="${XDG_RUNTIME_DIR:-/tmp}/nyxus-home-deck.lock"
+# FIXED PATH, not $XDG_RUNTIME_DIR. That variable is set in a login shell but
+# NOT in some exec-once/systemd contexts, so two instances resolved two
+# DIFFERENT lock files, both acquired, and then fought - one opening the deck
+# the other had just closed. That is the recurring "two decks at once" bug.
+LOCK="${HOME}/.cache/nyxus-home-deck.lock"
+mkdir -p "${HOME}/.cache"
 exec 9>"$LOCK"
 if ! flock -n 9; then
   echo "another nyxus-home-deck already holds $LOCK - exiting" >&2

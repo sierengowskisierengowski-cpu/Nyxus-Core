@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# Axiom desktop launcher.
+# Axiom launcher — runs the PACKAGED AppImage.
 #
-# Axiom is an ELECTRON app (its own artifacts/desktop workspace), unlike the
-# GowskiNet security consoles which are Tauri shells over a local server. It
-# is launched from the workspace rather than a packaged AppImage: electron
-# lives in the pnpm store, and electron-builder packaging is a separate step.
+# Axiom is an Electron app (unlike the GowskiNet consoles, which are Tauri
+# shells). It must be PACKAGED to work: in production it resolves its API
+# server from process.resourcesPath, which only exists inside the bundle -
+# running electron against the workspace starts the window but no backend.
+# electron-builder bundles artifacts/api-server/dist as an extraResource.
 #
-# NOTE: the project's root `preinstall` guard rejects pnpm's own internal
-# invocation (npm_config_user_agent is not propagated), so `pnpm run` cannot
-# build or start this - call electron directly.
+# Rebuild with:
+#   cd ~/GowskiNet-Vault/Apps/AXIOM/artifacts/api-server && node build.mjs
+#   cd ../desktop && node electron/build.mjs
+#   node ../../node_modules/.pnpm/electron-builder@*/node_modules/electron-builder/cli.js \
+#        --linux --config electron-builder.config.cjs
+# (call electron-builder directly - the repo's root `preinstall` guard
+#  rejects pnpm's own internal invocation, so `pnpm run` cannot drive it.)
 set -euo pipefail
-APP="$HOME/Projects/axiom/artifacts/desktop"
-ELECTRON="/home/cosmic/Projects/axiom/node_modules/.pnpm/electron@36.9.5/node_modules/electron/dist/electron"
-[ -x "$ELECTRON" ] || { echo "electron missing - run: cd ~/Projects/axiom && pnpm rebuild electron" >&2; exit 1; }
-# NODE_ENV=production so the app loads its BUILT renderer instead of the vite
-# dev server on :21098 (which is not running when launched this way).
-exec env NODE_ENV=production "$ELECTRON" "$APP" "$@"
+exec "$HOME/.local/bin/axiom-app" "$@"
