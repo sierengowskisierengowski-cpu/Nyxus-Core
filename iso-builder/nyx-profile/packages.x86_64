@@ -571,9 +571,29 @@ scx-scheds
 # build-iso.sh (binary already built off-tree at ~/Projects/bifrost).
 # webkit2gtk-4.1/gtk3/libayatana-appindicator are required for the Tauri
 # window + tray icon to render at all; the python-* set covers the
-# guardian.py sidecar's imports. `ollama` (optional local LLM backend)
-# is intentionally NOT listed — guardian.py already degrades gracefully
-# without it (logs a non-fatal warning), matching live behavior tonight.
+# guardian.py sidecar's imports.
+#
+# ★ CORRECTED 2026-07-27: ollama IS now listed. The previous note said it was
+# "intentionally NOT listed - guardian.py already degrades gracefully without
+# it (logs a non-fatal warning)". That assumption was WRONG and was measured
+# on the live box: with ollama absent, heimdall.guardian gets
+# [Errno 111] Connection refused on EVERY event, which means
+#   CircuitBreaker guardian_extractor: OPEN   (permanently)
+#   [!] AI queue full - dropped suspicious event   ~15,000 per hour
+#   every verdict downgraded to action=LOG effective=LOG severity=INFO
+# That is not graceful degradation - it is silent blindness, and the unit
+# still reports `active` the whole time. Shipping ollama means a fresh
+# install has a working AI EDR instead of one that only looks alive.
+#
+# NOTE the MODEL is not baked (941M): first boot still needs
+#   ollama pull qwen2.5:1.5b-instruct     (or run: nyxus-edr-repair)
+ollama
+# suricata: host wire visibility. nyxus-suricata-setup ships in
+# /usr/local/bin but the package did not, so on a fresh install the script
+# had to pull it at runtime. The honeypots only see traffic aimed at the
+# bait; nothing watched what actually crosses the NIC. Shipping it means
+# `nyxus-suricata-setup` works offline on first boot.
+suricata
 webkit2gtk-4.1
 gtk3
 libayatana-appindicator

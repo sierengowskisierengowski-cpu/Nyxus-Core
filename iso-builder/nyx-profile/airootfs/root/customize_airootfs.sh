@@ -482,6 +482,7 @@ for svc in \
   scx.service \
   nyxus-firstboot.service \
   jett-daemon.service \
+  ollama.service \
   docker.service \
   nyxus-honeypot-firewall.service ; do
   systemctl enable "${svc}" 2>/dev/null || true
