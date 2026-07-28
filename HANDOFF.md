@@ -84,7 +84,7 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-26 · bake DONE (flash new ISO)
+## WHERE WE STAND — 2026-07-27 · bake READY (new ISO)
 
 > Short status for the owner. Detail lives in §5 / §6 below. **Update this block
 > whenever bake readiness changes.**
@@ -92,15 +92,25 @@
 | | |
 |---|---|
 | **Repo** | `~/Nyxus-Core` · **`main`** |
-| **HEAD** | `dc5269b8` — confirm with `git rev-parse --short HEAD` |
+| **HEAD** | `7289a761` — confirm with `git rev-parse --short HEAD` |
 | **Open PRs** | **none** |
 | **Chrome night brief** | [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md) |
-| **Live-boot audit** | [`docs/LIVE_BOOT_AUDIT_2026-07-25.md`](./docs/LIVE_BOOT_AUDIT_2026-07-25.md) |
-| **Repo state for bake** | Bake **DONE**. ISO `nyxus-2026.07.26` @ **02:26** is the stick to flash (pre-saucer-redesign baseline; livewall planet experiment was after bake start / reverted — not needed for this flash). Next: owner flash + UEFI boot QA. |
-| **Last ISO on disk** | `nyxus-2026.07.26-x86_64.iso` @ **02:26** (~7.5G) — **FLASH THIS**. Older `07.25` @ 15:00 is stale. |
-| **Kage-Ryu on stick** | ✅ splash / boot path worked on prior live USB |
-| **Running desktop kernel** | Stock on builder; Kage on stick |
+| **Stations / vault brief** | [`docs/STATIONS_APPS_AND_LAB_BRIEF_2026-07-27.md`](./docs/STATIONS_APPS_AND_LAB_BRIEF_2026-07-27.md) |
+| **Security inventory** | [`docs/SECURITY_INVENTORY_2026-07-27.md`](./docs/SECURITY_INVENTORY_2026-07-27.md) |
+| **Repo state for bake** | **READY.** Tip includes stations (HOME/START/GHOST/FORGE/LAB/ARSENAL), vault desktop apps, localhost bind for consoles, ollama+suricata on ISO, welcome `exec-once` restored. `verify-profile` **PASS**. Owner runs bake (sudo/fingerprint). |
+| **Last ISO on disk** | `nyxus-2026.07.26-x86_64.iso` @ **02:26** — **stale once 07.27 bake finishes**. |
+| **Kage-Ryu on stick** | Packages in `iso-builder/local-repo/` + Projects tree |
 | **Gates** | ✅ `iso-builder/verify-profile.sh` |
+| **Disk note** | Builder root ~**58G free / 94%** — free space before bake (old ISOs in `out/` are ~38G); squash workdir needs headroom. |
+
+### Bake command
+
+```bash
+# Repo must be clean: git status  →  nothing to commit
+cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh
+# → iso-builder/out/nyxus-<YYYY.MM.DD>-x86_64.iso
+```
+
 
 ### 🛑 EWW chrome night — reverted (2026-07-25 → 26) — DO NOT REPEAT
 
