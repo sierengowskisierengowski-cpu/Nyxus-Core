@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-28 ~04:00 EDT (07.27 ISO was broken · all causes fixed · REBAKE REQUIRED · hacker mode = black/white/red + saucer alien)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-28 ~05:00 EDT (07.27 ISO was broken · all causes fixed · REBAKE REQUIRED · hacker mode = black/white/red + saucer alien · Bifrost's 58 dirty files committed + pushed)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -444,7 +444,67 @@ question, and it touches the fragile rail).
    **3 EDRs** jeTT/Bifrost/Cerberus overlap (decide the split); **axiom exists 3×**
    and **c2 == ghost-relay** and **BAASIC/android-hub are double checkouts**;
    the **39-tool shark suite is unversioned** and should be put under git;
-   **Bifrost has 58 uncommitted files** locally. All advisory — nothing deleted.
+   ~~**Bifrost has 58 uncommitted files** locally~~ → **COMMITTED + PUSHED, see 9.**
+   All advisory — nothing deleted.
+9. **Bifrost's 58 dirty files are COMMITTED AND PUSHED** (`~/Projects/bifrost`,
+   `main` → `github.com/…/Bifrost`, `75b4235..a29fb1d`, tree now clean, in sync).
+   This was the highest risk-of-loss item on the box — station 9 is BIFROST and
+   the ISO stages a Bifrost payload, so it was live, load-bearing and existed in
+   exactly one place. Three commits, nothing rewritten, nothing force-pushed:
+   - `chore(gitignore)` — the only thing deliberately **NOT** committed. All three
+     files under `app/bifrost-desktop/src-tauri/resources/guardian/` are outputs of
+     the committed `package_monolithic.sh`: a **21MB stripped PyInstaller ELF**
+     (`--onefile --strip`, also rebuilt by `build-release.yml` in CI) plus
+     `reasoner.py` and `security.py` that are **byte-identical `install -m 644`
+     copies of tracked `bifrost/` source**. The binary would have been an
+     undiffable permanent blob; the two `.py` copies are the worse trap, because
+     git would let them drift from the real modules while still being bundled into
+     the installer. This was an *inconsistency*, not new policy — the same script
+     writes the same binary to `binaries/guardian-${TARGET_TRIPLE}`, which was
+     already ignored, and only the second destination was missed. Ignored the
+     directory *contents* with a `!.gitkeep` negation, since the placeholders are
+     the tracked contract and `tauri.conf.json` globs `resources/**/*` at bundle
+     time. **Nothing was deleted** — the payload is still on disk and still
+     bundles; a fresh clone regenerates it with `./package_monolithic.sh`.
+   - `feat(guardian)` — the deterministic rules floor (`rules_analyst.py`) and
+     Jett verdict ingestion (`jett_ingest.py`). Fixes a real ambiguity that ties
+     straight into the "**BIFROST'S AI EDR WAS RUNNING BLIND**" warning at the top
+     of this file: when the analyst was down, every event still got
+     `threat_class="parser_error"` at LOW, so *"analyst offline"* and *"analyst
+     says this is fine"* rendered **identically**. Now the rules floor classifies
+     from already-extracted indicators and stamps
+     `reasoner_model="deterministic_rules"`, `_safe_fallback` splits
+     infrastructure-offline from genuine parse errors, and the dashboard derives
+     `online / degraded / offline / unknown`. Jett's verdicts are ingested
+     pre-decided (the router does not re-run the LLM on an already-decided
+     verdict), and process events are no longer shoehorned into the "IP attacker"
+     shape.
+   - `feat(desktop)` — 52 files: Bifrost the EDR window becomes **NYXUS the hub**,
+     7 new Rust Tauri modules (`nyxus`/`jett_intel`/`honeypot`/`meli_ops`/`sysctl`/
+     `heimdall`/`forge`, 42 commands all wired into `invoke_handler`), a real
+     embedded PTY (`portable-pty` + `@xterm/xterm`), 11 new React pages, and
+     Orbitron / Permanent Marker / JetBrains Mono **vendored** in `public/fonts`
+     (~300KB) because a local-first EDR console must render with no network and
+     must not make outbound CDN calls.
+
+   **NO SECRETS FOUND.** Scanned for `sk-`/`ghp_`/`github_pat_`/`AKIA`/`xox`/
+   `AIza`/JWT/`BEGIN … PRIVATE KEY` and for hardcoded credential assignments:
+   clean. Bifrost's `.gitignore` was already good (`.env`, `*.db`, `*.log`,
+   `__pycache__`, `.venv/`, `node_modules/`, `bifrost_tokens.env`,
+   `heimdall_config.json`), which is why only 58 files were ever exposed. Two
+   non-secrets worth knowing: `dashboard.py`'s `"token":"localhost-session"` is a
+   **pre-existing unchanged** loopback sentinel, not a leaked credential; and the
+   new Rust modules use `env::var(…).unwrap_or_else(|| "/home/cosmic/…")` — the env
+   override is the real mechanism but the **fallbacks are this machine's paths**,
+   so they are not portable to another user. Left exactly as they run today.
+   **Bifrost does NOT need a remote** — `origin` already existed and is current.
+
+   **The live daemon was not touched.** `bifrost-guardian` (PID 942,
+   `python3 -m bifrost.guardian --dashboard --dashboard-port 8766`) stayed `active`
+   with its socket listening across the whole operation, and the payload files kept
+   their original mtimes. Version control only — no restart, no refactor, no moves.
+   **The running process is therefore still executing the previously loaded code
+   and will pick up the guardian changes on its next natural restart.**
 
 ---
 
