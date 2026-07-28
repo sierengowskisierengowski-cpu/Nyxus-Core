@@ -740,3 +740,25 @@ proxychains-ng
 sslscan
 sslyze
 testssl.sh
+
+# ── INSTALLER ────────────────────────────────────────────────────────
+# ★ THE FIX (2026-07-28): calamares is installed as a BINARY PACKAGE here,
+# not built from the AUR in the chroot.
+#
+# Four ISOs shipped with no installer because customize_airootfs.sh tried to
+# `makepkg` calamares inside the chroot, and that path kept breaking for a
+# different reason each time - first an unanswerable `sudo` password prompt
+# for the locked `nobody` user, then an empty chroot mirrorlist ("no servers
+# configured for repository: extra"), so kpmcore + yaml-cpp were unreachable.
+#
+# None of that is necessary: calamares is a plain binary in [blackarch],
+# which this profile's BUILD-TIME pacman.conf already enables, and both of its
+# problem dependencies are in [extra]:
+#     calamares -> blackarch      kpmcore -> extra      yaml-cpp -> extra
+# pacstrap installs it directly, so the installer no longer depends on the
+# chroot having working network, a build user, or a mirrorlist at all.
+#
+# The AUR `_aur_build calamares` call is left in place as a fallback - it
+# early-returns when `pacman -Qi calamares` already succeeds, so it becomes a
+# no-op rather than dead weight.
+calamares

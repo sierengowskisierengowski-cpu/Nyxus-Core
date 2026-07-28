@@ -653,9 +653,28 @@ _aur_setup() {
     echo "[customize_airootfs] AUR: wrote a temporary build mirrorlist (chroot had none)"
   fi
   # Refresh the package DBs against those mirrors or -Sy-less installs still miss.
-  pacman -Sy --noconfirm >/dev/null 2>&1 \
-    && echo "[customize_airootfs] AUR: pacman DBs synced" \
-    || echo "[customize_airootfs] AUR: WARNING pacman -Sy failed (offline build host?)"
+  # Output is CAPTURED, not discarded. This exact step is the one that has
+  # silently doomed three bakes: when it fails, everything after it fails too,
+  # and the old `>/dev/null 2>&1` meant the log showed a one-line WARNING with
+  # no reason. Now the real pacman error is printed and the mirror is probed
+  # so the log says WHY - unreachable mirror, DNS, or no network in the chroot.
+  _sy_out="$(pacman -Sy --noconfirm 2>&1)"; _sy_rc=$?
+  if [[ $_sy_rc -eq 0 ]]; then
+    echo "[customize_airootfs] AUR: pacman DBs synced"
+  else
+    echo "[customize_airootfs] AUR: ## pacman -Sy FAILED (rc=${_sy_rc}) - every AUR build after this WILL fail ##"
+    printf '%s\n' "$_sy_out" | tail -15 | sed 's/^/[customize_airootfs] AUR:   /'
+    echo "[customize_airootfs] AUR: mirrorlist contents:"
+    sed 's/^/[customize_airootfs] AUR:   /' /etc/pacman.d/mirrorlist 2>/dev/null | head -5
+    echo "[customize_airootfs] AUR: connectivity probe:"
+    if command -v curl >/dev/null 2>&1; then
+      curl -fsS -o /dev/null -w 'https://geo.mirror.pkgbuild.com -> HTTP %{http_code} in %{time_total}s\n' \
+        --max-time 10 https://geo.mirror.pkgbuild.com/core/os/x86_64/core.db 2>&1 \
+        | sed 's/^/[customize_airootfs] AUR:   /' || echo "[customize_airootfs] AUR:   curl failed - no network in chroot"
+    else
+      echo "[customize_airootfs] AUR:   curl unavailable in chroot"
+    fi
+  fi
 
   echo "[customize_airootfs] AUR: build user ${_NYX_BUILDUSER} ready, CheckSpace off"
 }
