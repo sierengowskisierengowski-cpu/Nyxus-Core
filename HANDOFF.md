@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-28 ~02:40 EDT (07.27 ISO was broken · all causes fixed · REBAKE REQUIRED · hacker mode is monochrome)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-28 ~04:00 EDT (07.27 ISO was broken · all causes fixed · REBAKE REQUIRED · hacker mode = black/white/red + saucer alien)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -315,6 +315,45 @@ is exactly that — repos offer **0.56.0-2**, this box runs **0.55.4-1**.
 A true pacman *pin* was considered and rejected: pacman resolves by version, so
 a pin fights the resolver and fails quietly. A guard cannot be bypassed by
 accident, which is the property that actually matters here.
+
+### 🗂 OWNER'S OTHER PROJECTS — located 2026-07-28 (owner had lost track of both)
+
+Recorded here because the owner asked where they went, twice. Neither is part
+of the ISO build; both are **alive on disk** and neither is finished.
+
+**SharkDash — a btop FORK (C++).** This is why it "used the same code": it *is*
+btop's source. btop itself is upstream `btop 1.4.7-1` from Arch and is NOT an
+owner app — but NYXUS *does* theme it (`~/.config/btop/btop.conf` →
+`color_theme = "nyxus-prism"`, shipped in skel with `nyxus-prism.theme` and
+`SharkDash.theme`).
+
+| Path | State |
+|---|---|
+| `~/.local/build/sharkdash-btop` | 22M, 310 files — full btop tree at upstream `6c0cedd` (v1.4.0, 2024-09-22) with `src/sharkdash_pages.{cpp,hpp}` added. **The real fork.** |
+| `~/sharkdash-fork` | 64K — the *patch set*: `sharkdash.patch`, `patch_btop.py`, `build_sharkdash.sh`, `sharkdash_pages.{cpp,hpp}`, `SharkDash.theme`. The reproducible way back in. |
+| `~/sharkdash` | 3.8M, git `5567d49` (2026-07-12) — later NYXUS-branded work (`nyxus/`, `nexus/`) |
+| `~/Downloads/sharkdash_src (1)` | 268K, 19 files — `collectors/config/engine.{cpp,hpp}` — a from-scratch attempt |
+| Built binary | **none found** — it has never been compiled to a shipped binary |
+
+**SharkNOC — the NOC TUI (Python/curses).** Not lost, and it still works:
+`~/.local/bin/sharknoc.py` (`SharkFin NOC (Network Operations Console)
+mini-view v2.0`, curses, 2026-06-29) plus a newer bash reporter
+`~/.local/bin/sharknoc` (`--json` / `--watch`, 2026-07-10). Its dependency
+`~/.local/bin/sharkdash_state.py` is present and **`import sharknoc` succeeds**,
+so it is runnable today — just run `sharknoc`.
+`~/Projects/gowskinet-noc` and `~/gowskinet-noc` hold only its *state* (
+`honeypot.sqlite`, `honeyhive.state.json`, `alerter.state.json`), not source;
+an older copy is at `~/Projects/archive/GowskiNet-Hub/noc`.
+
+**Opportunity, not a task:** GHOST/LAB already surface honeypot and VM data as
+eww decks, and SharkNOC reads the same `honeypot.sqlite` + HoneyHive state. If
+the owner wants the NOC back, wiring `sharknoc` into a station is cheap; a
+btop-fork rebuild is a much larger job and would need the patch set above.
+
+**Pending polish:** btop is a TUI, so no eww CSS reaches it — in hacker mode it
+stays violet/magenta/green from `nyxus-prism.theme`. A `nyxus-hacker.theme`
+(42 keys, mono + `#ff2d55`) swapped by `nyxus-hacker-mode` would make even the
+terminal monitors flip. **Not started.**
 
 ### 🔜 OWNER QUEUE (next session)
 
