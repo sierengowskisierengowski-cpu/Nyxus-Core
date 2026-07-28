@@ -191,6 +191,82 @@ window pins — hand-appended to a generated file — were deleted on the first
 toggle. They now live in **`nyxus-stations-named.conf`**, which no generator
 writes. Verified: a full on→off cycle leaves all three intact.
 
+### 👽 SAUCER ALIEN + hacker glow + boombox art (2026-07-28 late)
+
+**Saucer alien — DONE.** An urban alien in a hoodie and snapback throwing a
+peace sign, white outline only, strikes into the saucer's transparent cockpit
+window like lightning and is gone. `GLITCH.alien` in
+`eww/scripts/random-glow.sh` fires at **6% per 7s poll** (~once every two
+minutes) — deliberately far rarer than the other glitches, because the point is
+that it catches you off guard. `@keyframes nyxus-alien-strike` uses
+`steps(1, end)` so GTK cannot interpolate the opacity jumps into a crossfade.
+
+Two traps worth remembering:
+- **A relative `url()` in `eww.css` does not resolve.** The box rendered
+  (proved with a debug border: 199×61 at x=859 y=972, exactly the cockpit) but
+  the image never painted. `saucer_base` loads its band art from an inline
+  `:style`, and that works — so the alien's `background-image` lives in the
+  inline style too. Only the flicker is in CSS.
+- The strike **darkens the cockpit** (`rgba(0,0,0,0.86)`), otherwise the
+  wallpaper showing through the transparent window drowns a white outline. That
+  plate is **elliptical and inset** (`border-radius: 96px/29px`, 8px side
+  margins) — a square plate spills past the oval and looks exactly like the
+  rectangular "shadow box" this build has fought twice.
+
+**Hacker glow — DONE.** Owner: *"bright white and/or glow to the bars and some
+of the saucer so it shows more."* The three art PNGs now carry a **baked 3px
+white outline** (CSS cannot stroke a PNG), and hacker mode adds white text-glow
+on the clock, rails, ticker and metric values, with brighter structural
+hairlines (0.14 → 0.26/0.30). The danger red is the only colour allowed to glow.
+
+**⚠ BOOMBOX v2 — ART DONE, NOT WIRED (geometry conflict, owner decision).**
+New 1980s boombox exists at `eww/assets/nyxus-boombox-band-v2.png` (+ `-mono`):
+twin speaker grilles, carry handle, transport row, sliders, alien glyphs, ALIEN
+NEON violet/magenta, and an **empty transparent display window** like the
+saucer's cockpit.
+
+It is **not wired in** because of a measured conflict — do NOT guess a margin
+here, that drifted wrong twice before:
+
+| | |
+|---|---|
+| Art (trimmed) | **1516×891**, aspect **1.70:1** |
+| Display window | **528×286**, `fill=1.00` (a true rectangle) |
+| Window box | x=492..1020, y=356..642 |
+| Window as fraction of art | width **0.3483**, height **0.3210** |
+| Window centre offset | dx **−0.0013**, dy **+0.0600** of art |
+| Band slot today | 551×150 for the saucer = **3.67:1** |
+
+So: undistorted at 150px tall the boombox is only **255px wide** (much smaller
+than the saucer) and its window shrinks to **89×48**, while the current music
+face was laid out for **146×100**. Matching the saucer's width needs a **324px**
+tall bar — 30% of a 1080p screen. `bar-bottom` is declared `74px` but the layer
+measures **150px** because eww sizes a window to its CONTENT, so the bar *can*
+grow; whether it should is the owner's call.
+
+**Three options, all needing a visual OK:** (a) render at 150px and move the
+title/transport/cava *beside* the boombox using the spare band width — best
+looking, most work; (b) grow the music face to ~200px only while audio plays —
+but a bar that changes height mid-session shifts the desktop; (c) commission a
+genuinely wider (3:1+) boombox composition. Multiply the fractions above by the
+chosen render size to place the overlay — never eyeball it.
+
+### 🛡 verify-profile gate 13x — Hyprland version guard (2026-07-28)
+
+Hard-**FAIL**s the bake if the repos offer Hyprland **≥ 0.57**, because that
+release drops hyprlang and this profile is `hyprland.conf` + 17 hyprlang
+shards — a bake would silently produce an ISO with no desktop config at all.
+Override deliberately with `NYX_ALLOW_HYPRLAND=1`.
+
+It also **WARN**s on build-host skew, which is the deeper process bug: the bake
+installs Hyprland from the repos at bake time, so "verified live on the builder
+box" can be verification against a compositor that never boots. Current state
+is exactly that — repos offer **0.56.0-2**, this box runs **0.55.4-1**.
+
+A true pacman *pin* was considered and rejected: pacman resolves by version, so
+a pin fights the resolver and fails quietly. A guard cannot be bypassed by
+accident, which is the property that actually matters here.
+
 ### 🔜 OWNER QUEUE (next session)
 
 1. **REBAKE** from clean `main`, then verify: calamares present, no line-592
@@ -202,11 +278,10 @@ writes. Verified: a full on→off cycle leaves all three intact.
    "Unable to connect — localhost:5173" Firefox window appeared during a hacker
    flip. Likely contributor to the ~3-minute bar delay. **Behaviour decision
    still owner's — not changed.**
-4. **NOT STARTED — owner asked 2026-07-28:** (a) white outlines on the saucer and
-   other key art so it reads against the black; (b) an **urban alien throwing a
-   peace sign** inside the bottom-bar saucer window (where time/date sits) that
-   appears only occasionally, flickers like lightning so only its outline shows,
-   then vanishes; (c) **1980s boombox redesign** — same era, much better design.
+4. ~~white outlines on the art~~ **DONE** · ~~peace-sign alien flicker~~ **DONE**
+   · **boombox v2 art DONE but NOT WIRED** — pick one of the three geometry
+   options in the boombox section above; the measurements are recorded so the
+   overlay is placed, not guessed.
 5. Unmerged on `babysit/land-open-prs` (Jul 13, never landed): login/lock
    **anti-lockout recovery gate**, a path-traversal fix in the nyxus-web static
    server, offline GTK4 app deploy fix.

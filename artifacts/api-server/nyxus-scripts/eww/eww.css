@@ -7051,3 +7051,118 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   color: rgba(255, 255, 255, 0.55);
   text-shadow: none;
 }
+
+/* ── SAUCER ALIEN: the cockpit is occupied (2026-07-28) ─────────────── */
+/* An urban alien throwing a peace sign, drawn as a white outline only, that
+   strikes into the saucer's transparent cockpit window like lightning and is
+   gone again. Rare by design - GLITCH.alien is ~6% per 7s poll, so roughly
+   once every couple of minutes.
+
+   Default state is INVISIBLE and zero-size-ish: the box always exists in the
+   overlay (so nothing re-layouts when it appears) but paints nothing. Only
+   .saucer-alien-strike gives it an image and runs the flicker.
+
+   Sized to the cockpit window, not the hull: the transparent oval is only
+   ~204x61, so the figure is a glimpse rather than a portrait - which is the
+   intent. background-size contain keeps the whole silhouette in frame. */
+.saucer-alien {
+  min-width: 196px;
+  min-height: 58px;
+  background-image: none;
+  background-color: transparent;
+  opacity: 0;
+}
+.saucer-alien-strike {
+  /* The strike DARKENS the cockpit so the white outline reads instead of
+     fighting the wallpaper showing through the transparent window. Elliptical
+     and inset on purpose: a square plate spills past the oval and would look
+     exactly like the rectangular "shadow box" this build has fought twice. */
+  background-color: rgba(0, 0, 0, 0.86);
+  /* background-image lives in the INLINE :style in eww.yuck - a relative
+     url() here does not resolve (box renders, image never paints). */
+  border-radius: 96px 96px 96px 96px / 29px 29px 29px 29px;
+  margin-left: 8px;
+  margin-right: 8px;
+  animation-name: nyxus-alien-strike;
+  animation-duration: 1500ms;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  animation-timing-function: steps(1, end);
+}
+
+/* Lightning, not a fade: hard opacity steps with uneven gaps so it reads as a
+   discharge. steps(1,end) above stops GTK interpolating between them, which
+   would turn the whole thing back into the crossfade this is meant to avoid. */
+@keyframes nyxus-alien-strike {
+  0%   { opacity: 0; }
+  4%   { opacity: 0.95; }
+  9%   { opacity: 0; }
+  14%  { opacity: 0.70; }
+  17%  { opacity: 0; }
+  26%  { opacity: 1; }
+  38%  { opacity: 0.85; }
+  44%  { opacity: 0; }
+  52%  { opacity: 0.55; }
+  58%  { opacity: 0; }
+  70%  { opacity: 0.30; }
+  78%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* ── hacker mode: lift the art and the bars off the black ───────────── */
+/* Owner: "need like white outlines around the saucer and other key things to
+   show it more" + "maybe bright white and or glow to the bars". The art now
+   carries a baked 3px white outline (CSS cannot stroke a PNG), and these rules
+   add the glow around it plus brighter hairlines on the chrome. This is the one
+   place hacker mode is allowed to glow - everything else stays flat. */
+.nyx-hacker .saucer-alien-strike {
+  /* the strike reads brighter against a black deck than a lit wallpaper */
+  opacity: 1;
+}
+.nyx-hacker .bar-hub-time, .nyx-hacker .saucer-time {
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.85), 0 0 18px rgba(255, 255, 255, 0.40);
+}
+.nyx-hacker .bar-hub-date {
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.45);
+}
+/* brighter structural hairlines so surfaces are readable, not just present */
+.nyx-hacker .deck-root, .nyx-hacker .gh-root, .nyx-hacker .start-root {
+  border-color: rgba(255, 255, 255, 0.30);
+  box-shadow: 0 0 26px rgba(255, 255, 255, 0.10);
+}
+.nyx-hacker .nyxus-surface,
+.nyx-hacker .deck-card, .nyx-hacker .gh-hive, .nyx-hacker .gh-row,
+.nyx-hacker .gh-tool, .nyx-hacker .start-tile, .nyx-hacker .start-win,
+.nyx-hacker .start-hit, .nyx-hacker .lab-vm, .nyx-hacker .fg-repo {
+  border-color: rgba(255, 255, 255, 0.26);
+}
+/* the rails and ticker: glyphs get a real white glow so they read as chrome */
+.nyx-hacker .ws-pill, .nyx-hacker .app-pill, .nyx-hacker .ws-word {
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 0 7px rgba(255, 255, 255, 0.45);
+}
+.nyx-hacker .ws-pill-active {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.95), 0 0 22px rgba(255, 255, 255, 0.50);
+}
+.nyx-hacker .ws-pill:hover, .nyx-hacker .app-pill:hover {
+  color: #ffffff;
+  text-shadow: 0 0 9px rgba(255, 255, 255, 1), 0 0 24px rgba(255, 255, 255, 0.55);
+}
+.nyx-hacker .ticker, .nyx-hacker .ticker-text {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.38);
+}
+.nyx-hacker .mon-value, .nyx-hacker .mon-value-sm {
+  color: #ffffff;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.42);
+}
+.nyx-hacker .deck-brand, .nyx-hacker .deck-big, .nyx-hacker .gh-big {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.32);
+}
+/* the danger red is the one thing allowed to glow in colour */
+.nyx-hacker .mon-alert, .nyx-hacker .gh-big-hot, .nyx-hacker .fg-dirty {
+  text-shadow: 0 0 8px rgba(255, 45, 85, 0.65);
+}

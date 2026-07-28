@@ -1328,6 +1328,55 @@ if [[ -f "${NYXCFG}/stations.json" && -f "${NYXCFG}/stations-hacker.json" ]] \
   fi
 fi
 
+# ── 13x. Hyprland version guard (hyprlang removal + build-host skew) ────────
+# TWO REAL PROBLEMS, both found 2026-07-28:
+#
+# 1. hyprlang is being REMOVED. Lua configs landed in 0.55 and upstream said
+#    the old .conf syntax survives "1-2 releases" after that, i.e. gone at
+#    ~0.57. NYXUS is hyprland.conf + 17 hyprlang shards, and three of those
+#    shards are GENERATED at runtime (nyxus-hacker-mode, nyxus-freeform,
+#    Settings). So the first bake that pulls 0.57 produces an ISO where the
+#    entire desktop config silently stops loading - no bars, no keybinds, no
+#    stations. That must never happen by accident, so it is a hard FAIL.
+#
+# 2. BUILD-HOST SKEW. The bake installs Hyprland from the Arch repos at bake
+#    time, so the ISO can ship a different version than the box the config was
+#    developed and "verified live" on. The 2026.07.27 ISO shipped 0.56.1 while
+#    the builder box ran 0.55.4 - which is exactly why `hyprctl configerrors`
+#    was clean here and the ISO showed an error banner. Warn loudly, because
+#    "I tested it live" means very little across a version gap.
+#
+# Override for a deliberate experiment: NYX_ALLOW_HYPRLAND=1
+hd "13x. Hyprland version guard"
+
+_hypr_avail="$(pacman -Si hyprland 2>/dev/null | awk -F': ' '/^Version/{print $2; exit}')"
+_hypr_host="$(pacman -Q hyprland 2>/dev/null | awk '{print $2}')"
+
+if [[ -z "${_hypr_avail}" ]]; then
+  warn "cannot query the hyprland version from the repos (offline?) — guard skipped"
+else
+  _hv="${_hypr_avail%%-*}"
+  _maj="${_hv%%.*}"; _rest="${_hv#*.}"; _min="${_rest%%.*}"
+  printf '        repos offer hyprland %s   build host has %s\n' "${_hypr_avail}" "${_hypr_host:-none}"
+
+  if [[ "${_maj}" == "0" ]] && (( ${_min:-0} >= 57 )) && [[ "${NYX_ALLOW_HYPRLAND:-0}" != "1" ]]; then
+    fail "hyprland ${_hypr_avail} DROPS hyprlang — this profile's hyprland.conf + 17 shards would not load AT ALL"
+    fail "  migrate the config to Lua first (see HANDOFF 'hyprlang is being REMOVED'),"
+    fail "  or bake deliberately with NYX_ALLOW_HYPRLAND=1 if you know why"
+  elif [[ "${_maj}" == "0" ]] && (( ${_min:-0} >= 57 )); then
+    warn "hyprland ${_hypr_avail} drops hyprlang — proceeding only because NYX_ALLOW_HYPRLAND=1"
+  else
+    ok "hyprland ${_hypr_avail} still supports hyprlang (.conf)"
+  fi
+
+  if [[ -n "${_hypr_host}" && "${_hypr_host}" != "${_hypr_avail}" ]]; then
+    warn "VERSION SKEW: the ISO will ship ${_hypr_avail} but this box runs ${_hypr_host}"
+    warn "  config verified live here is NOT verified against what boots — update the host or pin the ISO"
+  elif [[ -n "${_hypr_host}" ]]; then
+    ok "build host matches what the ISO will ship (${_hypr_host})"
+  fi
+fi
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

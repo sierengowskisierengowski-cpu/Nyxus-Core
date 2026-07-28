@@ -633,7 +633,20 @@
          :style "margin-top: 11px;"
       (box :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
         (label :class "bar-hub-time" :halign "center" :text "${TIME.hm}")
-        (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))))
+        (label :class "bar-hub-date" :halign "center" :text "${TIME.date}")))
+    ;; SAUCER ALIEN (2026-07-28) — the cockpit is occupied. GLITCH.alien fires
+    ;; rarely (~6% per 7s poll), and when it does the CSS strikes the outline in
+    ;; like lightning and drops it again. Sits ON TOP of the clock in the same
+    ;; overlay and is pointer-transparent, so it never eats a transport click.
+    ;; Kept to the transparent cockpit window's own margin so it can't spill
+    ;; onto the painted hull art.
+    ;; background-image goes in the INLINE style, not eww.css: a relative
+    ;; url() in the stylesheet does not resolve (the box renders, the image
+    ;; never paints), while inline :style resolves it exactly the way
+    ;; saucer_base already loads its band art. Only the flicker lives in CSS.
+    (box :class "saucer-alien${GLITCH.alien ? ' saucer-alien-strike' : ''}"
+         :halign "center" :valign "center"
+         :style "margin-top: 11px; background-image: url('assets/nyxus-alien-peace-wide.png'); background-size: contain; background-repeat: no-repeat; background-position: center;")))
 
 ;; Music face: an old-school (1980s carry-around) ALIEN BOOMBOX instead of
 ;; a bare transport strip (rev 2026-07-25) — twin speaker-grille dots
