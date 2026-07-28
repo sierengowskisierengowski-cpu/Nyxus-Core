@@ -476,7 +476,7 @@
       "${st.id}")))
 
 (defwidget workspaces_rail []
-  (box :class "ws-rail ws-rail-float" :orientation "v" :space-evenly false :spacing 10 :valign "center" :halign "center"
+  (box :class "ws-rail ws-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 10 :valign "center" :halign "center"
     (workspace_home_pill)
     (workspace_start_pill)
     ;; numbered stations 1-10. Station 10 came back as ARSENAL (the four
@@ -494,7 +494,7 @@
 
 ;; Transparent column — each launcher is its own float-island (no rail slab).
 (defwidget app_rail []
-  (box :class "app-rail app-rail-float" :orientation "v" :space-evenly false :spacing 11 :valign "center" :halign "center"
+  (box :class "app-rail app-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 11 :valign "center" :halign "center"
     (app_launcher :glyph "󰣇" :cmd "nyxus-start"     :label "NYXUS Start" :hue "pink")
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
@@ -709,7 +709,7 @@
   ;; centerbox guarantees the saucer clock stays dead-center regardless of the
   ;; side clusters' widths. Metrics are balanced 3-per-side: fan/temp/cpu left,
   ;; gpu + net (down/up) right.
-  (centerbox :class "bar-bottom-minimal" :orientation "h" :valign "center"
+  (centerbox :class "bar-bottom-minimal${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "h" :valign "center"
     (box :class "bar-metrics-left mon-cluster" :orientation "h" :halign "start"
          :space-evenly false :spacing 26 :valign "center"
       (mon_stack2 :hue "orange" :glyph "󰈐"
@@ -733,7 +733,7 @@
       (mon_net))))
 
 (defwidget bar_top_layout []
-  (box :class "bar-top-ticker-only" :orientation "h" :hexpand true :halign "fill"
+  (box :class "bar-top-ticker-only${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "h" :hexpand true :halign "fill"
     (ticker_widget)))
 
 ;; ═════════════════════════════════════════════════════════════════════
@@ -1384,7 +1384,7 @@
 
 ;; ---------------------------------------------------------------- deck
 (defwidget home_deck []
-  (box :class "deck-root" :orientation "v" :space-evenly false :spacing 0
+  (box :class "deck-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 0
        :hexpand true :vexpand true
     ;; brand sits top-centre, above the scatter
     (label :class "deck-brand" :halign "center" :text "N Y X U S   ·   H O M E   S T A T I O N")
@@ -1463,7 +1463,7 @@
   ;; Bass-reactive rim, same formula the boombox uses (CAVA_BASS 0-100).
   ;; Applied INLINE because the CSS compile strips background-size and the
   ;; scalar has to interpolate per frame anyway.
-  (box :class "nyxus-surface start-root" :orientation "v" :space-evenly false :spacing 12
+  (box :class "nyxus-surface start-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 12
        :style "border-color: rgba(255, 45, 173, ${0.30 + CAVA_BASS / 260}); box-shadow: 0 0 ${30 + CAVA_BASS / 2}px rgba(125, 61, 255, ${0.22 + CAVA_BASS / 380}), 0 0 ${70 + CAVA_BASS}px rgba(255, 45, 173, ${0.10 + CAVA_BASS / 500});"
     ;; ---- header ------------------------------------------------------
     (box :class "start-head" :orientation "h" :space-evenly false :spacing 18
@@ -1699,7 +1699,7 @@
       (label :class "deck-sub" :halign "start" :text cap))))
 
 (defwidget ghost_deck []
-  (box :class "gh-root" :orientation "v" :space-evenly false :spacing 8
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 8
     (label :class "deck-brand" :halign "center"
            :text "G H O S T   ·   S E C U R I T Y   S T A T I O N")
 
@@ -1909,7 +1909,7 @@
       (label :class "fg-dirty" :text "${r.dirty}"))))
 
 (defwidget forge_deck []
-  (box :class "gh-root" :orientation "v" :space-evenly false :spacing 16
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 16
     (label :class "deck-brand" :halign "center"
            :text "F O R G E   ·   B U I L D   S T A T I O N")
 
@@ -2010,7 +2010,7 @@
               :onclick "kitty --title ${v.name} -e sh -c 'VBoxManage snapshot ${v.name} list; echo; read _' &" "snaps"))))
 
 (defwidget lab_deck []
-  (box :class "gh-root" :orientation "v" :space-evenly false :spacing 14
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 14
     (label :class "deck-brand" :halign "center"
            :text "L A B   ·   H O M E   L A B   S T A T I O N")
 
