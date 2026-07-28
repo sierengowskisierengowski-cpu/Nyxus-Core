@@ -6806,106 +6806,106 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
    violet/magenta NYXUS palette to green phosphor. Transitions are eased so it
    reads as the desktop changing state rather than a hard cut.
 
-   Scoped under .nyx-hacker-DISABLED-TEST so it is purely additive - remove the class and
+   Scoped under .nyx-hacker so it is purely additive - remove the class and
    every rule below stops applying. Nothing else in the sheet is touched. */
 
-.nyx-hacker-DISABLED-TEST { transition: all 420ms cubic-bezier(0.16, 1, 0.2, 1); }
+.nyx-hacker { transition: all 420ms cubic-bezier(0.16, 1, 0.2, 1); }
 
 /* card bodies: black glass, phosphor rim */
-.nyx-hacker-DISABLED-TEST .deck-card,
-.nyx-hacker-DISABLED-TEST .nyxus-surface,
-.nyx-hacker-DISABLED-TEST .start-tile,
-.nyx-hacker-DISABLED-TEST .gh-row,
-.nyx-hacker-DISABLED-TEST .gh-tool,
-.nyx-hacker-DISABLED-TEST .fg-repo,
-.nyx-hacker-DISABLED-TEST .lab-vm,
-.nyx-hacker-DISABLED-TEST .start-hit,
-.nyx-hacker-DISABLED-TEST .start-win,
-.nyx-hacker-DISABLED-TEST .start-place,
-.nyx-hacker-DISABLED-TEST .gh-hive {
+.nyx-hacker .deck-card,
+.nyx-hacker .nyxus-surface,
+.nyx-hacker .start-tile,
+.nyx-hacker .gh-row,
+.nyx-hacker .gh-tool,
+.nyx-hacker .fg-repo,
+.nyx-hacker .lab-vm,
+.nyx-hacker .start-hit,
+.nyx-hacker .start-win,
+.nyx-hacker .start-place,
+.nyx-hacker .gh-hive {
   background-color: rgba(0, 14, 5, 0.44);
   border-color: rgba(0, 255, 106, 0.34);
   box-shadow: inset 0 1px 0 rgba(0,255,106,0.10), 0 0 18px rgba(0, 255, 106, 0.16);
   transition: all 420ms cubic-bezier(0.16, 1, 0.2, 1);
 }
-.nyx-hacker-DISABLED-TEST .deck-card:hover,
-.nyx-hacker-DISABLED-TEST .start-tile:hover,
-.nyx-hacker-DISABLED-TEST .gh-row:hover,
-.nyx-hacker-DISABLED-TEST .gh-tool:hover,
-.nyx-hacker-DISABLED-TEST .fg-repo:hover,
-.nyx-hacker-DISABLED-TEST .start-hit:hover,
-.nyx-hacker-DISABLED-TEST .start-win:hover,
-.nyx-hacker-DISABLED-TEST .start-place:hover,
-.nyx-hacker-DISABLED-TEST .gh-hive:hover {
+.nyx-hacker .deck-card:hover,
+.nyx-hacker .start-tile:hover,
+.nyx-hacker .gh-row:hover,
+.nyx-hacker .gh-tool:hover,
+.nyx-hacker .fg-repo:hover,
+.nyx-hacker .start-hit:hover,
+.nyx-hacker .start-win:hover,
+.nyx-hacker .start-place:hover,
+.nyx-hacker .gh-hive:hover {
   border-color: rgba(0, 255, 106, 0.95);
   box-shadow: 0 0 24px rgba(0, 255, 106, 0.55), inset 0 0 18px rgba(0,255,106,0.08);
 }
 
 /* type: everything to phosphor, brand + big numbers glow hardest */
-.nyx-hacker-DISABLED-TEST .deck-brand,
-.nyx-hacker-DISABLED-TEST .deck-clock,
-.nyx-hacker-DISABLED-TEST .start-name,
-.nyx-hacker-DISABLED-TEST .gh-posture,
-.nyx-hacker-DISABLED-TEST .start-avatar {
+.nyx-hacker .deck-brand,
+.nyx-hacker .deck-clock,
+.nyx-hacker .start-name,
+.nyx-hacker .gh-posture,
+.nyx-hacker .start-avatar {
   color: #00ff6a;
   text-shadow: 0 0 12px rgba(0,255,106,0.85), 0 0 30px rgba(0,255,106,0.35);
 }
-.nyx-hacker-DISABLED-TEST .deck-big, .nyx-hacker-DISABLED-TEST .gh-big, .nyx-hacker-DISABLED-TEST .fg-name,
-.nyx-hacker-DISABLED-TEST .lab-name, .nyx-hacker-DISABLED-TEST .start-hit-name, .nyx-hacker-DISABLED-TEST .gh-hive-ip,
-.nyx-hacker-DISABLED-TEST .start-track, .nyx-hacker-DISABLED-TEST .start-upd-count, .nyx-hacker-DISABLED-TEST .start-wx-temp {
+.nyx-hacker .deck-big, .nyx-hacker .gh-big, .nyx-hacker .fg-name,
+.nyx-hacker .lab-name, .nyx-hacker .start-hit-name, .nyx-hacker .gh-hive-ip,
+.nyx-hacker .start-track, .nyx-hacker .start-upd-count, .nyx-hacker .start-wx-temp {
   color: #00ff6a; text-shadow: 0 0 10px rgba(0,255,106,0.7);
 }
-.nyx-hacker-DISABLED-TEST .deck-card-title, .nyx-hacker-DISABLED-TEST .start-sec, .nyx-hacker-DISABLED-TEST .gh-cat,
-.nyx-hacker-DISABLED-TEST .start-ars-cat, .nyx-hacker-DISABLED-TEST .lab-role {
+.nyx-hacker .deck-card-title, .nyx-hacker .start-sec, .nyx-hacker .gh-cat,
+.nyx-hacker .start-ars-cat, .nyx-hacker .lab-role {
   color: rgba(0, 255, 106, 0.80); text-shadow: 0 0 8px rgba(0,255,106,0.45);
 }
-.nyx-hacker-DISABLED-TEST .deck-sub, .nyx-hacker-DISABLED-TEST .deck-cal, .nyx-hacker-DISABLED-TEST .gh-name,
-.nyx-hacker-DISABLED-TEST .fg-branch, .nyx-hacker-DISABLED-TEST .start-tile-name, .nyx-hacker-DISABLED-TEST .lab-meta,
-.nyx-hacker-DISABLED-TEST .gh-feed, .nyx-hacker-DISABLED-TEST .start-scratch, .nyx-hacker-DISABLED-TEST .deck-spark,
-.nyx-hacker-DISABLED-TEST .gh-ports, .nyx-hacker-DISABLED-TEST .start-hit-sub, .nyx-hacker-DISABLED-TEST .start-win-title {
+.nyx-hacker .deck-sub, .nyx-hacker .deck-cal, .nyx-hacker .gh-name,
+.nyx-hacker .fg-branch, .nyx-hacker .start-tile-name, .nyx-hacker .lab-meta,
+.nyx-hacker .gh-feed, .nyx-hacker .start-scratch, .nyx-hacker .deck-spark,
+.nyx-hacker .gh-ports, .nyx-hacker .start-hit-sub, .nyx-hacker .start-win-title {
   color: rgba(140, 255, 190, 0.72);
 }
-.nyx-hacker-DISABLED-TEST .deck-card-glyph, .nyx-hacker-DISABLED-TEST .start-tile-glyph,
-.nyx-hacker-DISABLED-TEST .start-hit-glyph, .nyx-hacker-DISABLED-TEST .lab-dot, .nyx-hacker-DISABLED-TEST .gh-dot,
-.nyx-hacker-DISABLED-TEST .deck-moon, .nyx-hacker-DISABLED-TEST .deck-netglyph, .nyx-hacker-DISABLED-TEST .deck-battglyph {
+.nyx-hacker .deck-card-glyph, .nyx-hacker .start-tile-glyph,
+.nyx-hacker .start-hit-glyph, .nyx-hacker .lab-dot, .nyx-hacker .gh-dot,
+.nyx-hacker .deck-moon, .nyx-hacker .deck-netglyph, .nyx-hacker .deck-battglyph {
   color: #00ff6a; text-shadow: 0 0 10px rgba(0,255,106,0.8);
 }
 
 /* hairlines + dividers */
-.nyx-hacker-DISABLED-TEST .deck-rule, .nyx-hacker-DISABLED-TEST .start-div, .nyx-hacker-DISABLED-TEST .start-vdiv,
-.nyx-hacker-DISABLED-TEST .gh-cat-rule { background-color: rgba(0, 255, 106, 0.24); }
+.nyx-hacker .deck-rule, .nyx-hacker .start-div, .nyx-hacker .start-vdiv,
+.nyx-hacker .gh-cat-rule { background-color: rgba(0, 255, 106, 0.24); }
 
 /* buttons + chips */
-.nyx-hacker-DISABLED-TEST .deck-btn, .nyx-hacker-DISABLED-TEST .start-action, .nyx-hacker-DISABLED-TEST .lab-btn,
-.nyx-hacker-DISABLED-TEST .gh-chip, .nyx-hacker-DISABLED-TEST .start-edit, .nyx-hacker-DISABLED-TEST .fg-mini,
-.nyx-hacker-DISABLED-TEST .start-mini, .nyx-hacker-DISABLED-TEST .start-search {
+.nyx-hacker .deck-btn, .nyx-hacker .start-action, .nyx-hacker .lab-btn,
+.nyx-hacker .gh-chip, .nyx-hacker .start-edit, .nyx-hacker .fg-mini,
+.nyx-hacker .start-mini, .nyx-hacker .start-search {
   background-color: rgba(0, 16, 6, 0.52);
   border-color: rgba(0, 255, 106, 0.42);
   color: #7dffb4;
   text-shadow: 0 0 8px rgba(0,255,106,0.5);
 }
-.nyx-hacker-DISABLED-TEST .deck-btn:hover, .nyx-hacker-DISABLED-TEST .start-action:hover,
-.nyx-hacker-DISABLED-TEST .lab-btn:hover, .nyx-hacker-DISABLED-TEST .gh-chip:hover,
-.nyx-hacker-DISABLED-TEST .start-edit:hover, .nyx-hacker-DISABLED-TEST .fg-mini:hover,
-.nyx-hacker-DISABLED-TEST .start-mini:hover, .nyx-hacker-DISABLED-TEST .start-search:hover {
+.nyx-hacker .deck-btn:hover, .nyx-hacker .start-action:hover,
+.nyx-hacker .lab-btn:hover, .nyx-hacker .gh-chip:hover,
+.nyx-hacker .start-edit:hover, .nyx-hacker .fg-mini:hover,
+.nyx-hacker .start-mini:hover, .nyx-hacker .start-search:hover {
   border-color: rgba(0, 255, 106, 1);
   color: #ffffff;
   box-shadow: 0 0 22px rgba(0, 255, 106, 0.75);
 }
 
 /* per-hue accents collapse to phosphor so nothing stays purple */
-.nyx-hacker-DISABLED-TEST .deck-card-pink, .nyx-hacker-DISABLED-TEST .deck-card-cyan,
-.nyx-hacker-DISABLED-TEST .deck-card-green, .nyx-hacker-DISABLED-TEST .deck-card-blue,
-.nyx-hacker-DISABLED-TEST .deck-card-gold, .nyx-hacker-DISABLED-TEST .deck-card-orange,
-.nyx-hacker-DISABLED-TEST .deck-card-violet { border-color: rgba(0, 255, 106, 0.34); }
-.nyx-hacker-DISABLED-TEST .deck-big-green, .nyx-hacker-DISABLED-TEST .deck-big-cyan, .nyx-hacker-DISABLED-TEST .deck-big-pink,
-.nyx-hacker-DISABLED-TEST .deck-big-blue, .nyx-hacker-DISABLED-TEST .deck-big-gold, .nyx-hacker-DISABLED-TEST .deck-big-orange,
-.nyx-hacker-DISABLED-TEST .gh-big-ok, .nyx-hacker-DISABLED-TEST .gh-big-warn, .nyx-hacker-DISABLED-TEST .gh-big-hot {
+.nyx-hacker .deck-card-pink, .nyx-hacker .deck-card-cyan,
+.nyx-hacker .deck-card-green, .nyx-hacker .deck-card-blue,
+.nyx-hacker .deck-card-gold, .nyx-hacker .deck-card-orange,
+.nyx-hacker .deck-card-violet { border-color: rgba(0, 255, 106, 0.34); }
+.nyx-hacker .deck-big-green, .nyx-hacker .deck-big-cyan, .nyx-hacker .deck-big-pink,
+.nyx-hacker .deck-big-blue, .nyx-hacker .deck-big-gold, .nyx-hacker .deck-big-orange,
+.nyx-hacker .gh-big-ok, .nyx-hacker .gh-big-warn, .nyx-hacker .gh-big-hot {
   color: #00ff6a; text-shadow: 0 0 12px rgba(0,255,106,0.75);
 }
 /* the one exception: real danger stays red so alerts still read as alerts */
-.nyx-hacker-DISABLED-TEST .gh-row-down .gh-dot, .nyx-hacker-DISABLED-TEST .lab-vm-bad .lab-dot,
-.nyx-hacker-DISABLED-TEST .start-chip-off .start-chip-dot, .nyx-hacker-DISABLED-TEST .gh-posture-hot {
+.nyx-hacker .gh-row-down .gh-dot, .nyx-hacker .lab-vm-bad .lab-dot,
+.nyx-hacker .start-chip-off .start-chip-dot, .nyx-hacker .gh-posture-hot {
   color: #ff2b4a; text-shadow: 0 0 10px rgba(255,43,74,0.9);
 }
 
@@ -6915,18 +6915,18 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   50%  { border-color: rgba(0, 255, 106, 0.72); }
   100% { border-color: rgba(0, 255, 106, 0.26); }
 }
-.nyx-hacker-DISABLED-TEST .deck-card { animation: nyxus-hacker-breathe 4s ease-in-out infinite; }
+.nyx-hacker .deck-card { animation: nyxus-hacker-breathe 4s ease-in-out infinite; }
 
 /* stragglers that kept the magenta accent under hacker mode */
-.nyx-hacker-DISABLED-TEST .deck-ampm, .nyx-hacker-DISABLED-TEST .deck-sub-hot, .nyx-hacker-DISABLED-TEST .start-role,
-.nyx-hacker-DISABLED-TEST .start-sec-hint, .nyx-hacker-DISABLED-TEST .start-search-kbd, .nyx-hacker-DISABLED-TEST .gh-hint,
-.nyx-hacker-DISABLED-TEST .start-hint, .nyx-hacker-DISABLED-TEST .fg-dirty, .nyx-hacker-DISABLED-TEST .fg-ahead,
-.nyx-hacker-DISABLED-TEST .lab-note, .nyx-hacker-DISABLED-TEST .gh-state, .nyx-hacker-DISABLED-TEST .start-chip-label,
-.nyx-hacker-DISABLED-TEST .deck-time, .nyx-hacker-DISABLED-TEST .gh-hive-meta, .nyx-hacker-DISABLED-TEST .start-ars-if {
+.nyx-hacker .deck-ampm, .nyx-hacker .deck-sub-hot, .nyx-hacker .start-role,
+.nyx-hacker .start-sec-hint, .nyx-hacker .start-search-kbd, .nyx-hacker .gh-hint,
+.nyx-hacker .start-hint, .nyx-hacker .fg-dirty, .nyx-hacker .fg-ahead,
+.nyx-hacker .lab-note, .nyx-hacker .gh-state, .nyx-hacker .start-chip-label,
+.nyx-hacker .deck-time, .nyx-hacker .gh-hive-meta, .nyx-hacker .start-ars-if {
   color: rgba(0, 255, 106, 0.68);
   text-shadow: 0 0 7px rgba(0,255,106,0.35);
 }
-.nyx-hacker-DISABLED-TEST .deck-prog progress {
+.nyx-hacker .deck-prog progress {
   background-image: linear-gradient(90deg, #007a33 0%, #00ff6a 100%);
   box-shadow: 0 0 10px rgba(0,255,106,0.65);
 }
@@ -6935,54 +6935,54 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
    The decks flipping alone left the persistent chrome purple, which broke
    the illusion - the owner wants every single thing to turn. These are the
    four bar surfaces (top ticker, bottom hub, left station rail, right app
-   rail), reached through the same .nyx-hacker-DISABLED-TEST class their roots now carry. */
+   rail), reached through the same .nyx-hacker class their roots now carry. */
 
 /* rail + hub pills, ticker tiles, metric clusters */
-.nyx-hacker-DISABLED-TEST .ws-pill, .nyx-hacker-DISABLED-TEST .app-pill, .nyx-hacker-DISABLED-TEST .bar-tile,
-.nyx-hacker-DISABLED-TEST .brand, .nyx-hacker-DISABLED-TEST .ticker-tile, .nyx-hacker-DISABLED-TEST .mon-cluster,
-.nyx-hacker-DISABLED-TEST .saucer-screen, .nyx-hacker-DISABLED-TEST .float-island {
+.nyx-hacker .ws-pill, .nyx-hacker .app-pill, .nyx-hacker .bar-tile,
+.nyx-hacker .brand, .nyx-hacker .ticker-tile, .nyx-hacker .mon-cluster,
+.nyx-hacker .saucer-screen, .nyx-hacker .float-island {
   background-color: rgba(0, 14, 5, 0.42);
   border-color: rgba(0, 255, 106, 0.38);
   box-shadow: inset 0 1px 0 rgba(0,255,106,0.10), 0 0 14px rgba(0,255,106,0.20);
 }
-.nyx-hacker-DISABLED-TEST .ws-pill:hover, .nyx-hacker-DISABLED-TEST .app-pill:hover {
+.nyx-hacker .ws-pill:hover, .nyx-hacker .app-pill:hover {
   border-color: rgba(0, 255, 106, 1);
   box-shadow: 0 0 22px rgba(0, 255, 106, 0.8);
 }
 /* active station reads brightest */
-.nyx-hacker-DISABLED-TEST .ws-pill-active {
+.nyx-hacker .ws-pill-active {
   background-color: rgba(0, 40, 16, 0.66);
   border-color: rgba(0, 255, 106, 1);
   box-shadow: 0 0 26px rgba(0, 255, 106, 0.85);
 }
-.nyx-hacker-DISABLED-TEST .ws-pill-occupied { border-color: rgba(0, 255, 106, 0.55); }
+.nyx-hacker .ws-pill-occupied { border-color: rgba(0, 255, 106, 0.55); }
 
 /* every hue variant on the rails collapses to phosphor */
-.nyx-hacker-DISABLED-TEST .ws-pill-pink, .nyx-hacker-DISABLED-TEST .ws-pill-purple, .nyx-hacker-DISABLED-TEST .ws-pill-green,
-.nyx-hacker-DISABLED-TEST .ws-pill-gold, .nyx-hacker-DISABLED-TEST .ws-pill-orange, .nyx-hacker-DISABLED-TEST .ws-pill-blue,
-.nyx-hacker-DISABLED-TEST .ws-pill-cyan, .nyx-hacker-DISABLED-TEST .app-pill-pink, .nyx-hacker-DISABLED-TEST .app-pill-green,
-.nyx-hacker-DISABLED-TEST .app-pill-orange, .nyx-hacker-DISABLED-TEST .app-pill-gold, .nyx-hacker-DISABLED-TEST .app-pill-purple,
-.nyx-hacker-DISABLED-TEST .app-pill-blue, .nyx-hacker-DISABLED-TEST .app-pill-cyan {
+.nyx-hacker .ws-pill-pink, .nyx-hacker .ws-pill-purple, .nyx-hacker .ws-pill-green,
+.nyx-hacker .ws-pill-gold, .nyx-hacker .ws-pill-orange, .nyx-hacker .ws-pill-blue,
+.nyx-hacker .ws-pill-cyan, .nyx-hacker .app-pill-pink, .nyx-hacker .app-pill-green,
+.nyx-hacker .app-pill-orange, .nyx-hacker .app-pill-gold, .nyx-hacker .app-pill-purple,
+.nyx-hacker .app-pill-blue, .nyx-hacker .app-pill-cyan {
   color: #00ff6a;
   border-color: rgba(0, 255, 106, 0.38);
   text-shadow: 0 0 9px rgba(0,255,106,0.7);
 }
 
 /* bar text: ticker, clock, metrics, brand */
-.nyx-hacker-DISABLED-TEST .ticker, .nyx-hacker-DISABLED-TEST .ticker-text, .nyx-hacker-DISABLED-TEST .bar-tile-label,
-.nyx-hacker-DISABLED-TEST .bar-tile-value, .nyx-hacker-DISABLED-TEST .mon-label, .nyx-hacker-DISABLED-TEST .mon-value,
-.nyx-hacker-DISABLED-TEST .mon-trace, .nyx-hacker-DISABLED-TEST .clock, .nyx-hacker-DISABLED-TEST .clock-date,
-.nyx-hacker-DISABLED-TEST .saucer-clock, .nyx-hacker-DISABLED-TEST .saucer-date, .nyx-hacker-DISABLED-TEST .cava,
-.nyx-hacker-DISABLED-TEST .ws-word {
+.nyx-hacker .ticker, .nyx-hacker .ticker-text, .nyx-hacker .bar-tile-label,
+.nyx-hacker .bar-tile-value, .nyx-hacker .mon-label, .nyx-hacker .mon-value,
+.nyx-hacker .mon-trace, .nyx-hacker .clock, .nyx-hacker .clock-date,
+.nyx-hacker .saucer-clock, .nyx-hacker .saucer-date, .nyx-hacker .cava,
+.nyx-hacker .ws-word {
   color: #00ff6a;
   text-shadow: 0 0 9px rgba(0,255,106,0.6);
 }
-.nyx-hacker-DISABLED-TEST .bar-tile-label, .nyx-hacker-DISABLED-TEST .mon-label {
+.nyx-hacker .bar-tile-label, .nyx-hacker .mon-label {
   color: rgba(0, 255, 106, 0.62);
 }
 
 /* the bar surfaces themselves */
-.nyx-hacker-DISABLED-TEST.bar-top-ticker-only, .nyx-hacker-DISABLED-TEST.bar-bottom-minimal,
-.nyx-hacker-DISABLED-TEST.ws-rail, .nyx-hacker-DISABLED-TEST.app-rail {
+.nyx-hacker.bar-top-ticker-only, .nyx-hacker.bar-bottom-minimal,
+.nyx-hacker.ws-rail, .nyx-hacker.app-rail {
   background-color: transparent;
 }
