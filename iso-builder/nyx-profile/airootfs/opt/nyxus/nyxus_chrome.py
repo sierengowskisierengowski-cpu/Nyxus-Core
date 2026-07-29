@@ -433,7 +433,7 @@ vte-terminal, vte-terminal * {
 .nyx-h3 { font-size: 18px; color: #c8ccd6; }
 .nyx-dim,   .nyx-faint  { color: #6a6e78; }
 
-/* -- Headerbar / titlebar: dark mirror glass plate ------------------------ */
+/* -- Headerbar / titlebar: alien neon glass plate ------------------------ */
 headerbar, .titlebar {
     background-color: rgba(8, 12, 20, 0.62);
     background-image: none;
@@ -462,7 +462,7 @@ headerbar button:hover, .titlebar button:hover {
 }
 
 /* -- Universal frosted-glass surface (every panel / card / frame / pane) -- *
- * One single dark mirror treatment for ALL containers. Eliminates every     *
+ * One single alien neon glass treatment for ALL containers. Eliminates      *
  * per-app neon card class — they all collapse here. Everything is the same. */
 .nyx-bg, .nyx-shell-bg, .nyx-frosted, .nyx-panel,
 .nyx-godsapp-frame, .nyx-card, .nyx-card-dark, .nyx-hero,

@@ -210,7 +210,7 @@
 (defwidget nyxus_brand []
   (button :class "brand brand-bottom"
           :style "background-position: center; opacity: 1;"
-          :onclick "nyxus-start &"
+          :onclick "hyprctl dispatch workspace name:START &"
           :tooltip "NYXUS Start · Search · Apps · Stations"
     (box :orientation "h" :space-evenly false :spacing 7
       (label :class "brand-gem" :text "◆")
@@ -221,7 +221,7 @@
 (defwidget nyxus_brand_compact []
   (button :class "brand brand-top"
           :style "background-position: center; opacity: 1;"
-          :onclick "nyxus-start &"
+          :onclick "hyprctl dispatch workspace name:START &"
           :tooltip "NYXUS Start"
     (box :orientation "h" :space-evenly false :spacing 6
       (label :class "brand-gem" :text "◆")
@@ -347,7 +347,7 @@
 ;;    start menu is the nyxus-start app.
 (defwidget search_btn []
   (button :class "search-btn"
-          :onclick "nyxus-start &"
+          :onclick "hyprctl dispatch workspace name:START &"
           :tooltip "Search NYXUS"
     (label :class {GLITCH.search ? "nyx-glitch" : ""} :text "  Search NYXUS")))
 
@@ -521,7 +521,7 @@
 ;; Transparent column — each launcher is its own float-island (no rail slab).
 (defwidget app_rail []
   (box :class "app-rail app-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 11 :valign "center" :halign "center"
-    (app_launcher :glyph "󰣇" :cmd "nyxus-start"     :label "NYXUS Start" :hue "pink")
+    (app_launcher :glyph "󰣇" :cmd "hyprctl dispatch workspace name:START" :label "NYXUS Start" :hue "pink")
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
     (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
@@ -1415,7 +1415,7 @@
 (defwidget dcard_launch []
   (deck_card :title "LAUNCH" :glyph "󰀻" :tone "violet" :depth "near"
     (box :orientation "h" :space-evenly false :spacing 10
-      (button :class "deck-btn" :onclick "nyxus-start &" :tooltip "NYXUS Start" "󰣇")
+      (button :class "deck-btn" :onclick "hyprctl dispatch workspace name:START &" :tooltip "NYXUS Start" "󰣇")
       (button :class "deck-btn" :onclick "alacritty &" :tooltip "Terminal" "")
       (button :class "deck-btn" :onclick "firefox &" :tooltip "Browser" "")
       (button :class "deck-btn" :onclick "thunar &" :tooltip "Files" "")
