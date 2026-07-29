@@ -131,14 +131,14 @@ category = "System"
 [[bind]]
 mods     = "SUPER"
 key      = "F3"
-action   = "eww open --toggle mission-control"
+action   = "eww open --toggle mission"
 desc     = "Mission Control"
 category = "System"
 
 [[bind]]
 mods     = "SUPER"
 key      = "F4"
-action   = "eww open --toggle quick-settings"
+action   = "eww open --toggle quicksettings"
 desc     = "Quick Settings"
 category = "System"
 
@@ -234,7 +234,7 @@ desc     = "Tap right Ctrl → Cheat-sheet"
 type     = "swipe"
 fingers  = 3
 direction = "up"
-action   = "eww open --toggle mission-control"
+action   = "eww open --toggle mission"
 desc     = "3-finger swipe up → Mission Control"
 
 [[gesture]]

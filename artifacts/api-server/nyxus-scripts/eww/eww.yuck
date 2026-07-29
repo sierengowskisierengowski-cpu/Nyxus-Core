@@ -41,8 +41,6 @@
                                      "~/.config/eww/scripts/brightness.sh")
 (defpoll WORKSPACES :interval "1s"   :initial '{"active":1,"home_active":false,"home":{"code":"HOME","name":"HOME","hue":"cyan","occupied":false},"start":{"active":false,"occupied":false},"stations":[]}'
                                      "~/.config/eww/scripts/workspaces.sh")
-(defpoll APP_RAIL   :interval "0.5s" :initial '{"active":"","terminal":{"active":false,"occupied":false},"browser":{"active":false,"occupied":false},"files":{"active":false,"occupied":false},"sysmon":{"active":false,"occupied":false},"notepad":{"active":false,"occupied":false},"stickies":{"active":false,"occupied":false},"mixer":{"active":false,"occupied":false},"bluetooth":{"active":false,"occupied":false}}'
-                                     "~/.config/eww/scripts/app-rail.sh")
 (defpoll WEATHER    :interval "900s" :initial '{"temp":"—","summary":"…"}'
                                      "~/.config/eww/scripts/weather.sh")
 (defpoll CALENDAR   :interval "60s"  :initial '{"month":"—","grid":""}'
@@ -64,10 +62,6 @@
 ;; bars enter a blazing "show" glow (the beat sync itself drives the
 ;; wallpaper + borders, not the bars).
 (defvar SUPERNOVA false)
-(defpoll FANSTRIP   :interval "3s"   :initial '{"text":"FAN —","tooltip":"fan speeds"}'
-                                     "~/.config/eww/scripts/fan-strip.sh")
-(defpoll NETSTRIP   :interval "3s"   :initial '{"text":"NET —","tooltip":"network"}'
-                                     "~/.config/eww/scripts/net-strip.sh")
 ;; ── Phase 6 live monitoring graphs (bottom bar, ghost HUD) ───────────
 ;; fan RPM, unified CPU/temp/GPU (dGPU degrades gracefully when asleep)
 ;; and up/down network - each streams a rolling block-char sparkline
@@ -122,12 +116,8 @@
                                 "python3 ~/.config/eww/scripts/forge-feed.py")
 (defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0},"hive":{"up":false,"total":0,"ips":0,"pots":0,"h1":0,"countries":0,"rows":[],"quiet":true}}'
                                 "python3 ~/.config/eww/scripts/ghost-feed.py")
-(defpoll STARTARS :interval "12s" :initial '{"groups":[],"live":0,"total":0}'
-                                   "python3 ~/.config/eww/scripts/start-feed.py arsenal")
 (defpoll STARTLIVE :interval "4s" :initial '{"running":[],"run_count":0,"recent":[],"places":[]}'
                                    "python3 ~/.config/eww/scripts/start-feed.py live")
-(defpoll STARTSTAT :interval "6s"  :initial '{"items":[]}'
-                                   "python3 ~/.config/eww/scripts/start-feed.py status")
 
 (defvar WIFI_VIEW "nearby")
 
@@ -182,8 +172,6 @@
 ;; consume it via inline :style so the gradient painted on border-box
 ;; (the visible rim) sweeps around the frame while the inset neon
 ;; pulses. NYXUS_BAR_FX=off in nyxus.conf freezes it at zero CPU.
-(deflisten PRISM :initial '{"a":100,"b":280,"p":0.5,"g":0.5,"pr":255,"pg":60,"pb":172,"ps":0,"fr":43,"fg":210,"fb":255,"fs":0,"ctop":-60,"cright":-60,"cbot":-60,"cleft":-60}'
-                 "~/.config/eww/scripts/prism-anim.sh")
 
 ;; ── neon-sign flicker driver ─────────────────────────────────────────
 ;; neon-flicker.sh streams an opacity value (1 = steady) with rare,
@@ -191,7 +179,6 @@
 ;; neon tube. GTK3-in-eww ignores CSS @keyframes, so this rides the
 ;; same inline-:style mechanism as PRISM. NYXUS_NEON_FLICKER=off in
 ;; nyxus.conf disables it.
-(deflisten NEONFLICK :initial "1" "~/.config/eww/scripts/neon-flicker.sh")
 
 ;; ── starlight headliner twinkle ──────────────────────────────────────
 ;; starlight-anim.sh cycles pre-rendered twinkle overlays so the
@@ -205,8 +192,6 @@
                  "~/.config/eww/scripts/starfield-lock-anim.sh")
 
 ;; trapped fog drift inside obsidian pill vessels (rev 2026-07-12)
-(deflisten FOG :initial '{"x":50,"y":50,"a":0}'
-             "~/.config/eww/scripts/fog-swirl.sh")
 
 ;; ── live moon phase (starlight top bar tile) ─────────────────────────
 (defpoll MOON :interval "1800s"
@@ -981,7 +966,7 @@
             (label :class "hub-section-title" :hexpand true :halign "start" :text "APPS"
                    :style "letter-spacing: 0.08em; min-width: 72px;")
             (button :class "hub-apps-toggle" :halign "end"
-                    :onclick "mkdir -p ~/.cache/nyxus-eww && { [ -f ~/.cache/nyxus-eww/hub-apps-all ] && rm -f ~/.cache/nyxus-eww/hub-apps-all || touch ~/.cache/nyxus-eww/hub-apps-all; } &"
+                    :onclick "~/.config/eww/scripts/hub-apps-toggle.sh &"
                     :tooltip "toggle NYXUS-only vs all installed apps"
               "${HUBAPPS_MODE == 'all' ? 'ALL APPS' : 'NYXUS ONLY'}"))
           (scroll :class "hub-apps-scroll" :vscroll true :hscroll false
@@ -1522,7 +1507,7 @@
       ;; EXCLUSIVE (see the window note), so search hands off to rofi - the
       ;; same launcher Super+Space already uses.
       (button :class "start-search" :hexpand true
-              :onclick "${EWW_CMD} update STARTQ='' && ${EWW_CMD} open start-search"
+              :onclick "eww update STARTQ='' && eww open start-search"
         (box :orientation "h" :space-evenly false :spacing 10
           (label :class "start-search-glyph" :text "")
           (label :class "start-search-text" :text "Search apps and commands")
@@ -1639,12 +1624,12 @@
       (start_action :glyph ""  :tip "Settings"      :cmd "nyxus-settings &" :tone "violet")
       (start_action :glyph ""  :tip "Files"         :cmd "thunar &"         :tone "gold")
       (start_action :glyph ""  :tip "Terminal"      :cmd "alacritty &"      :tone "cyan")
-      (start_action :glyph ""  :tip "Notifications" :cmd "${EWW_CMD} open --toggle notifications" :tone "cyan")
+      (start_action :glyph ""  :tip "Notifications" :cmd "eww open --toggle notifications" :tone "cyan")
       (box :hexpand true)
       (label :class "start-hint" :valign "center" :text "Super+Home  HOME     Super+End  START")
       (box :hexpand true)
       (start_action :glyph ""  :tip "Lock"          :cmd "hyprlock &"       :tone "blue")
-      (start_action :glyph ""  :tip "Power menu"    :cmd "${EWW_CMD} open --toggle powermenu" :tone "gold"))))
+      (start_action :glyph ""  :tip "Power menu"    :cmd "eww open --toggle powermenu" :tone "gold"))))
 
 ;; -- START search overlay ---------------------------------------------
 ;; A text field needs keyboard focus, and eww 0.5 only offers EXCLUSIVE
@@ -1655,7 +1640,7 @@
 ;; closes it whenever you leave START, and Super+Shift+S force-closes it.
 (defwidget start_hit [name cmd glyph tagline]
   (button :class "start-hit"
-          :onclick "${cmd} & ${EWW_CMD} update STARTQ='' && ${EWW_CMD} close start-search"
+          :onclick "${cmd} & eww update STARTQ='' && eww close start-search"
           :tooltip tagline
     (box :orientation "h" :space-evenly false :spacing 12
       (label :class "start-hit-glyph" :text glyph)
@@ -1671,7 +1656,7 @@
              :onchange "python3 ~/.config/eww/scripts/start-search.py {} &"
              :onaccept "python3 ~/.config/eww/scripts/start-search.py --run {} &")
       (button :class "start-sclose" :tooltip "Close (Esc)"
-              :onclick "${EWW_CMD} update STARTQ='' && ${EWW_CMD} close start-search" ""))
+              :onclick "eww update STARTQ='' && eww close start-search" ""))
     (box :class "start-div" :height 1)
     (label :class "start-scratch-empty" :halign "start"
            :visible {STARTFOUND.n == 0} :text "start typing to search installed apps")

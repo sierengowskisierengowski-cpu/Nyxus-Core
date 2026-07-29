@@ -105,9 +105,13 @@ try:
     from nyxus_palette import HUD_PALETTE as _HP, \
         install_hud_css as _NYX_IHC, neon_flicker_css as _NYX_NFC
 except Exception:
-    _HP = {"pink": "#ff2dad", "purple": "#7d3dff", "blue": "#4d9fff",
-           "green": "#7dff5e", "gold": "#ff8a1e", "orange": "#ff8a1e",
-           "cyan": "#2bd2ff", "red": "#ff2d55"}
+    # Mirrors nyxus_palette.HUD_PALETTE exactly so a failed import renders the
+    # same ALIEN NEON hues rather than a near-miss palette. The pink/cyan key
+    # names are historical: canon maps pink->violet and cyan->magenta.
+    _HP = {"pink": "#7d3dff", "purple": "#7d3dff", "blue": "#2bd2ff",
+           "green": "#39ff14", "gold": "#ff8a1e", "orange": "#ff8a1e",
+           "cyan": "#ff2dad", "red": "#ff2d55", "orchid": "#e367ff",
+           "mono": "#eef2fa"}
     _NYX_IHC = None
     def _NYX_NFC(): return ""
 

@@ -586,6 +586,31 @@ fi
 if [[ -d "${NS}/eww/scripts" ]]; then
   install -m 0755 "${NS}"/eww/scripts/* "${SKEL}/.config/eww/scripts/" 2>/dev/null || true
 fi
+# CATCH-ALL for every remaining top-level file in NS/eww (2026-07-29).
+#
+# The named installs above are a hand-maintained whitelist, and files kept
+# falling through it. `rm -rf skel/.config/eww` above deletes EVERYTHING, so
+# anything not explicitly restored simply does not exist on the ISO — silently,
+# because nothing checks. Three real casualties were shipping:
+#
+#   cava.conf         — cava.sh runs `cava -p ~/.config/eww/cava.conf`. Missing
+#                       file => cava exits, so the bar visualizer AND the
+#                       CAVA_BASS scalar that drives the boombox speaker
+#                       reactivity were both dead on every baked stick.
+#   _nyxus_accent.scss / accent.scss
+#                     — eww.scss.source line 4 is `@import "_nyxus_accent"`, so
+#                       any recompile (nyxus-apply-accent) failed outright.
+#   nyxus-palette.css — the @import target for the shared palette tokens.
+#
+# Copying whatever else NS/eww holds means adding a file there is enough; no
+# edit is needed here and the whitelist can never silently lose one again.
+# This runs AFTER the named installs so their explicit modes/renames still win.
+for _ef in "${NS}"/eww/*; do
+  [[ -f "${_ef}" ]] || continue
+  _eb="$(basename "${_ef}")"
+  [[ -e "${SKEL}/.config/eww/${_eb}" ]] && continue
+  install -m 0644 "${_ef}" "${SKEL}/.config/eww/${_eb}"
+done
 # eww/assets wiped by rm -rf skel/.config/eww — bars/overlays reference
 # assets/*.png from eww.yuck; without this restage the HUD is blank art.
 if [[ -d "${NS}/eww/assets" ]]; then
@@ -679,7 +704,19 @@ if compgen -G "${NS}/nyxus-*.png" >/dev/null; then
   install -m 0644 "${NS}"/nyxus-*.png "${WALLS_USER}/"
   install -m 0644 "${NS}"/nyxus-*.png "${WALLS_SYS}/"
 fi
-ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyxus/ + skel"
+# ROTATION SET (2026-07-29). The glob above only reaches NS's ROOT, but every
+# nyxus-rot-*.png lives in NS/hypr-walls/rotation/ — and `rm -rf skel/.config/hypr`
+# above deletes the committed skel copy of walls/rotation/. Net effect on every
+# stick baked so far: 27 of the 32 wallpapers in the curated wall-rotation.list
+# did not exist on the ISO, so the ambient rotation cycled the same 5 images and
+# nyxus-rotate-walls logged a miss for the rest. Stage the subdir into BOTH
+# surfaces, matching the search paths in nyxus-set-wallpaper.sh / nyxus-hacker-mode.
+if compgen -G "${NS}/hypr-walls/rotation/*.png" >/dev/null; then
+  mkdir -p "${WALLS_USER}/rotation" "${WALLS_SYS}/rotation"
+  install -m 0644 "${NS}"/hypr-walls/rotation/*.png "${WALLS_USER}/rotation/"
+  install -m 0644 "${NS}"/hypr-walls/rotation/*.png "${WALLS_SYS}/rotation/"
+fi
+ok "wallpapers: $(ls "${WALLS_SYS}" | wc -l) files in /usr/share/backgrounds/nyxus/ + skel (+ $(ls "${WALLS_SYS}/rotation" 2>/dev/null | wc -l) rotation)"
 
 # ── Helper scripts → /usr/local/bin/ ────────────────────────────────────
 # rev r6-eww: waybar-stats / waybar-ticker removed. nyxus-eww-launch added.

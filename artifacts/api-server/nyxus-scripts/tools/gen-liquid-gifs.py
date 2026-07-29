@@ -74,7 +74,7 @@ if __name__ == "__main__":
         "purple":   ("11400a", "39ff14"),
         "gold":     ("50290a", "ff8a1e"),
         "orange":   ("50290a", "ff8a1e"),
-        "blue":     ("102a50", "4d9fff"),
+        "blue":     ("102a50", "2bd2ff"),
         "cyan":     ("500f1c", "ff2d55"),
         "occupied": ("2a1150", "7d3dff"),
     }

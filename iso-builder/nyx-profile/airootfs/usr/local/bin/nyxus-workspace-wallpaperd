@@ -36,6 +36,18 @@ lookup_wallpaper() {
 handle_workspace() {
   local wsid="$1"
   local wp; wp="$(lookup_wallpaper "${wsid}")"
+  # Expand a leading tilde. Both matrices set "wall_dir": "~/.config/hypr/walls"
+  # and the skel copy of workspaces.json therefore ships LITERAL "~/..." paths.
+  # Bash does not tilde-expand the contents of a variable, so `-r "${wp}"` was
+  # testing a path that can never exist: every lookup missed, this function
+  # returned early, and the background silently never changed. Runtime regen
+  # (nyxus-sync-stations) emits absolute paths, but it only runs on a
+  # hacker-mode flip — until then, and on a first boot, this is the only thing
+  # standing between the user and a static wallpaper.
+  case "${wp}" in
+    '~')   wp="${HOME}" ;;
+    '~/'*) wp="${HOME}/${wp#\~/}" ;;
+  esac
   if [[ -z "${wp}" || ! -r "${wp}" || "${wp}" == "${LAST}" ]]; then
     return 0
   fi

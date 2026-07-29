@@ -3730,11 +3730,14 @@ class KeyboardPage(SectionPage):
         # Cheatsheet jump
         ext = Adw.PreferencesGroup(title="Shortcuts")
         self.add_group(ext)
+        # There is no `nyxus-cheatsheet` binary and there never was - this
+        # button did nothing. The cheatsheet is the eww `hotkey-cheatsheet`
+        # window, which is what Super+/ opens (hyprland.conf).
         ext.add(action_row(
             "Open keyboard cheatsheet",
             "Full list of system & Hyprland shortcuts",
             "Open",
-            lambda: fire_and_forget("nyxus-cheatsheet")))
+            lambda: fire_and_forget("eww open --toggle hotkey-cheatsheet")))
 
         # ── Real, parsed shortcut table from hyprland.conf ──
         # Reads ~/.config/hypr/hyprland.conf, surfaces every NYXUS app
