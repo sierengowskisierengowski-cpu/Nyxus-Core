@@ -164,6 +164,7 @@ file_permissions=(
   ["/usr/local/bin/nyxus-sysmon"]="0:0:755"
   ["/usr/local/bin/nyxus-terminal"]="0:0:755"
   ["/usr/local/bin/nyxus-tint"]="0:0:755"
+  ["/usr/local/bin/nyxus-threatd"]="0:0:755"
   ["/usr/local/bin/nyxus-tintd"]="0:0:755"
   ["/usr/local/bin/nyxus-tour"]="0:0:755"
   ["/usr/local/bin/nyxus-updater"]="0:0:755"

@@ -4865,6 +4865,7 @@ scale slider {
   box-shadow: 0 0 20px rgba(125, 61, 255, 0.9), 0 0 42px rgba(255, 45, 173, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
+
 /* =====================================================================
    HOME-HUD DASHBOARD v2 - rev 2026-07-09
    Graffiti greeting, card headers with rule + stamp, ring gauges,
@@ -5847,6 +5848,50 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   background-color: transparent;
   background-image: none;
   border: none;
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------------------
+   THREAT STATE on the GHOST pill  (rev 2026-07-29)
+   Driven by the THREAT defvar, pushed by nyxus-threatd off the real
+   security probes. ONLY the GHOST pill takes these classes.
+   MUST stay below EVERY .ws-pill-* rule: the threat class is APPENDED to
+   the hue class and both are single-class selectors, so equal specificity
+   means the later rule wins. This file defines .ws-pill more than once,
+   so "after the first one" is not good enough - this sits after the last.
+   watch #ffe600 / alert #ff8a1e / breach #ff2d55 (landmark red).
+   blind is not a severity - it is "we do not know", drawn as a dashed rim
+   so it can never read as calm.
+   Mirrored by hand from eww.scss.source: this file has drifted far from
+   its source, so it is patched surgically rather than regenerated.
+   ------------------------------------------------------------------ */
+.ws-threat-watch {
+  color: #ffe600;
+  border-color: rgba(255, 230, 0, 0.55);
+  text-shadow: 0 0 10px rgba(255, 230, 0, 0.7);
+  box-shadow: 0 0 16px rgba(255, 230, 0, 0.3);
+}
+
+.ws-threat-alert {
+  color: #ff8a1e;
+  border-color: rgba(255, 138, 30, 0.7);
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.85);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.42);
+}
+
+.ws-threat-breach {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(255, 45, 85, 0.3), rgba(255, 45, 85, 0.1));
+  border-color: #ff2d55;
+  text-shadow: 0 0 14px rgba(255, 45, 85, 0.95);
+  box-shadow: 0 0 26px rgba(255, 45, 85, 0.62), inset 0 0 18px rgba(255, 45, 85, 0.22);
+}
+
+.ws-threat-blind {
+  color: rgba(43, 210, 255, 0.8);
+  border-style: dashed;
+  border-color: rgba(43, 210, 255, 0.55);
+  text-shadow: 0 0 8px rgba(43, 210, 255, 0.45);
   box-shadow: none;
 }
 

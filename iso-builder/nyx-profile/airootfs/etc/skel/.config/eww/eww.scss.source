@@ -3513,6 +3513,61 @@ scale slider {
     inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
+/* ---------------------------------------------------------------------
+   THREAT STATE on the GHOST pill  (rev 2026-07-29)
+   Driven by the THREAT defvar, pushed by nyxus-threatd off the real
+   security probes. ONLY the GHOST pill takes these classes - a colour on
+   every pill would mean nothing, and the rail has to stay readable.
+
+   These MUST stay below the .ws-pill-* hue rules: the threat class is
+   APPENDED to the hue class, both are single-class selectors, so equal
+   specificity means the later rule wins. Moving this block up silently
+   disables it.
+
+   Escalation uses the canon ramp and nothing else:
+     watch  yellow #ffe600  - background noise, worth a glance
+     alert  orange #ff8a1e  - real activity
+     breach red    #ff2d55  - the landmark colour, host is affected
+   Red is spent here and nowhere near decoration, per the design contract.
+
+   blind is NOT a severity - it is "we do not know". Dashed border is the
+   convention for absent data, and it must never read as calm: this build
+   already shipped an EDR that reported healthy while seeing nothing.
+   Pure ASCII only in this block. A non-ASCII character makes sass emit a
+   charset at-rule, which GTK rejects, and the whole theme drops to grey.
+   (Spelled out rather than written literally: the documented health check is
+   a grep for that at-rule in eww.css, and a comment containing it would
+   register as a false positive.)
+   ------------------------------------------------------------------ */
+.ws-threat-watch {
+  color: #ffe600;                    /* YELLOW_FIXED - no scss var exists */
+  border-color: rgba(255, 230, 0, 0.55);
+  text-shadow: 0 0 10px rgba(255, 230, 0, 0.70);
+  box-shadow: 0 0 16px rgba(255, 230, 0, 0.30);
+}
+.ws-threat-alert {
+  color: $nyxus-accent-warn;
+  border-color: rgba(255, 138, 30, 0.70);
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.85);
+  box-shadow: 0 0 22px rgba(255, 138, 30, 0.42);
+}
+.ws-threat-breach {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(255, 45, 85, 0.30), rgba(255, 45, 85, 0.10));
+  border-color: $neon-red;
+  text-shadow: 0 0 14px rgba(255, 45, 85, 0.95);
+  box-shadow:
+    0 0 26px rgba(255, 45, 85, 0.62),
+    inset 0 0 18px rgba(255, 45, 85, 0.22);
+}
+.ws-threat-blind {
+  color: rgba(43, 210, 255, 0.80);
+  border-style: dashed;
+  border-color: rgba(43, 210, 255, 0.55);
+  text-shadow: 0 0 8px rgba(43, 210, 255, 0.45);
+  box-shadow: none;
+}
+
 /* =====================================================================
    HOME-HUD DASHBOARD v2 - rev 2026-07-09
    Graffiti greeting, card headers with rule + stamp, ring gauges,
