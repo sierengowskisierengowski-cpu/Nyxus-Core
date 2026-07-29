@@ -64,14 +64,14 @@ PALETTE = {
     "purple": "#39ff14",
     "gold":   "#ff8a1e",
     "indigo": "#39ff14",
-    "green":  "#7dff5e",
+    "green":  "#39ff14",
     "orange": "#ff8a1e",
-    "blue":   "#4d9fff",
+    "blue":   "#2bd2ff",
     "red":    "#ff2d55",
     "white":  "#ffffff",
     "text":   "#eef2fa",
     "dim":    "#c8ccd6",
-    "void":   "#0f1420",
+    "void":   "#05060a",
 }
 
 NEONS = ["#7d3dff", "#ff2d55", "#39ff14", "#ff8a1e", "#7dff5e",

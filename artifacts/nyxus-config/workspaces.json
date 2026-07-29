@@ -1,55 +1,55 @@
 {
-  "_comment": "Auto-generated from stations.json (ALIEN ONLY). Do not hand-edit.",
+  "_comment": "Auto-generated from stations.json at ISO bake. Do not hand-edit.",
   "workspaces": [
     {
       "id": 1,
       "name": "OPS",
-      "wallpaper": "~/.config/hypr/walls/nyxus-urban-alien.png"
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-urban-alien.png"
     },
     {
       "id": 2,
       "name": "FORGE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-login-wall.png"
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-login-wall.png"
     },
     {
       "id": 3,
       "name": "GHOST",
-      "wallpaper": "~/.config/hypr/walls/nyxus-desktop-hero.png"
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-desktop-hero.png"
     },
     {
       "id": 4,
       "name": "PULSE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-space.png"
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-graffiti-space.png"
     },
     {
       "id": 5,
       "name": "WAVE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-01.png"
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-graffiti-01.png"
     },
     {
       "id": 6,
       "name": "CORE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-04.png"
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-graffiti-04.png"
     },
     {
       "id": 7,
       "name": "MESH",
-      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-08.png"
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-graffiti-08.png"
     },
     {
       "id": 8,
       "name": "SCRIBE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-11.png"
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-graffiti-11.png"
     },
     {
       "id": 9,
-      "name": "BLAST",
-      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-16.png"
+      "name": "BIFROST",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-graffiti-16.png"
     },
     {
       "id": 10,
-      "name": "EDGE",
-      "wallpaper": "~/.config/hypr/walls/nyxus-graffiti-20.png"
+      "name": "ARSENAL",
+      "wallpaper": "/usr/share/backgrounds/nyxus/nyxus-urban-alien.png"
     }
   ]
 }

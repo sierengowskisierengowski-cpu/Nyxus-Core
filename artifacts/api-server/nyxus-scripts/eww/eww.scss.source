@@ -7,7 +7,7 @@
  *    PALETTE + nyxus-palette.css rev r13 - fixed, preset-independent) -- */
 $neon-orange: #ff8a1e;   // HUD "orange"  (fans / power)
 $neon-green:  #7dff5e;   // HUD "green"   (network)
-$neon-blue:   #4d9fff;   // HUD "blue"    (bluetooth)
+$neon-blue:   #2bd2ff;   // HUD "blue"    (bluetooth) == CYAN_FIXED, palette canon
 $neon-cyan:   #ff2d55;   // HUD "cyan"    (HOME station)
 $neon-red:    #ff2d55;   // HUD "red"     (music / danger)
 
@@ -626,7 +626,7 @@ window, window.background, decoration {
 
 /* ember alert state (hot metric) + graceful-degrade dim (dGPU asleep) */
 .mon-alert .mon-value { color: #ffd9a0; text-shadow: 0 0 12px rgba(255, 160, 60, 0.85), 0 1px 5px rgba(0,0,0,0.9); }
-.mon-alert .mon-glyph { color: #ffb45e; text-shadow: 0 0 12px rgba(255, 160, 60, 0.85); }
+.mon-alert .mon-glyph { color: #ff8a1e; text-shadow: 0 0 12px rgba(255, 160, 60, 0.85); }
 .mon-dim { opacity: 0.45; }
 
 /* -- STARFALL REACTOR NEXUS (bottom bar) --------------------------- */

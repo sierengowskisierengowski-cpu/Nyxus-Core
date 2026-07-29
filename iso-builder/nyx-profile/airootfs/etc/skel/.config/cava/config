@@ -246,7 +246,7 @@
 gradient = 1
 gradient_count = 6
 gradient_color_1 = '#39ff14'
-gradient_color_2 = '#4d9fff'
+gradient_color_2 = '#2bd2ff'
 gradient_color_3 = '#ff2d55'
 gradient_color_4 = '#7d3dff'
 gradient_color_5 = '#ff7ae5'

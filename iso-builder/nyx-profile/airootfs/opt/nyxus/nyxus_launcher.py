@@ -100,11 +100,14 @@ MAX_RESULTS  = 40
 try:
     from nyxus_palette import HUD_PALETTE, hud_css_bundle, install_hud_css
 except Exception:
+    # Mirrors nyxus_palette.HUD_PALETTE exactly so a failed import renders the
+    # same ALIEN NEON hues. purple tracks the violet PRIMARY (it used to track
+    # the ok/green slot, which is why fallback rendering went off-palette).
     HUD_PALETTE = {"pink": ACCENT_PRIMARY, "cyan": ACCENT_SECONDARY,
-                   "gold": ACCENT_WARN, "purple": ACCENT_OK,
-                   "green": "#7dff5e", "orange": "#ff8a1e",
-                   "blue": "#4d9fff", "red": "#ff2d55",
-                   "mono": WHITE_OFF}
+                   "gold": ACCENT_WARN, "purple": ACCENT_PRIMARY,
+                   "green": "#39ff14", "orange": ACCENT_WARN,
+                   "blue": "#2bd2ff", "red": "#ff2d55",
+                   "orchid": "#e367ff", "mono": WHITE_OFF}
     def hud_css_bundle(sel="window", hues=()):  # noqa: E704
         return ""
     install_hud_css = None
