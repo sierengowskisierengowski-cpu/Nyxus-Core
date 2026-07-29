@@ -26,9 +26,30 @@ push_bass() {
   done
   local bass=$(( mx * 100 / 7 ))
   eww update CAVA_BASS="$bass" >/dev/null 2>&1 &
+
+  # Bass-reactive border animation speed. Hyprland's borderangle animation
+  # duration maps silence→slow-spin, peak→fast-spin. The 240→60 range is
+  # chosen so silent music keeps a slow dreamlike sweep and loud peaks make
+  # the border pulse visibly without becoming a strobe. Only updates when
+  # the tier changes (4 bands) so hyprctl is never called on every frame.
+  local tier
+  if   (( bass >= 75 )); then tier=4   # peak   → 60s duration
+  elif (( bass >= 50 )); then tier=3   # loud   → 110s
+  elif (( bass >= 25 )); then tier=2   # medium → 180s
+  else                        tier=1   # quiet  → 240s
+  fi
+  if [[ "${_CAVA_LAST_TIER:-0}" != "$tier" ]]; then
+    _CAVA_LAST_TIER="$tier"
+    local dur
+    case "$tier" in
+      4) dur=60  ;; 3) dur=110 ;; 2) dur=180 ;; *) dur=240 ;;
+    esac
+    hyprctl keyword animation "borderangle,1,${dur},linear,loop" >/dev/null 2>&1 &
+  fi
 }
 
 # Restart cava if it dies (e.g. pulse restart) so the bar never goes stale.
+_CAVA_LAST_TIER=0
 while :; do
   cava -p "$CONF" 2>/dev/null | while IFS= read -r line; do
     out=""

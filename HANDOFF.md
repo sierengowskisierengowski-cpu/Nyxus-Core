@@ -1,11 +1,17 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-28 ~05:00 EDT (07.27 ISO was broken · all causes fixed · REBAKE REQUIRED · hacker mode = black/white/red + saucer alien · Bifrost's 58 dirty files committed + pushed)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-29 ~05:10 UTC (all 10 station decks built · hacker mode complete · CAVA-reactive borders · station rail now shows names · PR #78 open, needs merge to main before baking)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
+>
+> **★★ LATEST — STATION DECKS + HACKER MODE + CAVA (Jul 29):**  
+> PR **#78** on branch `cursor/complete-station-decks-hacker-cava-3280` — open,
+> needs merge to `main` before baking. Changes are on both artifacts/ and ISO
+> skel already; no extra sync needed after merge. Full details in the
+> "2026-07-29" section directly below.
 >
 > **★★ START HERE — PICKUP BRIEF (Jul 28 evening):**  
 > [`docs/PICKUP_BRIEF_2026-07-28.md`](./docs/PICKUP_BRIEF_2026-07-28.md)  
@@ -90,6 +96,84 @@
 > [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md) /
 > [`docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md`](./docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md).
 > Stay-as-is: Bifrost / GodsApp / Meli / Arsenal.
+
+---
+
+## WHERE WE STAND — 2026-07-29 · PR #78 OPEN — MERGE + REBAKE REQUIRED
+
+> All changes are committed and pushed on branch
+> `cursor/complete-station-decks-hacker-cava-3280` (PR #78).
+> **Merge to `main` then bake.** No extra sync steps needed — both
+> `artifacts/` and `iso-builder/nyx-profile/` are already updated.
+
+### ✅ DONE this session (Jul 29, ~04:00–05:10 UTC)
+
+#### Station rail — names instead of numbers
+- `station_pill` now shows `st.name` (OPS/FORGE/GHOST/PULSE/WAVE/CORE/MESH/
+  SCRIBE/BIFROST/ARSENAL) with the `ws-word` class → same Permanent Marker
+  font + per-hue neon glow as HOME and START. Zero visual style change.
+- Companion half-station Tifinagh glyphs **removed from the rail** — they
+  were not rendering reliably and the owner was uncertain about them.
+  Companion stations (RELAY/ANVIL/TRACE/etc.) still reachable via
+  `Super+Alt+N` and tooltip. Widget definition left in eww.yuck for future use.
+
+#### All 10 stations now have eww decks (wired into nyxus-home-deck)
+Previously only HOME/START/GHOST/FORGE/LAB had decks. Six were bare workspaces.
+
+| Station | Deck |
+|---|---|
+| **OPS (1)** | CPU/RAM/GPU/TEMP vitals + sparklines, load/fan/swap, network throughput, quick-launch grid (btop/journal/dmesg/ports/procs/disk/cron) |
+| **PULSE (4)** | Network status, weather + moon, time/date, quick-links hub (browser/email/Discord/GitHub/YouTube/Reddit/Calendar/Maps) |
+| **WAVE (5)** | Full-width CAVA hero visualizer (orange glow), large now-playing text, bass-reactive play button, transport, volume/mic panel |
+| **CORE (6)** | Disk usage (/, ~, ~/Projects) + RAM/swap, directory quick-nav bookmarks |
+| **SCRIBE (8)** | Writing focus: clock + moon, scrollable scratchpad, notepad/stickies/vim toolkit |
+| **ARSENAL (10)** | Security console mosaic — 2 large hero tiles (CIPHER + RedForge), 3 medium tiles (Forge/GSL/Trainer), live port-status dots, 10s refresh |
+
+Two new data feeds added:
+- `eww/scripts/disk-info.sh` — probes /, ~, ~/Projects with df -h
+- `eww/scripts/arsenal-feed.sh` — probes GowskiNet ports with `nc -z -w1`
+
+`nyxus-home-deck` watcher updated with 6 new station→window entries
+(OPS/PULSE/WAVE/CORE/SCRIBE/ARSENAL); adding another station now = one line.
+
+#### CAVA bass-reactive Hyprland border animation
+`cava.sh` `push_bass()` now also adjusts `borderangle` animation speed across
+4 tiers (quiet 240s → medium 180s → loud 110s → peak 60s). Calls `hyprctl`
+only on tier transitions, never per-frame. `hacker_off` resets to 240s.
+
+**Trap:** `_CAVA_LAST_TIER` must persist within the cava pipe's subshell
+(not the outer restart loop). It's initialized before `while :;` so it
+resets cleanly when cava dies and restarts.
+
+#### Hacker mode — complete (btop was the last holdout)
+- `nyxus-hacker.theme` (new): 42-key btop theme. Black structure, white data,
+  `#ff2d55` red as the ONLY surviving hue. All graph gradients: grey → white
+  → red at peak. Stored at `skel/.config/btop/themes/nyxus-hacker.theme`.
+- `nyxus-hacker-mode on`: `sed`s `color_theme` in `~/.config/btop/btop.conf`
+  to `nyxus-hacker`; records previous theme (`btop_prev_theme=`) in STATE.
+- `nyxus-hacker-mode off`: restores recorded theme (falls back to
+  `nyxus-prism` if STATE missing); resets border animation to 240s.
+
+#### Three-surface sync — all done
+Every file landed on all three surfaces the bake reads:
+- `artifacts/api-server/nyxus-scripts/` (NS, source of truth)
+- `iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/`
+- `iso-builder/nyx-profile/airootfs/usr/local/bin/`
+
+### 🔜 NEXT (after merging PR #78)
+1. **Merge PR #78** → `main` (`git merge --no-ff cursor/complete-station-decks-hacker-cava-3280`)
+2. **Check for conflicts** with the other audit agent's PR (if any) — these
+   changes are additive so conflicts should be minimal
+3. **Rebake** from clean idle `main`
+4. **Verify on stick:** switch to each station and confirm its deck appears;
+   toggle hacker mode and confirm btop flips to mono; play music and watch
+   the border animation speed up with the bass
+
+### ⚠️ Things NOT done (out of scope per owner)
+- Bifrost / jeTT — explicitly off-limits this session
+- 3D saucer/boombox asset rendering (needs Blender on builder box)
+- Boombox v2 geometry conflict (needs owner decision on 3 options in HANDOFF)
+- Left/right 3D dock rail integration (models in Downloads, not started)
 
 ---
 

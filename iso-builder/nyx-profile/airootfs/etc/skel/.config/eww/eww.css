@@ -7446,3 +7446,181 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
 
 /* rail gap tightening: the marks fit in the spacing, not by shrinking numbers */
 .ws-rail .float-island { margin-bottom: 3px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WAVE DECK  ·  music station additions
+   ═══════════════════════════════════════════════════════════════════════════ */
+.wave-cava-hero {
+  border-radius: 14px;
+  padding: 12px 20px;
+  background-color: rgba(8, 8, 12, 0.82);
+  border: 1px solid rgba(255, 138, 30, 0.22);
+  margin: 0 4px;
+}
+.wave-cava-text {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: rgba(255, 138, 30, 0.92);
+  text-shadow: 0 0 10px rgba(255, 138, 30, 0.6), 0 0 28px rgba(255, 45, 173, 0.28);
+}
+.wave-cava-mini {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 13px;
+  color: rgba(255, 138, 30, 0.80);
+  text-shadow: 0 0 7px rgba(255, 138, 30, 0.55);
+}
+.wave-track {
+  font-family: "Permanent Marker", "Orbitron", sans-serif;
+  font-size: 22px;
+  color: #fff;
+  text-shadow: 0 0 16px rgba(255, 138, 30, 0.70);
+}
+.wave-artist {
+  font-size: 13px;
+  color: rgba(255, 138, 30, 0.80);
+  font-style: italic;
+}
+.wave-prog {
+  min-height: 4px;
+}
+.wave-prog trough { background-color: rgba(255,255,255,0.10); border-radius: 2px; }
+.wave-prog trough progress { background-color: rgba(255, 138, 30, 0.85); border-radius: 2px; }
+.wave-btn {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 24px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 50%;
+  background-color: rgba(255, 138, 30, 0.14);
+  border: 1px solid rgba(255, 138, 30, 0.30);
+  color: rgba(255, 255, 255, 0.90);
+  transition: all 150ms ease;
+}
+.wave-btn-sm { font-size: 20px; min-width: 40px; min-height: 40px; }
+.wave-btn-play {
+  font-size: 28px;
+  min-width: 58px;
+  min-height: 58px;
+  background-color: rgba(255, 138, 30, 0.22);
+  border: 1.5px solid rgba(255, 138, 30, 0.55);
+}
+.wave-btn:hover, .wave-btn-play:hover {
+  background-color: rgba(255, 138, 30, 0.30);
+  color: #fff;
+}
+.nyx-hacker .wave-cava-text {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 0 10px rgba(255,255,255,0.45);
+}
+.nyx-hacker .wave-cava-mini { color: rgba(255,255,255,0.70); text-shadow: none; }
+.nyx-hacker .wave-track { text-shadow: 0 0 12px rgba(255,255,255,0.50); }
+.nyx-hacker .wave-artist { color: rgba(255,255,255,0.55); }
+.nyx-hacker .wave-btn { background-color: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); }
+.nyx-hacker .wave-btn-play { background-color: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.28); }
+.nyx-hacker .wave-cava-hero { border-color: rgba(255,255,255,0.14); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ARSENAL DECK  ·  security console mosaic
+   ═══════════════════════════════════════════════════════════════════════════ */
+.arsenal-hero {
+  border-radius: 18px;
+  padding: 28px 24px;
+  background-color: rgba(8, 8, 14, 0.88);
+  border: 1.5px solid rgba(43, 210, 255, 0.28);
+  min-height: 180px;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+.arsenal-hero-down {
+  border-color: rgba(255,255,255,0.08);
+}
+.arsenal-hero:hover {
+  background-color: rgba(43, 210, 255, 0.09);
+  border-color: rgba(43, 210, 255, 0.55);
+}
+.arsenal-hero-down:hover {
+  background-color: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.15);
+}
+.arsenal-hero-glyph {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 38px;
+  color: rgba(43, 210, 255, 0.90);
+  text-shadow: 0 0 18px rgba(43, 210, 255, 0.55);
+}
+.arsenal-hero-name {
+  font-family: "Permanent Marker", "Orbitron", sans-serif;
+  font-size: 22px;
+  color: #fff;
+  text-shadow: 0 0 14px rgba(43, 210, 255, 0.50);
+  letter-spacing: 3px;
+}
+.arsenal-hero-tag {
+  font-size: 12px;
+  color: rgba(43, 210, 255, 0.70);
+  letter-spacing: 1px;
+}
+.arsenal-hero-port {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.28);
+}
+.arsenal-hero-dot { font-size: 10px; }
+.arsenal-hero-down .arsenal-hero-glyph {
+  color: rgba(255,255,255,0.22);
+  text-shadow: none;
+}
+.arsenal-hero-down .arsenal-hero-name { text-shadow: none; color: rgba(255,255,255,0.35); }
+.arsenal-hero-down .arsenal-hero-tag  { color: rgba(255,255,255,0.20); }
+
+.arsenal-tile {
+  border-radius: 14px;
+  padding: 18px 20px;
+  background-color: rgba(8, 8, 14, 0.80);
+  border: 1px solid rgba(125, 61, 255, 0.25);
+  min-height: 90px;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.2, 1);
+}
+.arsenal-tile-down { border-color: rgba(255,255,255,0.08); }
+.arsenal-tile:hover {
+  background-color: rgba(125, 61, 255, 0.10);
+  border-color: rgba(125, 61, 255, 0.50);
+}
+.arsenal-tile-down:hover {
+  background-color: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.14);
+}
+.arsenal-tile-glyph {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 28px;
+  color: rgba(125, 61, 255, 0.88);
+  text-shadow: 0 0 12px rgba(125, 61, 255, 0.50);
+  min-width: 40px;
+}
+.arsenal-tile-name {
+  font-family: "Permanent Marker", "Orbitron", sans-serif;
+  font-size: 16px;
+  color: #fff;
+  letter-spacing: 2px;
+}
+.arsenal-tile-tag { font-size: 11px; color: rgba(125, 61, 255, 0.65); }
+.arsenal-tile-port {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.22);
+}
+.arsenal-tile-dot { font-size: 9px; }
+.arsenal-tile-down .arsenal-tile-glyph { color: rgba(255,255,255,0.20); text-shadow: none; }
+.arsenal-tile-down .arsenal-tile-name  { color: rgba(255,255,255,0.30); }
+.arsenal-tile-down .arsenal-tile-tag   { color: rgba(255,255,255,0.18); }
+
+/* Hacker overrides: cyan/violet → white, only active/live gets red */
+.nyx-hacker .arsenal-hero { border-color: rgba(255,255,255,0.18); }
+.nyx-hacker .arsenal-hero:not(.arsenal-hero-down):hover { border-color: rgba(255,255,255,0.38); }
+.nyx-hacker .arsenal-hero-glyph { color: rgba(255,255,255,0.85); text-shadow: 0 0 10px rgba(255,255,255,0.35); }
+.nyx-hacker .arsenal-hero-name  { text-shadow: 0 0 10px rgba(255,255,255,0.30); }
+.nyx-hacker .arsenal-hero-tag   { color: rgba(255,255,255,0.50); }
+.nyx-hacker .arsenal-tile { border-color: rgba(255,255,255,0.14); }
+.nyx-hacker .arsenal-tile-glyph { color: rgba(255,255,255,0.80); text-shadow: 0 0 8px rgba(255,255,255,0.30); }
+.nyx-hacker .arsenal-tile-name  { color: rgba(255,255,255,0.88); }
+.nyx-hacker .arsenal-tile-tag   { color: rgba(255,255,255,0.42); }
