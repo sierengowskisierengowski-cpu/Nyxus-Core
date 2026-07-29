@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-29 ~05:20 EDT (PR #77 + #78 MERGED · audit ROUND 2: the bake was REVERTING committed fixes (polkit Replit URLs, session entry as an app), 5 buttons still opened the deleted trap app, and THEME.md/DESIGN_CONTRACT.md still specified the PURGED palette · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-29 ~06:05 EDT (audit ROUND 3: the reactive bus NEVER STARTED - nothing launched nyxus-sense, so the mood layer read a default forever; 4 hypr shards shipped UNSOURCED incl. 3 headline features + the Arsenal rules; NEW nyxus-threatd gives the desktop a real threat signal off the live probes · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -249,6 +249,99 @@ palette ban-list comments are deliberately left alone.
 > `eww.scss.source`. Regenerating buries any real change in unrelated churn and
 > risks the live-verified bar styling. Patch it surgically until someone reconciles
 > it on purpose.
+
+### ⚡ ROUND 3 — THE REACTIVE LAYER WAS NEVER STARTED (Jul 29)
+
+**`nyxus-sense` is the state bus the whole reactive layer reads, and NOTHING in
+the tree launched it.** No systemd unit, no exec-once, no script. On a real boot:
+
+- `~/.config/nyxus/sense.json` was never written
+- `nyxus-mood` never ran, so it never pushed `eww update SENSE=...`
+- the bars' `SENSE` defvar sat on its built-in default **forever** - which is why
+  the mood glow never changed and the wordmark/clock classes were static
+- `nyxus-whispers` and `nyxus-graffiti-wall` polled a file that did not exist
+
+The consumers were fine the whole time. **The producer was simply never
+launched.** Only `nyxus-pulsed` was, via `nyxus-living on quiet` in
+`nyxus-signature.conf`. `nyxus-reactive.conf` now autostarts sense -> mood ->
+threatd, staggered off the critical path, each pidfile-guarded.
+
+#### Four hypr shards shipped UNSOURCED (conf.d is not auto-globbed)
+
+Two of them say *"sourced from hyprland.conf"* in their own header. Between them
+**9 keybinds and 24 window rules were dead on arrival**:
+
+| Shard | What was dead |
+|---|---|
+| `nyxus-reactive.conf` | Machine Whispers, SUPERNOVA, Graffiti Memory Wall - **three of the four headline reactive features had no working keybind** |
+| `nyxus-arsenal-apps.conf` | 19 window rules that float/size/park the native security tools. **THIRD time this shard fell through** - it was the W6 fix on 2026-07-24 and it regressed |
+| `nyxus-hyprland-aurora.conf` | X-RAY PEEK + 3 other binds |
+| `nyxus-cometfire.conf` | 2 binds + 5 window rules |
+
+Verified before enabling: **zero chord collisions**, 156 binds active, 17 shards
+sourced. `nyxus-safemode.conf` stays unsourced - standalone recovery profile.
+
+**One real duplicate found doing that:** `Super+Alt+0` was bound BOTH to
+`workspace name:RANGE` and to the zoom-lens reset. hyprland.conf binds
+`Super+Alt+1..0` to the ten companions as a set, and the flair shard is sourced
+afterwards, so the lens won and **companion 10 was the one station the keyboard
+could not reach**. Lens reset moved to `Super+Alt+BackSpace`.
+
+#### The threat signal (new) - `nyxus-threatd`
+
+Turns the REAL security probes into desktop state. It **reimplements no probe**:
+`ghost-feed.py` already probes cowrie/journalctl/docker and states that every
+number is real, so threatd invokes it and derives a level. One place knows how to
+read those sources.
+
+**Two scoring buckets, on purpose.** A honeypot exists to be attacked, so decoy
+traffic is the system *working* - loud, informative, not an emergency - and it is
+**capped so it can never on its own exceed `alert`**. Only host-affecting signals
+(auth failures on the real host, defence daemons down, failed units) reach
+`breach`. Otherwise the desktop goes red during normal operation, and a console
+that cries wolf gets ignored as fast as one that lies. Measured: 300 honeypot
+hits/hr + 30 probes = `alert`; that **plus two defence daemons down = `breach`**.
+Being attacked *while blind* is the only non-panic path to breach, which is
+exactly the Bifrost scenario.
+
+**BLINDNESS IS A STATE, NOT A DEFAULT.** Quiet and blind must never render the
+same. `blind` is true when the feed cannot be read; sense treats a `threat.json`
+older than 90s as UNKNOWN rather than republishing a stale `calm`; the eww defvar
+**defaults to blind**; and the GHOST pill draws blind as a **dashed cyan rim**.
+
+Rendered on the **GHOST pill only** (station 3 is the security console; a colour
+on every pill would mean nothing). The class is APPENDED, so a calm desktop looks
+exactly as it does today. Canon ramp only: watch `#ffe600`, alert `#ff8a1e`,
+breach `#ff2d55`.
+
+> **Two traps hit and avoided - read before touching this:**
+> 1. **jq's `//` treats `false` as empty**, so `.threat.blind // true` returned
+>    TRUE even when the bus said false - inverting the one field that exists to
+>    prevent a misreport. Caught by testing. Use an explicit null check.
+> 2. **`+` string concat appears nowhere else in `eww.yuck`**, so it is
+>    unverified against the eww the ISO ships and a bad simplexpr takes out the
+>    whole rail. Use interpolation. Same for a nested `${}` inside a ternary
+>    branch (zero existing uses) - flatten instead.
+>
+> Also: the threat CSS **must** sit after the LAST `.ws-pill` rule. `eww.css`
+> defines `.ws-pill` more than once and the threat class is appended, so equal
+> specificity means an earlier rule is silently dead. Gate 13y checks the line
+> numbers.
+
+**Gate 13y** asserts every link: shard sourced, each producer autostarted AND
+parsing, threatd pushes, eww declares, a widget consumes, all four classes have
+CSS, the CSS ordering, and the jq null-check. Negative-tested.
+
+#### Swept for other "built but never wired" cases - clean
+
+Every `nyxus-*` in `/usr/local/bin` was checked for callers. Five have none:
+`nyxus-battery` and `nyxus-netusage` are launchable from their `.desktop`
+entries; `nyxus-setup-apps`, `nyxus-store-install` and `nyxus-oath-register` are
+CLI-only helpers by design. No orphaned apps.
+
+Observation, not a bug: battery is on the **HOME deck** (`dcard_power`), not on
+the persistent bar - the redesigned bars dropped the pill row. Owner's call.
+
 
 ### 🧾 STILL OPEN after this audit (found, deliberately not fixed)
 
