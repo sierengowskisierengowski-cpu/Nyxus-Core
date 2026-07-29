@@ -177,14 +177,16 @@ only on tier transitions, never per-frame. `hacker_off` resets to 240s.
 (not the outer restart loop). It's initialized before `while :;` so it
 resets cleanly when cava dies and restarts.
 
-#### Hacker mode — complete (btop was the last holdout)
+#### Hacker mode — complete (btop + dunst)
 - `nyxus-hacker.theme` (new): 42-key btop theme. Black structure, white data,
   `#ff2d55` red as the ONLY surviving hue. All graph gradients: grey → white
   → red at peak. Stored at `skel/.config/btop/themes/nyxus-hacker.theme`.
-- `nyxus-hacker-mode on`: `sed`s `color_theme` in `~/.config/btop/btop.conf`
-  to `nyxus-hacker`; records previous theme (`btop_prev_theme=`) in STATE.
-- `nyxus-hacker-mode off`: restores recorded theme (falls back to
-  `nyxus-prism` if STATE missing); resets border animation to 240s.
+- `nyxus-hacker-mode on`: **self-installs** the theme (skel → cache → inline
+  heredoc) then `sed`s `color_theme` to `nyxus-hacker`; records previous
+  theme in STATE. Also flips dunst urgency frame colors to mono hairlines
+  and `pkill -USR1 dunst`.
+- `nyxus-hacker-mode off`: restores btop theme + dunst frames; resets
+  border animation to 240s.
 
 #### Three-surface sync — all done
 Every file landed on all three surfaces the bake reads:
