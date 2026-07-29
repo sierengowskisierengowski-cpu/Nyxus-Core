@@ -365,6 +365,56 @@ if [[ -f "${WP_DIR}/manifest.tsv" ]]; then
 else
   fail "manifest.tsv missing"
 fi
+
+# ── 13c-rot. every wall-rotation.list entry is actually STAGEABLE ──────
+# The bake wipes skel/.config/hypr (taking walls/rotation/ with it) and stages
+# wallpapers from NS. It used to glob only NS's ROOT, so all 27 nyxus-rot-*.png
+# — which live in NS/hypr-walls/rotation/ — were absent from every ISO: the
+# ambient rotation silently cycled 5 of its 32 images. This derives the
+# requirement from wall-rotation.list itself rather than from a whitelist, so
+# adding art to the list cannot outrun the bake again.
+ROT_LIST="${NS}/wall-rotation.list"
+if [[ -f "${ROT_LIST}" ]]; then
+  ROT_MISS=0; ROT_TOTAL=0
+  while read -r _slug; do
+    [[ -z "${_slug}" || "${_slug}" == \#* ]] && continue
+    _b="$(basename "${_slug}" .png).png"
+    ROT_TOTAL=$((ROT_TOTAL+1))
+    if [[ ! -f "${NS}/${_b}" && ! -f "${NS}/hypr-walls/rotation/${_b}" \
+       && ! -f "${NS}/hypr-walls/${_b}" ]]; then
+      ROT_MISS=$((ROT_MISS+1))
+      warn "  rotation wallpaper has no source in NS: ${_b}"
+    fi
+  done < "${ROT_LIST}"
+  if (( ROT_MISS == 0 )); then
+    ok "all ${ROT_TOTAL} wall-rotation.list wallpapers have a stageable source"
+  else
+    fail "${ROT_MISS}/${ROT_TOTAL} wall-rotation.list wallpapers are not stageable"
+  fi
+else
+  warn "wall-rotation.list absent — rotation set unverified"
+fi
+
+# ── 13c-eww. the eww wipe restores every top-level NS/eww file ────────
+# `rm -rf skel/.config/eww` deletes the whole tree; anything the bake does not
+# explicitly restage simply is not on the ISO. cava.conf (the visualizer +
+# CAVA_BASS feed), _nyxus_accent.scss (imported by eww.scss.source) and
+# nyxus-palette.css were all lost this way. build-iso.sh now has a catch-all
+# loop; this asserts it stays effective.
+if [[ -d "${NS}/eww" ]]; then
+  if grep -q 'for _ef in "\${NS}"/eww/\*' "${HERE}/build-iso.sh"; then
+    ok "bake restages every top-level NS/eww file (catch-all present)"
+  else
+    fail "build-iso.sh lost the NS/eww catch-all — new eww files will vanish at bake"
+  fi
+  for _need in cava.conf _nyxus_accent.scss nyxus-palette.css; do
+    if [[ -f "${NS}/eww/${_need}" ]]; then
+      ok "eww support file present in NS: ${_need}"
+    else
+      fail "eww support file MISSING from NS: ${_need}"
+    fi
+  done
+fi
 WP_CONF="${AIROOT}/etc/skel/.config/nyxus/wallpaper.conf"
 if [[ -f "${WP_CONF}" ]]; then
   # Runtime schema: WALLPAPER="slug" + WALLPAPER_PATH="/abs/path" (consumed by
