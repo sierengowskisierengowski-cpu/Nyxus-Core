@@ -7396,6 +7396,16 @@ button:active, .pill:active, .ws-pill:active, .app-pill:active,
   font-size: 22px;
 }
 
+/* Station NAME pills (ws-word class) override the 22px number size.
+   Specificity (0,3,0) beats .ws-rail .ws-pill (0,2,0) and .ws-word (0,1,0).
+   10px keeps "ARSENAL" (7 chars) within the 56px rail without overflowing.
+   letter-spacing tightens the display-face kerning for compact labels. */
+.ws-rail .ws-pill.ws-word {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  min-height: 38px;
+}
+
 /* the alien companion mark - subordinate in size AND weight/opacity */
 .ws-alien {
   font-family: "DejaVu Sans", "Adwaita Sans", "Noto Sans", sans-serif;

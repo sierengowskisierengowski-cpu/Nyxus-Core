@@ -393,6 +393,36 @@ BTOP_HACKER_THEME
     sed -i 's|^color_theme\s*=.*|color_theme = "nyxus-hacker"|' "${btop_conf}" 2>/dev/null || true
   fi
 
+  # 6. Flip dunst notification frames to hacker palette.
+  #    dunst is a native app — CSS cannot reach it. Swap urgency_normal and
+  #    urgency_low frame_color in dunstrc, then reload dunst so in-flight
+  #    popups pick up the new style without a session restart.
+  local dunstrc="${HOME}/.config/dunst/dunstrc"
+  if [[ -r "${dunstrc}" ]]; then
+    local norm_frame low_frame
+    norm_frame="$(grep -A5 '\[urgency_normal\]' "${dunstrc}" | grep 'frame_color' | head -1 | grep -oP '#\w+|rgba\([^)]+\)')"
+    low_frame="$( grep -A5 '\[urgency_low\]'    "${dunstrc}" | grep 'frame_color' | head -1 | grep -oP '#\w+|rgba\([^)]+\)')"
+    {
+      echo "dunst_norm_frame=${norm_frame:-#eef2fa}"
+      echo "dunst_low_frame=${low_frame:-#eef2fa38}"
+    } >> "${STATE}"
+    # urgency_normal: dim white hairline so only critical (red) stands out
+    python3 - "${dunstrc}" << 'PYEOF' 2>/dev/null || true
+import sys, re
+path = sys.argv[1]
+text = open(path).read()
+
+def swap_section(text, section, key, new_val):
+    pattern = rf'(\[{section}\][^\[]*?{key}\s*=\s*)([^\n]+)'
+    return re.sub(pattern, lambda m: m.group(1) + new_val, text, flags=re.DOTALL)
+
+text = swap_section(text, 'urgency_normal', 'frame_color', '"rgba(255,255,255,0.26)"')
+text = swap_section(text, 'urgency_low',    'frame_color', '"rgba(255,255,255,0.12)"')
+open(path, 'w').write(text)
+PYEOF
+    pkill -USR1 dunst 2>/dev/null || true
+  fi
+
   notify -u critical "NYXUS Hacker Mode" "ENGAGED — black/white/red. Toggle off: Super+Ctrl+X"
 }
 
@@ -443,6 +473,30 @@ hacker_off() {
   fi
   # Restore normal border animation speed (240s = slow dreamlike sweep)
   hyprctl keyword animation "borderangle,1,240,linear,loop" >/dev/null 2>&1 || true
+
+  # 6. Restore dunst notification frame colors.
+  local dunstrc="${HOME}/.config/dunst/dunstrc"
+  if [[ -r "${dunstrc}" ]]; then
+    local norm_frame low_frame
+    norm_frame="$(grep -oP '^dunst_norm_frame=\K.*' "${STATE}" 2>/dev/null | head -1)"
+    low_frame="$( grep -oP '^dunst_low_frame=\K.*'  "${STATE}" 2>/dev/null | head -1)"
+    [[ -z "${norm_frame}" ]] && norm_frame="#eef2fa"
+    [[ -z "${low_frame}"  ]] && low_frame="#eef2fa38"
+    python3 - "${dunstrc}" "${norm_frame}" "${low_frame}" << 'PYEOF' 2>/dev/null || true
+import sys, re
+path, norm, low = sys.argv[1], sys.argv[2], sys.argv[3]
+text = open(path).read()
+
+def swap_section(text, section, key, new_val):
+    pattern = rf'(\[{section}\][^\[]*?{key}\s*=\s*)([^\n]+)'
+    return re.sub(pattern, lambda m: m.group(1) + new_val, text, flags=re.DOTALL)
+
+text = swap_section(text, 'urgency_normal', 'frame_color', f'"{norm}"')
+text = swap_section(text, 'urgency_low',    'frame_color', f'"{low}"')
+open(path, 'w').write(text)
+PYEOF
+    pkill -USR1 dunst 2>/dev/null || true
+  fi
 
   rm -f "${STATE}"
   notify -u normal "NYXUS Hacker Mode" "Disengaged — normal station matrix restored."
