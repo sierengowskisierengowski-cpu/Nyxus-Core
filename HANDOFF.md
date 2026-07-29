@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-28 ~05:00 EDT (07.27 ISO was broken · all causes fixed · REBAKE REQUIRED · hacker mode = black/white/red + saucer alien · Bifrost's 58 dirty files committed + pushed)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-29 ~05:10 EDT (DEEP INTERNAL AUDIT - see the audit block below; cava + boombox reactivity, 27 rotation wallpapers, per-station wallpapers and several buttons were all silently dead on every ISO. All fixed + gated. REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -90,6 +90,139 @@
 > [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md) /
 > [`docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md`](./docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md).
 > Stay-as-is: Bifrost / GodsApp / Meli / Arsenal.
+
+---
+
+## 🔬 DEEP INTERNAL AUDIT — 2026-07-29 (branch `cursor/deep-internal-audit-fixes-8f1c`, PR #77)
+
+> Everything below was **reproduced or proven against the tree** before being
+> changed. Nothing here was fixed on reasoning alone.
+
+**The pattern behind almost all of it:** the bake **wipes** a directory and
+restores it from a **hand-maintained whitelist**, and *nothing checked the
+difference*. Anything not named in the whitelist is simply absent from the ISO —
+silently. This is the same shape as the shard bug that has now shipped five
+times. Every fix below therefore ships with a gate that derives its requirement
+from the real source instead of restating a whitelist.
+
+### Silent losses at bake (all confirmed, all were shipping)
+
+| What | Consequence on every stick baked so far |
+|---|---|
+| `eww/cava.conf` never restaged after `rm -rf skel/.config/eww` | `cava.sh` runs `cava -p ~/.config/eww/cava.conf`; missing file ⇒ cava exits. **The bar visualizer AND the `CAVA_BASS` boombox speaker reactivity were dead on every ISO.** |
+| `eww/_nyxus_accent.scss`, `eww/nyxus-palette.css` same | `eww.scss.source` line 4 is `@import "_nyxus_accent"` ⇒ any recompile (`nyxus-apply-accent`) failed outright |
+| Wallpapers globbed only from NS **root** | Every `nyxus-rot-*.png` lives in `NS/hypr-walls/rotation/`. **27 of the 32 wallpapers in `wall-rotation.list` did not exist on the ISO** — ambient rotation cycled 5 images |
+| Polkit `vendor_url` | The Jul-23 Replit purge edited `airootfs` but **not** NS, and the bake installs from NS, so **every ISO re-shipped `https://nyxus-core.replit.app`** in the loginscreen/plymouth/sound policies |
+| `nyxus-hyprland.desktop` | Wave-4 globs every `nyxus-*.desktop` into `usr/share/applications`, so the **greetd session entry also shipped as a launchable app** — clicking it starts a *nested compositor*. NS was also missing `DesktopNames=Hyprland`, so the bake dropped it from the real session entry |
+
+`build-iso.sh` now has a **catch-all** for every top-level `NS/eww` file, stages
+`hypr-walls/rotation/` into both wallpaper surfaces, and skips `DesktopNames=`
+entries when populating `applications/`. New gates **13c-rot** and **13c-eww**;
+negative-tested (removing the catch-all makes `verify-profile` FAIL).
+
+### Silent failures in shipped config
+
+- **Per-station wallpapers never changed.** Both matrices set
+  `wall_dir: "~/.config/hypr/walls"`, so `workspaces.json` shipped **literal**
+  `~/...`. Bash does not tilde-expand *variable contents*, so
+  `nyxus-workspace-wallpaperd`'s `[[ -r "${wp}" ]]` could never pass and the
+  daemon returned early on every switch. `nyxus-sync-stations` was already fixed
+  to emit absolute paths but only runs on a hacker-mode flip, so a first boot
+  never got there. Fixed **where the value is consumed** (daemon +
+  `nyxus-set-wallpaper`), which keeps the skel JSON portable across usernames.
+- **`env = PATH,/home/cosmic/...` in `hyprland.conf`** — captured off the build
+  machine. `env = PATH` *replaces* PATH and cannot expand `$HOME`, so it added
+  three dead entries for a user that exists nowhere **and dropped the real
+  user's `~/.local/bin`** — the thing it existed to guarantee. Removed;
+  `nyxus-session-start` (the session `Exec=`) already exports it correctly for
+  any username. **Do not reintroduce it.**
+- **`nyxus-set-wallpaper.sh` never searched `walls/rotation/`** — same omission
+  that broke 8 of 10 station wallpapers in hacker mode.
+
+### Dead buttons (all were user-reachable)
+
+- **`${EWW_CMD}` was referenced 5× and defined nowhere** ⇒ START station search,
+  its Notifications and Power actions, the result picker and the overlay close
+  button all expanded to a command starting with a bare space. Now literal `eww`.
+- **Hub `ALL APPS / NYXUS ONLY` toggled the wrong file.** The flag was renamed
+  `hub-apps-all` → `hub-apps-nyxus` on 2026-07-20, both defpolls were updated,
+  **the button was missed** — it toggled a file nothing reads. Moved to
+  `eww/scripts/hub-apps-toggle.sh` (one name, one place) and it now pushes values
+  into eww instead of leaving the user to wait out a 10s poll.
+- **Five buttons still launched the `nyxus-start` GTK app** — the one this file
+  says "could be neither closed nor moved when it lost keyboard focus", i.e. a
+  desktop trap. They now dispatch to the **START station**.
+- `hotkeys.toml` bound `mission-control` / `quick-settings`; the windows are
+  `mission` / `quicksettings`. `nyxus-focusmode` closed `bar_top`; it is
+  `bar-top`, so focus mode never hid the top bar. Settings' "Open keyboard
+  cheatsheet" ran `nyxus-cheatsheet`, **a binary that does not exist** → now
+  opens the `hotkey-cheatsheet` window.
+
+### Wasted work removed
+
+Eight `defpoll`/`deflisten` definitions had **no consumer left** (the only
+surviving mentions of `PRISM` and `FOG` are comments, and FOG's says it was
+disabled) yet their producers ran forever: `APP_RAIL` **every 0.5s**
+(~172,800 runs/day), `STARTSTAT` every 6s and `STARTARS` every 12s **each
+spawning a Python interpreter**, `FANSTRIP`/`NETSTRIP` every 3s, and three
+`deflisten` daemons streaming continuously. Removed.
+
+### Theme — one palette now
+
+`nyxus_palette.py` is canon (HUD **blue *is* `CYAN_FIXED` `#2bd2ff`**, green
+`#39ff14`, warn `#ff8a1e`). Purged from shipped surfaces: eww `$neon-blue` was
+`#4d9fff` (a blue that appears **nowhere** in the palette), `.mon-alert` used old
+amber `#ffb45e`, plus cava's gradient, the NYXUS-Dark theme icon's 4th swatch and
+`gen-liquid-gifs.py`. Terminal ANSI `color4` was **the only one of the 16 slots
+that was not canon** — so it was *missed*, not chosen; blue now tracks violet
+`#7d3dff` (cyan stays `#2bd2ff` on `color6`, which is exactly why `color4` could
+not simply become cyan). The HUD **fallback** maps in `nyxus_sysmon_gtk.py`,
+`nyxus_launcher.py` and `nyxus-home/style.py` had drifted on blue/green/void and
+the launcher mapped `purple` to the *ok* slot instead of the violet primary; they
+now mirror `HUD_PALETTE` exactly.
+
+> **`eww.css` was deliberately NOT recompiled.** It has drifted **~3500 lines**
+> from `eww.scss.source`, so regenerating buries any change in unrelated churn
+> and risks the live-verified bar styling. The two hexes were mirrored into the
+> compiled file instead. Treat `eww.css` as an artifact you patch surgically
+> until someone reconciles it on purpose.
+
+### Stale things deleted
+
+`nyxus-left-dock.png` + `nyxus-right-dock.png` (**3.2 MB** of Meshy dock art from
+the reverted chrome night, referenced by nothing, copied into every ISO) ·
+`NS/com.nyxus.parental.policy` (stale duplicate, and the only file in the repo
+with a malformed DTD `PolicyKit/1/` vs `1.0/`) · two stale `nyxus-start` trees ·
+a vim `.save` dropping under `opt/arsenal`.
+
+### Docs corrected (they were actively dangerous)
+
+`THEME.md` was titled **DARK MIRROR** and documented the **purged** palette as
+current — including "accent tokens (LIVE — follow the wallpaper)" and eight
+presets that were **deleted**. `DESIGN_CONTRACT.md` §4, the "single quality bar",
+listed `#a06bff`/`#3ad8ff` as the accent pair. Any agent following either would
+have reintroduced banned colour. Both rewritten to canon, with an explicit
+banned-hex list. `WHITE_OFF` was documented `#e8edf5` (real value `#eef2fa`) and
+the HUD void fills were wrong. Also fixed stale station names (`BL`/`ED` are the
+retired BLAST/EDGE) and the claim that the HOME dashboard is the GTK app on
+`name:0`.
+
+### Tree drift found (NS wins at bake — the skel copy is NOT what ships)
+
+`eww/` graph scripts (`HIST_LEN` 24 vs 34 — **skel was stale**),
+`starfall-backdrop-card.png`, `eww.css.map`, `nyxus_chrome.py` (still carried
+`DARK MIRROR` comments), `nyxus-welcome`, `nyxus-webapp`. All resynced.
+
+**Verified:** `verify-profile.sh` passes (only the 3 expected environment WARNs)
+· `pnpm run typecheck` clean across all 8 projects · `bash -n` on every changed
+script · `defwidget` 125 / `defwindow` 27 and paren balance unchanged in
+`eww.yuck` · banned-hex sweep clean across shipped surfaces.
+
+**Still open (found, not fixed):** ~31 unused bar-pill widgets from the
+pre-redesign bar, 4 windows nothing opens (`cheatsheet`, `quicksettings-daemon`,
+`hotkey-recorder`, `dock-reveal`), `/etc/nyxus/nyxus.conf` still points
+`resync_base`/`manifest_url` at Replit (not NS-managed, so the bake does not
+touch it), and `attached_assets/` holds ~40 unreferenced files >2MB.
 
 ---
 

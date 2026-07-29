@@ -129,7 +129,7 @@ for _ in range(10):
     spray_blob(d, random.uniform(140, 520), random.uniform(60, 300), random.uniform(40, 90),
                col, random.randint(8, 14), n=220)
 marker_tag(img, "NYXUS", (30, 60), 84, rgb(PRIMARY), 14, -7)
-marker_tag(img, "dark mirror", (120, 190), 40, rgb(SECONDARY), 16, -4, font="Caveat.ttf")
+marker_tag(img, "alien neon", (120, 190), 40, rgb(SECONDARY), 16, -4, font="Caveat.ttf")
 for _ in range(4):
     col = random.choice(PALETTE)
     drip(d, random.uniform(60, 460), random.uniform(120, 200), random.randint(40, 90),

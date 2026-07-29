@@ -56,39 +56,53 @@ The benchmark is **macOS Sonoma / Windows 11 / iOS 17**. Not "indie Linux."
 
 ## 4. Color
 
-DARK MIRROR palette is locked. Do **not** invent new colors.
+ALIEN NEON palette is **LOCKED** (2026-07-23). Do **not** invent new colors, and
+do not reintroduce the purged DARK MIRROR hexes listed at the bottom of this
+section. `nyxus_palette.py` is the machine-readable canon;
+[`THEME.md`](./THEME.md) is the full reference.
 
 | Token             | Value                          | Use                            |
 |-------------------|--------------------------------|--------------------------------|
-| `--bg-page`       | `#000000` to `#050608` gradient| Window background              |
-| `--surface-1`     | `rgba(8,10,16,0.66)`           | Rails, sidebars                |
-| `--surface-2`     | `rgba(17,21,31,0.85)`          | Inputs, list rows              |
-| `--accent-primary`| `#a06bff` (Mirror purple)      | Primary actions, focus         |
-| `--accent-secondary`| `#3ad8ff` (Mirror cyan)      | Gradient pair                  |
-| `--success`       | `#82ffd2`                      | Confirmations, "done" state    |
-| `--warning`       | `#ffb45e`                      | Pending, caution               |
-| `--danger`        | `#ff4d6b`                      | Errors, destructive            |
+| `--bg-page`       | `#05060a` (`VOID`)            | Window background              |
+| `--surface-1`     | `rgba(14,14,22,0.55)`          | Rails, sidebars                |
+| `--surface-2`     | `rgba(8,8,14,0.78)`            | Inputs, list rows              |
+| `--surface-3`     | `rgba(0,0,0,0.92)`             | Popovers, tooltips, modals     |
+| `--accent-primary`| `#7d3dff` (violet)            | Primary actions, focus         |
+| `--accent-secondary`| `#ff2dad` (magenta)         | Gradient pair, data readouts   |
+| `--success`       | `#39ff14` (neon green)        | Confirmations, "done" state    |
+| `--warning`       | `#ff8a1e` (orange)            | Pending, caution               |
+| `--danger`        | `#ff2d55` (red)               | Errors, destructive            |
+| `--info`          | `#2bd2ff` (cyan)              | Informational, bluetooth/GPU   |
 | `--text-strong`   | `#ffffff`                      | Headings, primary copy         |
-| `--text`          | `#e8edf5`                      | Body                           |
-| `--text-muted`    | `#9aa2b3` / `#8b94a8`          | Hints, captions                |
-| `--text-subtle`   | `#6b7388`                      | Eyebrows, footnotes            |
-| `--text-faint`    | `#3a4055`                      | Disabled                       |
+| `--text`          | `#eef2fa` (cool white)        | Body                           |
+| `--text-muted`    | `#c8ccd6`                      | Hints, captions                |
+| `--text-subtle`   | `#9aa0ad`                      | Eyebrows, footnotes            |
+| `--text-faint`    | `#6a6e78`                      | Disabled                       |
 
-- Use the gradient `linear-gradient(90deg, #a06bff, #3ad8ff)` for primary
+- Use the gradient `linear-gradient(90deg, #7d3dff, #ff2dad)` for primary
   buttons and progress fills only. Don't sprinkle it on cards.
-- Never use saturated red/green/yellow at full brightness. The danger
-  token is muted on purpose.
+- **Red is the landmark colour.** In hacker mode `#ff2d55` is the *only* colour
+  on screen, so never spend it on decoration — reserve it for genuine danger.
+
+**BANNED — these were purged from the tree and must not come back:**
+cream `#f4ead5`, gold `#d4b87a`, old violet `#a06bff`, old cyan `#3ad8ff`,
+`#ff7849`, `#ff4d6b`, `#6dffcf`, `#4d9fff`, `#82ffd2`, `#ffb45e`,
+cream-era voids `#0a0a14` / `#050308`, and the wallpaper-drift set
+`#1caef2` `#6526ff` `#7949f2` `#ff2667` `#ffb026` `#26ffb7`.
+
+Deliberate carve-outs that may differ: Bifrost, GodsApp, Meli, the Arsenal /
+security-lab apps, and Security Center.
 
 ## 5. Borders, radii, and shadows
 
 - Border radius: **10px** (inputs, small buttons), **12px** (cards, tiles),
   **16px** (windows, large panels), **999px** (pills, slider tracks).
-- Default border: `1px solid rgba(160,107,255,0.10-0.32)` (intensity tracks
-  the hierarchy of the surface).
-- Focus ring: `border-color: #3ad8ff; box-shadow: 0 0 0 3px rgba(58,216,255,0.18);`
+- Default border: `1px solid rgba(125,61,255,0.10-0.32)` (violet at low alpha;
+  intensity tracks the hierarchy of the surface).
+- Focus ring: `border-color: #2bd2ff; box-shadow: 0 0 0 3px rgba(43,210,255,0.18);`
 - Window shadow: `0 24px 60px rgba(0,0,0,0.70)` plus inner highlight
-  `inset 0 0 28px rgba(160,107,255,0.06)`.
-- Never use a hard `1px solid black` border — always use the purple/cyan
+  `inset 0 0 28px rgba(125,61,255,0.06)`.
+- Never use a hard `1px solid black` border — always use the violet/magenta
   family at low alpha.
 
 ## 6. Motion
