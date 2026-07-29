@@ -9,6 +9,30 @@
 
 ## 0. THE ONE THING TO DO FIRST
 
+**★ RESOLVED — bake #5 (18:42) SUCCEEDED.**
+
+```
+[customize_airootfs] INSTALLER OK - calamares is installed in the ISO
+installing yaml-cpp...  installing kpmcore...  installing calamares...
+SYSLINUX set up for BIOS booting successfully.
+GRUB set up for UEFI booting successfully.
+```
+
+**ISO:** `iso-builder/out/nyxus-2026.07.28-x86_64.iso` (7.6G, 19:28)
+**sha256:** `bd55aedd10d093aabdf385e4ac31f2d31e8c2110f4fdd87610844184b6470561`
+
+REMAINING PROOF: boot it and confirm the **"Install NYXUS"** desktop icon
+appears. The log proves the package is in the image; booting proves the
+launcher reaches the user. Do not skip this - three ISOs were declared fixed
+on reasoning alone and all three shipped broken.
+
+Three AUR builds still fail NON-FATALLY and are worth fixing the same way
+calamares was (source a binary instead of building):
+`snap-pac` (PGP key E4B5E45AA3B8C5C3 missing from the chroot keyring),
+`ananicy-cpp` (C++ compile errors), `appimagelauncher` (missing dep `argagg`).
+
+Historical detail below.
+
 **A bake (started 18:42, log `~/nyxus-bake-2.log`) was RUNNING when this
 session ended. Its outcome is UNKNOWN.** Check it before anything else:
 
