@@ -1,17 +1,16 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-29 ~05:10 UTC (all 10 station decks built · hacker mode complete · CAVA-reactive borders · station rail now shows names · PR #78 open, needs merge to main before baking)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-29 ~01:15 EDT (PR #77 + #78 MERGED to main · silent bake/wallpaper/PATH bugs fixed · all 10 station decks · hacker mode complete · CAVA-reactive borders · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
 >
-> **★★ LATEST — STATION DECKS + HACKER MODE + CAVA (Jul 29):**  
-> PR **#78** on branch `cursor/complete-station-decks-hacker-cava-3280` — open,
-> needs merge to `main` before baking. Changes are on both artifacts/ and ISO
-> skel already; no extra sync needed after merge. Full details in the
-> "2026-07-29" section directly below.
+> **★★ LATEST — ON MAIN (Jul 29): PR #77 + #78 merged · REBAKE REQUIRED**  
+> Deep-audit silent failures (**#77**) and station decks / hacker / CAVA (**#78**)
+> are both on `main`. `verify-profile` passes (incl. new gates **13c-rot** /
+> **13c-eww**). Full details in the "2026-07-29" section directly below.
 >
 > **★★ START HERE — PICKUP BRIEF (Jul 28 evening):**  
 > [`docs/PICKUP_BRIEF_2026-07-28.md`](./docs/PICKUP_BRIEF_2026-07-28.md)  
@@ -99,14 +98,37 @@
 
 ---
 
-## WHERE WE STAND — 2026-07-29 · PR #78 OPEN — MERGE + REBAKE REQUIRED
+## WHERE WE STAND — 2026-07-29 · ON MAIN · REBAKE REQUIRED
 
-> All changes are committed and pushed on branch
-> `cursor/complete-station-decks-hacker-cava-3280` (PR #78).
-> **Merge to `main` then bake.** No extra sync steps needed — both
-> `artifacts/` and `iso-builder/nyx-profile/` are already updated.
+> **PR #77** (`deep-internal-audit-fixes-8f1c`) and **PR #78**
+> (`complete-station-decks-hacker-cava-3280`) are **merged into `main`**.
+> Next step is a clean rebake — none of this is in a stick yet.
 
-### ✅ DONE this session (Jul 29, ~04:00–05:10 UTC)
+### ⚠ SILENT FAILURES LANDED VIA PR #77 (do not rediscover)
+
+These all shipped looking correct and never threw. Re-read before touching
+wallpaper / bake wipe / PATH / eww handlers:
+
+1. **Per-station wallpapers never changed** — matrices ship literal `~/...`
+   paths; bash does not tilde-expand variable contents. Fixed in
+   `nyxus-workspace-wallpaperd` + `nyxus-set-wallpaper` (also searches
+   `walls/rotation/`).
+2. **`env = PATH,/home/cosmic/...`** clobbered PATH on every login for a user
+   that does not exist on the stick. Removed; session entrypoint already
+   prepends `${HOME}/.local/bin`. Do **not** reintroduce a hardcoded PATH env.
+3. **Bake wipe gaps (again)** — `rm -rf skel/.config/eww` then whitelist
+   dropped `cava.conf`, `_nyxus_accent.scss`, `nyxus-palette.css` → bar
+   visualizer + CAVA_BASS dead on every stick. Rotation wallpapers under
+   `NS/hypr-walls/rotation/` were never staged (27/32 missing). Catch-all
+   + staging added; gates **13c-eww** / **13c-rot** assert it.
+4. **Dead eww controls** — undefined `${EWW_CMD}`, hub toggle wrote the wrong
+   flag file, hotkeys targeted `mission-control`/`quick-settings` (windows are
+   `mission`/`quicksettings`), focusmode closed `bar_top` (real name
+   `bar-top`), Settings cheatsheet called a missing binary. Eight unused
+   defpoll/deflisten producers removed (APP_RAIL every 0.5s, etc.).
+5. **Off-canon hex** — eww `$neon-blue` was `#4d9fff`; canon is `#2bd2ff`.
+
+### ✅ DONE this session (Jul 29)
 
 #### Station rail — names instead of numbers
 - `station_pill` now shows `st.name` (OPS/FORGE/GHOST/PULSE/WAVE/CORE/MESH/
@@ -160,14 +182,15 @@ Every file landed on all three surfaces the bake reads:
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/`
 - `iso-builder/nyx-profile/airootfs/usr/local/bin/`
 
-### 🔜 NEXT (after merging PR #78)
-1. **Merge PR #78** → `main` (`git merge --no-ff cursor/complete-station-decks-hacker-cava-3280`)
-2. **Check for conflicts** with the other audit agent's PR (if any) — these
-   changes are additive so conflicts should be minimal
-3. **Rebake** from clean idle `main`
-4. **Verify on stick:** switch to each station and confirm its deck appears;
-   toggle hacker mode and confirm btop flips to mono; play music and watch
-   the border animation speed up with the bass
+### 🔜 NEXT
+1. **Rebake** from clean idle `main` (installer + #77/#78 all need a stick)
+2. **Verify on stick:**
+   - station wallpapers change on switch (tilde expand)
+   - cava bar visualizer + boombox bass react (cava.conf staged)
+   - rotation set has all 32 images
+   - each station deck appears; hacker mode flips btop; bass speeds borders
+   - START search / hub ALL APPS / Super+M / Super+A / focusmode top bar
+3. Do **not** merge `local-stash-work` — parked bake.log / `.env` / db junk
 
 ### ⚠️ Things NOT done (out of scope per owner)
 - Bifrost / jeTT — explicitly off-limits this session
