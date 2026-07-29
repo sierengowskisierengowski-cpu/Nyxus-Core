@@ -16,7 +16,7 @@
 -->
 <policyconfig>
   <vendor>NYXUS</vendor>
-  <vendor_url>https://nyxus-core.replit.app</vendor_url>
+  <vendor_url>https://github.com/sierengowskisierengowski-cpu/Nyxus-Core</vendor_url>
 
   <action id="dev.nyxus.welcome.helper">
     <description>Apply NYXUS first-boot setup</description>

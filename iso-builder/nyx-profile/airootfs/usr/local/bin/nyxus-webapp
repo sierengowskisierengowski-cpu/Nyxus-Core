@@ -430,24 +430,27 @@ ensure_bifrost() {
 }
 
 ensure_redforge() {
+  # RedForge is a real app now (2026-07-27): its Express server serves the
+  # built SPA from the same process, so one systemd unit is the whole thing -
+  # no vite dev server, no second port. Same shape as ensure_forge.
+  if http_up "http://127.0.0.1:5000"; then
+    ok "RedForge already listening on :5000"
+    return 0
+  fi
   ensure_system_service postgresql 1
-  local dir="$VAULT/Security/RedForge"
-  start_node_dev "$dir" "@workspace/api-server" "@workspace/redforge" \
-    "http://localhost:5000" "http://localhost:5173"
-  wait_for_url "http://localhost:5173" 120
+  ensure_user_service gowskinet-redforge.service
+  wait_for_url "http://127.0.0.1:5000/" 60
 }
 
 ensure_cipher() {
-  if http_up "http://localhost:23051"; then
-    ok "CIPHER already listening on :23051"
+  # Real app as of 2026-07-27 - single process serves API + built SPA on :8080.
+  if http_up "http://127.0.0.1:8080"; then
+    ok "CIPHER already listening on :8080"
     return 0
   fi
   ensure_system_service postgresql 0 || true
-  local dir="$VAULT/Security/CIPHER"
-  [ -d "$dir" ] || die "CIPHER project missing at $dir (expected under GowskiNet-Vault/Security/CIPHER)"
-  start_node_dev "$dir" "@workspace/api-server" "@workspace/cipher" \
-    "http://localhost:8080" "http://localhost:23051"
-  wait_for_url "http://localhost:23051" 120 || die "CIPHER UI did not come up on :23051 — check $dir/.nyxus-webapp-ui.log"
+  ensure_user_service gowskinet-cipher.service
+  wait_for_url "http://127.0.0.1:8080/" 60
 }
 
 ensure_gsl() {
@@ -501,8 +504,8 @@ register_app grafana    "Grafana"             "http://127.0.0.1:3000/"   "Gowski
 register_app prometheus "Prometheus"          "http://127.0.0.1:9090/"   "GowskiNetPrometheus" "prometheus" "alerts"     "(no login)"
 register_app honeyhive  "HoneyHive Map"       "http://127.0.0.1:8888/"   "GowskiNetHoneyHive"  "honeyhive"  "deep-core"  "(no login)"
 register_app bifrost    "Bifrost Dashboard"   "http://127.0.0.1:8766/"   "GowskiNetBifrost"    "bifrost"    "bifrost"    "(dashboard password set in Bifrost)"
-register_app redforge   "RedForge"            "http://127.0.0.1:5173/"   "GowskiNetRedForge"   "redforge"   "arsenal"    "(operator account on first launch)"
-register_app cipher     "CIPHER"              "http://127.0.0.1:23051/"  "GowskiNetCipher"     "cipher"     "lock"       "owner password in CIPHER .env"
+register_app redforge   "RedForge"            "http://127.0.0.1:5000/"   "GowskiNetRedForge"   "redforge"   "arsenal"    "(operator account on first launch)"
+register_app cipher     "CIPHER"              "http://127.0.0.1:8080/"  "GowskiNetCipher"     "cipher"     "lock"       "owner password in CIPHER .env"
 register_app gsl        "GSL"                 "http://127.0.0.1:19670/"  "GowskiNetGSL"        "gsl"        "dashboard"  "admin / see gsl-backend .env"
 register_app trainer    "AI Defense Trainer"  "http://127.0.0.1:20508/"  "GowskiNetTrainer"    "trainer"    "arsenal"    "admin / see Trainer .env SEED_ADMIN_PASSWORD"
 
