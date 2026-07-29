@@ -8,7 +8,7 @@
 // Landing page for nyxus-web. Mirrors the current state of NYXUS as of
 // rev r5 (2026-05-10): Arch + Hyprland live ISO with built-in disk
 // installer (`sudo nyxus-install`) and full hardware enablement for the
-// MSI GS77 hybrid-graphics target. Locked to DARK MIRROR triple-black
+// MSI GS77 hybrid-graphics target. Locked to ALIEN NEON triple-black
 // monochrome — no per-section accent colors, no neon. The only chroma
 // allowed is the wallpaper image bleeding through and the white-glow
 // accents on wordmarks (NYXUS / SIERENGOWSKI).
@@ -20,7 +20,7 @@ import BuildManifest from "./pages/BuildManifest";
 const BASE = "/api/download/nyxus";
 const ISO_NAME = "nyx-2026.05.02-x86_64.iso";
 
-// ── DARK MIRROR · TRIPLE-BLACK palette (matches replit.md rev r14) ──
+// ── ALIEN NEON · TRIPLE-BLACK palette (matches replit.md rev r14) ──
 const NYX = {
   smoke:  "rgba(14,14,22,0.55)",   // bars, panels, window backgrounds
   ink:    "rgba(8,8,14,0.78)",     // raised pebbles, cards, buttons
@@ -346,7 +346,7 @@ function Landing() {
               <span style={{ color: NYX.text2 }}>MSI GS77 (i9-12900H + RTX 3060)</span>: NVIDIA
               hybrid graphics, Intel iGPU, sof-firmware audio, Vulkan, Steam-ready multilib, and
               power/thermal management. Locked to a single visual system —{" "}
-              <span style={{ color: NYX.text2 }}>DARK MIRROR · Triple-Black</span>.
+              <span style={{ color: NYX.text2 }}>ALIEN NEON · Triple-Black</span>.
             </p>
           </Pebble>
 
@@ -381,7 +381,7 @@ function Landing() {
 
             <Pebble raised>
               <SectionLabel>VISUAL SYSTEM</SectionLabel>
-              <SpecRow k="Theme" v="DARK MIRROR r14" />
+              <SpecRow k="Theme" v="ALIEN NEON r14" />
               <SpecRow k="Surfaces" v="Triple-Black" />
               <SpecRow k="Toolkit" v="GTK4 + libadwaita" />
               <SpecRow k="Chrome" v="nyxus_chrome.py" />
@@ -661,7 +661,7 @@ function Landing() {
         >
           <div style={{ fontFamily: FONT_MONO, fontSize: "0.6rem", color: NYX.dim, letterSpacing: "0.22em" }}>
             © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED ·{" "}
-            <span style={{ color: NYX.text2 }}>DARK MIRROR · Triple-Black · rev r14</span>
+            <span style={{ color: NYX.text2 }}>ALIEN NEON · Triple-Black · rev r14</span>
           </div>
         </footer>
       </div>

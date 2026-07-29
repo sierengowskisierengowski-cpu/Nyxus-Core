@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-29 ~01:15 EDT (PR #77 + #78 MERGED to main · silent bake/wallpaper/PATH bugs fixed · all 10 station decks · hacker mode complete · CAVA-reactive borders · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-29 ~05:20 EDT (PR #77 + #78 MERGED · audit ROUND 2: the bake was REVERTING committed fixes (polkit Replit URLs, session entry as an app), 5 buttons still opened the deleted trap app, and THEME.md/DESIGN_CONTRACT.md still specified the PURGED palette · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -181,6 +181,84 @@ Every file landed on all three surfaces the bake reads:
 - `artifacts/api-server/nyxus-scripts/` (NS, source of truth)
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/`
 - `iso-builder/nyx-profile/airootfs/usr/local/bin/`
+
+### ⚠ ROUND 2 — THE BAKE WAS *REVERTING* COMMITTED FIXES (Jul 29, follow-up)
+
+Continuation of the same audit. New class of bug: not just files lost at bake, but
+**committed fixes actively undone** because they were applied to the copy the bake
+does not read.
+
+1. **Polkit `vendor_url` — the Jul-23 Replit purge was being reverted on every
+   bake.** That pass edited `airootfs/usr/share/polkit-1/actions/*` but NOT the
+   `nyxus-scripts/polkit-policies/*` copies the bake installs from, so every ISO
+   since re-shipped `https://nyxus-core.replit.app` in the loginscreen, plymouth
+   and sound policies (plus `nyxus-welcome.policy`). Fixed at the source.
+   **Lesson: fixing `airootfs` alone is not fixing anything for most paths.**
+
+2. **The greetd SESSION entry shipped as a launchable app.** The wave-4 loop globs
+   every `nyxus-*.desktop` into `usr/share/applications`, so `nyxus-hyprland.desktop`
+   appeared in the app menu — clicking it tries to start a **nested compositor**
+   inside the running session. The loop now skips entries carrying `DesktopNames=`,
+   which is exactly the distinction `verify-profile`'s parity gate already makes.
+   nyxus-scripts was ALSO missing `DesktopNames=Hyprland`, so the bake was dropping
+   it from the real session entry in `wayland-sessions/`.
+
+3. **Five buttons still opened the app that was deleted for trapping the desktop.**
+   `eww.yuck`'s own comments say the START panel "replac[ed] the nyxus-start GTK4
+   app" because it "sat on the OVERLAY layer and could be neither closed nor moved
+   when it lost keyboard focus" — yet both brand buttons, the app-rail entry, the
+   NYXUS Start tile and a deck button still ran `nyxus-start`. They now dispatch to
+   the **START station**.
+
+4. **Stale duplicates deleted:** `nyxus-scripts/com.nyxus.parental.policy` (stale
+   copy of the `polkit-policies/` one, and the only file in the repo with a
+   malformed DTD — `PolicyKit/1/` instead of `1.0/`), two stale `nyxus-start` trees
+   (`skel/.config/nyxus/` and `skel/.nyxus/`, the latter wiped+symlinked at bake
+   anyway), and a vim `.save` dropping under `opt/arsenal`.
+
+### 📕 THE DOCS WERE TELLING AGENTS TO USE THE PURGED PALETTE
+
+`THEME.md` was titled **DARK MIRROR** and presented the **purged** palette as
+current — section 3 was literally headed *"Accent tokens (LIVE — follow the
+wallpaper)"* listing `#7949f2` / `#ff2667` / `#ffb026` / `#26ffb7`, claimed the
+active preset was `wallpaper`, and advertised eight presets that were **deleted**
+from `accent.json`. `DESIGN_CONTRACT.md` §4 — the "single quality bar" — gave the
+accent pair as `#a06bff` / `#3ad8ff`.
+
+**Any agent following either would have reintroduced banned colour.** Both are now
+rewritten from `nyxus_palette.py` + `accent.json` (so the values are the real ones)
+and each carries an explicit banned-hex list. Two factual errors fixed en route:
+`WHITE_OFF` was documented `#e8edf5` when the constant is `#eef2fa`, and the HUD
+void fills did not match `HUD_VOID` / `HUD_CARD_BG`.
+
+Also corrected in `THEME.md` §11: station pills were listed `OP/FG/GH/.../BL/ED`
+(BLAST and EDGE were renamed BIFROST/ARSENAL on 2026-07-27), and the HOME dashboard
+was described as the GTK app on `name:0` — that app is **disabled** (rendered an
+empty window), the eww `home-deck` replaced it, and `name:0` was renamed because a
+numeric name resolves into Hyprland's SPECIAL range and was never visible.
+
+Brand strings purged from shipped surfaces: `gen-graffiti-assets.py` was stamping
+the words **"dark mirror" into the generated graffiti art**; nyxus-web showed
+"DARK MIRROR" in the Settings window, notifications, panel flyout, build manifest
+and three page headers; rofi configs, `nyxus-prism-pulse.sh` and
+`gen-cosmic-flyout-assets.py` carried "Obsidian Prism". Historical references that
+*describe* the purge (the ALIEN_NEON audit docs, `legacy-visuals.md`) and the
+palette ban-list comments are deliberately left alone.
+
+> **Do not recompile `eww.css` casually.** It has drifted **~3500 lines** from
+> `eww.scss.source`. Regenerating buries any real change in unrelated churn and
+> risks the live-verified bar styling. Patch it surgically until someone reconciles
+> it on purpose.
+
+### 🧾 STILL OPEN after this audit (found, deliberately not fixed)
+
+- ~31 unused bar-pill widgets from the pre-redesign bar (dead code, zero runtime cost)
+- 4 windows nothing opens: `cheatsheet` (superseded by `hotkey-cheatsheet`),
+  `quicksettings-daemon`, `hotkey-recorder`, `dock-reveal`
+- `/etc/nyxus/nyxus.conf` still points `resync_base` / `manifest_url` at Replit —
+  it is **not** nyxus-scripts-managed, so the bake does not touch it
+- `attached_assets/` holds ~40 unreferenced files >2MB (design scratch)
+
 
 ### 🔜 NEXT
 1. **Rebake** from clean idle `main` (installer + #77/#78 all need a stick)

@@ -62,7 +62,7 @@ export const APPS: AppDef[] = [
   // ── LIVE IFRAMES (3) — apps that ship a web mirror alongside the GTK4 app ─
   { id: "notepad",  name: "Notepad",  glyph: "✑", color: T, kind: "iframe", src: "/nyxus-notepad/",  category: "live",
     tagline: "PLAINTEXT EDITOR · GTK4",
-    desc: "Frictionless plaintext notebook with autosave to ~/.nyxus/notepad.json. DARK MIRROR chrome." },
+    desc: "Frictionless plaintext notebook with autosave to ~/.nyxus/notepad.json. ALIEN NEON chrome." },
   { id: "stickies", name: "Stickies", glyph: "▢", color: T, kind: "iframe", src: "/nyxus-stickies/", category: "live",
     tagline: "STICKY NOTES · GTK4",
     desc: "Pin-to-desktop sticky notes. Layer-shell anchored, auto-persist." },

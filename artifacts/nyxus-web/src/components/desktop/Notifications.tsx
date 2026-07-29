@@ -8,7 +8,7 @@ export function Notifications({ open, onClose }: { open: boolean; onClose: () =>
     { glyph: "◈", title: "Phantom",   body: "Daemon armed. 0 threats since boot." },
     { glyph: "✦", title: "GodsApp",   body: "WiFi audit module ready." },
     { glyph: "✑", title: "Notepad",   body: "5 notes synced to ~/.nyxus/notepad.json." },
-    { glyph: "⚙", title: "Settings",  body: "DARK MIRROR rev r16 — chrome refreshed." },
+    { glyph: "⚙", title: "Settings",  body: "ALIEN NEON rev r16 — chrome refreshed." },
   ];
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 85 }}>

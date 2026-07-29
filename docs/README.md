@@ -26,7 +26,7 @@ This directory contains the canonical project documentation for system scope, ar
 - [`deployment/web-and-api-deployment.md`](deployment/web-and-api-deployment.md): API/web deployment behavior and distribution flow.
 
 ### Design and Quality
-- [`DESIGN_CONTRACT.md`](DESIGN_CONTRACT.md): Active design quality bar for all NYXUS UI components — layout, typography, color (note: still says DARK MIRROR in places; ALIEN NEON lock supersedes — see theme brief).
+- [`DESIGN_CONTRACT.md`](DESIGN_CONTRACT.md): Active design quality bar for all NYXUS UI components — layout, typography, color. Colour section carries the locked ALIEN NEON palette plus the banned-hex list.
 - [`ALIEN_NEON_SETTINGS_BRIEF.md`](ALIEN_NEON_SETTINGS_BRIEF.md): **START HERE** for ALIEN NEON + Settings workstream (phases, stay-as-is, progress log).
 - [`ALIEN_NEON_SETTINGS_AUDIT.md`](ALIEN_NEON_SETTINGS_AUDIT.md): Full counted checklist — unthemed surfaces, thin Settings pages, missing sections.
 - [`BUILD_DAY_BRIEF_2026-07-24.md`](BUILD_DAY_BRIEF_2026-07-24.md): **Master brief for the last day of building** (Jul 23–24) — story, timeline, done/open, bake readiness.

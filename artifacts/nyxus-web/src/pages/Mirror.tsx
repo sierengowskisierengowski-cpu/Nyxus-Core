@@ -62,7 +62,7 @@ export default function Mirror() {
       background: C.void,
       fontFamily: '"JetBrains Mono", monospace',
     }}>
-      {/* DARK MIRROR fonts — Architects Daughter (wordmarks), Inter (body), JetBrains Mono (stats/code) */}
+      {/* ALIEN NEON fonts — Architects Daughter (wordmarks), Inter (body), JetBrains Mono (stats/code) */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" />
 
       {/* full-bleed wallpaper */}
@@ -112,7 +112,7 @@ export default function Mirror() {
         </div>
       )}
 
-      {/* Wallpaper + back-to-portal labels (tiny, corner) — DARK MIRROR */}
+      {/* Wallpaper + back-to-portal labels (tiny, corner) — ALIEN NEON */}
       <div style={{
         position: "absolute",
         top: 36, left: 50,

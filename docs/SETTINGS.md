@@ -51,7 +51,7 @@ Status legend: **OK** = present, builds, reads+writes real state.
 | `editors` | Editors | curated editor bundle, `xdg-mime` default text‑editor | OK |
 | `dock` | Dock | pinned apps / position / autohide → `nyxus-dock` config | OK |
 | `wallpaper` | Wallpaper Studio | browse/apply NYXUS walls → `nyxus_wallpaper_studio.py` | OK |
-| `themepacks` | Theme Packs | DARK MIRROR accent variants → `nyxus-apply-accent` | OK |
+| `themepacks` | Theme Packs | ALIEN NEON accent (`prism` is the only preset) → `nyxus-apply-accent` | OK |
 | `clipboard` | Clipboard | `cliphist` history size / persistence / secrets filter | OK |
 | `assistant` | NYXUS Assistant | NORA prefs (wake/model/hotkey), `ollama` detection | OK |
 
@@ -113,7 +113,7 @@ are kept only as canonical mirrors.
 
 | Standalone module | In‑app replacement (nav key) | Notes |
 |-------------------|------------------------------|-------|
-| `nyxus_settings_accessibility.py` (`A11yPanel`) | **Accessibility** (`accessibility`) | In‑app adds cursor size, animation toggle, assistive‑tool launch + autostart. The standalone's gsettings high‑contrast toggle intentionally omitted (DARK MIRROR locks the theme). |
+| `nyxus_settings_accessibility.py` (`A11yPanel`) | **Accessibility** (`accessibility`) | In‑app adds cursor size, animation toggle, assistive‑tool launch + autostart. The standalone's gsettings high‑contrast toggle intentionally omitted (the ALIEN NEON palette lock owns the theme). |
 | `nyxus_settings_notifications.py` | **Notifications** (`notifications`) | In‑app detects mako/dunst/swaync, DND, USB‑arrival toasts. |
 | `nyxus_settings_sandbox.py` (`SandboxPanel`) | **App Permissions** (`app_perms`) | In‑app lists installed Flatpaks with per‑app camera/mic/network/fs toggles via `flatpak override --user`. |
 | `nyxus_settings_snapshots.py` | **Backup** (`backup`) | In‑app Time‑Machine snapshot scrubber (Timeshift restore/delete via pkexec). |
