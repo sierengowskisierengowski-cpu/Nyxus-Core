@@ -23,7 +23,7 @@ The live machine is the source of truth, not the repo — the repo mirrors it:
 
 ---
 
-## 2. Theme spec — "DARK MIRROR"
+## 2. Theme spec — "ALIEN NEON"
 
 - Triple-black glass surfaces (`nyx_black_smoke` / `nyx_black_ink` / `nyx_black_void`), white glow, neon accent.
 - Accent color follows the current wallpaper — computed via `~/.config/nyxus/accent.json`, applied by `/usr/local/bin/nyxus-apply-accent`.

@@ -4,7 +4,7 @@
  "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
 <policyconfig>
   <vendor>NYXUS</vendor>
-  <vendor_url>https://nyxus-core.replit.app</vendor_url>
+  <vendor_url>https://github.com/sierengowskisierengowski-cpu/Nyxus-Core</vendor_url>
 
   <action id="com.nyxus.plymouth.set-theme">
     <description>Switch the NYXUS boot splash theme</description>

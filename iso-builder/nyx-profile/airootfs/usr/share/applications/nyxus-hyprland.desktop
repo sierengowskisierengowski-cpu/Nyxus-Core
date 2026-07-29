@@ -1,6 +1,0 @@
-[Desktop Entry]
-Name=NYXUS (Hyprland)
-Comment=NYXUS Silent Dark Desktop
-Exec=nyxus-session-start
-Type=Application
-Keywords=nyxus;tiling;wayland;compositor;

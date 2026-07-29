@@ -171,7 +171,7 @@ export default function BuildManifest() {
           </a>
         </div>
         <div style={{ fontFamily: FONT_MONO, fontSize: "0.7rem", color: NYX.dim, letterSpacing: "0.22em", marginBottom: "2.5rem" }}>
-          DARK MIRROR · TRIPLE-BLACK · REV R15 · 2026-05-12
+          ALIEN NEON · TRIPLE-BLACK · REV R15 · 2026-05-12
         </div>
 
         {/* Stat strip */}

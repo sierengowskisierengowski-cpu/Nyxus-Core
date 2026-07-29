@@ -1,0 +1,394 @@
+#!/usr/bin/env python3
+# ============================================================================
+#  nyxus-threatd  ·  the NYXUS threat signal producer      rev 2026-07-29 r1
+#  (c) 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#
+#  Turns the REAL security probes into one small state file that the
+#  nyxus-sense bus republishes, so the DESKTOP can react to what the machine
+#  is actually experiencing:
+#
+#      ~/.config/nyxus/threat.json
+#
+#  WHY THIS IS A SEPARATE DAEMON AND NOT PART OF nyxus-sense
+#  --------------------------------------------------------------------------
+#  nyxus-sense samples at 4 Hz. These probes are the slow kind - docker logs,
+#  journalctl, ss - which is exactly why the GHOST deck polls them at 15s with
+#  4-6s timeouts. Putting them in a 4 Hz loop would wreck the session. So the
+#  slow work lives here on its own long interval, and nyxus-sense only does a
+#  cheap read of the file we write. That preserves the bus contract: producers
+#  publish files, nothing calls anything directly.
+#
+#  THE PROBES ARE NOT REIMPLEMENTED HERE
+#  --------------------------------------------------------------------------
+#  ghost-feed.py already probes all of this and is explicit that "every number
+#  here is REAL and probed live - if the honeypots have seen nothing, this
+#  reports zero rather than inventing activity." We invoke it and derive a
+#  level from its output, so there is exactly ONE place that knows how to read
+#  cowrie/journalctl/docker and one place to fix when a probe changes.
+#
+#  BLINDNESS IS REPORTED, NOT HIDDEN
+#  --------------------------------------------------------------------------
+#  This build has already been burned once by a security component that
+#  reported healthy while seeing nothing: Bifrost's guardian answered "active"
+#  to every health check while dropping ~15,000 events an hour because ollama
+#  was never started. So "quiet" and "blind" must never render the same.
+#  `blind` is true when the feed could not be read at all, and `sources` says
+#  which probes actually returned. A calm desktop with blind=true is NOT a
+#  safe desktop and consumers are expected to show that differently.
+#
+#      nyxus-threatd run     # foreground daemon (systemd/autostart target)
+#      nyxus-threatd start   # background daemon (double-fork), pidfile-guarded
+#      nyxus-threatd stop    # stop the running daemon
+#      nyxus-threatd status  # print current threat.json (or 'stopped')
+#      nyxus-threatd once    # sample once, print JSON, exit (debug)
+# ============================================================================
+import json
+import os
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+
+HOME = os.path.expanduser("~")
+CFG_DIR = os.path.join(HOME, ".config", "nyxus")
+STATE = os.path.join(CFG_DIR, "threat.json")
+PIDFILE = os.path.join(CFG_DIR, "threatd.pid")
+
+# The feed lives with the eww scripts on an installed system; the system copy
+# is the fallback for a live/root context where $HOME/.config is not populated.
+FEED_CANDIDATES = [
+    os.path.join(HOME, ".config", "eww", "scripts", "ghost-feed.py"),
+    "/etc/skel/.config/eww/scripts/ghost-feed.py",
+]
+
+INTERVAL = 20.0        # seconds between probe rounds (probes take ~5-10s)
+FEED_TIMEOUT = 25.0    # hard ceiling so a wedged docker cannot stall us
+
+# Levels, quietest first. Consumers may rely on this ordering.
+LEVELS = ("calm", "watch", "alert", "breach")
+
+os.makedirs(CFG_DIR, exist_ok=True)
+
+
+def _feed_path():
+    for p in FEED_CANDIDATES:
+        if os.path.isfile(p):
+            return p
+    return None
+
+
+def read_feed():
+    """Run ghost-feed.py and return its dict, or None if we could not read it.
+
+    None means BLIND - we do not substitute an all-clear.
+    """
+    path = _feed_path()
+    if not path:
+        return None
+    try:
+        out = subprocess.run([sys.executable, path], capture_output=True,
+                             text=True, timeout=FEED_TIMEOUT)
+        if out.returncode != 0 or not out.stdout.strip():
+            return None
+        return json.loads(out.stdout)
+    except Exception:
+        return None
+
+
+def _int(d, *keys, default=0):
+    """Walk nested dict keys, coercing to int, never raising."""
+    cur = d
+    for k in keys:
+        if not isinstance(cur, dict):
+            return default
+        cur = cur.get(k)
+    try:
+        return int(cur)
+    except (TypeError, ValueError):
+        return default
+
+
+def score(feed):
+    """Derive (level, score, reasons, sources) from a ghost-feed blob.
+
+    TWO BUCKETS, ON PURPOSE. A honeypot exists to be attacked, so traffic
+    against it is the system WORKING - loud, informative, and not an emergency.
+    Scoring it the same as a compromise of the real host would paint the desktop
+    red during normal operation, and a console that cries wolf gets ignored just
+    as fast as one that lies.
+    
+      external : probing/hits against the DECOYS. Informative. Deliberately
+                 CAPPED so it can never on its own exceed `alert`.
+      host     : things about THIS machine - failed logins against the real
+                 host, defence daemons down, failed units. Can reach `breach`.
+    
+    Thresholds are conservative because this drives visible desktop state: one
+    mistyped password must not change the colour of the room.
+    """
+    reasons = []
+    ext = 0     # external / decoy-facing  (capped below ALERT_MAX)
+    host = 0    # host-affecting           (uncapped)
+
+    # ── explicit user panic wins outright ────────────────────────────────
+    panic = str((feed.get("state") or {}).get("panic") or "idle")
+    if panic not in ("idle", ""):
+        return "breach", 100, [f"panic mode: {panic}"], {"panic": True}
+
+    # ── live SSH probing against the honeypot ────────────────────────────
+    atk = _int(feed, "attacks", "total")
+    if atk >= 20:
+        ext += 40
+        reasons.append(f"{atk} ssh probes on the honeypot")
+    elif atk >= 5:
+        ext += 30
+        reasons.append(f"{atk} ssh probes on the honeypot")
+    elif atk >= 1:
+        ext += 15
+        reasons.append(f"{atk} ssh probe(s) on the honeypot")
+
+    # ── honeypot hits in the last hour, straight from HoneyHive ──────────
+    h1 = _int(feed, "hive", "h1")
+    if h1 >= 50:
+        ext += 35
+        reasons.append(f"{h1} honeypot hits in the last hour")
+    elif h1 >= 5:
+        ext += 20
+        reasons.append(f"{h1} honeypot hits in the last hour")
+    elif h1 >= 1:
+        ext += 10
+        reasons.append(f"{h1} honeypot hit(s) in the last hour")
+
+    # ── auth failures on the REAL host, 24h window ───────────────────────
+    failed = _int(feed, "auth", "failed")
+    if failed >= 100:
+        host += 45
+        reasons.append(f"{failed} auth failures in 24h")
+    elif failed >= 25:
+        host += 22
+        reasons.append(f"{failed} auth failures in 24h")
+    elif failed >= 5:
+        host += 8
+        reasons.append(f"{failed} auth failures in 24h")
+
+    # ── a defence daemon that is DOWN is a threat to KNOWING about threats.
+    # This is the Bifrost-ran-blind lesson expressed as state: the EDR
+    # answered "active" to every health check while dropping ~15,000 events an
+    # hour. Down defence counts against the HOST bucket because it degrades
+    # every other number in this function.
+    defense = feed.get("defense") or []
+    down = [d.get("name", "?") for d in defense
+            if isinstance(d, dict) and not d.get("ok")]
+    if down:
+        host += 14 * len(down)
+        reasons.append("defence offline: " + ", ".join(down))
+
+    # ── failed systemd units ─────────────────────────────────────────────
+    units = feed.get("units") or {}
+    if units and not units.get("clean", True):
+        n = _int(feed, "units", "count")
+        host += 8
+        reasons.append(f"{n} failed unit(s)")
+
+    # ── security events the GHOST deck already surfaces ──────────────────
+    ev = _int(feed, "events", "count")
+    if ev >= 20:
+        host += 18
+        reasons.append(f"{ev} security events")
+    elif ev >= 1:
+        host += 6
+        reasons.append(f"{ev} security event(s)")
+
+    # External noise saturates at the top of ALERT: being scanned is never, by
+    # itself, a breach of this machine.
+    ALERT_MAX = 59
+    ext = min(ext, ALERT_MAX)
+    pts = min(ext + host, 100)
+    # ...and if NOTHING host-affecting is happening, hold the whole level at
+    # alert no matter how loud the decoys get.
+    if host == 0:
+        pts = min(pts, ALERT_MAX)
+
+    if pts >= 60:
+        level = "breach"
+    elif pts >= 30:
+        level = "alert"
+    elif pts >= 10:
+        level = "watch"
+    else:
+        level = "calm"
+
+    sources = {
+        "feed": True,
+        "external": ext,
+        "host": host,
+        "pots_up": _int(feed, "pots_up"),
+        "pots_total": _int(feed, "pots_total"),
+        "hive_up": bool((feed.get("hive") or {}).get("up")),
+        "defense_total": len(defense),
+        "defense_down": len(down),
+    }
+    return level, pts, reasons, sources
+
+
+def sample():
+    feed = read_feed()
+    if feed is None:
+        # BLIND. Report it as such - never as an all-clear.
+        return {
+            "ts": int(time.time()),
+            "level": "calm",
+            "score": 0,
+            "blind": True,
+            "reasons": ["security feed unavailable - threat state is UNKNOWN"],
+            "sources": {"feed": False},
+        }
+    level, pts, reasons, sources = score(feed)
+    return {
+        "ts": int(time.time()),
+        "level": level,
+        "score": pts,
+        "blind": False,
+        "reasons": reasons or ["quiet"],
+        "sources": sources,
+    }
+
+
+def push_eww(state):
+    """Push the threat state into the eww bars (defvar THREAT).
+
+    Its OWN defvar rather than piggybacking on nyxus-mood's SENSE push: mood
+    pushes on mood change with a 30s heartbeat, so routing threat through it
+    would delay a level change by up to half a minute. A defvar (not a defpoll)
+    matches the existing pattern and updates deterministically regardless of
+    eww's lazy per-window poll activation.
+    """
+    payload = json.dumps({
+        "level":  state.get("level", "calm"),
+        "score":  state.get("score", 0),
+        "blind":  bool(state.get("blind", True)),
+        "reason": (state.get("reasons") or ["quiet"])[0],
+    })
+    try:
+        subprocess.Popen(["eww", "update", f"THREAT={payload}"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+
+def write_atomic(path, data):
+    d = os.path.dirname(path)
+    fd, tmp = tempfile.mkstemp(dir=d, prefix=".threat.")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+# ── daemon plumbing (mirrors nyxus-sense so behaviour is predictable) ───────
+_RUN = True
+
+
+def _sigterm(*_):
+    global _RUN
+    _RUN = False
+
+
+def run():
+    signal.signal(signal.SIGTERM, _sigterm)
+    signal.signal(signal.SIGINT, _sigterm)
+    with open(PIDFILE, "w") as f:
+        f.write(str(os.getpid()))
+    last_key = None
+    last_push = 0.0
+    try:
+        while _RUN:
+            try:
+                st = sample()
+                write_atomic(STATE, st)
+                # Push to the bars when the level or blindness changes, with a
+                # slow heartbeat so a restarted eww daemon re-learns the state
+                # instead of sitting on its defvar default forever.
+                key = (st.get("level"), bool(st.get("blind")))
+                now = time.time()
+                if key != last_key or now - last_push >= 60.0:
+                    push_eww(st)
+                    last_key, last_push = key, now
+            except Exception:
+                pass          # never let one bad round kill the producer
+            # Sleep in slices so SIGTERM is honoured promptly despite the
+            # long interval - a 20s uninterruptible sleep makes logout hang.
+            slept = 0.0
+            while _RUN and slept < INTERVAL:
+                time.sleep(0.5)
+                slept += 0.5
+    finally:
+        try:
+            os.unlink(PIDFILE)
+        except OSError:
+            pass
+
+
+def _running_pid():
+    try:
+        with open(PIDFILE) as f:
+            pid = int(f.read().strip())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+def start():
+    if _running_pid():
+        print("nyxus-threatd already running")
+        return
+    if os.fork() > 0:
+        return
+    os.setsid()
+    if os.fork() > 0:
+        os._exit(0)
+    devnull = os.open(os.devnull, os.O_RDWR)
+    for fd in (0, 1, 2):
+        os.dup2(devnull, fd)
+    run()
+
+
+def stop():
+    pid = _running_pid()
+    if not pid:
+        print("nyxus-threatd not running")
+        return
+    try:
+        os.kill(pid, signal.SIGTERM)
+        print(f"stopped nyxus-threatd (pid {pid})")
+    except OSError as e:
+        print(f"could not stop pid {pid}: {e}")
+
+
+def status():
+    try:
+        with open(STATE) as f:
+            print(f.read())
+    except OSError:
+        print("stopped (no threat.json)")
+
+
+def once():
+    print(json.dumps(sample(), indent=2))
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "run"
+    {"run": run, "start": start, "stop": stop,
+     "status": status, "once": once}.get(cmd, run)()
+
+
+if __name__ == "__main__":
+    main()

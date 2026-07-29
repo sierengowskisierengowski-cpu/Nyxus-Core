@@ -679,10 +679,13 @@ if [[ -f "${NS}/nyxus-parental-helper" ]]; then
   install -Dm755 "${NS}/nyxus-parental-helper" \
     "${PROFILE_DIR}/airootfs/usr/local/libexec/nyxus-parental-helper"
 fi
-if [[ -f "${NS}/com.nyxus.parental.policy" ]]; then
-  install -Dm644 "${NS}/com.nyxus.parental.policy" \
-    "${PROFILE_DIR}/airootfs/usr/share/polkit-1/actions/com.nyxus.parental.policy"
-fi
+# com.nyxus.parental.policy is NOT installed from NS's root (2026-07-29).
+# A stale duplicate lived there: it was the only file in the whole tree with a
+# malformed DTD URL (PolicyKit/1/ instead of PolicyKit/1.0/) and it declared
+# auth_admin_keep with no allow_gui annotation, unlike the canonical copy. The
+# wave-4 loop below installs polkit-policies/com.nyxus.parental.policy, which
+# matches the committed airootfs action and is authoritative. The duplicate has
+# been deleted; do not reintroduce a root-level copy of a wave-4 policy.
 # Security + welcome helpers — referenced by nyxus_security.py and
 # nyxus_welcome.py via /usr/local/libexec/<name>; without these the
 # helper-mediated polkit calls 404 and the apps fall back to readonly.
@@ -1172,6 +1175,15 @@ done
 if [[ -d "${NS}/desktop-entries" ]]; then
   for desk in "${NS}/desktop-entries"/nyxus-*.desktop; do
     [[ -f "${desk}" ]] || continue
+    # SESSION entries are not applications (2026-07-29). This glob was pulling
+    # nyxus-hyprland.desktop -- the greetd session selector -- into the app menu,
+    # where it rendered as a launchable "NYXUS (Hyprland)" entry that would try
+    # to start a NESTED compositor inside the running session. A DesktopNames=
+    # key is what marks a session entry; those belong only in
+    # usr/share/wayland-sessions/, which is staged separately above.
+    if grep -q '^DesktopNames=' "${desk}"; then
+      continue
+    fi
     install -Dm644 "${desk}" "${PROFILE_DIR}/airootfs/usr/share/applications/$(basename "${desk}")"
   done
 fi

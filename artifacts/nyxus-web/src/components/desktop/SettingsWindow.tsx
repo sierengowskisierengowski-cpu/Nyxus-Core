@@ -177,7 +177,7 @@ export function SettingsWindow({ open, onClose }: { open: boolean; onClose: () =
       case "appearance":
         return (
           <Stack>
-            <ReadOnlyRow label="Theme" value="DARK MIRROR · rev r16 (locked)" />
+            <ReadOnlyRow label="Theme" value="ALIEN NEON · rev r16 (locked)" />
             <Toggle label="Wallpaper rotation" value={s.wallpaperRotation} onChange={v => set("wallpaperRotation", v)} />
             <Slider label="Rotation interval" min={5} max={120} step={5} unit="s" value={s.wallpaperRotationSec} onChange={v => set("wallpaperRotationSec", v)} />
             <Slider label="Blur size" min={0} max={32} value={s.blurSize} onChange={v => set("blurSize", v)} />
@@ -328,7 +328,7 @@ export function SettingsWindow({ open, onClose }: { open: boolean; onClose: () =
       case "about":
         return (
           <Stack>
-            <ReadOnlyRow label="NYXUS" value="rev r16 · DARK MIRROR (LOCKED)" />
+            <ReadOnlyRow label="NYXUS" value="rev r16 · ALIEN NEON (LOCKED)" />
             <ReadOnlyRow label="Apps" value="26 installed (3 live + 11 tarball + 12 system)" />
             <ReadOnlyRow label="Settings keys" value={`${Object.keys(s).length} wired in`} />
             <ReadOnlyRow label="Creator" value="Joseph A. Sierengowski" />

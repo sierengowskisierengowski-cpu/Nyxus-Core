@@ -33,10 +33,12 @@ CFG_DIR  = os.path.join(HOME, ".config", "nyxus")
 STATE    = os.path.join(CFG_DIR, "sense.json")
 PIDFILE  = os.path.join(CFG_DIR, "sense.pid")
 HACKER   = os.path.join(CFG_DIR, "hacker-mode.state")
+THREAT   = os.path.join(CFG_DIR, "threat.json")
 
 INTERVAL   = 0.25          # sample period (seconds) -> 4 Hz
 MOOD_DWELL = 6.0           # a rival mood must persist this long to win
 EMA_ALPHA  = 0.15          # energy smoothing (0..1, lower = smoother)
+THREAT_TTL = 90.0          # threat.json older than this is treated as UNKNOWN
 
 os.makedirs(CFG_DIR, exist_ok=True)
 
@@ -59,6 +61,40 @@ def hacker_on():
             return "mode=on" in f.read()
     except OSError:
         return False
+
+
+def threat_state():
+    """Republish nyxus-threatd's finding onto the bus. Never raises.
+
+    This is a plain file read on purpose. The security probes behind this are
+    the slow kind (docker logs, journalctl, ss) and this loop runs at 4 Hz, so
+    nyxus-threatd owns the probing on its own long interval and we only carry
+    its result. Keeps the bus contract: producers publish files.
+
+    STALE DATA IS REPORTED AS UNKNOWN, NOT AS CALM. If threatd has died the
+    file stops advancing, and continuing to publish its last `calm` would be
+    the exact failure this build already hit once, when Bifrost's guardian
+    reported healthy while seeing nothing. `blind` true means "we do not know".
+    """
+    unknown = {"level": "calm", "score": 0, "blind": True, "reason": "no threat feed"}
+    try:
+        with open(THREAT) as f:
+            d = json.load(f)
+    except Exception:
+        return unknown
+    try:
+        if time.time() - float(d.get("ts", 0)) > THREAT_TTL:
+            return {"level": "calm", "score": 0, "blind": True,
+                    "reason": "threat feed stale"}
+        reasons = d.get("reasons") or []
+        return {
+            "level": str(d.get("level", "calm")),
+            "score": int(d.get("score", 0)),
+            "blind": bool(d.get("blind", False)),
+            "reason": str(reasons[0]) if reasons else "quiet",
+        }
+    except Exception:
+        return unknown
 
 
 def player_state():
@@ -145,6 +181,7 @@ class Sensor:
 
         playing, title, artist = player_state()
         app, ws = active_window()
+        threat = threat_state()
 
         # instantaneous energy → EMA-smoothed
         raw = clamp(0.5 * (cpu / 100.0)
@@ -180,6 +217,7 @@ class Sensor:
             "mood": self.mood,
             "mood_intensity": round(self.energy, 3),
             "hacker": hk,
+            "threat": threat,
         }
 
 

@@ -1,14 +1,19 @@
-# NYXUS Theme Reference — "DARK MIRROR"
+# NYXUS Theme Reference — "ALIEN NEON"
 
 > Single source-of-truth for every color, font, and effect token used across
 > the NYXUS desktop (EWW bars/menus, GTK apps, Hyprland, login/lock). Worker-B
 > owns this file (Phase 5.1). Phase 2 (login/lock) consumes the accent + surface
 > tokens documented in [§8](#8-tokens-for-phase-2-loginlock).
 
-Aesthetic in one line: **deep-space triple-black glass, pink/magenta + purple
-neon accent, white glow, a Rolls-Royce starlight twinkle motif**, with the
-current wallpaper (`nyxus-graffiti-space.png`) as the single background reference
-for every surface.
+> **Palette LOCKED 2026-07-23.** The single accent preset is `prism` and
+> `follow_wallpaper` is **false**. The older "DARK MIRROR" / "OBSIDIAN PRISM"
+> palette this file used to document was **purged** from the tree; its hexes are
+> banned. History lives in [`legacy-visuals.md`](./legacy-visuals.md).
+
+Aesthetic in one line: **urban-alien graffiti on deep-space triple-black glass —
+violet + magenta neon, neon-green signal, white glow, a starlight twinkle
+motif**, with `nyxus-urban-alien.png` as the single background reference for
+every surface.
 
 ---
 
@@ -35,7 +40,7 @@ CSS `@define-color` name (eww/GTK) / `nyxus_palette.py` constant / value:
 | CSS name | Python | Value | Use |
 |----------|--------|-------|-----|
 | `nyx_white` | `WHITE_PURE` | `#ffffff` | rim highlight, focused caret, hover halo |
-| `nyx_white_off` | `WHITE_OFF` | `#e8edf5` | primary text |
+| `nyx_white_off` | `WHITE_OFF` | `#eef2fa` | primary text (canon cool white) |
 | `nyx_grey_light` | `GREY_LIGHT` | `#c8ccd6` | secondary text |
 | `nyx_grey_mid` | `GREY_MID` | `#9aa0ad` | disabled / hint text |
 | `nyx_grey_tertiary` | `GREY_TERTIARY` | `#6a6e78` | ghost text |
@@ -52,9 +57,10 @@ CSS `@define-color` name (eww/GTK) / `nyxus_palette.py` constant / value:
 Legacy aliases (same values): `nyx_glass_dark`/`GLASS_DARK`,
 `nyx_glass_deeper`/`GLASS_DEEPER`, `nyx_glass_deepest`/`GLASS_DEEPEST`.
 
-EWW HUD deep-void fills (in `eww.scss.source`, mirror `nyxus_palette.py`):
-`$void-card` = `rgba(7,5,14,0.93)` (card fill), `$void-deep` = `rgba(5,1,13,0.97)`
-(root sheet), `HUD_VOID` = `rgba(5,1,13,0.97)`, `HUD_CARD_BG` = `rgba(7,5,14,0.93)`.
+EWW HUD deep-void fills — `nyxus_palette.py` is canon:
+`HUD_VOID` = `rgba(5,6,10,0.97)` (root sheet, from `VOID` `#05060a`),
+`HUD_CARD_BG` = `rgba(7,8,14,0.93)` (card fill). `eww.scss.source` mirrors these
+as `$void-deep` / `$void-card`.
 
 ### Glow / hairline / shadow
 | CSS name | Value | Use |
@@ -74,57 +80,69 @@ EWW HUD deep-void fills (in `eww.scss.source`, mirror `nyxus_palette.py`):
 
 ---
 
-## 3. Accent tokens (LIVE — follow the wallpaper)
+## 3. Accent tokens (LOCKED — `prism` only)
 
-Four slots, applied everywhere by `nyxus-apply-accent`. Current active preset is
-`wallpaper`:
+Four slots, applied everywhere by `nyxus-apply-accent`. There is exactly **one**
+preset and the accent does **not** follow the wallpaper:
 
-| Slot | SCSS var | GTK | Wallpaper value | Meaning |
-|------|----------|-----|-----------------|---------|
-| primary | `$nyxus-accent-primary` | `@accent_color` | **`#7949f2`** (purple) | primary accent, brand, focus |
-| secondary | `$nyxus-accent-secondary` | — | **`#ff2667`** (magenta/pink) | data readouts, signal, rims |
-| warn | `$nyxus-accent-warn` | — | **`#ffb026`** (gold) | warnings / highlights |
-| ok | `$nyxus-accent-ok` | — | **`#26ffb7`** (mint) | ok / tertiary refraction |
+| Slot | SCSS var | GTK | Value | Meaning |
+|------|----------|-----|-------|---------|
+| primary | `$nyxus-accent-primary` | `@accent_color` | **`#7d3dff`** (violet) | primary accent, brand, focus |
+| secondary | `$nyxus-accent-secondary` | — | **`#ff2dad`** (magenta) | data readouts, signal, rims |
+| warn | `$nyxus-accent-warn` | — | **`#ff8a1e`** (orange) | warnings / highlights |
+| ok | `$nyxus-accent-ok` | — | **`#39ff14`** (neon green) | ok / tertiary refraction |
 
-Derived soft/deep tints (auto-follow the preset), defined in `eww.scss.source`:
+Derived soft/deep tints (defined in `eww.scss.source`):
 `$accent-primary-soft` = `mix(#fff, primary, 42%)`, `$accent-secondary-soft`
 = `mix(#fff, secondary, 45%)`, `$accent-ok-soft`, `$accent-warn-soft`,
 `$accent-primary-deep` = `mix(#000, primary, 30%)`.
 
-**Pipeline:** `accent.json` (presets + `active`) → `nyxus-apply-accent [preset]`
+**Pipeline:** `accent.json` (`active` + `presets`) → `nyxus-apply-accent [preset]`
 rewrites `accent.scss`, the GTK `/* nyxus-accent-begin … end */` block, and
 `hyprlock-accent.conf`, then substitutes old→new hex across all registered
 consumers from a canonical PRISM baseline in `~/.config/nyxus/accent-baseline/`,
 recompiles `eww.css`, and live-reloads eww/hypr/dunst/swaync/cava.
-Presets available: `prism, aurora, ember, verdant, violet, rose, ice, noir,
-wallpaper`.
 
-> Because `eww.scss.source` is variable-driven (`@import "_nyxus_accent"`), theme
-> edits use `$nyxus-accent-*` and never raw preset hex — so any accent swap keeps
-> the DARK MIRROR structure intact.
-
----
+> **`prism` is the only preset.** `aurora, ember, verdant, violet, rose, ice,
+> noir, wallpaper` were **deleted** from `accent.json` on 2026-07-23 — do not
+> reference them and do not re-add them. Wallpaper→accent extraction is what
+> kept dragging the desktop off-theme; `follow_wallpaper: false` is deliberate
+> and `nyxus-accent-from-wallpaper` is dev-only behind
+> `NYXUS_ALLOW_WALLPAPER_ACCENT=1`.
+>
+> Unrelated uses of these words are fine and are NOT presets: the
+> `NYXUS-Aurora` cursor theme, the eww "aurora curtain" CSS animation, and
+> `nyxus-shader ember|noir` post-process filters.
 
 ## 4. Fixed HUD neon family (preset-independent)
 
 Monitoring widgets use a stable neon set so graphs read consistently regardless
-of accent. In `eww.scss.source` (mirror `nyxus_palette.py` `HUD_PALETTE`):
+of accent. `nyxus_palette.py` is the canon; `eww.scss.source` mirrors it:
 
 | SCSS var | Value | Monitoring use |
 |----------|-------|----------------|
-| `$neon-orange` | `#ff7849` | fans / power |
-| `$neon-green` | `#6dffcf` | network |
-| `$neon-blue` | `#4d9fff` | GPU / bluetooth |
-| `$neon-red` | `#ff4d6b` | critical / music / danger |
-| `$neon-cyan` | `#ff2667` | legacy HOME-station hue (== secondary) |
+| `$neon-orange` | `#ff8a1e` | fans / power (== warn slot) |
+| `$neon-green` | `#7dff5e` | network (lifted tint of `#39ff14`) |
+| `$neon-blue` | `#2bd2ff` | GPU / bluetooth (== `CYAN_FIXED`) |
+| `$neon-red` | `#ff2d55` | critical / music / danger (== `RED_FIXED`) |
+| `$neon-cyan` | `#ff2d55` | legacy HOME-station hue (alias of red — historical) |
 
-HUD hue map (`hud_tile`/graph widgets): CPU = pink (primary), RAM = purple (ok),
-GPU = blue, TEMP = orange, FAN = orange, NET-down = green, NET-up = secondary.
+Fixed, preset-independent constants (`nyxus_palette.py`): `CYAN_FIXED` `#2bd2ff`,
+`RED_FIXED` `#ff2d55`, `YELLOW_FIXED` `#ffe600`, `ORCHID` `#e367ff`,
+`GREEN_OK` `#39ff14`, `VOID` `#05060a`.
 
-`HUD_NEONS` (Python, extended set for multi-series charts): `#ff4994 #26ff39
-#26ffb7 #ff8b26 #6dffcf #ff7ae5 #66efff #c084fc #ffce85`.
+`HUD_PALETTE` key → value (note the historical key names: `pink` is the violet
+primary and `cyan` is the magenta secondary):
+`pink` `#7d3dff` · `cyan` `#ff2dad` · `gold`/`orange` `#ff8a1e` ·
+`purple` `#7d3dff` · `green` `#39ff14` · `blue` `#2bd2ff` · `red` `#ff2d55` ·
+`orchid` `#e367ff` · `mono` `#eef2fa`.
 
----
+`HUD_NEONS` (extended set for multi-series charts): `#7d3dff #ff2dad #39ff14
+#2bd2ff #ff8a1e #ffe600 #e367ff #ff2d55`.
+
+> Any Python app that hardcodes a HUD colour must mirror `HUD_PALETTE` exactly
+> in its `except ImportError` fallback, or the app renders a near-miss palette
+> whenever the import fails. Three of them had drifted this way.
 
 ## 5. Fonts — "GRAFFITI TYPE SYSTEM"
 
@@ -208,23 +226,27 @@ veil), not noisy.
 Phase 2 owns hyprlock/SDDM styling; consume these tokens so login matches DARK
 MIRROR. Accent is exposed to hyprlock via generated `~/.config/hypr/hyprlock-accent.conf`:
 
+`hyprlock-accent.conf` **ships empty** (so `hyprlock.conf`'s `source =` resolves
+on a fresh account) and is written by `nyxus-apply-accent` at runtime. With the
+locked `prism` preset it generates:
+
 ```
-$nyxus_accent_rgba   = rgba(121, 73, 242, 1.0)   # primary #7949f2
-$nyxus_accent_glow   = rgba(121, 73, 242, 0.45)
-$nyxus_accent_dim    = rgba(121, 73, 242, 0.75)
-$nyxus_accent_faint  = rgba(121, 73, 242, 0.20)
-$nyxus_accent2_rgba  = rgba(255, 38, 103, 1.0)   # secondary #ff2667
-$nyxus_accent2_glow  = rgba(255, 38, 103, 0.45)
-$nyxus_accent2_dim   = rgba(255, 38, 103, 0.75)
+$nyxus_accent_rgba   = rgba(125, 61, 255, 1.0)   # primary #7d3dff
+$nyxus_accent_glow   = rgba(125, 61, 255, 0.45)
+$nyxus_accent_dim    = rgba(125, 61, 255, 0.75)
+$nyxus_accent_faint  = rgba(125, 61, 255, 0.20)
+$nyxus_accent2_rgba  = rgba(255, 45, 173, 1.0)   # secondary #ff2dad
+$nyxus_accent2_glow  = rgba(255, 45, 173, 0.45)
+$nyxus_accent2_dim   = rgba(255, 45, 173, 0.75)
 ```
 
 Recommended login/lock surface tokens:
-- Backdrop: the wallpaper nebula + fullscreen starfield (`starfield-lock-base.png`
+- Backdrop: the urban-alien wallpaper + fullscreen starfield (`starfield-lock-base.png`
   + `starfield-lock-twinkle-{0..15}.png`, driver `starfield-lock-anim.sh`).
-- Login box: frosted smoked glass = `rgba(5,2,11,0.78)` fill, 1px
-  `rgba(121,73,242,0.32)` border, 2px `rgba(121,73,242,0.62)` top-rule, blur
+- Login box: frosted smoked glass = `rgba(5,6,10,0.78)` fill, 1px
+  `rgba(125,61,255,0.32)` border, 2px `rgba(125,61,255,0.62)` top-rule, blur
   behind (Hyprland blur 14/4).
-- Text: `#e8edf5` primary, `#c8ccd6` secondary, `#6a6e78` hints.
+- Text: `#eef2fa` primary, `#c8ccd6` secondary, `#6a6e78` hints.
 - Fonts: Permanent Marker (Nyxus wordmark), Orbitron (clock), Inter (fields),
   Caveat (greeting, ~1.5×).
 
@@ -277,16 +299,16 @@ Recommended login/lock surface tokens:
 
 ## 11. Shipped signature components (current reality · rev 2026-07-15)
 
-The DARK MIRROR tokens above drive these live surfaces. All are shipped and
+The ALIEN NEON tokens above drive these live surfaces. All are shipped and
 verified; none are placeholders.
 
 | Component | Where | Notes |
 |-----------|-------|-------|
 | **The Hub** | `eww.yuck` `nyxus_hub_layout`; `nyxus-hub-open` / `nyxus-hub-launch` / `nyxus-hub-close` / `nyxus-hub-apps` / `nyxus-hub-search` | Redesigned full-screen launcher/command surface: NYXUS/ALL app toggle, search, now-playing, and a STATIONS footer switcher (OP..ED, from `stations.json`) + power actions. Opened via `nyxus-hub-open` (stashes+closes the bars so the overlay maps truly fullscreen, restores on any failure); closed by `nyxus-hub-close` and by the global `Escape` / `Super+Shift+Escape` binds. Every eww CLI call in the open/close path is `timeout`-bounded and a wedged daemon triggers hard recovery (`pkill -9 eww` → `nyxus-eww-launch-safe`), so the user can never be trapped. |
-| **Station rail** | `eww.yuck` `workspaces_rail` / `station_pill` | Left rail = HOME `◈` + station pills OP/FG/GH/PL/WV/CR/MS/SC/BL/ED, hue-tinted per station, driven by `~/.config/nyxus/stations.json`. Matches Hyprland workspace identity 1-10 (see NYXUS_STATUS station reconciliation). |
+| **Station rail** | `eww.yuck` `workspaces_rail` / `station_pill` | Left rail = HOME / START / 1-10, hue-tinted per station, driven by `~/.config/nyxus/stations.json`. Stations are OPS · FORGE · GHOST · PULSE · WAVE · CORE · MESH · SCRIBE · BIFROST · ARSENAL (9/10 were renamed from BLAST/EDGE on 2026-07-27). Named annex stations HOME / START / LAB live in `nyxus-stations-named.conf`; identity must stay identical across `stations.json` and `stations-hacker.json` — gate 13w asserts it. |
 | **Saucer center clock + music** | `eww.yuck` `.saucer-*` classes; `nyxus-nowplaying` | UFO-saucer center clock on `bar-bottom`; flips to a source-agnostic MPRIS now-playing readout when any player is active. |
 | **NYXUS PULSE** | `nyxus-pulsed` / `nyxus-beat*`; `~/.config/nyxus/pulse-cava.conf`, `cava.conf` | Cava-driven audio-reactive beat feed used by bar FX / visualizers. |
-| **HOME dashboard** | `~/.nyxus/nyxus-home/` (GTK4, workspace name:0) | Command deck: clock, weather, SYSTEM CORE rings + per-core bars, JETT AI EDR, HONEYPOT GRID, MUSIC DECK, NETWORK, Fans/Storage/Calendar/Notepad/Processes/Notifications/Password. Builds its own `CosmicSceneArea` backdrop — it pre-arms the `nyxus_chrome` guard so the shared present-hook doesn't re-wrap (and blank) its overlay. |
+| **HOME dashboard** | eww `home-deck` window on the **HOME** station (`Super+Home`) | Command deck: clock, weather, SYSTEM CORE rings + per-core bars, JETT AI EDR, HONEYPOT GRID, MUSIC DECK, NETWORK, Fans/Storage/Calendar/Notepad/Processes/Notifications/Password. **The GTK4 `nyxus-home` app is DISABLED** (it rendered an empty window); the eww deck replaced it, opened/closed by `nyxus-home-deck` following the Hyprland socket. The old workspace `name:0` was renamed `name:HOME` because a numeric `name:0` resolves into Hyprland's SPECIAL range and was never visible. |
 | **Matrix screensaver** | `~/.config/nyxus/nyxus_matrix_saver.py`; `nyxus-screensaver` | Idle/lock-adjacent matrix-rain saver in the neon palette. Launched by hypridle; quits on any key/click/motion and honours SIGTERM (can never trap the user). Ship copy: `artifacts/api-server/nyxus-scripts/nyxus_matrix_saver.py`. |
 | **hyprlock (UFO art)** | `~/.config/hypr/hyprlock.conf` + `hyprlock-accent.conf`; `assets/nyxus-hyprlock-ufo.png` | Lock screen over the UFO art + fullscreen starfield; consumes the generated accent tokens (§8). |
 | **Branded splash** | `eww/splash.yuck` + `.splash-*` in `eww.scss.source`; `assets/nyxus-splash-brand.png` | Session-start curtain = full-bleed graffiti "NYXUS HYPRLAND" brand art with top/bottom scrim for legible boot text. Pre-scaled to the panel resolution because the compile step strips `background-size`. |

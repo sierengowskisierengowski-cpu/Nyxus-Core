@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-29 ~01:15 EDT (PR #77 + #78 MERGED to main · silent bake/wallpaper/PATH bugs fixed · all 10 station decks · hacker mode complete · CAVA-reactive borders · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-29 ~06:05 EDT (audit ROUND 3: the reactive bus NEVER STARTED - nothing launched nyxus-sense, so the mood layer read a default forever; 4 hypr shards shipped UNSOURCED incl. 3 headline features + the Arsenal rules; NEW nyxus-threatd gives the desktop a real threat signal off the live probes · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -181,6 +181,177 @@ Every file landed on all three surfaces the bake reads:
 - `artifacts/api-server/nyxus-scripts/` (NS, source of truth)
 - `iso-builder/nyx-profile/airootfs/etc/skel/.config/eww/`
 - `iso-builder/nyx-profile/airootfs/usr/local/bin/`
+
+### ⚠ ROUND 2 — THE BAKE WAS *REVERTING* COMMITTED FIXES (Jul 29, follow-up)
+
+Continuation of the same audit. New class of bug: not just files lost at bake, but
+**committed fixes actively undone** because they were applied to the copy the bake
+does not read.
+
+1. **Polkit `vendor_url` — the Jul-23 Replit purge was being reverted on every
+   bake.** That pass edited `airootfs/usr/share/polkit-1/actions/*` but NOT the
+   `nyxus-scripts/polkit-policies/*` copies the bake installs from, so every ISO
+   since re-shipped `https://nyxus-core.replit.app` in the loginscreen, plymouth
+   and sound policies (plus `nyxus-welcome.policy`). Fixed at the source.
+   **Lesson: fixing `airootfs` alone is not fixing anything for most paths.**
+
+2. **The greetd SESSION entry shipped as a launchable app.** The wave-4 loop globs
+   every `nyxus-*.desktop` into `usr/share/applications`, so `nyxus-hyprland.desktop`
+   appeared in the app menu — clicking it tries to start a **nested compositor**
+   inside the running session. The loop now skips entries carrying `DesktopNames=`,
+   which is exactly the distinction `verify-profile`'s parity gate already makes.
+   nyxus-scripts was ALSO missing `DesktopNames=Hyprland`, so the bake was dropping
+   it from the real session entry in `wayland-sessions/`.
+
+3. **Five buttons still opened the app that was deleted for trapping the desktop.**
+   `eww.yuck`'s own comments say the START panel "replac[ed] the nyxus-start GTK4
+   app" because it "sat on the OVERLAY layer and could be neither closed nor moved
+   when it lost keyboard focus" — yet both brand buttons, the app-rail entry, the
+   NYXUS Start tile and a deck button still ran `nyxus-start`. They now dispatch to
+   the **START station**.
+
+4. **Stale duplicates deleted:** `nyxus-scripts/com.nyxus.parental.policy` (stale
+   copy of the `polkit-policies/` one, and the only file in the repo with a
+   malformed DTD — `PolicyKit/1/` instead of `1.0/`), two stale `nyxus-start` trees
+   (`skel/.config/nyxus/` and `skel/.nyxus/`, the latter wiped+symlinked at bake
+   anyway), and a vim `.save` dropping under `opt/arsenal`.
+
+### 📕 THE DOCS WERE TELLING AGENTS TO USE THE PURGED PALETTE
+
+`THEME.md` was titled **DARK MIRROR** and presented the **purged** palette as
+current — section 3 was literally headed *"Accent tokens (LIVE — follow the
+wallpaper)"* listing `#7949f2` / `#ff2667` / `#ffb026` / `#26ffb7`, claimed the
+active preset was `wallpaper`, and advertised eight presets that were **deleted**
+from `accent.json`. `DESIGN_CONTRACT.md` §4 — the "single quality bar" — gave the
+accent pair as `#a06bff` / `#3ad8ff`.
+
+**Any agent following either would have reintroduced banned colour.** Both are now
+rewritten from `nyxus_palette.py` + `accent.json` (so the values are the real ones)
+and each carries an explicit banned-hex list. Two factual errors fixed en route:
+`WHITE_OFF` was documented `#e8edf5` when the constant is `#eef2fa`, and the HUD
+void fills did not match `HUD_VOID` / `HUD_CARD_BG`.
+
+Also corrected in `THEME.md` §11: station pills were listed `OP/FG/GH/.../BL/ED`
+(BLAST and EDGE were renamed BIFROST/ARSENAL on 2026-07-27), and the HOME dashboard
+was described as the GTK app on `name:0` — that app is **disabled** (rendered an
+empty window), the eww `home-deck` replaced it, and `name:0` was renamed because a
+numeric name resolves into Hyprland's SPECIAL range and was never visible.
+
+Brand strings purged from shipped surfaces: `gen-graffiti-assets.py` was stamping
+the words **"dark mirror" into the generated graffiti art**; nyxus-web showed
+"DARK MIRROR" in the Settings window, notifications, panel flyout, build manifest
+and three page headers; rofi configs, `nyxus-prism-pulse.sh` and
+`gen-cosmic-flyout-assets.py` carried "Obsidian Prism". Historical references that
+*describe* the purge (the ALIEN_NEON audit docs, `legacy-visuals.md`) and the
+palette ban-list comments are deliberately left alone.
+
+> **Do not recompile `eww.css` casually.** It has drifted **~3500 lines** from
+> `eww.scss.source`. Regenerating buries any real change in unrelated churn and
+> risks the live-verified bar styling. Patch it surgically until someone reconciles
+> it on purpose.
+
+### ⚡ ROUND 3 — THE REACTIVE LAYER WAS NEVER STARTED (Jul 29)
+
+**`nyxus-sense` is the state bus the whole reactive layer reads, and NOTHING in
+the tree launched it.** No systemd unit, no exec-once, no script. On a real boot:
+
+- `~/.config/nyxus/sense.json` was never written
+- `nyxus-mood` never ran, so it never pushed `eww update SENSE=...`
+- the bars' `SENSE` defvar sat on its built-in default **forever** - which is why
+  the mood glow never changed and the wordmark/clock classes were static
+- `nyxus-whispers` and `nyxus-graffiti-wall` polled a file that did not exist
+
+The consumers were fine the whole time. **The producer was simply never
+launched.** Only `nyxus-pulsed` was, via `nyxus-living on quiet` in
+`nyxus-signature.conf`. `nyxus-reactive.conf` now autostarts sense -> mood ->
+threatd, staggered off the critical path, each pidfile-guarded.
+
+#### Four hypr shards shipped UNSOURCED (conf.d is not auto-globbed)
+
+Two of them say *"sourced from hyprland.conf"* in their own header. Between them
+**9 keybinds and 24 window rules were dead on arrival**:
+
+| Shard | What was dead |
+|---|---|
+| `nyxus-reactive.conf` | Machine Whispers, SUPERNOVA, Graffiti Memory Wall - **three of the four headline reactive features had no working keybind** |
+| `nyxus-arsenal-apps.conf` | 19 window rules that float/size/park the native security tools. **THIRD time this shard fell through** - it was the W6 fix on 2026-07-24 and it regressed |
+| `nyxus-hyprland-aurora.conf` | X-RAY PEEK + 3 other binds |
+| `nyxus-cometfire.conf` | 2 binds + 5 window rules |
+
+Verified before enabling: **zero chord collisions**, 156 binds active, 17 shards
+sourced. `nyxus-safemode.conf` stays unsourced - standalone recovery profile.
+
+**One real duplicate found doing that:** `Super+Alt+0` was bound BOTH to
+`workspace name:RANGE` and to the zoom-lens reset. hyprland.conf binds
+`Super+Alt+1..0` to the ten companions as a set, and the flair shard is sourced
+afterwards, so the lens won and **companion 10 was the one station the keyboard
+could not reach**. Lens reset moved to `Super+Alt+BackSpace`.
+
+#### The threat signal (new) - `nyxus-threatd`
+
+Turns the REAL security probes into desktop state. It **reimplements no probe**:
+`ghost-feed.py` already probes cowrie/journalctl/docker and states that every
+number is real, so threatd invokes it and derives a level. One place knows how to
+read those sources.
+
+**Two scoring buckets, on purpose.** A honeypot exists to be attacked, so decoy
+traffic is the system *working* - loud, informative, not an emergency - and it is
+**capped so it can never on its own exceed `alert`**. Only host-affecting signals
+(auth failures on the real host, defence daemons down, failed units) reach
+`breach`. Otherwise the desktop goes red during normal operation, and a console
+that cries wolf gets ignored as fast as one that lies. Measured: 300 honeypot
+hits/hr + 30 probes = `alert`; that **plus two defence daemons down = `breach`**.
+Being attacked *while blind* is the only non-panic path to breach, which is
+exactly the Bifrost scenario.
+
+**BLINDNESS IS A STATE, NOT A DEFAULT.** Quiet and blind must never render the
+same. `blind` is true when the feed cannot be read; sense treats a `threat.json`
+older than 90s as UNKNOWN rather than republishing a stale `calm`; the eww defvar
+**defaults to blind**; and the GHOST pill draws blind as a **dashed cyan rim**.
+
+Rendered on the **GHOST pill only** (station 3 is the security console; a colour
+on every pill would mean nothing). The class is APPENDED, so a calm desktop looks
+exactly as it does today. Canon ramp only: watch `#ffe600`, alert `#ff8a1e`,
+breach `#ff2d55`.
+
+> **Two traps hit and avoided - read before touching this:**
+> 1. **jq's `//` treats `false` as empty**, so `.threat.blind // true` returned
+>    TRUE even when the bus said false - inverting the one field that exists to
+>    prevent a misreport. Caught by testing. Use an explicit null check.
+> 2. **`+` string concat appears nowhere else in `eww.yuck`**, so it is
+>    unverified against the eww the ISO ships and a bad simplexpr takes out the
+>    whole rail. Use interpolation. Same for a nested `${}` inside a ternary
+>    branch (zero existing uses) - flatten instead.
+>
+> Also: the threat CSS **must** sit after the LAST `.ws-pill` rule. `eww.css`
+> defines `.ws-pill` more than once and the threat class is appended, so equal
+> specificity means an earlier rule is silently dead. Gate 13y checks the line
+> numbers.
+
+**Gate 13y** asserts every link: shard sourced, each producer autostarted AND
+parsing, threatd pushes, eww declares, a widget consumes, all four classes have
+CSS, the CSS ordering, and the jq null-check. Negative-tested.
+
+#### Swept for other "built but never wired" cases - clean
+
+Every `nyxus-*` in `/usr/local/bin` was checked for callers. Five have none:
+`nyxus-battery` and `nyxus-netusage` are launchable from their `.desktop`
+entries; `nyxus-setup-apps`, `nyxus-store-install` and `nyxus-oath-register` are
+CLI-only helpers by design. No orphaned apps.
+
+Observation, not a bug: battery is on the **HOME deck** (`dcard_power`), not on
+the persistent bar - the redesigned bars dropped the pill row. Owner's call.
+
+
+### 🧾 STILL OPEN after this audit (found, deliberately not fixed)
+
+- ~31 unused bar-pill widgets from the pre-redesign bar (dead code, zero runtime cost)
+- 4 windows nothing opens: `cheatsheet` (superseded by `hotkey-cheatsheet`),
+  `quicksettings-daemon`, `hotkey-recorder`, `dock-reveal`
+- `/etc/nyxus/nyxus.conf` still points `resync_base` / `manifest_url` at Replit —
+  it is **not** nyxus-scripts-managed, so the bake does not touch it
+- `attached_assets/` holds ~40 unreferenced files >2MB (design scratch)
+
 
 ### 🔜 NEXT
 1. **Rebake** from clean idle `main` (installer + #77/#78 all need a stick)

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # NYXUS easter egg - "prism pulse". Secret chord: SUPER+SHIFT+X.
 # Spins the iridescent border gradient a full 3 turns around every
-# window, then settles back to the stock 270deg Obsidian Prism ring.
+# window, then settles back to the stock 270deg ALIEN NEON ring.
 # Single-instance guarded so mashing the chord can't stack spinners.
 LOCK=/tmp/.nyxus-prism-pulse.lock
 exec 9>"$LOCK"

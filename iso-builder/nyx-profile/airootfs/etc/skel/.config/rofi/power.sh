@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-#  NYXUS · Obsidian Prism — rofi power menu
+#  NYXUS · ALIEN NEON — rofi power menu
 #  Location: ~/.config/rofi/power.sh
 #  Triggered by Super+Shift+P or the top-bar power button
 # ============================================================

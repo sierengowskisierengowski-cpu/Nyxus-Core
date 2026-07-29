@@ -58,6 +58,17 @@
 ;; a defvar (not defpoll) so it updates deterministically regardless of
 ;; eww's lazy per-window poll activation.
 (defvar SENSE '{"mood":"prowl","energy":0,"hacker":false}')
+;; NYXUS threat signal - PUSHED by nyxus-threatd when the level changes (plus a
+;; 60s heartbeat so a restarted eww daemon relearns the state instead of sitting
+;; on this default). Its own defvar rather than a field of SENSE because mood
+;; pushes on mood change with a 30s heartbeat, which would delay a threat change
+;; by up to half a minute.
+;;
+;; `blind` DEFAULTS TRUE, and that is deliberate: before threatd has said
+;; anything we do not know the threat state, and "unknown" must never render as
+;; "all clear". This build already shipped an EDR that answered `active` to
+;; every health check while dropping ~15,000 events an hour.
+(defvar THREAT '{"level":"calm","score":0,"blind":true,"reason":"no threat feed"}')
 ;; SUPERNOVA show mode - pushed true/false by nyxus-supernova. When true the
 ;; bars enter a blazing "show" glow (the beat sync itself drives the
 ;; wallpaper + borders, not the bars).
@@ -210,7 +221,7 @@
 (defwidget nyxus_brand []
   (button :class "brand brand-bottom"
           :style "background-position: center; opacity: 1;"
-          :onclick "nyxus-start &"
+          :onclick "hyprctl dispatch workspace name:START &"
           :tooltip "NYXUS Start · Search · Apps · Stations"
     (box :orientation "h" :space-evenly false :spacing 7
       (label :class "brand-gem" :text "◆")
@@ -221,7 +232,7 @@
 (defwidget nyxus_brand_compact []
   (button :class "brand brand-top"
           :style "background-position: center; opacity: 1;"
-          :onclick "nyxus-start &"
+          :onclick "hyprctl dispatch workspace name:START &"
           :tooltip "NYXUS Start"
     (box :orientation "h" :space-evenly false :spacing 6
       (label :class "brand-gem" :text "◆")
@@ -347,7 +358,7 @@
 ;;    start menu is the nyxus-start app.
 (defwidget search_btn []
   (button :class "search-btn"
-          :onclick "nyxus-start &"
+          :onclick "hyprctl dispatch workspace name:START &"
           :tooltip "Search NYXUS"
     (label :class {GLITCH.search ? "nyx-glitch" : ""} :text "  Search NYXUS")))
 
@@ -458,12 +469,26 @@
 (defwidget station_pill [st]
   ;; Name labels instead of bare numbers — same glow/hue system, ws-word gives
   ;; the same Permanent Marker font the HOME and START pills use.
-  (button :class {st.active ? "ws-pill ws-word ws-pill-active ws-pill-${st.hue}" :
-                  st.occupied ? "ws-pill ws-word ws-pill-occupied ws-pill-${st.hue}" :
-                                "ws-pill ws-word ws-pill-${st.hue}"}
+  ;;
+  ;; THREAT STATE ON GHOST (2026-07-29). GHOST is the security console, so its
+  ;; pill carries the live threat level from the nyxus-sense bus. Only GHOST
+  ;; does: the rail must stay readable, and a colour on every pill would mean
+  ;; nothing. The class is APPENDED, so the existing active/occupied/hue system
+  ;; is untouched and a calm desktop looks exactly as it does today.
+  ;;
+  ;; `.ws-threat-blind` is a distinct state from calm on purpose. Quiet and
+  ;; blind must never look the same - this build already shipped an EDR that
+  ;; reported healthy while seeing nothing.
+  ;; String INTERPOLATION, not a `+` concat: `+` on strings appears nowhere else
+  ;; in this file, so it is unverified against the eww the ISO ships, and a bad
+  ;; simplexpr here takes out the whole rail. Interpolation is the pattern used
+  ;; throughout (see bar_top_layout) and is known to work.
+  (button :class "${st.active ? 'ws-pill ws-word ws-pill-active' : st.occupied ? 'ws-pill ws-word ws-pill-occupied' : 'ws-pill ws-word'} ws-pill-${st.hue}${st.name == 'GHOST' ? (THREAT.blind ? ' ws-threat-blind' : THREAT.level == 'breach' ? ' ws-threat-breach' : THREAT.level == 'alert' ? ' ws-threat-alert' : THREAT.level == 'watch' ? ' ws-threat-watch' : '') : ''}"
           :style "background-position: center;"
           :onclick "hyprctl dispatch workspace ${st.id} &"
-          :tooltip "${st.name} · ${st.tagline}   (Super+${st.id == 10 ? '0' : st.id})"
+          ;; Flat interpolations only. A nested ${...} inside a ternary branch
+          ;; is used nowhere else in this file, so it stays unused here too.
+          :tooltip "${st.name} - ${st.tagline}   (Super+${st.id == 10 ? '0' : st.id})${st.name == 'GHOST' ? '   THREAT: ' : ''}${st.name == 'GHOST' && THREAT.blind ? 'UNKNOWN - no live feed' : ''}${st.name == 'GHOST' && !THREAT.blind ? THREAT.level : ''}${st.name == 'GHOST' && !THREAT.blind ? ' - ' : ''}${st.name == 'GHOST' && !THREAT.blind ? THREAT.reason : ''}"
     "${st.name}"))
 
 ;; ── companion ("half") station mark ─────────────────────────────────────
@@ -504,7 +529,9 @@
   (box :class "ws-rail ws-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 0 :valign "center" :halign "center"
     (workspace_home_pill)
     (workspace_start_pill)
-    ;; numbered stations 1-10, each with its companion glyph beneath it.
+    ;; numbered stations 1-10. NOTE: the companion glyph is deliberately NOT
+    ;; drawn beneath each one any more -- see station_cluster / station_half_pill
+    ;; above. Companions stay reachable via Super+Alt+<n> and the pill tooltip.
     ;; Station 10 came back as ARSENAL (the four security consoles) after
     ;; briefly being dropped.
     (for st in {WORKSPACES.stations}
@@ -521,7 +548,7 @@
 ;; Transparent column — each launcher is its own float-island (no rail slab).
 (defwidget app_rail []
   (box :class "app-rail app-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 11 :valign "center" :halign "center"
-    (app_launcher :glyph "󰣇" :cmd "nyxus-start"     :label "NYXUS Start" :hue "pink")
+    (app_launcher :glyph "󰣇" :cmd "hyprctl dispatch workspace name:START" :label "NYXUS Start" :hue "pink")
     (app_launcher :glyph "" :cmd "alacritty"      :label "Terminal" :hue "green")
     (app_launcher :glyph "" :cmd "firefox"        :label "Firefox" :hue "orange")
     (app_launcher :glyph "" :cmd "thunar"         :label "Files" :hue "gold")
@@ -1415,7 +1442,7 @@
 (defwidget dcard_launch []
   (deck_card :title "LAUNCH" :glyph "󰀻" :tone "violet" :depth "near"
     (box :orientation "h" :space-evenly false :spacing 10
-      (button :class "deck-btn" :onclick "nyxus-start &" :tooltip "NYXUS Start" "󰣇")
+      (button :class "deck-btn" :onclick "hyprctl dispatch workspace name:START &" :tooltip "NYXUS Start" "󰣇")
       (button :class "deck-btn" :onclick "alacritty &" :tooltip "Terminal" "")
       (button :class "deck-btn" :onclick "firefox &" :tooltip "Browser" "")
       (button :class "deck-btn" :onclick "thunar &" :tooltip "Files" "")

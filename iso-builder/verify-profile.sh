@@ -1378,6 +1378,90 @@ if [[ -f "${NYXCFG}/stations.json" && -f "${NYXCFG}/stations-hacker.json" ]] \
   fi
 fi
 
+# ── 13y. reactive bus: producers are actually STARTED + threat chain ──
+# The whole reactive layer shipped with NOTHING starting nyxus-sense, so
+# sense.json was never written, nyxus-mood never pushed SENSE, and the bars sat
+# on a defvar default forever. The consumers were fine; the producer was never
+# launched. This gate asserts each link of the chain exists AND is wired,
+# because "the script is committed" was never the part that was broken.
+hd "13y. reactive bus + threat signal"
+HYPRCONF="${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
+EWWY="${AIROOT}/etc/skel/.config/eww/eww.yuck"
+EWWCSS="${AIROOT}/etc/skel/.config/eww/eww.css"
+
+if grep -q 'conf\.d/nyxus-reactive\.conf' "${HYPRCONF}"; then
+  ok "nyxus-reactive.conf is sourced by hyprland.conf"
+else
+  fail "nyxus-reactive.conf NOT sourced - the reactive bus never starts"
+fi
+
+for _d in nyxus-sense nyxus-mood nyxus-threatd; do
+  if grep -rqs "${_d} start" "${AIROOT}/etc/skel/.config/hypr/"; then
+    ok "producer autostarted: ${_d}"
+  else
+    fail "producer NEVER started: ${_d} (nothing in hypr config launches it)"
+  fi
+done
+
+for _d in nyxus-sense nyxus-mood nyxus-threatd; do
+  if [[ -x "${AIROOT}/usr/local/bin/${_d}" ]]; then
+    if python3 -c "import ast;ast.parse(open('${AIROOT}/usr/local/bin/${_d}').read())" 2>/dev/null; then
+      ok "producer ships + parses: ${_d}"
+    else
+      fail "producer ships but FAILS to parse: ${_d}"
+    fi
+  else
+    fail "producer missing or not executable: /usr/local/bin/${_d}"
+  fi
+done
+
+if grep -q 'THREAT=' "${AIROOT}/usr/local/bin/nyxus-threatd" 2>/dev/null; then
+  ok "threatd pushes the THREAT defvar to eww"
+else
+  fail "threatd does not push THREAT - the bars would never see a threat level"
+fi
+if grep -q '(defvar THREAT ' "${EWWY}"; then
+  ok "eww declares the THREAT defvar"
+else
+  fail "eww has no THREAT defvar - threatd's push would be dropped"
+fi
+if grep -q 'ws-threat-' "${EWWY}"; then
+  ok "eww renders threat state (ws-threat-* on the GHOST pill)"
+else
+  fail "no widget consumes THREAT - the signal would be invisible"
+fi
+
+_MISSING_CSS=0
+for _c in ws-threat-watch ws-threat-alert ws-threat-breach ws-threat-blind; do
+  grep -q "\.${_c}" "${EWWCSS}" || { warn "  threat class has no CSS rule: .${_c}"; _MISSING_CSS=1; }
+done
+if (( _MISSING_CSS == 0 )); then
+  ok "all 4 threat classes have CSS in eww.css"
+else
+  fail "a threat class the yuck emits has no rule in eww.css"
+fi
+
+# The threat classes are APPENDED to .ws-pill-<hue>; equal specificity means
+# source order decides. Above the hue rules they do nothing.
+_LAST_PILL=$(grep -nE '^\.ws-pill[a-z0-9-]*(:[a-z-]+)?[[:space:]]*\{' "${EWWCSS}" | tail -1 | cut -d: -f1)
+_FIRST_THREAT=$(grep -nE '^\.ws-threat-' "${EWWCSS}" | head -1 | cut -d: -f1)
+if [[ -n "${_LAST_PILL}" && -n "${_FIRST_THREAT}" ]] && (( _FIRST_THREAT > _LAST_PILL )); then
+  ok "threat rules sit AFTER every .ws-pill rule (line ${_FIRST_THREAT} > ${_LAST_PILL})"
+else
+  fail "threat CSS is above a .ws-pill rule - equal specificity means it is dead"
+fi
+
+# jq's `//` treats false as empty, so a boolean defaulting to TRUE cannot use it.
+# Getting this wrong reports blind=true even when the bus said false, inverting
+# the one field that exists to prevent a misreport.
+if grep -q 'threat_blind:  (if (.threat.blind == null)' \
+        "${AIROOT}/etc/skel/.config/eww/scripts/sense-poll.sh" 2>/dev/null; then
+  ok "sense-poll.sh null-checks threat_blind (jq // would invert it)"
+else
+  warn "sense-poll.sh threat_blind may be using jq // (false // true == true)"
+fi
+
+
 # ── 13x. Hyprland version guard (hyprlang removal + build-host skew) ────────
 # TWO REAL PROBLEMS, both found 2026-07-28:
 #

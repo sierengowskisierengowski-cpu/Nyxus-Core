@@ -14,7 +14,7 @@ NYXUS combines:
 - Hyprland-centered desktop/runtime configuration with **EWW** bars (top and bottom)
 - Native application payloads and install/runtime scripts — 12 desktop apps with launcher entries plus additional runtime utilities and overlay components
 - Web/API distribution surfaces for platform artifacts
-- DARK MIRROR · TRIPLE-BLACK LAYERED visual design system shared across all GUI components
+- ALIEN NEON · TRIPLE-BLACK LAYERED visual design system shared across all GUI components
 
 ### Shipped chrome (r10)
 
