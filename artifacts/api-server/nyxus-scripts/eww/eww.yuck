@@ -130,6 +130,8 @@
                                 "~/.config/eww/scripts/disk-info.sh")
 (defpoll ARSENAL_ :interval "10s" :initial '{"cipher":false,"forge":false,"redforge":false,"gsl":false,"trainer":false}'
                                   "~/.config/eww/scripts/arsenal-feed.sh")
+(defpoll MESH_  :interval "8s"  :initial '{"conns":0,"tcp":0,"udp":0,"listen":0,"foreign":0}'
+                                "~/.config/eww/scripts/mesh-feed.sh")
 (defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0},"hive":{"up":false,"total":0,"ips":0,"pots":0,"h1":0,"countries":0,"rows":[],"quiet":true}}'
                                 "python3 ~/.config/eww/scripts/ghost-feed.py")
 (defpoll STARTLIVE :interval "4s" :initial '{"running":[],"run_count":0,"recent":[],"places":[]}'
@@ -2658,6 +2660,119 @@
   :namespace "nyxus-arsenal-deck"
   :geometry (geometry :x "0" :y "0" :width "1580px" :height "720px" :anchor "center")
   (arsenal_deck))
+
+;; ══════════════════════════════════════════════════════════════════════════
+;; MESH STATION DECK  (workspace 7)  ·  Network · NOC · Mesh
+;; Live network throughput, connection matrix, GowskiNet NOC status and a
+;; full toolkit row for the network operator. Every stat is a clickable
+;; button that opens the relevant tool.
+;; ══════════════════════════════════════════════════════════════════════════
+(defwidget mesh_deck []
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}"
+       :orientation "v" :space-evenly false :spacing 12
+    (label :class "deck-brand" :halign "center"
+           :text "M E S H   ·   N E T W O R K   O P S   C E N T R E")
+
+    (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+      ;; ── LEFT: live throughput + connection matrix ─────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "THROUGHPUT" :glyph "" :tone "blue"
+          (box :orientation "h" :space-evenly false :spacing 16
+            (ghost_stat :val "${NETGRAPH.up_fmt}" :cap "↑ UPLOAD"
+                        :tone "ok" :tip "Upload speed"
+                        :cmd "alacritty -e sh -c 'nethogs 2>/dev/null || iftop 2>/dev/null || ip -s link; read _' &")
+            (ghost_stat :val "${NETGRAPH.down_fmt}" :cap "↓ DOWNLOAD"
+                        :tone "ok" :tip "Download speed"
+                        :cmd "alacritty -e sh -c 'nethogs 2>/dev/null || iftop 2>/dev/null || ip -s link; read _' &")
+            (ghost_stat :val "${NETGRAPH.ssid}" :cap "LINK"
+                        :tone "ok" :tip "Active SSID / interface"
+                        :cmd "alacritty -e sh -c 'nmcli device status; read _' &"))
+          (label :class "deck-spark deck-spark-blue" :halign "start"
+                 :text "${NETGRAPH.down_spark}"))
+        (ghost_card :title "CONNECTIONS" :glyph "" :tone "cyan"
+          (box :orientation "h" :space-evenly false :spacing 14
+            (ghost_stat :val "${MESH_.conns}" :cap "TOTAL"
+                        :tone "ok" :tip "Total active sockets"
+                        :cmd "alacritty -e sh -c 'ss -s; read _' &")
+            (ghost_stat :val "${MESH_.listen}" :cap "LISTEN"
+                        :tone "ok" :tip "Listening ports"
+                        :cmd "alacritty -e sh -c 'ss -tlpn; read _' &")
+            (ghost_stat :val "${MESH_.foreign}" :cap "FOREIGN"
+                        :tone {MESH_.foreign > 20 ? "warn" : "ok"}
+                        :tip "Established to external hosts"
+                        :cmd "alacritty -e sh -c 'ss -tnp | grep ESTAB; read _' &")
+            (ghost_stat :val "${MESH_.tcp}" :cap "TCP"
+                        :tone "ok" :tip "TCP sockets"
+                        :cmd "alacritty -e sh -c 'ss -tnp; read _' &")))
+        (ghost_card :title "NOC STATUS" :glyph "" :tone "pink" :fill true
+          (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+            (ghost_stat :val "${GHOST_.hive.h1}" :cap "HITS 1h"
+                        :tone {GHOST_.hive.h1 > 0 ? "hot" : "ok"}
+                        :tip "HoneyHive hits in the last hour"
+                        :cmd "xdg-open http://localhost:8888 &")
+            (ghost_stat :val "${GHOST_.hive.ips}" :cap "SRC IPs"
+                        :tone "warn" :tip "Unique source IPs seen"
+                        :cmd "xdg-open http://localhost:8888 &")
+            (ghost_stat :val "${GHOST_.conns.count}" :cap "CONNS"
+                        :tone {GHOST_.conns.foreign > 5 ? "warn" : "ok"}
+                        :tip "Active foreign connections from GHOST scan"
+                        :cmd "alacritty -e sh -c 'ss -tnp | grep ESTAB | head -30; read _' &"))))
+      ;; ── RIGHT: network toolkit ────────────────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12
+           :style "min-width: 360px;"
+        (ghost_card :title "NETWORK TOOLKIT" :glyph "" :tone "violet" :fill true
+          (box :orientation "v" :space-evenly false :spacing 8 :vexpand true
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "NOC"
+                          :cmd "alacritty --title 'GowskiNet NOC' -e sh -c 'command -v sharknoc >/dev/null && exec sharknoc --watch || exec btop'"
+                          :tagline "SharkFin NOC (live watch)")
+              (start_tile :glyph ""  :name "IFTOP"
+                          :cmd "alacritty -e sh -c 'sudo iftop 2>/dev/null; read _'"
+                          :tagline "Per-connection bandwidth")
+              (start_tile :glyph ""  :name "NETHOGS"
+                          :cmd "alacritty -e sh -c 'sudo nethogs 2>/dev/null; read _'"
+                          :tagline "Per-process bandwidth"))
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "NMAP"
+                          :cmd "alacritty -e sh -c 'echo \"target: \"; read t; sudo nmap -sV $t; read _'"
+                          :tagline "Port scanner")
+              (start_tile :glyph ""  :name "SS"
+                          :cmd "alacritty -e sh -c 'watch -n1 ss -s; read _'"
+                          :tagline "Socket statistics (live)")
+              (start_tile :glyph "󰛳" :name "HIVE"
+                          :cmd "xdg-open http://localhost:8888"
+                          :tagline "HoneyHive map"))
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "WIRESHARK"
+                          :cmd "wireshark 2>/dev/null || alacritty -e sh -c 'sudo tcpdump -ni any -q; read _'"
+                          :tagline "Packet capture")
+              (start_tile :glyph ""  :name "CURL"
+                          :cmd "alacritty -e sh -c 'echo \"URL: \"; read u; curl -sIL $u | head -30; read _'"
+                          :tagline "HTTP headers probe")
+              (start_tile :glyph ""  :name "GRAFANA"
+                          :cmd "xdg-open http://localhost:3000"
+                          :tagline "Grafana dashboards"))))))
+    ;; ── action bar ────────────────────────────────────────────────────
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph ""  :tip "NOC (sharknoc --watch)"
+                    :cmd "alacritty --title 'GowskiNet NOC' -e sh -c 'command -v sharknoc >/dev/null && exec sharknoc --watch || exec btop' &"
+                    :tone "pink")
+      (start_action :glyph ""  :tip "Listening ports"
+                    :cmd "alacritty -e sh -c 'ss -tulpn; read _' &" :tone "cyan")
+      (start_action :glyph ""  :tip "Connections (live)"
+                    :cmd "alacritty -e sh -c 'watch -n1 ss -tnp; read _' &" :tone "blue")
+      (start_action :glyph "󰛳" :tip "HoneyHive map"
+                    :cmd "xdg-open http://localhost:8888 &" :tone "gold")
+      (start_action :glyph ""  :tip "Grafana"
+                    :cmd "xdg-open http://localhost:3000 &" :tone "violet")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center" :text "Super+7  MESH  ·  network ops"))))
+
+(defwindow mesh-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-mesh-deck"
+  :geometry (geometry :x "0" :y "0" :width "1580px" :height "750px" :anchor "center")
+  (mesh_deck))
 
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"

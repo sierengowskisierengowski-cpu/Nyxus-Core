@@ -1,16 +1,17 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-29 ~06:05 EDT (audit ROUND 3: the reactive bus NEVER STARTED - nothing launched nyxus-sense, so the mood layer read a default forever; 4 hypr shards shipped UNSOURCED incl. 3 headline features + the Arsenal rules; NEW nyxus-threatd gives the desktop a real threat signal off the live probes · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-29 ~02:10 EDT (PR #77–#81 ALL ON MAIN · reactive bus now starts · MESH deck + dunst hacker flip · bootstrap r15 · btop theme self-installs · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
 > owner a lot of time and money. Do not veer off into a different approach. Keep the
 > flow, and **update this file as you work** so the next agent re-derives nothing.
 >
-> **★★ LATEST — ON MAIN (Jul 29): PR #77 + #78 merged · REBAKE REQUIRED**  
-> Deep-audit silent failures (**#77**) and station decks / hacker / CAVA (**#78**)
-> are both on `main`. `verify-profile` passes (incl. new gates **13c-rot** /
-> **13c-eww**). Full details in the "2026-07-29" section directly below.
+> **★★ LATEST — ON MAIN (Jul 29): PR #77–#81 merged · REBAKE REQUIRED**  
+> Silent-failure audits (**#77**, **#80**), station decks / hacker / CAVA (**#78**),
+> bootstrap r15 + btop self-install (**#79**), MESH deck + dunst hacker + pill
+> font (**#81**). Headline from #80: **`nyxus-sense` was never launched** — the
+> whole reactive mood layer sat on defaults. Full details below.
 >
 > **★★ START HERE — PICKUP BRIEF (Jul 28 evening):**  
 > [`docs/PICKUP_BRIEF_2026-07-28.md`](./docs/PICKUP_BRIEF_2026-07-28.md)  
@@ -100,9 +101,16 @@
 
 ## WHERE WE STAND — 2026-07-29 · ON MAIN · REBAKE REQUIRED
 
-> **PR #77** (`deep-internal-audit-fixes-8f1c`) and **PR #78**
-> (`complete-station-decks-hacker-cava-3280`) are **merged into `main`**.
-> Next step is a clean rebake — none of this is in a stick yet.
+> **PR #77–#81 are all on `main`.** Next step is a clean rebake — none of this
+> is in a stick yet.
+>
+> - **#77 / #80** — silent bake/wallpaper/PATH bugs; reactive bus finally
+>   started (`nyxus-sense` → mood → `nyxus-threatd`); unsourced hypr shards fixed
+> - **#78 / #81** — all station decks incl. **MESH**; CAVA borders; dunst
+>   hacker flip; pill font fix
+> - **#79** — `BOOTSTRAP_VERSION` → `2026.07.29-r15-station-decks`;
+>   `nyxus-hacker-mode` self-installs the btop theme (skel / cache / inline
+>   heredoc) so the first toggle always works
 
 ### ⚠ SILENT FAILURES LANDED VIA PR #77 (do not rediscover)
 
@@ -148,15 +156,17 @@ Previously only HOME/START/GHOST/FORGE/LAB had decks. Six were bare workspaces.
 | **PULSE (4)** | Network status, weather + moon, time/date, quick-links hub (browser/email/Discord/GitHub/YouTube/Reddit/Calendar/Maps) |
 | **WAVE (5)** | Full-width CAVA hero visualizer (orange glow), large now-playing text, bass-reactive play button, transport, volume/mic panel |
 | **CORE (6)** | Disk usage (/, ~, ~/Projects) + RAM/swap, directory quick-nav bookmarks |
+| **MESH (7)** | Network ops: throughput + SSID, connections (ss), NOC/HoneyHive status, toolkit grid (sharknoc/iftop/nmap/wireshark/…) |
 | **SCRIBE (8)** | Writing focus: clock + moon, scrollable scratchpad, notepad/stickies/vim toolkit |
 | **ARSENAL (10)** | Security console mosaic — 2 large hero tiles (CIPHER + RedForge), 3 medium tiles (Forge/GSL/Trainer), live port-status dots, 10s refresh |
 
-Two new data feeds added:
+Data feeds:
 - `eww/scripts/disk-info.sh` — probes /, ~, ~/Projects with df -h
 - `eww/scripts/arsenal-feed.sh` — probes GowskiNet ports with `nc -z -w1`
+- `eww/scripts/mesh-feed.sh` — `ss -s` TCP/UDP, listening, foreign established
 
-`nyxus-home-deck` watcher updated with 6 new station→window entries
-(OPS/PULSE/WAVE/CORE/SCRIBE/ARSENAL); adding another station now = one line.
+`nyxus-home-deck` watcher covers OPS/PULSE/WAVE/CORE/MESH/SCRIBE/ARSENAL
+(+ HOME/START/GHOST/FORGE/LAB already present).
 
 #### CAVA bass-reactive Hyprland border animation
 `cava.sh` `push_bass()` now also adjusts `borderangle` animation speed across

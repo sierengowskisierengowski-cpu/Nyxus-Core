@@ -317,8 +317,73 @@ hacker_on() {
 
   # 5. Flip btop to the hacker theme (mono + #ff2d55 red landmarks).
   #    btop is a TUI so CSS cannot reach it — swap its color_theme key in
-  #    btop.conf. Record what the current theme was so OFF restores it.
+  #    btop.conf. Self-installs the theme file if it is missing so the toggle
+  #    is self-contained and does not require a prior bake+boot to work.
   local btop_conf="${HOME}/.config/btop/btop.conf"
+  local btop_theme_dir="${HOME}/.config/btop/themes"
+  local btop_hacker_theme="${btop_theme_dir}/nyxus-hacker.theme"
+  mkdir -p "${btop_theme_dir}"
+  if [[ ! -f "${btop_hacker_theme}" ]]; then
+    # Search common locations: post-bake skel, builder-box repo, NS offline cache
+    local _src=""
+    for _candidate in \
+      "/etc/skel/.config/btop/themes/nyxus-hacker.theme" \
+      "${HOME}/Nyxus-Core/iso-builder/nyx-profile/airootfs/etc/skel/.config/btop/themes/nyxus-hacker.theme" \
+      "/opt/nyxus-cache/btop/themes/nyxus-hacker.theme"; do
+      [[ -r "${_candidate}" ]] && { _src="${_candidate}"; break; }
+    done
+    if [[ -n "${_src}" ]]; then
+      cp -f "${_src}" "${btop_hacker_theme}" 2>/dev/null || true
+    else
+      # Last resort: write it inline so the theme is ALWAYS available.
+      cat > "${btop_hacker_theme}" << 'BTOP_HACKER_THEME'
+# NYXUS · btop · HACKER MODE — black / white / red
+# Auto-written by nyxus-hacker-mode on first use.
+theme[main_bg]=""
+theme[main_fg]="#e8ecf4"
+theme[title]="#ffffff"
+theme[hi_fg]="#ff2d55"
+theme[selected_bg]="#ff2d55"
+theme[selected_fg]="#000000"
+theme[inactive_fg]="#2a2a2e"
+theme[graph_text]="#b4b8c8"
+theme[meter_bg]="#05060a"
+theme[proc_misc]="#ff2d55"
+theme[cpu_box]="#ffffff"
+theme[mem_box]="#ffffff"
+theme[net_box]="#ffffff"
+theme[proc_box]="#ff2d55"
+theme[div_line]="#282830"
+theme[temp_start]="#505060"
+theme[temp_mid]="#a0a0b0"
+theme[temp_end]="#ff2d55"
+theme[cpu_start]="#404050"
+theme[cpu_mid]="#c0c0d0"
+theme[cpu_end]="#ff2d55"
+theme[free_start]="#505060"
+theme[free_mid]="#9090a0"
+theme[free_end]="#c8c8d8"
+theme[cached_start]="#404050"
+theme[cached_mid]="#707080"
+theme[cached_end]="#a0a0b0"
+theme[available_start]="#606070"
+theme[available_mid]="#b0b0c0"
+theme[available_end]="#e0e0f0"
+theme[used_start]="#383840"
+theme[used_mid]="#a04050"
+theme[used_end]="#ff2d55"
+theme[download_start]="#404050"
+theme[download_mid]="#909090"
+theme[download_end]="#e0e0f0"
+theme[upload_start]="#404050"
+theme[upload_mid]="#a04050"
+theme[upload_end]="#ff2d55"
+theme[process_start]="#505060"
+theme[process_mid]="#a04060"
+theme[process_end]="#ff2d55"
+BTOP_HACKER_THEME
+    fi
+  fi
   if [[ -r "${btop_conf}" ]]; then
     local cur_theme
     cur_theme="$(grep -oP '^color_theme\s*=\s*"\K[^"]+' "${btop_conf}" 2>/dev/null \
@@ -326,6 +391,36 @@ hacker_on() {
                || echo "nyxus-prism")"
     echo "btop_prev_theme=${cur_theme}" >> "${STATE}"
     sed -i 's|^color_theme\s*=.*|color_theme = "nyxus-hacker"|' "${btop_conf}" 2>/dev/null || true
+  fi
+
+  # 6. Flip dunst notification frames to hacker palette.
+  #    dunst is a native app — CSS cannot reach it. Swap urgency_normal and
+  #    urgency_low frame_color in dunstrc, then reload dunst so in-flight
+  #    popups pick up the new style without a session restart.
+  local dunstrc="${HOME}/.config/dunst/dunstrc"
+  if [[ -r "${dunstrc}" ]]; then
+    local norm_frame low_frame
+    norm_frame="$(grep -A5 '\[urgency_normal\]' "${dunstrc}" | grep 'frame_color' | head -1 | grep -oP '#\w+|rgba\([^)]+\)')"
+    low_frame="$( grep -A5 '\[urgency_low\]'    "${dunstrc}" | grep 'frame_color' | head -1 | grep -oP '#\w+|rgba\([^)]+\)')"
+    {
+      echo "dunst_norm_frame=${norm_frame:-#eef2fa}"
+      echo "dunst_low_frame=${low_frame:-#eef2fa38}"
+    } >> "${STATE}"
+    # urgency_normal: dim white hairline so only critical (red) stands out
+    python3 - "${dunstrc}" << 'PYEOF' 2>/dev/null || true
+import sys, re
+path = sys.argv[1]
+text = open(path).read()
+
+def swap_section(text, section, key, new_val):
+    pattern = rf'(\[{section}\][^\[]*?{key}\s*=\s*)([^\n]+)'
+    return re.sub(pattern, lambda m: m.group(1) + new_val, text, flags=re.DOTALL)
+
+text = swap_section(text, 'urgency_normal', 'frame_color', '"rgba(255,255,255,0.26)"')
+text = swap_section(text, 'urgency_low',    'frame_color', '"rgba(255,255,255,0.12)"')
+open(path, 'w').write(text)
+PYEOF
+    pkill -USR1 dunst 2>/dev/null || true
   fi
 
   notify -u critical "NYXUS Hacker Mode" "ENGAGED — black/white/red. Toggle off: Super+Ctrl+X"
@@ -378,6 +473,30 @@ hacker_off() {
   fi
   # Restore normal border animation speed (240s = slow dreamlike sweep)
   hyprctl keyword animation "borderangle,1,240,linear,loop" >/dev/null 2>&1 || true
+
+  # 6. Restore dunst notification frame colors.
+  local dunstrc="${HOME}/.config/dunst/dunstrc"
+  if [[ -r "${dunstrc}" ]]; then
+    local norm_frame low_frame
+    norm_frame="$(grep -oP '^dunst_norm_frame=\K.*' "${STATE}" 2>/dev/null | head -1)"
+    low_frame="$( grep -oP '^dunst_low_frame=\K.*'  "${STATE}" 2>/dev/null | head -1)"
+    [[ -z "${norm_frame}" ]] && norm_frame="#eef2fa"
+    [[ -z "${low_frame}"  ]] && low_frame="#eef2fa38"
+    python3 - "${dunstrc}" "${norm_frame}" "${low_frame}" << 'PYEOF' 2>/dev/null || true
+import sys, re
+path, norm, low = sys.argv[1], sys.argv[2], sys.argv[3]
+text = open(path).read()
+
+def swap_section(text, section, key, new_val):
+    pattern = rf'(\[{section}\][^\[]*?{key}\s*=\s*)([^\n]+)'
+    return re.sub(pattern, lambda m: m.group(1) + new_val, text, flags=re.DOTALL)
+
+text = swap_section(text, 'urgency_normal', 'frame_color', f'"{norm}"')
+text = swap_section(text, 'urgency_low',    'frame_color', f'"{low}"')
+open(path, 'w').write(text)
+PYEOF
+    pkill -USR1 dunst 2>/dev/null || true
+  fi
 
   rm -f "${STATE}"
   notify -u normal "NYXUS Hacker Mode" "Disengaged — normal station matrix restored."
