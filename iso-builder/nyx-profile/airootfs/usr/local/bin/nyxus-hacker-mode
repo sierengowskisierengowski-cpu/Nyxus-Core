@@ -315,7 +315,20 @@ hacker_on() {
   #    desktop; open it on demand with Super+G instead.)
   spawn_stations
 
-  notify -u critical "NYXUS Hacker Mode" "ENGAGED - matrix theme + security stations. Toggle off: Super+Ctrl+X"
+  # 5. Flip btop to the hacker theme (mono + #ff2d55 red landmarks).
+  #    btop is a TUI so CSS cannot reach it — swap its color_theme key in
+  #    btop.conf. Record what the current theme was so OFF restores it.
+  local btop_conf="${HOME}/.config/btop/btop.conf"
+  if [[ -r "${btop_conf}" ]]; then
+    local cur_theme
+    cur_theme="$(grep -oP '^color_theme\s*=\s*"\K[^"]+' "${btop_conf}" 2>/dev/null \
+               || grep -oP "^color_theme\s*=\s*\K\S+" "${btop_conf}" 2>/dev/null \
+               || echo "nyxus-prism")"
+    echo "btop_prev_theme=${cur_theme}" >> "${STATE}"
+    sed -i 's|^color_theme\s*=.*|color_theme = "nyxus-hacker"|' "${btop_conf}" 2>/dev/null || true
+  fi
+
+  notify -u critical "NYXUS Hacker Mode" "ENGAGED — black/white/red. Toggle off: Super+Ctrl+X"
 }
 
 hacker_off() {
@@ -354,6 +367,17 @@ hacker_off() {
   # 4. Un-freeze the rotation + border reflex daemons (resumes exactly what
   #    was paused on engage).
   resume_reflex
+
+  # 5. Restore btop theme.
+  local btop_conf="${HOME}/.config/btop/btop.conf"
+  if [[ -r "${btop_conf}" ]]; then
+    local prev_theme
+    prev_theme="$(grep -oP '^btop_prev_theme=\K.*' "${STATE}" 2>/dev/null | head -1)"
+    [[ -z "${prev_theme}" ]] && prev_theme="nyxus-prism"
+    sed -i "s|^color_theme\s*=.*|color_theme = \"${prev_theme}\"|" "${btop_conf}" 2>/dev/null || true
+  fi
+  # Restore normal border animation speed (240s = slow dreamlike sweep)
+  hyprctl keyword animation "borderangle,1,240,linear,loop" >/dev/null 2>&1 || true
 
   rm -f "${STATE}"
   notify -u normal "NYXUS Hacker Mode" "Disengaged — normal station matrix restored."

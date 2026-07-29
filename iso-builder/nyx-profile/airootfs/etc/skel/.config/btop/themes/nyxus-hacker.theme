@@ -1,0 +1,92 @@
+# ════════════════════════════════════════════════════════════════════
+#  NYXUS · btop · HACKER MODE — black / white / red
+#  Activated by nyxus-hacker-mode on toggle ON.
+#  Palette: near-black structure · white data · #ff2d55 red landmarks.
+#  Every coloured accent from nyxus-prism is stripped; red is the only
+#  surviving hue so a red thing is the ONLY colour on screen.
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+# ════════════════════════════════════════════════════════════════════
+
+# Main background (empty = terminal default, keeps frosted glass)
+theme[main_bg]=""
+
+# Main text color — cool white
+theme[main_fg]="#e8ecf4"
+
+# Title color for boxes
+theme[title]="#ffffff"
+
+# Highlight color for keyboard shortcuts — the ONE red
+theme[hi_fg]="#ff2d55"
+
+# Background color of selected item in processes box — red selection
+theme[selected_bg]="#ff2d55"
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="#000000"
+
+# Color of inactive/disabled text — dim grey
+theme[inactive_fg]="#2a2a2e"
+
+# Color of text appearing on top of graphs — soft white
+theme[graph_text]="#b4b8c8"
+
+# Background color of the percentage meters — near-black
+theme[meter_bg]="#05060a"
+
+# Misc colors for processes box — red accent
+theme[proc_misc]="#ff2d55"
+
+# Box outline colors — white hairlines (no colour, just structure)
+theme[cpu_box]="#ffffff"
+theme[mem_box]="#ffffff"
+theme[net_box]="#ffffff"
+theme[proc_box]="#ff2d55"
+
+# Box divider line and small boxes — dim grey
+theme[div_line]="#282830"
+
+# Temperature graph gradient — black → white, red for danger
+theme[temp_start]="#505060"
+theme[temp_mid]="#a0a0b0"
+theme[temp_end]="#ff2d55"
+
+# CPU graph gradient — dim → white → red at peak
+theme[cpu_start]="#404050"
+theme[cpu_mid]="#c0c0d0"
+theme[cpu_end]="#ff2d55"
+
+# Mem/Disk free meter — grey ramp
+theme[free_start]="#505060"
+theme[free_mid]="#9090a0"
+theme[free_end]="#c8c8d8"
+
+# Mem/Disk cached meter — slightly warmer grey
+theme[cached_start]="#404050"
+theme[cached_mid]="#707080"
+theme[cached_end]="#a0a0b0"
+
+# Mem/Disk available meter — white emphasis
+theme[available_start]="#606070"
+theme[available_mid]="#b0b0c0"
+theme[available_end]="#e0e0f0"
+
+# Mem/Disk used meter — red when high, grey when low
+theme[used_start]="#383840"
+theme[used_mid]="#a04050"
+theme[used_end]="#ff2d55"
+
+# Download graph gradient — grey → white
+theme[download_start]="#404050"
+theme[download_mid]="#909090"
+theme[download_end]="#e0e0f0"
+
+# Upload graph gradient — grey → red
+theme[upload_start]="#404050"
+theme[upload_mid]="#a04050"
+theme[upload_end]="#ff2d55"
+
+# Process box gradient — grey → red
+theme[process_start]="#505060"
+theme[process_mid]="#a04060"
+theme[process_end]="#ff2d55"

@@ -120,6 +120,11 @@
                               "python3 ~/.config/eww/scripts/lab-feed.py")
 (defpoll FORGE_ :interval "30s" :initial '{"repos":[],"total":0,"dirty":0,"dirty_rows":[],"unpushed":0,"unpushed_rows":[],"prs":[]}'
                                 "python3 ~/.config/eww/scripts/forge-feed.py")
+;; ── Station-deck data feeds (new stations) ───────────────────────────
+(defpoll DISK_  :interval "30s" :initial '{"root":{"used":"--","total":"--","pct":0},"home":{"used":"--","total":"--","pct":0},"projects":{"used":"--","total":"--","pct":0}}'
+                                "~/.config/eww/scripts/disk-info.sh")
+(defpoll ARSENAL_ :interval "10s" :initial '{"cipher":false,"forge":false,"redforge":false,"gsl":false,"trainer":false}'
+                                  "~/.config/eww/scripts/arsenal-feed.sh")
 (defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0},"hive":{"up":false,"total":0,"ips":0,"pots":0,"h1":0,"countries":0,"rows":[],"quiet":true}}'
                                 "python3 ~/.config/eww/scripts/ghost-feed.py")
 (defpoll STARTARS :interval "12s" :initial '{"groups":[],"live":0,"total":0}'
@@ -466,13 +471,15 @@
       "START")))
 
 (defwidget station_pill [st]
-  (button :class {st.active ? "ws-pill ws-pill-active ws-pill-${st.hue}" :
-                  st.occupied ? "ws-pill ws-pill-occupied ws-pill-${st.hue}" :
-                                "ws-pill ws-pill-${st.hue}"}
+  ;; Name labels instead of bare numbers — same glow/hue system, ws-word gives
+  ;; the same Permanent Marker font the HOME and START pills use.
+  (button :class {st.active ? "ws-pill ws-word ws-pill-active ws-pill-${st.hue}" :
+                  st.occupied ? "ws-pill ws-word ws-pill-occupied ws-pill-${st.hue}" :
+                                "ws-pill ws-word ws-pill-${st.hue}"}
           :style "background-position: center;"
           :onclick "hyprctl dispatch workspace ${st.id} &"
           :tooltip "${st.name} · ${st.tagline}   (Super+${st.id == 10 ? '0' : st.id})"
-    "${st.id}"))
+    "${st.name}"))
 
 ;; ── companion ("half") station mark ─────────────────────────────────────
 ;; The small ALIEN GLYPH that sits under its primary number. Deliberately
@@ -499,13 +506,14 @@
           :visible {st.half.mark != ""}
     "${st.half.mark}"))
 
-;; A station and its companion travel together as one cluster, so the glyph
-;; always sits tight under its own number no matter what the rail spacing is.
+;; Each station is its own cluster. The companion half-station glyphs have
+;; been removed from the rail — they are still reachable via Super+Alt+<n>
+;; and the tooltip on the pill, but they clutter the visual column and the
+;; Tifinagh font coverage was inconsistent across installs.
 (defwidget station_cluster [st]
   (box :class "ws-cluster" :orientation "v" :space-evenly false :spacing 0
        :valign "center" :halign "center"
-    (station_pill :st st)
-    (station_half_pill :st st)))
+    (station_pill :st st)))
 
 (defwidget workspaces_rail []
   (box :class "ws-rail ws-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 0 :valign "center" :halign "center"
@@ -2126,6 +2134,518 @@
   ;; must fit the 882px free area - verify with `hyprctl layers -j`
   :geometry (geometry :x "0" :y "0" :width "1640px" :height "760px" :anchor "center")
   (lab_deck))
+
+;; ══════════════════════════════════════════════════════════════════════════
+;; OPS STATION DECK  (workspace 1)  ·  Command · Terminal · Control
+;; System vitals, fans, network throughput and a quick-launch panel for the
+;; ops toolkit. Reuses the ghost_card / ghost_stat language from GHOST deck.
+;; ══════════════════════════════════════════════════════════════════════════
+(defwidget ops_deck []
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}"
+       :orientation "v" :space-evenly false :spacing 12
+    (label :class "deck-brand" :halign "center"
+           :text "O P S   ·   C O M M A N D   S T A T I O N")
+    (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+      ;; ── LEFT: live system vitals ─────────────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "SYSTEM VITALS" :glyph "󰍛" :tone "pink"
+          (box :orientation "h" :space-evenly true :spacing 12
+            (ghost_stat :val "${SYSPULSE.cpu}%" :cap "CPU"
+                        :tone {SYSPULSE.chot == 1 ? "hot" : "ok"}
+                        :tip "CPU load · 1m ${SYSPULSE.load}"
+                        :cmd "alacritty -e btop &")
+            (ghost_stat :val "${SYSPULSE.mem}%" :cap "RAM"
+                        :tone {SYSPULSE.mhot == 1 ? "hot" : "ok"}
+                        :tip "Memory in use · swap ${SYSPULSE.swap}%"
+                        :cmd "alacritty -e btop &")
+            (ghost_stat :val "${SYSPULSE.temp}°" :cap "TEMP"
+                        :tone {SYSPULSE.thot == 1 ? "hot" : "ok"}
+                        :tip "CPU temperature"
+                        :cmd "alacritty -e sh -c 'sensors; read _' &")
+            (ghost_stat :val "${SYSPULSE.gpu}%" :cap "GPU"
+                        :tone {SYSPULSE.ghot == 1 ? "hot" : "ok"}
+                        :tip "GPU load · ${SYSPULSE.gputemp}°C"
+                        :cmd "alacritty -e btop &"))
+          (label :class "deck-spark" :halign "start" :text "${SYSGRAPH.cpu.spark}"))
+        (ghost_card :title "LOAD · FAN · SWAP" :glyph "" :tone "cyan"
+          (box :orientation "h" :space-evenly false :spacing 14
+            (ghost_stat :val "${SYSPULSE.load}" :cap "1m load"
+                        :tone {SYSPULSE.hot == "1" ? "hot" : "ok"}
+                        :tip "1-minute load average"
+                        :cmd "alacritty -e sh -c 'uptime && ps aux --sort=-%cpu | head -15; read _' &")
+            (ghost_stat :val "${SYSPULSE.fan}" :cap "FAN"
+                        :tone "ok" :tip "Fan RPM"
+                        :cmd "alacritty -e sh -c 'sensors; read _' &")
+            (ghost_stat :val "${SYSPULSE.swap}%" :cap "SWAP"
+                        :tone {SYSPULSE.swap > 50 ? "warn" : "ok"} :tip "Swap in use"
+                        :cmd "alacritty -e sh -c 'free -h; read _' &"))
+          (label :class "deck-spark" :halign "start" :text "${FANGRAPH.spark}"))
+        (ghost_card :title "NETWORK THROUGHPUT" :glyph "" :tone "blue"
+          (box :orientation "h" :space-evenly false :spacing 14
+            (ghost_stat :val "${NETGRAPH.up_fmt}" :cap "↑ UP"
+                        :tone "ok" :tip "Upload speed"
+                        :cmd "alacritty -e sh -c 'ss -tulpn; read _' &")
+            (ghost_stat :val "${NETGRAPH.down_fmt}" :cap "↓ DOWN"
+                        :tone "ok" :tip "Download speed"
+                        :cmd "alacritty -e sh -c 'ss -tulpn; read _' &")
+            (ghost_stat :val "${NETGRAPH.ssid}" :cap "LINK"
+                        :tone "ok" :tip "Connected SSID"
+                        :cmd "alacritty -e sh -c 'ip addr; read _' &"))
+          (label :class "deck-spark deck-spark-blue" :halign "start"
+                 :text "${NETGRAPH.down_spark}")))
+      ;; ── RIGHT: ops toolkit quick-launch ──────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12
+           :style "min-width: 380px;"
+        (ghost_card :title "OPS TOOLKIT" :glyph "" :tone "violet" :fill true
+          (box :orientation "v" :space-evenly false :spacing 8 :vexpand true
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "BTOP"   :cmd "alacritty -e btop"
+                          :tagline "Full system monitor")
+              (start_tile :glyph ""  :name "TERM"   :cmd "alacritty"
+                          :tagline "New terminal")
+              (start_tile :glyph ""  :name "LOG"
+                          :cmd "alacritty -e sh -c 'journalctl -n 200 -f; read _'"
+                          :tagline "System journal (live)")
+              (start_tile :glyph "󰒠" :name "DMESG"
+                          :cmd "alacritty -e sh -c 'sudo dmesg -w; read _'"
+                          :tagline "Kernel ring buffer"))
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "PORTS"
+                          :cmd "alacritty -e sh -c 'ss -tulpn; read _'"
+                          :tagline "Open sockets & ports")
+              (start_tile :glyph ""  :name "PROCS"
+                          :cmd "alacritty -e sh -c 'ps aux --sort=-%mem | head -30; read _'"
+                          :tagline "Process list by memory")
+              (start_tile :glyph "󱑹" :name "DISK"
+                          :cmd "alacritty -e sh -c 'df -h; ncdu / 2>/dev/null || du -sh /* 2>/dev/null | sort -hr | head -20; read _'"
+                          :tagline "Disk usage")
+              (start_tile :glyph "󰖙" :name "CRON"
+                          :cmd "alacritty -e sh -c 'crontab -l; systemctl list-timers; read _'"
+                          :tagline "Scheduled jobs"))))))
+    ;; ── action bar ────────────────────────────────────────────────────
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph ""  :tip "Terminal"           :cmd "alacritty &"                                        :tone "cyan")
+      (start_action :glyph ""  :tip "System monitor"     :cmd "alacritty -e btop &"                               :tone "pink")
+      (start_action :glyph ""  :tip "Journal (live)"     :cmd "alacritty -e sh -c 'journalctl -n 200 -f; read _' &" :tone "gold")
+      (start_action :glyph ""  :tip "Open ports"        :cmd "alacritty -e sh -c 'ss -tulpn; read _' &"          :tone "blue")
+      (start_action :glyph "󰒠" :tip "Kernel log"         :cmd "alacritty -e sh -c 'sudo dmesg -w; read _' &"     :tone "violet")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center" :text "Super+1  OPS  ·  command & control"))))
+
+(defwindow ops-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-ops-deck"
+  :geometry (geometry :x "0" :y "0" :width "1580px" :height "740px" :anchor "center")
+  (ops_deck))
+
+;; ══════════════════════════════════════════════════════════════════════════
+;; PULSE STATION DECK  (workspace 4)  ·  Comms · Signal · Chat
+;; Network status, quick-link hub, weather, and clock. The browsing station.
+;; ══════════════════════════════════════════════════════════════════════════
+(defwidget pulse_deck []
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}"
+       :orientation "v" :space-evenly false :spacing 12
+    (label :class "deck-brand" :halign "center"
+           :text "P U L S E   ·   C O M M S   S T A T I O N")
+    (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+      ;; ── LEFT: network status + weather ───────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "NETWORK" :glyph "" :tone "blue"
+          (box :orientation "h" :space-evenly false :spacing 14
+            (ghost_stat :val "${NETGRAPH.ssid}" :cap "LINK"
+                        :tone "ok" :tip "Active connection"
+                        :cmd "alacritty -e sh -c 'ip addr; read _' &")
+            (ghost_stat :val "${NETGRAPH.up_fmt}" :cap "↑ UP"
+                        :tone "ok" :tip "Upload speed"
+                        :cmd "alacritty -e sh -c 'ss -s; read _' &")
+            (ghost_stat :val "${NETGRAPH.down_fmt}" :cap "↓ DOWN"
+                        :tone "ok" :tip "Download speed"
+                        :cmd "alacritty -e sh -c 'ss -s; read _' &"))
+          (label :class "deck-spark deck-spark-blue" :halign "start"
+                 :text "${NETGRAPH.down_spark}"))
+        (ghost_card :title "WEATHER" :glyph "󰖐" :tone "cyan"
+          (box :orientation "h" :space-evenly false :spacing 16
+            (box :orientation "v" :space-evenly false :spacing 4
+              (label :class "gh-big gh-big-ok" :text "${WEATHER.temp}")
+              (label :class "deck-sub" :text "${WEATHER.summary}"))
+            (box :orientation "v" :space-evenly false :spacing 4 :valign "center"
+              (label :class "deck-moon" :text "${MOON.glyph}")
+              (label :class "deck-sub" :text "${MOON.name}"))))
+        (ghost_card :title "TIME & DATE" :glyph "󰥔" :tone "pink"
+          (box :orientation "h" :space-evenly false :spacing 14
+            (box :orientation "v" :space-evenly false
+              (label :class "deck-clock" :halign "start" :text "${TIME.hm}")
+              (label :class "deck-sub" :halign "start" :text "${TIME.date}"))
+            (dcard_calendar))))
+      ;; ── RIGHT: quick links + actions ────────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12
+           :style "min-width: 380px;"
+        (ghost_card :title "QUICK LINKS" :glyph "" :tone "gold" :fill true
+          (box :orientation "v" :space-evenly false :spacing 8 :vexpand true
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "BROWSER"  :cmd "firefox"
+                          :tagline "Firefox web browser")
+              (start_tile :glyph ""  :name "EMAIL"    :cmd "xdg-open https://mail.google.com"
+                          :tagline "Gmail")
+              (start_tile :glyph "󰙈" :name "DISCORD"  :cmd "xdg-open https://discord.com/app"
+                          :tagline "Discord")
+              (start_tile :glyph ""  :name "GITHUB"   :cmd "xdg-open https://github.com"
+                          :tagline "GitHub"))
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph "󰎈" :name "YOUTUBE"  :cmd "xdg-open https://youtube.com"
+                          :tagline "YouTube")
+              (start_tile :glyph "󰡦" :name "REDDIT"   :cmd "xdg-open https://reddit.com"
+                          :tagline "Reddit")
+              (start_tile :glyph ""  :name "CALENDAR" :cmd "xdg-open https://calendar.google.com"
+                          :tagline "Google Calendar")
+              (start_tile :glyph ""  :name "MAPS"     :cmd "xdg-open https://maps.google.com"
+                          :tagline "Google Maps"))))))
+    ;; ── action bar ────────────────────────────────────────────────────
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph ""  :tip "Firefox"            :cmd "firefox &"                      :tone "orange")
+      (start_action :glyph ""  :tip "Network settings"   :cmd "nm-connection-editor &"         :tone "blue")
+      (start_action :glyph ""  :tip "Bluetooth"          :cmd "eww open --toggle bluetooth"    :tone "cyan")
+      (start_action :glyph ""  :tip "WiFi networks"      :cmd "eww open --toggle wifi"         :tone "gold")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center" :text "Super+4  PULSE  ·  comms & signal"))))
+
+(defwindow pulse-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-pulse-deck"
+  :geometry (geometry :x "0" :y "0" :width "1580px" :height "740px" :anchor "center")
+  (pulse_deck))
+
+;; ══════════════════════════════════════════════════════════════════════════
+;; WAVE STATION DECK  (workspace 5)  ·  Media · Sound · Stream
+;; The music command centre. Full-width CAVA, now-playing, transport,
+;; volume and sink management — everything music in one panel.
+;; ══════════════════════════════════════════════════════════════════════════
+(defwidget wave_deck []
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}"
+       :orientation "v" :space-evenly false :spacing 12
+    (label :class "deck-brand" :halign "center"
+           :text "W A V E   ·   M E D I A   S T A T I O N")
+
+    ;; ── hero: full-width CAVA visualizer ─────────────────────────────
+    (box :class "nyxus-surface wave-cava-hero"
+         :style "box-shadow: 0 0 ${24 + CAVA_BASS / 2}px rgba(${SECSTATE.hacker == 'on' ? '255,255,255' : '255,138,30'}, ${0.28 + CAVA_BASS / 220}); padding: 10px 18px;"
+      (label :class "wave-cava-text" :halign "center" :hexpand true
+             :text "${CAVA}"))
+
+    (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+      ;; ── LEFT: now playing + transport ───────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "NOW PLAYING" :glyph "" :tone "orange" :fill true
+          (box :orientation "v" :space-evenly false :spacing 8 :vexpand true
+            (label :class "wave-track" :halign "start" :limit-width 36
+                   :text "${PLAYER.title}")
+            (label :class "wave-artist" :halign "start" :limit-width 40
+                   :text "${PLAYER.artist}")
+            (box :class "deck-rule" :height 1)
+            (box :orientation "h" :space-evenly false :spacing 8 :valign "center"
+              (label :class "deck-time" :text "${PLAYER.pos}")
+              (progress :class "wave-prog" :hexpand true :valign "center"
+                        :value {PLAYER.progress} :orientation "h")
+              (label :class "deck-time" :text "${PLAYER.len}"))
+            (box :orientation "h" :space-evenly true :spacing 12 :halign "center"
+              (button :class "wave-btn wave-btn-sm"
+                      :onclick "playerctl previous &" :tooltip "Previous"
+                "󰒮")
+              (button :class "wave-btn wave-btn-play"
+                      :style "box-shadow: 0 0 ${10 + CAVA_BASS / 3}px rgba(${SECSTATE.hacker == 'on' ? '255,255,255' : '255,138,30'}, ${0.4 + CAVA_BASS / 180});"
+                      :onclick "playerctl play-pause &" :tooltip "Play / Pause"
+                "${PLAYER.icon}")
+              (button :class "wave-btn wave-btn-sm"
+                      :onclick "playerctl next &" :tooltip "Next"
+                "󰒭")))))
+      ;; ── RIGHT: volume + sinks ────────────────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12
+           :style "min-width: 380px;"
+        (ghost_card :title "VOLUME" :glyph "" :tone "violet"
+          (box :orientation "h" :space-evenly false :spacing 12
+            (ghost_stat :val "${AUDIO.vol}%" :cap "OUTPUT"
+                        :tone "ok" :tip "Master volume"
+                        :cmd "eww open --toggle mixer &")
+            (ghost_stat :val "${MIC.vol}%" :cap "MIC"
+                        :tone {MIC.mute == "yes" ? "warn" : "ok"}
+                        :tip "Microphone level"
+                        :cmd "eww open --toggle mixer &"))
+          (box :orientation "h" :space-evenly false :spacing 10 :halign "start"
+            (button :class "start-action start-action-violet" :tooltip "Volume up"
+                    :onclick "pactl set-sink-volume @DEFAULT_SINK@ +5% &" "")
+            (button :class "start-action start-action-violet" :tooltip "Volume down"
+                    :onclick "pactl set-sink-volume @DEFAULT_SINK@ -5% &" "")
+            (button :class "start-action start-action-${MIC.mute == 'yes' ? 'red' : 'cyan'}"
+                    :tooltip "Toggle mic mute"
+                    :onclick "pactl set-source-mute @DEFAULT_SOURCE@ toggle &"
+                    "${MIC.icon}")))
+        (ghost_card :title "QUICK LAUNCH" :glyph "" :tone "pink" :fill true
+          (box :orientation "v" :space-evenly false :spacing 8 :vexpand true
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "PAVUCTL"
+                          :cmd "pavucontrol"
+                          :tagline "PulseAudio volume control")
+              (start_tile :glyph ""  :name "MIXER"
+                          :cmd "eww open --toggle mixer"
+                          :tagline "NYXUS audio mixer")
+              (start_tile :glyph ""  :name "CAVA"
+                          :cmd "alacritty --title CAVA -e cava"
+                          :tagline "Audio visualizer"))))))
+    ;; ── action bar ────────────────────────────────────────────────────
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph "󰒮" :tip "Previous track" :cmd "playerctl previous &"  :tone "orange")
+      (start_action :glyph {PLAYER.icon} :tip "Play / Pause" :cmd "playerctl play-pause &" :tone "pink")
+      (start_action :glyph "󰒭" :tip "Next track"     :cmd "playerctl next &"      :tone "orange")
+      (start_action :glyph ""  :tip "Volume mixer"   :cmd "eww open --toggle mixer" :tone "violet")
+      (box :hexpand true)
+      (label :class "wave-cava-mini" :valign "center" :text "${CAVA}")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center" :text "Super+5  WAVE  ·  media & sound"))))
+
+(defwindow wave-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-wave-deck"
+  :geometry (geometry :x "0" :y "0" :width "1580px" :height "760px" :anchor "center")
+  (wave_deck))
+
+;; ══════════════════════════════════════════════════════════════════════════
+;; CORE STATION DECK  (workspace 6)  ·  Files · Data · Vault
+;; Storage overview, disk health, and quick-nav to the key directories.
+;; ══════════════════════════════════════════════════════════════════════════
+(defwidget core_deck []
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}"
+       :orientation "v" :space-evenly false :spacing 12
+    (label :class "deck-brand" :halign "center"
+           :text "C O R E   ·   F I L E S   &   V A U L T")
+    (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+      ;; ── LEFT: disk usage ────────────────────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "STORAGE" :glyph "󱑹" :tone "blue"
+          (box :orientation "v" :space-evenly false :spacing 10
+            (box :orientation "h" :space-evenly false :spacing 14
+              (ghost_stat :val "${DISK_.root.used}" :cap "/ USED"
+                          :tone {DISK_.root.pct > 85 ? "hot" : (DISK_.root.pct > 70 ? "warn" : "ok")}
+                          :tip "Root partition used · ${DISK_.root.pct}% of ${DISK_.root.total}"
+                          :cmd "alacritty -e sh -c 'df -h; read _' &")
+              (ghost_stat :val "${DISK_.home.used}" :cap "~ USED"
+                          :tone {DISK_.home.pct > 85 ? "hot" : (DISK_.home.pct > 70 ? "warn" : "ok")}
+                          :tip "Home partition used · ${DISK_.home.pct}% of ${DISK_.home.total}"
+                          :cmd "alacritty -e sh -c 'df -h ~; read _' &")
+              (ghost_stat :val "${DISK_.projects.used}" :cap "PROJECTS"
+                          :tone "ok"
+                          :tip "~/Projects disk usage"
+                          :cmd "alacritty -e sh -c 'du -sh ~/Projects/*/; read _' &"))
+            (box :class "deck-rule" :height 1)
+            (box :orientation "h" :space-evenly false :spacing 14
+              (ghost_stat :val "${SYSPULSE.mem}%" :cap "RAM"
+                          :tone {SYSPULSE.mhot == 1 ? "hot" : "ok"}
+                          :tip "Memory in use"
+                          :cmd "alacritty -e sh -c 'free -h; read _' &")
+              (ghost_stat :val "${SYSPULSE.swap}%" :cap "SWAP"
+                          :tone {SYSPULSE.swap > 30 ? "warn" : "ok"}
+                          :tip "Swap in use"
+                          :cmd "alacritty -e sh -c 'free -h; read _' &"))))
+        (ghost_card :title "QUICK TOOLS" :glyph "" :tone "gold"
+          (box :orientation "h" :space-evenly true :spacing 6
+            (start_tile :glyph ""  :name "FILES"
+                        :cmd "thunar" :tagline "File manager")
+            (start_tile :glyph "󰒖" :name "ARCHIVE"
+                        :cmd "alacritty -e sh -c 'ls ~/Archive/ 2>/dev/null || ls ~/Downloads/; read _'"
+                        :tagline "Archives & Downloads")
+            (start_tile :glyph ""  :name "SYNC"
+                        :cmd "alacritty -e sh -c 'rsync --progress -avh ~/Projects/ ~/Backups/projects-rsync/ 2>/dev/null; read _'"
+                        :tagline "Sync Projects → Backups")
+            (start_tile :glyph "󰋊" :name "NCDU"
+                        :cmd "alacritty -e sh -c 'ncdu / 2>/dev/null || du -sh ~/* | sort -hr | head -20; read _'"
+                        :tagline "Disk usage browser"))))
+      ;; ── RIGHT: quick-nav bookmarks ───────────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12
+           :style "min-width: 360px;"
+        (ghost_card :title "DIRECTORIES" :glyph "" :tone "violet" :fill true
+          (box :orientation "v" :space-evenly false :spacing 6 :vexpand true
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "HOME"      :cmd "thunar ~"            :tagline "Home directory")
+              (start_tile :glyph ""  :name "PROJECTS"  :cmd "thunar ~/Projects"   :tagline "~/Projects")
+              (start_tile :glyph ""  :name "DOWNLOADS" :cmd "thunar ~/Downloads"  :tagline "~/Downloads"))
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "DOCS"      :cmd "thunar ~/Documents"  :tagline "~/Documents")
+              (start_tile :glyph ""  :name "VAULT"     :cmd "thunar ~/GowskiNet-Vault 2>/dev/null || thunar ~" :tagline "GowskiNet Vault")
+              (start_tile :glyph "󰒆" :name "BACKUPS"   :cmd "thunar ~/Backups 2>/dev/null || thunar ~" :tagline "Backups"))))))
+    ;; ── action bar ────────────────────────────────────────────────────
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph ""  :tip "Files (Thunar)"  :cmd "thunar &"                                    :tone "gold")
+      (start_action :glyph ""  :tip "Terminal in ~"   :cmd "alacritty &"                                 :tone "cyan")
+      (start_action :glyph "󱑹" :tip "Disk usage"      :cmd "alacritty -e sh -c 'df -h; read _' &"       :tone "blue")
+      (start_action :glyph "󰋊" :tip "Disk browser"    :cmd "alacritty -e sh -c 'ncdu /; read _' &"      :tone "violet")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center" :text "Super+6  CORE  ·  files & data"))))
+
+(defwindow core-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-core-deck"
+  :geometry (geometry :x "0" :y "0" :width "1560px" :height "740px" :anchor "center")
+  (core_deck))
+
+;; ══════════════════════════════════════════════════════════════════════════
+;; SCRIBE STATION DECK  (workspace 8)  ·  Notes · Docs · Scribe
+;; Writing focus station. Scratchpad, stickies shortcut, quick doc tools.
+;; ══════════════════════════════════════════════════════════════════════════
+(defwidget scribe_deck []
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}"
+       :orientation "v" :space-evenly false :spacing 12
+    (label :class "deck-brand" :halign "center"
+           :text "S C R I B E   ·   N O T E S   &   D O C S")
+    (box :orientation "h" :space-evenly false :spacing 16 :vexpand true
+      ;; ── LEFT: scratchpad + time (writing focus) ──────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12 :hexpand true
+        (ghost_card :title "TIME" :glyph "󰥔" :tone "pink"
+          (box :orientation "h" :space-evenly false :spacing 16
+            (box :orientation "v" :space-evenly false
+              (label :class "deck-clock" :halign "start" :text "${TIME.hm}")
+              (label :class "deck-sub" :halign "start" :text "${TIME.date}"))
+            (box :orientation "v" :space-evenly false :valign "center"
+              (label :class "deck-moon" :text "${MOON.glyph}")
+              (label :class "deck-sub" :text "${MOON.name}"))))
+        (ghost_card :title "SCRATCHPAD" :glyph "" :tone "violet" :fill true
+          (box :orientation "v" :space-evenly false :spacing 4 :vexpand true
+            (label :class "start-scratch-empty" :halign "start"
+                   :visible {STARTMETA.scratch_empty} :text "nothing written yet  ·  open notepad to start")
+            (scroll :class "start-scroll" :vscroll true :hscroll false :vexpand true
+              (box :orientation "v" :space-evenly false :spacing 5 :valign "start"
+                (for l in {STARTMETA.scratch}
+                  (label :class "start-scratch" :halign "start" :limit-width 40 :text l)))))))
+      ;; ── RIGHT: writing toolkit ───────────────────────────────────────
+      (box :orientation "v" :space-evenly false :spacing 12
+           :style "min-width: 360px;"
+        (ghost_card :title "WRITING TOOLS" :glyph "" :tone "gold" :fill true
+          (box :orientation "v" :space-evenly false :spacing 8 :vexpand true
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "NOTEPAD"
+                          :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'"
+                          :tagline "NYXUS Notepad")
+              (start_tile :glyph ""  :name "STICKIES"
+                          :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py'"
+                          :tagline "NYXUS Stickies")
+              (start_tile :glyph ""  :name "VIM"
+                          :cmd "alacritty -e vim"
+                          :tagline "Vim text editor"))
+            (box :orientation "h" :space-evenly true :spacing 6
+              (start_tile :glyph ""  :name "MD VIEW"
+                          :cmd "sh -c 'ls ~/Documents/*.md 2>/dev/null | head -1 | xargs -I{} xdg-open {} || thunar ~/Documents'"
+                          :tagline "Open last markdown doc")
+              (start_tile :glyph ""  :name "DOCS"
+                          :cmd "thunar ~/Documents"
+                          :tagline "~/Documents folder")
+              (start_tile :glyph "󰻭" :name "TODO"
+                          :cmd "alacritty -e sh -c 'cat ~/TODO.md 2>/dev/null || cat ~/todo.md 2>/dev/null || echo \"no TODO file\"; read _'"
+                          :tagline "View TODO list"))))))
+    ;; ── action bar ────────────────────────────────────────────────────
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph ""  :tip "Notepad"        :cmd "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py' &" :tone "violet")
+      (start_action :glyph ""  :tip "Stickies"       :cmd "sh -c 'command -v nyxus-stickies >/dev/null && nyxus-stickies || python3 ~/.nyxus/nyxus_stickies.py' &" :tone "gold")
+      (start_action :glyph ""  :tip "Terminal"       :cmd "alacritty &"                                                                                           :tone "cyan")
+      (start_action :glyph ""  :tip "Documents"      :cmd "thunar ~/Documents &"                                                                                   :tone "blue")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center" :text "Super+8  SCRIBE  ·  notes & docs"))))
+
+(defwindow scribe-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-scribe-deck"
+  :geometry (geometry :x "0" :y "0" :width "1560px" :height "740px" :anchor "center")
+  (scribe_deck))
+
+;; ══════════════════════════════════════════════════════════════════════════
+;; ARSENAL STATION DECK  (workspace 10)  ·  Security Consoles
+;; Badass mosaic of GowskiNet security app tiles: CIPHER, RedForge, Forge,
+;; GSL and Trainer — live port-status dots, click to launch. Two big hero
+;; tiles on top, three medium tiles below. AXIOM as a standalone launch.
+;; ══════════════════════════════════════════════════════════════════════════
+(defwidget arsenal_app_hero [name glyph tagline port cmd live]
+  ;; Big hero tile — 2 in a row, prominent
+  (button :class "arsenal-hero${live ? '' : ' arsenal-hero-down'}"
+          :style "box-shadow: 0 0 ${live ? (16 + CAVA_BASS / 3) : 6}px rgba(${SECSTATE.hacker == 'on' ? '255,255,255' : '43,210,255'}, ${live ? 0.35 : 0.10});"
+          :onclick "${cmd} &" :tooltip "${tagline} · port ${port}"
+    (box :orientation "v" :space-evenly false :spacing 8 :halign "center" :valign "center"
+      (box :orientation "h" :space-evenly false :spacing 10 :halign "center"
+        (label :class "arsenal-hero-dot" :text {live ? "●" : "○"}
+               :style "color: ${live ? (SECSTATE.hacker == 'on' ? '#fff' : '#2bd2ff') : 'rgba(255,255,255,0.3)'};" )
+        (label :class "arsenal-hero-glyph" :text glyph))
+      (label :class "arsenal-hero-name" :text name)
+      (label :class "arsenal-hero-tag" :text tagline)
+      (label :class "arsenal-hero-port" :text "127.0.0.1:${port}"))))
+
+(defwidget arsenal_app_tile [name glyph tagline port cmd live]
+  ;; Medium tile — 3 in a row
+  (button :class "arsenal-tile${live ? '' : ' arsenal-tile-down'}"
+          :style "box-shadow: 0 0 ${live ? (12 + CAVA_BASS / 4) : 4}px rgba(${SECSTATE.hacker == 'on' ? '255,255,255' : '125,61,255'}, ${live ? 0.3 : 0.08});"
+          :onclick "${cmd} &" :tooltip "${tagline} · port ${port}"
+    (box :orientation "h" :space-evenly false :spacing 10 :halign "start"
+      (label :class "arsenal-tile-glyph" :text glyph)
+      (box :orientation "v" :space-evenly false :spacing 3
+        (box :orientation "h" :space-evenly false :spacing 8
+          (label :class "arsenal-tile-name" :text name)
+          (label :class "arsenal-tile-dot" :text {live ? "●" : "○"}
+                 :style "color: ${live ? (SECSTATE.hacker == 'on' ? '#fff' : '#7d3dff') : 'rgba(255,255,255,0.28)'};" ))
+        (label :class "arsenal-tile-tag" :text tagline)
+        (label :class "arsenal-tile-port" :text ":${port}")))))
+
+(defwidget arsenal_deck []
+  (box :class "gh-root${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}"
+       :orientation "v" :space-evenly false :spacing 14
+    (label :class "deck-brand" :halign "center"
+           :text "A R S E N A L   ·   S E C U R I T Y   C O N S O L E S")
+
+    ;; ── ROW 1: two big hero tiles (CIPHER + RedForge) ─────────────────
+    (box :orientation "h" :space-evenly true :spacing 16
+      (arsenal_app_hero
+        :name "CIPHER" :glyph ""
+        :tagline "Encryption & Key Forge"
+        :port "8080"
+        :cmd "nyxus-webapp cipher"
+        :live {ARSENAL_.cipher})
+      (arsenal_app_hero
+        :name "RED FORGE" :glyph ""
+        :tagline "Red Team Operations"
+        :port "5000"
+        :cmd "nyxus-webapp redforge"
+        :live {ARSENAL_.redforge}))
+
+    ;; ── ROW 2: three medium tiles (Forge, GSL, Trainer) ───────────────
+    (box :orientation "h" :space-evenly true :spacing 12
+      (arsenal_app_tile
+        :name "FORGE" :glyph ""
+        :tagline "GowskiNet Build Console"
+        :port "20000"
+        :cmd "nyxus-webapp forge"
+        :live {ARSENAL_.forge})
+      (arsenal_app_tile
+        :name "GSL" :glyph ""
+        :tagline "Security Lab Intelligence"
+        :port "19670"
+        :cmd "nyxus-webapp gsl"
+        :live {ARSENAL_.gsl})
+      (arsenal_app_tile
+        :name "TRAINER" :glyph "󰑓"
+        :tagline "Security Training Platform"
+        :port "20508"
+        :cmd "nyxus-webapp trainer"
+        :live {ARSENAL_.trainer}))
+
+    ;; ── action bar ────────────────────────────────────────────────────
+    (box :class "gh-bar" :orientation "h" :space-evenly false :spacing 10
+      (start_action :glyph ""  :tip "Launch all consoles"  :cmd "nyxus-consoles &"       :tone "cyan")
+      (start_action :glyph ""  :tip "AXIOM"                :cmd "nyxus-webapp axiom &"   :tone "violet")
+      (start_action :glyph ""  :tip "GHOST security"       :cmd "hyprctl dispatch workspace name:GHOST &" :tone "green")
+      (start_action :glyph ""  :tip "Terminal"             :cmd "alacritty &"            :tone "gold")
+      (box :hexpand true)
+      (label :class "start-hint" :valign "center"
+             :text "Super+0  ARSENAL  ·  status refreshes every 10s  ·  click any tile to launch"))))
+
+(defwindow arsenal-deck
+  :monitor 0 :stacking "bottom" :exclusive false :focusable false
+  :namespace "nyxus-arsenal-deck"
+  :geometry (geometry :x "0" :y "0" :width "1580px" :height "720px" :anchor "center")
+  (arsenal_deck))
 
 (defwindow bar-bottom
   :monitor 0 :stacking "bottom" :exclusive true :namespace "nyxus-bar-bottom"
