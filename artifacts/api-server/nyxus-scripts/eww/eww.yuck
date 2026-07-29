@@ -504,7 +504,9 @@
   (box :class "ws-rail ws-rail-float${SECSTATE.hacker == 'on' ? ' nyx-hacker' : ''}" :orientation "v" :space-evenly false :spacing 0 :valign "center" :halign "center"
     (workspace_home_pill)
     (workspace_start_pill)
-    ;; numbered stations 1-10, each with its companion glyph beneath it.
+    ;; numbered stations 1-10. NOTE: the companion glyph is deliberately NOT
+    ;; drawn beneath each one any more -- see station_cluster / station_half_pill
+    ;; above. Companions stay reachable via Super+Alt+<n> and the pill tooltip.
     ;; Station 10 came back as ARSENAL (the four security consoles) after
     ;; briefly being dropped.
     (for st in {WORKSPACES.stations}
