@@ -317,8 +317,73 @@ hacker_on() {
 
   # 5. Flip btop to the hacker theme (mono + #ff2d55 red landmarks).
   #    btop is a TUI so CSS cannot reach it — swap its color_theme key in
-  #    btop.conf. Record what the current theme was so OFF restores it.
+  #    btop.conf. Self-installs the theme file if it is missing so the toggle
+  #    is self-contained and does not require a prior bake+boot to work.
   local btop_conf="${HOME}/.config/btop/btop.conf"
+  local btop_theme_dir="${HOME}/.config/btop/themes"
+  local btop_hacker_theme="${btop_theme_dir}/nyxus-hacker.theme"
+  mkdir -p "${btop_theme_dir}"
+  if [[ ! -f "${btop_hacker_theme}" ]]; then
+    # Search common locations: post-bake skel, builder-box repo, NS offline cache
+    local _src=""
+    for _candidate in \
+      "/etc/skel/.config/btop/themes/nyxus-hacker.theme" \
+      "${HOME}/Nyxus-Core/iso-builder/nyx-profile/airootfs/etc/skel/.config/btop/themes/nyxus-hacker.theme" \
+      "/opt/nyxus-cache/btop/themes/nyxus-hacker.theme"; do
+      [[ -r "${_candidate}" ]] && { _src="${_candidate}"; break; }
+    done
+    if [[ -n "${_src}" ]]; then
+      cp -f "${_src}" "${btop_hacker_theme}" 2>/dev/null || true
+    else
+      # Last resort: write it inline so the theme is ALWAYS available.
+      cat > "${btop_hacker_theme}" << 'BTOP_HACKER_THEME'
+# NYXUS · btop · HACKER MODE — black / white / red
+# Auto-written by nyxus-hacker-mode on first use.
+theme[main_bg]=""
+theme[main_fg]="#e8ecf4"
+theme[title]="#ffffff"
+theme[hi_fg]="#ff2d55"
+theme[selected_bg]="#ff2d55"
+theme[selected_fg]="#000000"
+theme[inactive_fg]="#2a2a2e"
+theme[graph_text]="#b4b8c8"
+theme[meter_bg]="#05060a"
+theme[proc_misc]="#ff2d55"
+theme[cpu_box]="#ffffff"
+theme[mem_box]="#ffffff"
+theme[net_box]="#ffffff"
+theme[proc_box]="#ff2d55"
+theme[div_line]="#282830"
+theme[temp_start]="#505060"
+theme[temp_mid]="#a0a0b0"
+theme[temp_end]="#ff2d55"
+theme[cpu_start]="#404050"
+theme[cpu_mid]="#c0c0d0"
+theme[cpu_end]="#ff2d55"
+theme[free_start]="#505060"
+theme[free_mid]="#9090a0"
+theme[free_end]="#c8c8d8"
+theme[cached_start]="#404050"
+theme[cached_mid]="#707080"
+theme[cached_end]="#a0a0b0"
+theme[available_start]="#606070"
+theme[available_mid]="#b0b0c0"
+theme[available_end]="#e0e0f0"
+theme[used_start]="#383840"
+theme[used_mid]="#a04050"
+theme[used_end]="#ff2d55"
+theme[download_start]="#404050"
+theme[download_mid]="#909090"
+theme[download_end]="#e0e0f0"
+theme[upload_start]="#404050"
+theme[upload_mid]="#a04050"
+theme[upload_end]="#ff2d55"
+theme[process_start]="#505060"
+theme[process_mid]="#a04060"
+theme[process_end]="#ff2d55"
+BTOP_HACKER_THEME
+    fi
+  fi
   if [[ -r "${btop_conf}" ]]; then
     local cur_theme
     cur_theme="$(grep -oP '^color_theme\s*=\s*"\K[^"]+' "${btop_conf}" 2>/dev/null \
