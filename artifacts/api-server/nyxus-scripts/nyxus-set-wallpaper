@@ -30,6 +30,14 @@ if [[ -z "${PATH_ARG}" ]]; then
   echo "usage: nyxus-set-wallpaper /path/to/wallpaper [--no-accent]" >&2
   exit 2
 fi
+# Callers pass this path through a variable (the wallpaper daemon reads it out
+# of workspaces.json, whose wall_dir is "~/.config/hypr/walls"), and bash does
+# not tilde-expand variable contents. Expand here so a "~/..." argument is not
+# rejected as unreadable.
+case "${PATH_ARG}" in
+  '~')   PATH_ARG="${HOME}" ;;
+  '~/'*) PATH_ARG="${HOME}/${PATH_ARG#\~/}" ;;
+esac
 if [[ ! -r "${PATH_ARG}" ]]; then
   echo "error: cannot read ${PATH_ARG}" >&2
   exit 1

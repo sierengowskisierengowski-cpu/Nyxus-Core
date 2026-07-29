@@ -21,7 +21,11 @@ export PATH="${HOME}/.local/bin:${PATH}"
 NAME="${1:-}"
 [[ -z "${NAME}" ]] && { echo "usage: nyxus-set-wallpaper.sh <name-or-path>" >&2; exit 2; }
 
-DIRS=("${HOME}/.config/hypr/walls" "/usr/share/backgrounds/nyxus")
+# walls/rotation MUST be searched: every nyxus-rot-*.png lives in the
+# rotation/ subdir, not the walls/ root. Omitting it is the same bug that made
+# 8 of 10 station wallpapers fail to resolve in nyxus-hacker-mode (2026-07-28).
+DIRS=("${HOME}/.config/hypr/walls" "${HOME}/.config/hypr/walls/rotation" \
+      "/usr/share/backgrounds/nyxus" "/usr/share/backgrounds/nyxus/rotation")
 TARGET=""
 
 if [[ -r "${NAME}" ]]; then
