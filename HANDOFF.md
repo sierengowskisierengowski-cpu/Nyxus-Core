@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-29 ~01:15 EDT (PR #77 + #78 MERGED to main · silent bake/wallpaper/PATH bugs fixed · all 10 station decks · hacker mode complete · CAVA-reactive borders · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-29 ~05:20 UTC (PR #77 + #78 MERGED · BOOTSTRAP_VERSION bumped to r15 · REBAKE REQUIRED · btop hacker theme needs manual copy for live session)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -102,6 +102,17 @@
 
 > **PR #77** (`deep-internal-audit-fixes-8f1c`) and **PR #78**
 > (`complete-station-decks-hacker-cava-3280`) are **merged into `main`**.
+> **BOOTSTRAP_VERSION** bumped to `2026.07.29-r15-station-decks` (PR #79) so
+> installed systems re-pull the new eww/scripts on next login.
+> **btop hacker theme live session:** the theme file is in the ISO skel but
+> NOT in `~/.config/btop/themes/` on the running system yet. To use it right
+> now before the next bake, run on the builder box:
+> ```bash
+> mkdir -p ~/.config/btop/themes
+> cp ~/Nyxus-Core/iso-builder/nyx-profile/airootfs/etc/skel/.config/btop/themes/nyxus-hacker.theme \
+>    ~/.config/btop/themes/
+> ```
+> Then `nyxus-hacker-mode toggle` will correctly flip btop to mono+red.
 > Next step is a clean rebake — none of this is in a stick yet.
 
 ### ⚠ SILENT FAILURES LANDED VIA PR #77 (do not rediscover)
