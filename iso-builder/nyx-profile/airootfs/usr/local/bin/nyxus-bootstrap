@@ -29,7 +29,7 @@ set -uo pipefail
 # ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
 # r12 (2026-07-23): offline-first — Replit dependency cut, install no longer
 # aborts on `clear`/set -e, hyprexpo build is one-shot + offline-aware.
-BOOTSTRAP_VERSION="2026.07.29-r15-station-decks"
+BOOTSTRAP_VERSION="2026.07.30-r16-localbin-path"
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"

@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-29 ~02:10 EDT (PR #77–#81 ALL ON MAIN · reactive bus now starts · MESH deck + dunst hacker flip · bootstrap r15 · btop theme self-installs · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-30 ~13:00 EDT (⛔ THE "MY BAKE LOOKS OLD" MYSTERY IS SOLVED — the ISO was right every time; the CONFIGS reached their own tools through an EMPTY `~/.local/bin`. Fixed + gate 13z. bootstrap r16 · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -96,6 +96,140 @@
 > [`docs/ALIEN_NEON_SETTINGS_AUDIT.md`](./docs/ALIEN_NEON_SETTINGS_AUDIT.md) /
 > [`docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md`](./docs/PRE_BAKE_CLEANUP_AND_SETTINGS.md).
 > Stay-as-is: Bifrost / GodsApp / Meli / Arsenal.
+
+---
+
+## ⛔ WHERE WE STAND — 2026-07-30 · WHY EVERY STICK "LOOKED OLD" · REBAKE REQUIRED
+
+> The owner flashed the `2026.07.29` ISO, booted it, and reported seeing "my
+> older version" — again, as with several bakes before it. **The ISO was not the
+> problem. It has never been the problem.** Root cause found, fixed on `main`,
+> and gated. Nothing is in a stick yet.
+
+### What was actually verified about the 07.29 stick (all CLEAN)
+
+The stick was mounted and the squashfs inspected directly. Do **not** re-derive
+this — every one of these was checked and was correct:
+
+| Checked | Result |
+|---|---|
+| Build stamp `/etc/nyxus-build` | `nyxus-2026.07.29`, source commit `91b86185` = `main` tip |
+| `airootfs.sfs` on the stick | 7,691,059,200 B — byte-identical to `out/nyxus-2026.07.29` |
+| `/etc/skel` vs `/home/nyx` | **byte-identical** (`cp -rT` in customize_airootfs is fine) |
+| `/opt/nyxus-cache` vs skel | **byte-identical** (hyprland.conf, all 8 installed shards, eww.yuck/css) |
+| Newest work present? | MESH deck, `st.name` station pills, `nyxus-reactive.conf` sourced **and** autostarting sense→mood→threatd — all in the shipped files |
+| Packages | hyprland **0.56.1-2** + hyprlang 0.6.8 (no 0.57 disaster), **calamares present**, eww + mpvpaper compiled into `/usr/local/bin` |
+
+So: skel was current, the bootstrap cache was current, the live user's home was
+current. The image was right. **The desktop simply could not reach its own
+tools.**
+
+### 🔴 ROOT CAUSE — the configs ran everything through an EMPTY `~/.local/bin`
+
+`/home/nyx/.local/bin` ships **EMPTY** (nothing stages into it, and nothing
+should). But the shipped Hyprland configs invoked **21 distinct nyxus tools** by
+the hardcoded path `~/.local/bin/<tool>` — **26 live call sites**.
+
+**All 21 tools exist in `/usr/local/bin` on the ISO. All 21 also exist in
+`~/.local/bin` on the builder box.** That is the whole trap: on this machine
+every one of them resolves, so the feature "works" and gets marked
+*verified live* — and on the stick every one is silently `command not found`.
+
+What was dead on **every** stick, on every boot:
+
+| Call site | What died |
+|---|---|
+| `exec-once = ~/.local/bin/nyxus-living on quiet` | the **entire living/reflex layer** — this is the only thing that starts `nyxus-pulsed` |
+| `exec-once = ~/.local/bin/nyxus-shader restore` | screen shaders never restored |
+| `exec-once = ~/.local/bin/nyxus-soundd` | all UI sound design |
+| ~20 keybinds | shader, tint, spray, beat, lens, accent-sync, wall-next/cycle, freeform, live-wallpaper, **and the three headline reactive features** (whispers / SUPERNOVA / graffiti wall) |
+| 5 × `hyprlock.conf` | weather line, lock art, track chip/title/artist — **the lock screen loses all dynamic content**, which reads as "the old lock screen" |
+
+Note the cruelty of the reactive one: PR #80 correctly fixed
+`nyxus-reactive.conf` being *unsourced*, so the shard now loads — but its three
+binds still pointed at `~/.local/bin`, so those features were **still** dead on
+the stick. That is the same feature being "fixed" twice and shipping broken
+twice.
+
+**FIX:** the `~/.local/bin/` prefix is gone from every shipped call site — bare
+command names now resolve through PATH to `/usr/local/bin`. This is already the
+convention elsewhere in the same files (`nyxus-mission-control-toggle`, and the
+newer `command -v nyxus-sense && nyxus-sense start` lines). Behaviour on the
+builder box is unchanged, because `nyxus-session-start` prepends
+`$HOME/.local/bin` to PATH, so the same binary still wins here.
+
+Applied to **both** surfaces the bake reads (NS is source of truth; skel is
+wiped and repopulated from it): `nyxus-signature.conf` (19), `hyprlock.conf`
+(5), `hyprland.conf` (3), `nyxus-reactive.conf` (3), `nyxus-cometfire.conf` (3).
+Commented-out directives were converted too, so uncommenting one can't
+reintroduce the bug. The lone survivor is a prose comment in
+`nyxus-freeform.conf` describing where the generator lives — harmless.
+
+### 🛡 verify-profile gate 13z (new) — negative-tested
+
+Hard-**FAIL**s if any shipped hypr config reaches a tool through
+`~/.local/bin` / `$HOME/.local/bin`. It scans `hyprland.conf`, **every
+`conf.d/` shard**, `hyprlock.conf`, *and* the NS copies (50 files today), and it
+only flags lines that actually run something (`bind*`/`exec-once`/`exec`/`text`/
+`reload_cmd`) — prose comments are ignored, commented-out directives WARN.
+
+**Why 13w did not catch this** (worth internalising): 13w reads **only
+`hyprland.conf`**, never the shards — and it asserts the binary *ships*, not
+that the config's path to it *resolves*. Every one of these binaries shipped
+perfectly. Shipping ≠ reachable.
+
+### Also landed
+
+- **`nyxus_install.sh` deployed only 8 of the 18 conf.d shards**, so an
+  installed system re-running bootstrap would have picked up the fixed
+  `hyprland.conf`/`hyprlock.conf` and kept the **broken** shards. Added
+  `nyxus-signature.conf` / `nyxus-reactive.conf` / `nyxus-cometfire.conf`.
+  Deliberately **not** glob-copied from the cache: `nyxus-stations.conf`,
+  `nyxus-freeform.conf` and `nyxus-monitors.conf` are GENERATED at runtime and a
+  glob would clobber the user's live station matrix / monitor layout.
+- `BOOTSTRAP_VERSION` → **`2026.07.30-r16-localbin-path`** so installed systems
+  self-heal.
+
+### 🔎 OPEN — the login screen (read before "fixing" it)
+
+Two separate things, neither of them a regression:
+
+1. **The greeter genuinely has not changed since Jul 24.** `regreet.css` last
+   changed in `a7af901f` (2026-07-24). So "still the older login screen" is
+   *correct* — the 07.29 stick shows the same greeter as 07.26/07.27/07.28
+   because **nobody has redesigned it**. If the owner wants a new login screen,
+   that is net-new work, not a bug hunt. What *did* visibly degrade is the
+   **lock** screen (hyprlock), via the `~/.local/bin` bug above — easy to
+   conflate with the login screen.
+2. **The session the greeter starts is non-deterministic.** The ISO ships
+   **three** entries in `/usr/share/wayland-sessions`: `hyprland.desktop`
+   (upstream → `/usr/bin/start-hyprland`), `hyprland-uwsm.desktop`, and
+   `nyxus-hyprland.desktop` (→ `nyxus-session-start`). `/var/lib/regreet/` and
+   `/var/cache/regreet/` ship **empty**, so regreet has no cached
+   `user_to_last_sess` and no configured default — it preselects whatever is
+   first in its list, which is almost certainly plain **"Hyprland"**, not
+   NYXUS. The tuigreet/agreety fallbacks *do* hardcode
+   `--cmd nyxus-session-start`, so only the themed path is ambiguous.
+   **NOT changed** — regreet's ordering could not be verified without a live
+   greeter, and guessing at login behaviour risks a no-desktop boot. Practical
+   delta is now small (the PATH difference stopped mattering once the
+   `~/.local/bin` bug was fixed); plain Hyprland still reads the same
+   `~/.config/hypr/hyprland.conf`. Two candidate fixes when the owner wants it:
+   drop the two upstream entries at bake so exactly one session exists, or
+   pre-seed `/var/lib/regreet/state.toml`. **Verify which session is selected on
+   the next boot before touching this** — the dropdown is right there on the
+   greeter.
+
+### 🔜 NEXT
+
+1. **Rebake** from clean idle `main` — `cd ~/Nyxus-Core/iso-builder && sudo ./build-iso.sh`
+2. On the stick, verify the things that were dead and should now be alive:
+   - Super+Alt+L toggles LIVING THEME; borders pulse (proves `nyxus-living`)
+   - Super+O cycles shaders; Super+T tint; Super+Z spray
+   - Super+Ctrl+W whispers · Super+Alt+Shift+S supernova · Super+Alt+Shift+G graffiti wall
+   - lock the screen (hyprlock) → weather line + lock art + track info render
+   - UI blips audible on window open/close (`nyxus-soundd`)
+3. **Note which session the greeter preselects** — see OPEN item 2 above.
 
 ---
 
@@ -1329,6 +1463,21 @@ Verify a flashed stick from the agent side (no sudo needed):
   `CONFIG_UDF_FS`). A lean/localmodconfig pass that drops them makes the
   default live entry unbootable (`unknown filesystem type 'iso9660'`). Catch
   this in QEMU (`-kernel` + virtio ISO + `console=ttyS0`) before flashing.
+- **NEVER invoke a shipped tool through `~/.local/bin/` in any config.**
+  `/home/nyx/.local/bin` is **EMPTY on the ISO**; `/usr/local/bin` is where
+  tools actually land. Use the **bare command name** and let PATH resolve it.
+  This bit for weeks: `~/.local/bin` is fully populated on the builder box, so
+  every such call "works" when verified live here and is dead on every stick —
+  it silently killed the living/reflex layer, soundd, shader restore, ~20
+  keybinds and all five hyprlock widgets. Gate **13z** now hard-fails it.
+  Corollary: **"the binary ships" ≠ "the config can reach it."** Gate 13w only
+  proved the former, and only for `hyprland.conf`, never the `conf.d/` shards.
+- **When a stick "looks old", verify the IMAGE before theorising.** Mount it
+  (`udisksctl mount -b /dev/sda1`, no sudo needed) and check
+  `/etc/nyxus-build` for the source commit, then diff `/etc/skel` against
+  `/home/nyx` and `/opt/nyxus-cache` inside `airootfs.sfs`. On 2026-07-30 all
+  of those were perfect and the bug was in how the configs resolved paths —
+  hours go missing re-auditing the bake when the bake was never wrong.
 - **The desktop must NOT depend on the network to come up.** Bars/wallpaper/theme
   are in skel and launch immediately; the app-install layers on after and may never
   block/break the core desktop. (Regressing this = the broken 07-22 boot.)

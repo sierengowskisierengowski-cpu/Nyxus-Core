@@ -1511,6 +1511,82 @@ else
   fi
 fi
 
+# ── 13z. shipped configs must not reach a tool through ~/.local/bin ─────────
+# WHY THIS EXISTS (2026-07-30): the owner kept flashing a freshly baked stick
+# and seeing "the old desktop". The ISO was correct every single time — the
+# build stamp, /etc/skel, /home/nyx and /opt/nyxus-cache were byte-identical to
+# HEAD. What was wrong was the PATH the configs used to reach their own tools.
+#
+# /home/nyx/.local/bin ships EMPTY (nothing stages into it), yet the hypr
+# configs invoked 21 distinct nyxus tools by the hardcoded path
+# `~/.local/bin/<tool>`. On THIS builder box ~/.local/bin holds all 21, so every
+# one of them worked when a change was "verified live" here — and every one was
+# dead on the stick. That silently killed the living/reflex layer
+# (nyxus-living -> pulsed), nyxus-soundd, `nyxus-shader restore`, ~20 flair
+# keybinds, the three headline reactive features (whispers / supernova /
+# graffiti wall) and all five hyprlock widgets (weather, lock art, track
+# chip+title+artist) — i.e. exactly the "none of my improvements are there"
+# symptom, on every bake.
+#
+# Gate 13w does NOT catch this: it reads only hyprland.conf (never the conf.d
+# shards), and it asserts the binary SHIPS, not that the config's path to it
+# RESOLVES. Every one of these tools is in /usr/local/bin, which is on the
+# default PATH, so the correct and only portable form is the bare command name.
+hd "13z. no shipped config reaches a tool through ~/.local/bin"
+
+_lb_fail=0; _lb_warn=0; _lb_files=0
+_LB_RE='(~|\$HOME|\$\{HOME\})/\.local/bin/'
+
+while IFS= read -r _cfg; do
+  [[ -r "${_cfg}" ]] || continue
+  _lb_files=$((_lb_files + 1))
+  _rel="${_cfg#"${HERE}/"}"
+  while IFS= read -r _hit; do
+    [[ -z "${_hit}" ]] && continue
+    _ln="${_hit%%:*}"; _txt="${_hit#*:}"
+    # Strip a leading comment marker so a commented-out directive is still
+    # recognised as a directive (and flagged before someone uncomments it).
+    _bare="$(printf '%s' "${_txt}" | sed 's/^[[:space:]]*#*[[:space:]]*//')"
+    # Prose that merely mentions the path is fine; only lines that RUN
+    # something matter (hypr binds/execs + hyprlock text/reload_cmd).
+    printf '%s' "${_bare}" \
+      | grep -qE '^(bind[a-z]*|exec-once|exec|text|reload_cmd)[[:space:]]*=' \
+      || continue
+    _tool="$(printf '%s' "${_txt}" | grep -oE "${_LB_RE}[A-Za-z0-9_.-]+" \
+               | head -1 | sed 's|.*/||')"
+    if printf '%s' "${_txt}" | grep -qE '^[[:space:]]*#'; then
+      warn "${_rel}:${_ln} commented directive still uses ~/.local/bin/${_tool} — dead if uncommented"
+      _lb_warn=$((_lb_warn + 1))
+    elif [[ -e "${AIROOT}/usr/local/bin/${_tool}" ]]; then
+      fail "${_rel}:${_ln} runs '${_tool}' via ~/.local/bin — EMPTY on the ISO. Use the bare name; it ships in /usr/local/bin"
+      _lb_fail=$((_lb_fail + 1))
+    else
+      fail "${_rel}:${_ln} runs '${_tool}' via ~/.local/bin — EMPTY on the ISO, and '${_tool}' is not in /usr/local/bin either"
+      _lb_fail=$((_lb_fail + 1))
+    fi
+  done < <(grep -nE "${_LB_RE}" "${_cfg}" 2>/dev/null)
+done < <({
+  find "${AIROOT}/etc/skel/.config/hypr" -maxdepth 2 -name '*.conf' 2>/dev/null
+  # The bake repopulates skel from NS, so the NS copies are what actually ship.
+  find "${NS}" -maxdepth 1 \( -name 'hypr*.conf' -o -name 'nyxus-*.conf' \) 2>/dev/null
+} | sort -u)
+
+if (( _lb_fail == 0 )); then
+  ok "checked ${_lb_files} shipped hypr config(s) — none reach a tool through ~/.local/bin"
+fi
+(( _lb_warn > 0 )) \
+  && warn "${_lb_warn} commented directive(s) still carry the ~/.local/bin prefix"
+
+# The premise above, asserted rather than assumed: if a future bake ever DOES
+# stage a populated ~/.local/bin into skel, this gate's reasoning changes and
+# whoever did that should see this note fire.
+_SKEL_LB="${AIROOT}/etc/skel/.local/bin"
+if [[ -d "${_SKEL_LB}" ]] && [[ -n "$(ls -A "${_SKEL_LB}" 2>/dev/null)" ]]; then
+  warn "skel/.local/bin is NOT empty ($(ls -A "${_SKEL_LB}" | wc -l) entries) — re-read gate 13z's premise"
+else
+  ok "skel/.local/bin is empty/absent — bare command names are the only portable form"
+fi
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

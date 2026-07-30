@@ -412,6 +412,16 @@ dl "hypridle.conf"  "$HYPR_DIR/hypridle.conf"  || failed=$((failed+1))
 # silently no-op and apps render fully opaque / unblurred. These six files
 # carry the locked NYXUS window opacity, blur tuning, layer-shell blur,
 # float/center/size rules, fog daemon hooks, and general behavior.
+#
+# signature/reactive/cometfire added 2026-07-30: they carry the fix that
+# stopped the desktop reaching its own tools through ~/.local/bin (empty on a
+# shipped system). Without them here, an installed system re-running bootstrap
+# picked up the fixed hyprland.conf/hyprlock.conf but kept the broken shards —
+# i.e. the reflex layer, soundd, the shader restore and ~20 keybinds stayed
+# dead. NOT globbed from the cache on purpose: nyxus-stations.conf,
+# nyxus-freeform.conf and nyxus-monitors.conf are GENERATED at runtime (by
+# nyxus-hacker-mode / nyxus-freeform / Settings), so overwriting them from the
+# cache would clobber the user's live station matrix and monitor layout.
 for conf in nyxus-hyprland-general.conf \
             nyxus-hyprland-rules.conf \
             nyxus-hyprland-opacity.conf \
@@ -419,7 +429,10 @@ for conf in nyxus-hyprland-general.conf \
             nyxus-hyprland-layerblur.conf \
             nyxus-hyprland-fog.conf \
             nyxus-hyprland-mission.conf \
-            nyxus-arsenal-apps.conf; do
+            nyxus-arsenal-apps.conf \
+            nyxus-signature.conf \
+            nyxus-reactive.conf \
+            nyxus-cometfire.conf; do
   dl "$conf" "$HYPR_DIR/conf.d/$conf" || failed=$((failed+1))
 done
 
