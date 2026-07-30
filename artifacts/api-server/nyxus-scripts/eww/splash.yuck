@@ -28,7 +28,7 @@
 
 (defwindow nyxus-splash
   :monitor 0
-  :geometry (geometry :x "0px" :y "0px" :width "100%" :height "100%" :anchor "center")
+  :geometry (geometry :x "0px" :y "0px" :width "100%" :height "100%" :anchor "top center")
   :stacking "overlay"
   :exclusive false
   :focusable false

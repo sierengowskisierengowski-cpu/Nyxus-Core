@@ -2820,9 +2820,24 @@
 ;; window shadows stay visible through the glass.
 ;; "fg" (TOP), not "overlay": same fullscreen-input-surface hazard as
 ;; nyxus-hub. See HANDOFF Section 7 and the defwindow nyxus-hub comment.
+;;
+;; ⚠ anchor "top center", NOT "center" — this is load-bearing, do not
+;; "tidy" it back. An eww window is non-exclusive (exclusive_zone 0), so
+;; wlr-layer-shell lays it out inside the USABLE area, not the monitor.
+;; With no anchor Hyprland CENTRES it there:
+;;   y = reserved_top + (usable_h - h) / 2
+;; Measured live 2026-07-30 at 1920x1080 with reserved [0,40,0,158]:
+;;   anchor "center"     -> y = -59, bottom edge 1021 -> a 59px strip of
+;;                          bare desktop under every fullscreen overlay
+;;   anchor "top center" -> y = reserved_top (40), bottom edge 1120 -> the
+;;                          bottom of the screen is covered, always
+;; The overlay-shield defpoll later hides the bars and the surface snaps to
+;; y=0, but that poll is on a 2s interval, so "center" showed the gap for
+;; the first ~2 seconds of EVERY open. Top-anchoring is correct in both
+;; phases and needs no timing. Gate 13pa.
 (defwindow dashboard
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-dashboard"
-  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (box :class "overlay-backdrop" (dashboard_layout)))
 
 (defwindow nyxus-hub
@@ -2842,7 +2857,7 @@
   ;; never existed. Escape is handled by the compositor binds in hyprland.conf,
   ;; which is the only layer that can guarantee it.
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-hub"
-  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (eventbox :onclick "nyxus-hub-close &"
     :vexpand true :hexpand true
     ;; A plain (box) fills the full layer height reliably (GtkCenterBox
@@ -2866,7 +2881,7 @@
 ;; nyxus-hub. See HANDOFF Section 7 and the defwindow nyxus-hub comment.
 (defwindow powermenu
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-powermenu"
-  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (box :class "overlay-backdrop"
        :style "background-image: linear-gradient(rgba(5,1,13,0.52), rgba(5,1,13,0.60)), url('assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
     (powermenu_layout)))
@@ -2875,7 +2890,7 @@
 ;; nyxus-hub. See HANDOFF Section 7 and the defwindow nyxus-hub comment.
 (defwindow cheatsheet
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-cheatsheet"
-  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (box :class "overlay-backdrop" (cheatsheet_layout)))
 
 (defwindow osd-volume
@@ -2895,7 +2910,7 @@
 
 (defwindow screensaver
   :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-screensaver"
-  :geometry (geometry :width "100%" :height "100%" :anchor "center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (screensaver_layout))
 
 ;; ═════════════════════════════════════════════════════════════════════

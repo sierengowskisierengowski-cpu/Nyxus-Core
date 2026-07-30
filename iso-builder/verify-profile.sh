@@ -2290,6 +2290,110 @@ fi
 (( _ak_fail == 0 )) \
   && ok "no decoy Hyprland shards under nyxus-scripts/hypr/conf.d"
 
+# ── 13pa. fullscreen eww overlays must be TOP-anchored, not centred ──────────
+# An eww window is non-exclusive (exclusive_zone 0), so wlr-layer-shell lays it
+# out inside the monitor's USABLE area — what is left after the bars' exclusive
+# zones — and with no anchor Hyprland CENTRES it there:
+#     y = reserved_top + (usable_h - requested_h) / 2
+# Measured live 2026-07-30, 1920x1080, reserved [0,40,0,158] (usable 882):
+#     anchor "center"      -> y = -59, bottom edge 1021  → 59px of bare desktop
+#                             showing under NYXUS Power / the Hub / every
+#                             fullscreen overlay
+#     anchor "top center"  -> y = 40,  bottom edge 1120  → bottom always covered
+# The overlay-shield defpoll does eventually hide the bars, after which the
+# surface snaps to y=0 — but it is a 2-SECOND poll, so "center" showed the strip
+# for the first ~2s of every single open. Top-anchoring is correct in both
+# phases and depends on no timing at all, so that is what is asserted here.
+# This also cannot be fixed with an exclusive-zone setting: eww's `:exclusive`
+# is a bool and only ever selects 0 or auto, never the -1 that would make
+# Hyprland use the full monitor as the bounds.
+hd "13pa. fullscreen eww overlays are top-anchored (no bottom desktop strip)"
+_pa_fail=0; _pa_seen=0
+_PA_TREES=("${NS}/eww" "${AIROOT}/etc/skel/.config/eww")
+for _pa_dir in "${_PA_TREES[@]}"; do
+  [[ -d "${_pa_dir}" ]] || { fail "13pa: eww tree missing: ${_pa_dir}"; _pa_fail=$((_pa_fail+1)); continue; }
+  while IFS= read -r _pa_f; do
+    [[ -n "${_pa_f}" ]] || continue
+    # Every geometry that asks for the whole screen must anchor to an edge.
+    while IFS= read -r _pa_line; do
+      [[ -n "${_pa_line}" ]] || continue
+      _pa_seen=$((_pa_seen+1))
+      _pa_no="${_pa_line%%:*}"
+      fail "13pa: ${_pa_f#${HERE}/../}:${_pa_no} declares a 100%x100% eww window with :anchor \"center\". A non-exclusive layer surface is centred inside the USABLE area, so at reserved [0,40,0,158] it lands at y=-59 and leaves a 59px strip of live desktop along the bottom edge. Use :anchor \"top center\""
+      _pa_fail=$((_pa_fail+1))
+    done < <(grep -n ':height "100%" :anchor "center"' "${_pa_f}" 2>/dev/null)
+  done < <(find "${_pa_dir}" -maxdepth 1 -name '*.yuck' 2>/dev/null | sort)
+done
+# The bake copies NS/eww/*.yuck into skel, so a fix applied to one tree only
+# still ships the bug. Assert the two trees agree.
+for _pa_f in "${NS}"/eww/*.yuck; do
+  [[ -f "${_pa_f}" ]] || continue
+  _pa_b="$(basename "${_pa_f}")"
+  _pa_s="${AIROOT}/etc/skel/.config/eww/${_pa_b}"
+  if [[ ! -f "${_pa_s}" ]]; then
+    fail "13pa: ${_pa_b} exists in nyxus-scripts/eww but not in skel — the bake would ship no copy of it"
+    _pa_fail=$((_pa_fail+1))
+  elif ! cmp -s "${_pa_f}" "${_pa_s}"; then
+    fail "13pa: ${_pa_b} has drifted between nyxus-scripts/eww (source of truth) and skel. Copy NS -> skel"
+    _pa_fail=$((_pa_fail+1))
+  fi
+done
+(( _pa_fail == 0 )) \
+  && ok "no centred fullscreen eww window on either tree; NS/eww *.yuck == skel"
+
+# ── 13pb. the screensavers must be able to actually go fullscreen ────────────
+# Hyprland refuses to fullscreen a PINNED window (pin implies floating), so a
+# `pin on` rule silently defeats the `fullscreen on` sitting next to it. Both
+# savers carried both rules, so neither ever went fullscreen. Measured live
+# 2026-07-30 on Hyprland 0.55.4:
+#     with `pin on`    -> at [0,-59] 1920x1080, fullscreen 0, pinned true
+#     without          -> at [0,0]   1920x1080, fullscreen 2
+# The -59 is the same arithmetic as 13pa: a 1080-tall window centred in the
+# 882px the bars leave. The alien saver was worse still — it does not size
+# itself, so it mapped as a 900x650 card floating in the middle of the desktop.
+hd "13pb. screensaver window rules can reach fullscreen (no pin conflict)"
+_pb_fail=0
+_PB_CLASSES=("com\\.nyxus\\.matrixsaver" "app\\.nyxus\\.Screensaver")
+for _pb_f in "${NS}/nyxus-hyprland-rules.conf" \
+             "${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-rules.conf"; do
+  if [[ ! -r "${_pb_f}" ]]; then
+    fail "13pb: cannot read ${_pb_f}"; _pb_fail=$((_pb_fail+1)); continue
+  fi
+  # The class patterns in these rules contain literal backslashes, so match
+  # them as FIXED strings. Comment lines are stripped first, because a
+  # commented-out directive is inert and the file documents the trap in prose.
+  _pb_live="$(grep -v '^[[:space:]]*#' "${_pb_f}")"
+  for _pb_c in "${_PB_CLASSES[@]}"; do
+    if printf '%s\n' "${_pb_live}" \
+         | grep -Fq "windowrule = pin on, match:class ^(${_pb_c})\$"; then
+      fail "13pb: ${_pb_f#${HERE}/../} pins ${_pb_c//\\/}. Hyprland will not fullscreen a pinned window, so this silently cancels the fullscreen rule beside it and the saver maps as a floating window with live desktop around it. Remove the pin"
+      _pb_fail=$((_pb_fail+1))
+    fi
+    if ! printf '%s\n' "${_pb_live}" \
+         | grep -Fq "windowrule = fullscreen on, match:class ^(${_pb_c})\$"; then
+      fail "13pb: ${_pb_f#${HERE}/../} has no 'fullscreen on' rule for ${_pb_c//\\/} — the idle screen will not cover the display"
+      _pb_fail=$((_pb_fail+1))
+    fi
+  done
+done
+# The payload's own belt-and-braces: fullscreen() called in __init__ runs before
+# the wayland surface exists and wlroots drops it, so it must be re-asserted
+# after present(). nyxus_matrix_saver.py already did this; the alien saver did
+# not. Checked on all three trees the bake reads.
+for _pb_p in "${NS}/nyxus_screensaver.py" \
+             "${AIROOT}/etc/skel/.config/nyxus/nyxus_screensaver.py" \
+             "${AIROOT}/opt/nyxus/nyxus_screensaver.py"; do
+  if [[ ! -r "${_pb_p}" ]]; then
+    fail "13pb: nyxus_screensaver.py missing at ${_pb_p#${HERE}/../}"; _pb_fail=$((_pb_fail+1)); continue
+  fi
+  if ! grep -q 'GLib.idle_add(win.fullscreen)' "${_pb_p}"; then
+    fail "13pb: ${_pb_p#${HERE}/../} never re-asserts fullscreen after present(). The fullscreen() in __init__ is issued before the surface is mapped and wlroots ignores it; add GLib.idle_add(win.fullscreen) after win.present() the way nyxus_matrix_saver.py does"
+    _pb_fail=$((_pb_fail+1))
+  fi
+done
+(( _pb_fail == 0 )) \
+  && ok "both savers can reach fullscreen (no pin conflict) and the payload re-asserts it after map"
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

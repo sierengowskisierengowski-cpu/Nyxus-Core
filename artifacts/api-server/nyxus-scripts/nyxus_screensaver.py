@@ -200,8 +200,8 @@ class ScreensaverWindow(Gtk.ApplicationWindow):
         candidates = [wall] if wall else []
         candidates += [
             "/usr/share/backgrounds/nyxus/nyxus-urban-alien.png",
-            "/usr/share/backgrounds/nyxus/nyxus-graffiti-space.png",
             "/usr/share/backgrounds/nyxus/nyxus-login-wall.png",
+            "/usr/share/backgrounds/nyxus/nyxus-desktop-hero.png",
             os.path.expanduser("~/.config/hypr/walls/nyxus-urban-alien.png"),
         ]
         picked = next((p for p in candidates if p and os.path.isfile(p)), None)
@@ -252,6 +252,14 @@ class ScreensaverWindow(Gtk.ApplicationWindow):
 def _on_activate(app):
     win = ScreensaverWindow(app)
     win.present()
+    # Re-assert fullscreen AFTER the surface is mapped. The fullscreen() call
+    # in __init__ runs before the wayland surface exists and wlroots drops it,
+    # so on its own the saver maps as a 900x650 floating window with the
+    # desktop showing all around it. The window rules cannot rescue this:
+    # `pin on` forces the window floating, which defeats `fullscreen on`.
+    # nyxus_matrix_saver.py already carries this same idle_add for the same
+    # reason -- measured on a live session 2026-07-30.
+    GLib.idle_add(win.fullscreen)
 
 
 def main():
