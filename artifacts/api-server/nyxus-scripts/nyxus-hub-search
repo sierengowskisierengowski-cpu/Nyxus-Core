@@ -49,9 +49,21 @@ case "$q" in
   lock)                            close_hub; runbg hyprlock;              exit 0;;
   power|shutdown|reboot|logout|sleep|suspend)
                                    close_hub; eww open --toggle powermenu; exit 0;;
-  dashboard|dash|home)             close_hub; hyprctl dispatch workspace name:0; exit 0;;
+  # name:HOME, never name:0 — a NUMERIC name:0 resolves into Hyprland's
+  # SPECIAL workspace range (id -1337), a hidden overlay, so this jumped
+  # somewhere invisible. Fixed in nyxus-stations-named.conf 2026-07-26; this
+  # call site was missed until 2026-07-30.
+  dashboard|dash|home)             close_hub; hyprctl dispatch workspace name:HOME; exit 0;;
   mission*)                        close_hub; nyxus-mission toggle;        exit 0;;
-  files|thunar|fm)                 close_hub; runbg thunar;                exit 0;;
+  # thunar is NOT on the ISO and never was — searching "files" did nothing at
+  # all. Same miss as the CORE station's on-created-empty. Fall through to
+  # something that is actually installed. (2026-07-30)
+  files|thunar|fm)                 close_hub
+                                   if   command -v thunar   >/dev/null 2>&1; then runbg thunar
+                                   elif command -v nautilus >/dev/null 2>&1; then runbg nautilus
+                                   elif command -v nyxus-files >/dev/null 2>&1; then runbg nyxus-files
+                                   else runbg alacritty; fi
+                                   exit 0;;
   terminal|term|kitty|shell)       close_hub; runbg kitty || runbg alacritty; exit 0;;
   browser|firefox|web)             close_hub; runbg firefox;               exit 0;;
   wallpaper|livewall|living)       close_hub; nyxus-live-wallpaper toggle; exit 0;;

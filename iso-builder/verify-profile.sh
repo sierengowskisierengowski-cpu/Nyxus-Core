@@ -1846,6 +1846,43 @@ done < <(find "${NS}" -maxdepth 1 -type f ! -name '*.conf' ! -name '*.md' \
 (( _af_fail == 0 )) \
   && ok "checked ${_af_n} 'set -u' script(s) — all session env vars are guarded"
 
+# ── 13ag. no shipped surface dispatches `workspace name:0` ───────────────────
+# Hyprland resolves a NUMERIC `name:0` into the SPECIAL workspace range
+# (id -1337) — a hidden overlay you cannot see. The HOME station was fixed to
+# `name:HOME` in nyxus-stations-named.conf on 2026-07-26 and the reason is
+# written out in that file's header, but three call sites kept the old form
+# and were only found on 2026-07-30:
+#
+#   eww.yuck hub_home_pill        -> the Hub's own HOME pill went nowhere
+#   nyxus-hub-search "home|dash"  -> same, from the Hub search box
+#   stations-hacker.json .home    -> HOME broke on the first hacker-mode flip
+#
+# All three are inside the Hub or its data, which is a large part of why the
+# Hub read as "nothing in here works".
+hd "13ag. nothing dispatches the hidden special workspace (name:0)"
+_ag_fail=0; _ag_n=0
+while IFS= read -r _f; do
+  [[ -f "${_f}" ]] || continue
+  _ag_n=$((_ag_n + 1))
+  _rel="${_f#"${HERE}/../"}"
+  while IFS= read -r _hit; do
+    [[ -z "${_hit}" ]] && continue
+    _ln="${_hit%%:*}"; _txt="${_hit#*:}"
+    # Comments (including the ones explaining this very rule) are fine.
+    printf '%s' "${_txt}" | grep -qE '^[[:space:]]*(#|;;|//)' && continue
+    fail "${_rel}:${_ln} dispatches 'name:0' — Hyprland reads a numeric name:0 as the SPECIAL workspace (id -1337), a hidden overlay, so this jumps somewhere invisible. Use 'name:HOME'"
+    _ag_fail=$((_ag_fail + 1))
+  done < <(grep -nE '(workspace[ ,]+name:0|"hypr"[[:space:]]*:[[:space:]]*"name:0")([^0-9]|$)' \
+             "${_f}" 2>/dev/null)
+done < <({
+  find "${NS}" "${HERE}/../artifacts/nyxus-config" -type f \
+       \( -name '*.yuck' -o -name '*.json' -o -name '*.conf' -o -name '*.sh' \) 2>/dev/null
+  find "${NS}" -maxdepth 1 -type f ! -name '*.*' 2>/dev/null
+  find "${AIROOT}/etc/skel/.config" "${AIROOT}/usr/local/bin" -type f 2>/dev/null
+} | sort -u)
+(( _ag_fail == 0 )) \
+  && ok "checked ${_ag_n} shipped file(s) — none dispatch the hidden name:0 workspace"
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

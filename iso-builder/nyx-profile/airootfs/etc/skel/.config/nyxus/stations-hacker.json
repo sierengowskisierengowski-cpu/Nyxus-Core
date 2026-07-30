@@ -11,7 +11,7 @@
   "_half_comment": "Companion ('half') station identities — names identical to stations.json so a mode flip cannot rename them. Their Hyprland workspace rules + launches live in conf.d/nyxus-stations-named.conf, which no generator ever rewrites.",
   "home": {
     "id": 0,
-    "hypr": "name:0",
+    "hypr": "name:HOME",
     "name": "HOME",
     "code": "◈",
     "hue": "green",

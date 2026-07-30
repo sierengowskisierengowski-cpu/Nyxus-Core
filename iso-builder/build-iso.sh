@@ -802,11 +802,18 @@ for _hub in nyxus-hub-open nyxus-hub-close nyxus-hub-launch nyxus-hub-apps \
     install -m 0755 "${NS}/${_hub}" "${LBIN}/${_hub}"
   fi
 done
-# Matrix screensaver payload (launched by nyxus-screensaver via hypridle).
-if [[ -f "${NS}/nyxus_matrix_saver.py" ]]; then
-  install -Dm0755 "${NS}/nyxus_matrix_saver.py" \
-    "${SKEL}/.config/nyxus/nyxus_matrix_saver.py"
-fi
+# Screensaver payloads (launched by nyxus-screensaver via hypridle).
+# nyxus_screensaver.py is the CANONICAL one — the urban-alien wallpaper hero
+# that e5c381d1 made the saver on 2026-07-24. It was never staged here, so it
+# only ever shipped because skel/.config/nyxus is not in the wipe list above:
+# an edit to the NS copy (the source of truth) would silently never reach a
+# stick. nyxus_matrix_saver.py is the superseded matrix-rain effect, kept
+# staged so an existing install that still points at it does not break.
+for _saver in nyxus_screensaver.py nyxus_matrix_saver.py; do
+  if [[ -f "${NS}/${_saver}" ]]; then
+    install -Dm0755 "${NS}/${_saver}" "${SKEL}/.config/nyxus/${_saver}"
+  fi
+done
 # greetd greeter chain — keep the airootfs copy in lockstep with the
 # canonical fixed version (login-loop fix: signal-death != crash).
 if [[ -f "${NS}/greetd/nyxus-greeter" ]]; then

@@ -390,6 +390,27 @@ bare-name keybind and `exec-once` would die silently and identically to the
 `env = PATH,/home/cosmic/...` from PR #77 — that pinned an absolute path for a
 user who does not exist on the stick.
 
+### 🕳 Three Hub controls jumped to a workspace you cannot see (part of symptom 8)
+
+Hyprland resolves a **numeric** `name:0` into the SPECIAL workspace range
+(id `-1337`) — a hidden overlay. HOME was moved off it to `name:HOME` on
+2026-07-26 and the reason is written out in the header of
+`nyxus-stations-named.conf`, but **three call sites kept the old form** and were
+only found on 2026-07-30. All three are inside the Hub or its data, which is a
+real part of why the Hub read as "nothing in here works":
+
+| Site | Effect |
+|---|---|
+| `eww.yuck` `hub_home_pill` | the Hub's own HOME pill went somewhere invisible |
+| `nyxus-hub-search` `home\|dash\|dashboard` | same, from the Hub search box |
+| `stations-hacker.json` `.home.hypr` | HOME broke on the first hacker-mode flip |
+
+Also in `nyxus-hub-search`: the `files|thunar|fm` command ran bare `thunar`,
+which **is not on the ISO** — the same miss as the CORE station's
+`on-created-empty`. Now a `command -v` chain ending in `alacritty`.
+
+Gate **13ag** scans 1059 shipped files for `name:0` and hard-fails.
+
 ### 🚫 STILL OPEN — not fixed, needs the owner or a live session
 
 Be clear with the owner about these three. They are **not** addressed by this
@@ -476,6 +497,7 @@ hashes file-by-file, not by trusting `git cherry`. **Zero open PRs** (81 total,
 | `13ad` | Warns when the squashfs compressor is `xz` |
 | `13ae` | The layer-blur catch-all stays **above** the explicit rules; reports namespaces with no rule of their own |
 | `13af` | No `set -u` script uses a bare `${XDG_RUNTIME_DIR}` / `${HYPRLAND_INSTANCE_SIGNATURE}` it never defaults |
+| `13ag` | Nothing dispatches `workspace name:0`, which is Hyprland's hidden special workspace |
 
 ### 🔜 NEXT (this section)
 

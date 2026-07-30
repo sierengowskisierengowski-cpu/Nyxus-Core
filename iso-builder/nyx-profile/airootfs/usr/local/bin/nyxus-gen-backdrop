@@ -116,18 +116,31 @@ def main() -> int:
         shutil.copy2(OUT_DIR / "starfall-backdrop-card.png",
                      EWW_ASSETS / "starfall-backdrop-card.png")
 
-    # wlogout GTK CSS cannot expand ~ — stamp the live home path
+    # wlogout GTK CSS cannot expand ~ — stamp the live home path into the
+    # starfall placeholder.
+    #
+    # OPT-IN ONLY (rev 2026-07-30). This used to rewrite the FIRST
+    # `background-image: url(...)` in the file whatever it pointed at. On
+    # 2026-07-25 the shipped stylesheet gained a deliberate pinned hero
+    # (`url("/usr/share/backgrounds/nyxus/nyxus-urban-alien.png")`, the
+    # "URBAN-ALIEN CANVAS" the owner asked for) and that became the first
+    # match — so the first wallpaper change of every session, which happens
+    # automatically at login and on every station switch, silently swapped
+    # the crisp alien art for a 42px-blurred, 0.42-brightness derivative.
+    # Only a url that is ALREADY a starfall backdrop (or the BACKDROP_HOME
+    # placeholder) is refreshed now; a pinned system wall is left alone.
     wlg = HOME / ".config/wlogout/style.css"
     if wlg.is_file():
         backdrop_uri = f"file://{OUT_DIR / 'starfall-backdrop.png'}"
         text = wlg.read_text()
         import re as _re
-        text = text.replace("file://BACKDROP_HOME", f"file://{HOME}")
-        text = _re.sub(
-            r'background-image:\s*url\("[^"]+"\)\s*;',
+        new = text.replace("file://BACKDROP_HOME", f"file://{HOME}")
+        new = _re.sub(
+            r'background-image:\s*url\("file://[^"]*starfall-backdrop\.png"\)\s*;',
             f'background-image: url("{backdrop_uri}");',
-            text, count=1)
-        wlg.write_text(text)
+            new, count=1)
+        if new != text:
+            wlg.write_text(new)
 
     print(f"nyxus-gen-backdrop: baked from {wall}")
     return 0

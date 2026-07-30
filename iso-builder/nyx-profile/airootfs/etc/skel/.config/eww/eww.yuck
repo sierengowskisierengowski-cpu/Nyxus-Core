@@ -835,7 +835,13 @@
   (button :class {WORKSPACES.home_active ? "hub-ws-pill hub-ws-active hub-ws-cyan" :
                   WORKSPACES.home.occupied ? "hub-ws-pill hub-ws-occupied hub-ws-cyan" :
                                             "hub-ws-pill hub-ws-cyan"}
-          :onclick "hyprctl dispatch workspace name:0; nyxus-hub-close &"
+          ;; name:HOME, never name:0 — Hyprland resolves a NUMERIC name:0 into
+          ;; the SPECIAL workspace range (id -1337), a hidden overlay, so this
+          ;; pill sent you somewhere invisible and the Hub looked dead. Fixed
+          ;; in nyxus-stations-named.conf on 2026-07-26; this call site was
+          ;; missed and kept the old form until 2026-07-30. The rail pill
+          ;; (workspace_home_pill) and the deck tile both already say name:HOME.
+          :onclick "hyprctl dispatch workspace name:HOME; nyxus-hub-close &"
           :tooltip "HOME · ${WORKSPACES.home.tagline ?: 'Obsidian Reactor'}"
     "${WORKSPACES.home.code}"))
 
