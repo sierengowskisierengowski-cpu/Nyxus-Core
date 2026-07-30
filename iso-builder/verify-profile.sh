@@ -2007,6 +2007,164 @@ done
 (( _ua_fail == 0 )) \
   && ok "urban-alien is pinned end to end: greeter -> hyprlock -> screensaver -> wlogout, on both trees the bake reads"
 
+# ── 13ah. eww handlers must fit inside eww's run_command budget ──────────────
+# eww runs every :onclick/:onchange as `/bin/sh -c <cmd>` and SIGKILLs that
+# shell after :timeout, which DEFAULTS TO 200 MILLISECONDS (crates/eww
+# widgets/mod.rs run_command(), identical in 0.5.0 and 0.6.0). Anything
+# sequenced after a slow FOREGROUND command therefore never runs at all.
+#
+# `nyxus-hub-close` measured 231ms-3723ms on a live session on 2026-07-30 —
+# it is a bash script that makes half a dozen eww socket round-trips and can
+# relaunch four bars. Six shipped handlers were written `nyxus-hub-close; X`,
+# so X was killed before it started. That is why every NYXUS Power action
+# (Shutdown / Restart / Suspend / Logout / Lock) "did nothing but close the
+# menu", and why the powermenu's own Cancel button did nothing at all.
+#
+# The fix is to background the WHOLE thing — `(nyxus-hub-close; X) &` — which
+# is what the hub tiles already did correctly. This gate keeps it that way.
+hd "13ah. eww onclick handlers survive the 200ms run_command budget"
+_ah_slow='nyxus-hub-close|nyxus-hub-open|nyxus-eww-launch-safe|nyxus-eww-launch|nyxus-panic'
+_ah_fail=0; _ah_files=0
+while IFS= read -r _y; do
+  [[ -f "${_y}" ]] || continue
+  _ah_files=$((_ah_files + 1))
+  while IFS= read -r _hit; do
+    [[ -z "${_hit}" ]] && continue
+    _ln="${_hit%%:*}"; _txt="${_hit#*:}"
+    # the handler's command string, i.e. what eww hands to `sh -c`
+    _cmd="$(printf '%s' "${_txt}" \
+              | sed -nE 's/.*:on(click|middleclick|rightclick|change|hover)[[:space:]]+"([^"]*)".*/\2/p')"
+    [[ -z "${_cmd}" ]] && continue
+    printf '%s' "${_cmd}" | grep -qE "(${_ah_slow})" || continue
+    # SAFE: the whole command is one detached subshell, so sh exits at once.
+    printf '%s' "${_cmd}" | grep -qE '^\(.*\)[[:space:]]*&$' && continue
+    # Otherwise every slow command must itself be detached: split the handler
+    # on the shell separators and require the segment that holds a slow
+    # command to end in `&`. `hyprctl dispatch ...; nyxus-hub-close &` is fine
+    # (hyprctl is fast and nyxus-hub-close is backgrounded); the reverse is not.
+    _stranded=""
+    while IFS= read -r _seg; do
+      printf '%s' "${_seg}" | grep -qE "(${_ah_slow})" || continue
+      printf '%s' "${_seg}" | grep -qE '&[[:space:]]*$' && continue
+      _stranded="${_seg#"${_seg%%[![:space:]]*}"}"
+      break
+    done < <(printf '%s' "${_cmd}" | sed -E 's/(&&|\|\||;)/\n/g')
+    [[ -z "${_stranded}" ]] && continue
+    fail "$(basename "${_y}"):${_ln} leaves \`${_stranded}\` in the FOREGROUND of \`${_cmd}\`. eww SIGKILLs the handler shell after 200ms (its run_command default) and nyxus-hub-close alone measured 231ms-3.7s, so nothing sequenced after it ever runs. Background the whole handler instead: \"(${_cmd}) &\" with the inner & removed"
+    _ah_fail=$((_ah_fail + 1))
+  done < <(grep -nE ':on(click|middleclick|rightclick|change|hover)[[:space:]]+"' "${_y}" 2>/dev/null)
+done < <({ find "${NS}/eww" -maxdepth 1 -name '*.yuck'; \
+           find "${AIROOT}/etc/skel/.config/eww" -maxdepth 1 -name '*.yuck'; } 2>/dev/null | sort)
+(( _ah_fail == 0 )) \
+  && ok "checked ${_ah_files} yuck file(s) — no handler strands its action behind a slow foreground command"
+
+# ── 13ai. no fullscreen input surface on the OVERLAY layer ───────────────────
+# HANDOFF Section 7: a fullscreen wlr-layer-shell surface on the OVERLAY layer
+# with no input region sits above EVERYTHING and swallows every pointer event
+# on the desktop. This was observed again live on 2026-07-30 — an unrelated
+# fullscreen OVERLAY probe was up and made every click on every other surface
+# vanish, including clicks on windows that were plainly visible.
+#
+# eww maps :stacking "overlay" -> OVERLAY and "fg" -> TOP. A fullscreen menu
+# belongs on TOP: it still covers ordinary windows, but OSDs, notifications
+# and hyprlock stay reachable above it, so the session can always talk to the
+# user and the screen can always be locked.
+hd "13ai. no fullscreen eww window sits on the OVERLAY layer"
+_ai_fail=0; _ai_n=0
+for _yuck in "${NS}/eww/eww.yuck" "${AIROOT}/etc/skel/.config/eww/eww.yuck"; do
+  [[ -r "${_yuck}" ]] || continue
+  _ai_n=$((_ai_n + 1))
+  # defwindow blocks are separated by blank lines; pull name + stacking + size
+  while IFS='|' read -r _win _stack _geo; do
+    [[ -n "${_win}" ]] || continue
+    [[ "${_stack}" == "overlay" ]] || continue
+    [[ "${_geo}" == *'width "100%"'* && "${_geo}" == *'height "100%"'* ]] || continue
+    # screensaver is the one surface that genuinely has to outrank everything,
+    # including notifications and OSDs — it is not a menu, it carries no
+    # control the user has to reach, and any input dismisses it.
+    if [[ "${_win}" == "screensaver" ]]; then
+      ok "defwindow ${_win} stays on OVERLAY on purpose (nothing may draw over the screensaver)"
+      continue
+    fi
+    fail "$(basename "${_yuck}"): defwindow ${_win} is 100%x100% AND :stacking \"overlay\" — a fullscreen OVERLAY-layer surface eats every pointer event on the desktop and nothing (not even an OSD or hyprlock) can appear above it. Use :stacking \"fg\" unless it also carries an empty input region"
+    _ai_fail=$((_ai_fail + 1))
+  done < <(awk '
+    /^\(defwindow /            { name=$2; stack=""; geo=""; want=1 }
+    want && /:stacking[[:space:]]*"/ { s=$0; sub(/.*:stacking[[:space:]]*"/,"",s); sub(/".*/,"",s); stack=s }
+    want && /:geometry/        { geo=geo $0 }
+    want && /^$/               { if (name != "") print name "|" stack "|" geo; want=0; name="" }
+    END                        { if (want && name != "") print name "|" stack "|" geo }
+  ' "${_yuck}")
+done
+(( _ai_fail == 0 && _ai_n > 0 )) \
+  && ok "checked ${_ai_n} eww config(s) — no fullscreen window claims the OVERLAY layer"
+
+# ── 13aj. the bars keep their blur alpha-clip (shadow-box guard) ─────────────
+# The frosted rectangular "shadow box" behind the bars is what the bars look
+# like with NO alpha clip. Demonstrated live on 2026-07-30 by A/B-ing
+# `hyprctl keyword layerrule 'ignore_alpha <v>, match:namespace nyxus-bar-*'`
+# on a running session: at 0.0 the wallpaper behind each cluster and behind
+# the whole left rail turns into a solid frosted slab; at 0.2, 0.45 and 0.6 it
+# is crisp and only the pills carry frost. So the shipped value is already
+# right and the bug is the rule going MISSING, not the number being wrong.
+#
+# The window/bar roots are `background: transparent` (alpha 0) and the pill
+# fills are rgba(8,3,16,0.55) / rgba(24,10,44,0.62), so any threshold strictly
+# between 0 and 0.55 clips the bleed and keeps the frost. Above 0.55 the pills
+# lose their frost too, which is the other half of what the owner asked for.
+hd "13aj. bar blur keeps an alpha clip below the pill fill"
+_LBS="${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf"
+_PILL_MIN="0.55"     # lowest pill background-color alpha in eww.css
+if [[ -r "${_LBS}" ]]; then
+  _aj_fail=0
+  for _ns in nyxus-bar-top nyxus-bar-bottom nyxus-bar-left nyxus-bar-right; do
+    _v="$(grep -E "^layerrule = ignore_alpha [0-9.]+, match:namespace ${_ns}\$" "${_LBS}" \
+            | tail -1 | sed -E 's/^layerrule = ignore_alpha ([0-9.]+),.*/\1/')"
+    if [[ -z "${_v}" ]]; then
+      fail "${_ns} has no ignore_alpha layerrule — with blur on and no alpha clip the bar renders as a frosted rectangular slab (the 'shadow box'). Add: layerrule = ignore_alpha 0.2, match:namespace ${_ns}"
+      _aj_fail=$((_aj_fail + 1)); continue
+    fi
+    if awk -v v="${_v}" 'BEGIN{exit !(v <= 0)}'; then
+      fail "${_ns} has ignore_alpha ${_v} — 0 clips nothing, so the blur bleeds into the fully transparent parts of the bar and paints the shadow box"
+      _aj_fail=$((_aj_fail + 1))
+    elif awk -v v="${_v}" -v p="${_PILL_MIN}" 'BEGIN{exit !(v >= p)}'; then
+      fail "${_ns} has ignore_alpha ${_v}, which is >= the ${_PILL_MIN} alpha of the pill fills — that clips the pills themselves and the frost disappears along with the box. Keep it strictly between 0 and ${_PILL_MIN}"
+      _aj_fail=$((_aj_fail + 1))
+    fi
+  done
+  (( _aj_fail == 0 )) \
+    && ok "all four bars clip blur below the ${_PILL_MIN} pill alpha — frost on the pills, no slab behind them"
+else
+  fail "nyxus-hyprland-layerblur.conf is not in skel conf.d"
+fi
+
+# ── 13ak. no shipping config has an unread twin under nyxus-scripts/hypr ─────
+# The bake reads Hyprland shards from the ROOT of nyxus-scripts:
+#   build-iso.sh:  install "${NS}"/nyxus-hyprland-*.conf  and  "${NS}/${_shard}"
+# It never looks in nyxus-scripts/hypr/conf.d/. That directory nevertheless
+# held copies of nyxus-hyprland-layerblur.conf and nyxus-stations.conf, and
+# both had drifted from the real ones — the layerblur twin was still the
+# pre-2026-07-30 ordering. An agent grepping for "layerblur" finds the twin
+# first, because its path looks canonical, edits it, verifies nothing, and
+# ships nothing. This is the single most repeated bug on this project, so it
+# gets a gate rather than another paragraph in HANDOFF.
+hd "13ak. no unread duplicate Hyprland shards under nyxus-scripts/hypr"
+_ak_fail=0; _ak_dir="${NS}/hypr/conf.d"
+if [[ -d "${_ak_dir}" ]]; then
+  while IFS= read -r _dup; do
+    [[ -n "${_dup}" ]] || continue
+    _b="$(basename "${_dup}")"
+    if [[ -f "${NS}/${_b}" ]]; then
+      fail "${_dup#${NS}/} is a copy of ${_b}, which the bake actually installs from ${NS}/${_b}. Nothing reads nyxus-scripts/hypr/conf.d/ — delete the copy so the next edit cannot land in a file that ships nothing"
+    else
+      fail "${_dup#${NS}/} lives in a directory the bake never reads (build-iso.sh installs shards from the root of nyxus-scripts). Move it to ${NS}/${_b} and add it to the shard list, or delete it"
+    fi
+    _ak_fail=$((_ak_fail + 1))
+  done < <(find "${_ak_dir}" -maxdepth 1 -name '*.conf' 2>/dev/null | sort)
+fi
+(( _ak_fail == 0 )) \
+  && ok "no decoy Hyprland shards under nyxus-scripts/hypr/conf.d"
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

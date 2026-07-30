@@ -575,7 +575,13 @@ expects) gets refreshed. A pinned system wall is left alone.
   wlogout keeps the canvas · **gen-backdrop cannot clobber a pinned hero** ·
   NS ↔ airootfs byte-identity for all seven files.
 
-### 🎨 OWNER DECISIONS — not guessed, flag only
+### 🎨 OWNER DECISIONS — ✅ ALL THREE ANSWERED AND IMPLEMENTED 2026-07-30
+
+> The owner answered all three the same afternoon: move the login card off the
+> alien, lighten the NYXUS · POWER scrim, give the standalone GTK power window
+> the art. See **"👽 THE THREE OWNER DECISIONS — IMPLEMENTED"** below for what
+> was done, how each was verified, and the screenshots. The three items are
+> left below as written so the reasoning behind each decision is still legible.
 
 1. **The greeter art and the greeter LAYOUT no longer match.**
    `regreet.css` pushes the login card to the right third
@@ -1915,6 +1921,131 @@ Verify a flashed stick from the agent side (no sudo needed):
   unit and `NetworkManager-wait-online` put ~100s in front of the greeter on a
   live stick. Live-only work belongs behind
   `ConditionPathExists=!/run/archiso`. Gate `13ac`.
+- **eww kills a widget handler after 200 ms (2026-07-30).** `:timeout`
+  defaults to 200ms and eww SIGKILLs the `/bin/sh -c` it spawned. Never put a
+  NYXUS script in the FOREGROUND of an `:onclick` — `nyxus-hub-close` alone
+  measured 231ms-3.7s, so `nyxus-hub-close; do-the-thing` never does the
+  thing. Background the whole handler: `(nyxus-hub-close; do-the-thing) &`.
+  Gate `13ah`.
+- **eww has no `:onkeydown` (2026-07-30).** Not in 0.5.0, not in 0.6.0. It is
+  accepted, logged as a warning, and dropped. Keyboard escape from any eww
+  overlay must be a compositor bind.
+- **`(eventbox :onclick "true")` blocks nothing (2026-07-30).** eww's eventbox
+  returns `gtk::Inhibit(false)`. It does not shield nested buttons and does not
+  stop the click reaching an outer eventbox. Measured, not assumed — see the
+  dated section below. Do not reach for it again.
+
+### 2026-07-30 · The Hub trap, the dead Power buttons, and the bar "shadow box"
+
+Three findings, all measured on a live Hyprland session rather than reasoned
+about. The first one overturns what the previous two sessions believed.
+
+**1 · `(eventbox :onclick "true")` never swallowed anything — DISPROVEN.**
+The wrapper around `nyxus_hub_layout` was blamed for the Hub's dead controls
+across two sessions. It is not the cause and never was. A throwaway eww config
+reproducing the exact nesting, driven by synthetic clicks through
+`/dev/uinput`, gives a deterministic answer (6/6, then 8/8 per zone):
+
+| clicked | handlers that fired |
+| --- | --- |
+| button inside the wrapper | the button only |
+| wrapper's own padding | wrapper **and** the outer backdrop dismiss |
+| outer backdrop | outer dismiss |
+
+eww's eventbox handler returns `gtk::Inhibit(false)` (identical in 0.5.0 and
+0.6.0), so it stops nothing; `GtkButton`'s own class handler is what keeps a
+tile click from reaching the backdrop. The wrapper neither blocked buttons nor
+did the job its comment claimed. It has been deleted. **Do not re-add it, and
+do not blame it again.**
+
+**2 · The real killer: eww SIGKILLs a handler after 200 ms.**
+`run_command()` spawns `/bin/sh -c <cmd>` and kills it once `:timeout`
+elapses — and `:timeout` **defaults to 200 ms**. `nyxus-hub-close` measured
+**231 ms – 3723 ms** on a live session on its *fast* path (Hub not even open,
+bars already up); it makes half a dozen eww socket round-trips and can
+relaunch four bars. Six shipped handlers were written `nyxus-hub-close; X`,
+which put the slow script in the foreground, so `X` was killed before it ever
+started. Verified directly: `sh -c 'nyxus-hub-close; echo REACHED'` killed at
+200 ms never writes REACHED.
+
+That is the whole explanation for "NYXUS Power does nothing": Shutdown,
+Restart, Suspend, Logout and Lock all ran `nyxus-hub-close; (${cmd}) &`, so the
+menu dismissed and the action never happened. The powermenu's own Cancel and
+the dashboard's Close were bare `nyxus-hub-close` with no `&` at all — killed
+mid-flight every time. The hub tiles were always written `(${cmd}) &` and were
+the only handlers doing it right.
+
+Fix: one backgrounded subshell, `(nyxus-hub-close; X) &`. Gate **`13ah`**
+fails any handler that leaves a slow NYXUS command in the foreground. Note the
+rule is per-segment, not per-handler: `hyprctl dispatch ...; nyxus-hub-close &`
+is fine because the slow half is the detached half.
+
+**3 · The Hub was a fullscreen OVERLAY-layer input surface (Section 7 again).**
+`:stacking "overlay"` at 100%x100% puts it above everything with no input
+region. While it is up, nothing else on the desktop can be clicked — so any
+Hub action that opens an ordinary window (`nyxus-settings`, `wdisplays`,
+anything via `nyxus-hub-launch`) lands *behind* it and reads as dead. This was
+demonstrated by accident during this session: a concurrent agent's fullscreen
+OVERLAY probe was up and every synthetic click on every other surface silently
+vanished until it closed.
+
+`nyxus-hub`, `dashboard`, `powermenu` and `cheatsheet` are now `:stacking "fg"`
+(TOP). They still cover ordinary windows, but OSDs, notifications and hyprlock
+stay above them, so the session can always reach the user. `screensaver` stays
+on OVERLAY deliberately. Gate **`13ai`**.
+
+Also removed: `:onkeydown` on the Hub's backdrop. **eww has no such attribute**
+in 0.5.0 or 0.6.0 — it was dropped with a log warning, so the in-widget Escape
+it appeared to provide never existed. Escape lives in `hyprland.conf`, which is
+the only layer that can guarantee it. `Super+Shift+Escape` now runs a bare
+`eww close nyxus-hub` *first* and on its own, and a new
+`Super+Ctrl+Shift+Escape` closes every eww window and relaunches via
+`nyxus-eww-launch-safe` without touching a single NYXUS script. Before this,
+every route out of the Hub — both close buttons, the backdrop, both Escape
+binds — funnelled through `nyxus-hub-close`, so one slow script was the only
+thing between the owner and a surface he could not dismiss.
+
+**4 · The bar "shadow box" is what NO alpha clip looks like — 0.2 is correct.**
+A/B'd live with `hyprctl keyword layerrule 'ignore_alpha <v>, match:namespace
+nyxus-bar-*'` and screenshots at 0.0 / 0.2 / 0.45 / 0.6. At **0.0** the
+wallpaper behind each metric cluster and behind the whole left rail turns into
+a solid frosted slab — that *is* the shadow box, and it is the blur bleeding
+into the near-zero-alpha halo around each pill (blur is `size 14, passes 4`, so
+it travels a long way past content edges). At 0.2, 0.45 and 0.6 the wallpaper
+is crisp and only the pills carry frost; the three are visually
+indistinguishable.
+
+So **the shipped value was already right and no threshold change was made.**
+Bar/window roots are `background: transparent` (alpha 0) and the pill fills are
+`rgba(8,3,16,0.55)` / `rgba(24,10,44,0.62)`, so any clip strictly between 0 and
+0.55 works; at 0.6 and above the pills lose their frost too. If the boxes come
+back, the rule is not reaching the compositor — check that, not the number.
+Gate **`13aj`** pins all four bars into that window.
+
+**5 · A third tree, again.** `artifacts/api-server/nyxus-scripts/hypr/conf.d/`
+held copies of `nyxus-hyprland-layerblur.conf` and `nyxus-stations.conf` that
+**nothing reads** — `build-iso.sh` installs shards from the *root* of
+`nyxus-scripts`. Both had drifted; the layerblur twin was still the pre-reorder
+ordering. Its path looks canonical, so it is exactly the file an agent greps
+for, edits, and ships nothing from. Deleted; gate **`13ak`** fails if any
+`.conf` reappears there.
+
+**Still open / not proven.**
+- Everything above is proven for eww widget, event and CSS behaviour on this
+  box (Hyprland **0.55.4**, eww 0.5.0). It is **not** proof for path resolution
+  or compositor-specific layer handling: the ISO ships Hyprland **0.56.1** and
+  a **`~/.local/bin` that is empty**. Gate `13x` already warns on that skew.
+- Why the owner sees shadow boxes on the ISO when the shipped shard does carry
+  `ignore_alpha 0.2` for all four bars (confirmed by extracting the 07.29
+  `airootfs.sfs`) is **not** established. The rule not applying under 0.56.1 is
+  the leading suspect and needs a boot to settle.
+- The Hub's controls were never exercised end to end on the real fullscreen
+  surface: the one attempt was invalidated by a concurrent agent's fullscreen
+  OVERLAY probe absorbing the clicks.
+- `verify-profile.sh` gate `13ub` (agent 4e21a37e) reads the powermenu scrim
+  with a fixed `grep -A4 '^(defwindow powermenu'`. Two comment lines added
+  inside that block are enough to fail a gate that is actually satisfied. It
+  wants a wider window or a block-aware read.
 
 ---
 
