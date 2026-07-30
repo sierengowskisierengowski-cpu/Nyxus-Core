@@ -2007,6 +2007,91 @@ done
 (( _ua_fail == 0 )) \
   && ok "urban-alien is pinned end to end: greeter -> hyprlock -> screensaver -> wlogout, on both trees the bake reads"
 
+# ── 13ub. the urban-alien surfaces stay LOOKABLE, not just pinned ────────────
+# 13ua proves the hero is wired up. It says nothing about whether you can see
+# it, and on 2026-07-30 the owner's answer to all three was "no": the greeter
+# card sat across the alien's legs, the Super+Escape overlay buried the mural
+# under a 0.76/0.82 scrim, and the app-menu power window had no art at all.
+# Each fix is a single number or a single block that a later edit can quietly
+# undo, so each gets an assertion.
+hd "13ub. urban-alien surfaces are actually visible (card placement, scrim, art)"
+_ub_fail=0
+_ubfail() { fail "$*"; _ub_fail=$((_ub_fail + 1)); }
+
+# (a) The login card must clear the centre-composed alien. nyxus-urban-alien is
+#     NOT the left-weighted art these margins were written for: at Cover on
+#     1920x1080 the figure spans x~460..1550, so the old margin-left of 720px
+#     put the card straight through it.
+for _f in "${NS}/greetd/regreet.css" "${AIROOT}/etc/greetd/regreet.css"; do
+  if [[ -r "${_f}" ]]; then
+    _ml="$(grep -oE '^[[:space:]]*margin-left:[[:space:]]*[0-9]+px;' "${_f}" \
+             | head -1 | grep -oE '[0-9]+')"
+    if [[ -z "${_ml}" ]]; then
+      _ubfail "$(basename "$(dirname "${_f}")")/regreet.css: the login frame has no plain \`margin-left: <n>px;\` line. nyxus-greeter rescales the card for the detected panel by rewriting that exact line — without it every screen gets the 1920x1080 numbers, and a narrower panel pushes the card off the edge where the operator cannot type a password"
+    elif (( _ml < 1200 )); then
+      _ubfail "$(basename "$(dirname "${_f}")")/regreet.css: login card margin-left is ${_ml}px. Anything below ~1200 lands it on the alien in nyxus-urban-alien.png (the figure runs to x~1550 at Cover on 1920x1080) — that is the 'old login screen' the owner reported. 1360px parks it in the starfield right of the sneaker"
+    fi
+  else
+    _ubfail "missing ${_f}"
+  fi
+done
+# ...and the greeter has to do the rescale, or those absolute pixels are a
+# lockout waiting for the first non-1080p panel.
+for _f in "${NS}/greetd/nyxus-greeter" "${AIROOT}/usr/local/bin/nyxus-greeter"; do
+  [[ -r "${_f}" ]] || continue
+  grep -q 'REGREET_STYLE' "${_f}" \
+    || _ubfail "$(basename "${_f}") no longer generates a per-panel stylesheet (REGREET_STYLE). regreet.css positions the card in ABSOLUTE pixels tuned for 1920 wide; on a 1366x768 laptop those margins push the login card off screen"
+done
+# regreet's config + stylesheet have to actually be installed from NS. They were
+# not, for the whole life of the file: NS carried a full copy that nothing ever
+# staged, so editing the source of truth shipped nothing.
+grep -q 'regreet.css' "${HERE}/build-iso.sh" \
+  || _ubfail "build-iso.sh does not stage greetd/regreet.css from NS — the login screen would ship whatever is committed under airootfs, not the source of truth"
+for _pair in "greetd/regreet.css:etc/greetd/regreet.css" \
+             "greetd/regreet.toml:etc/greetd/regreet.toml" ; do
+  _src="${NS}/${_pair%%:*}"; _dst="${AIROOT}/${_pair#*:}"
+  [[ -r "${_src}" && -r "${_dst}" ]] || continue
+  cmp -s "${_src}" "${_dst}" \
+    || _ubfail "${_pair%%:*} differs between nyxus-scripts (source of truth) and airootfs"
+done
+
+# (b) The Super+Escape overlay's scrim. Above ~0.70 the ufo-shop mural is a
+#     smudge; the card and buttons carry their own fills, so lowering it costs
+#     no label contrast (measured 18.5:1 white / 11.5:1 grey at 0.52/0.60 over
+#     the brightest 1% of the art).
+#     Read the whole `(defwindow powermenu …)` form, not a fixed line window.
+#     The first cut of this used `grep -A4` and a later commit added two comment
+#     lines inside the block, which pushed the value out of the window and
+#     failed a tree that was actually correct — i.e. it was asserting "do not
+#     comment here". Slurp from the defwindow line to the next top-level `(def`
+#     form so comments and blank lines anywhere inside are irrelevant.
+for _f in "${NS}/eww/eww.yuck" "${AIROOT}/etc/skel/.config/eww/eww.yuck"; do
+  [[ -r "${_f}" ]] || continue
+  _sc="$(awk '/^\(defwindow powermenu([[:space:]]|$)/ { f = 1 }
+              f && /^\(def/ && ++n > 1        { exit }
+              f                               { print }' "${_f}" \
+           | grep -oE 'linear-gradient\([[:space:]]*rgba\([[:space:]]*5,[[:space:]]*1,[[:space:]]*13,[[:space:]]*[0-9.]+' \
+           | head -1 | grep -oE '[0-9]+\.[0-9]+$')"
+  if [[ -z "${_sc}" ]]; then
+    _ubfail "$(basename "${_f}"): the powermenu window no longer scrims the hero with linear-gradient(rgba(5,1,13,..)) — check the NYXUS · POWER overlay still shows the ufo-shop art"
+  elif awk -v v="${_sc}" 'BEGIN{exit !(v > 0.70)}'; then
+    _ubfail "$(basename "${_f}"): NYXUS · POWER scrim is back to ${_sc}. The owner asked to SEE the graffiti; 0.76 was the value that hid it, and the power labels do not depend on this number because .powermenu-root and .power-btn stack their own fills"
+  fi
+done
+
+# (c) The standalone GTK power window — same menu, reached from the app menu
+#     instead of the keybind — was the last flat power surface.
+for _f in "${NS}/nyxus_powermenu.py" "${AIROOT}/opt/nyxus/nyxus_powermenu.py"; do
+  [[ -r "${_f}" ]] || continue
+  grep -q 'nyxus-urban-alien.png' "${_f}" \
+    || _ubfail "$(basename "${_f}") lost its urban-alien wall — the app-menu power window falls back to flat ink while the keybind overlay, hyprlock, the greeter and the screensaver all wear the hero"
+  grep -q 'set_measure_overlay' "${_f}" \
+    || _ubfail "$(basename "${_f}") drops set_measure_overlay: the Gtk.Picture backdrop is set_can_shrink(True) and asks for no size, so the window collapses to set_default_size and clips the outer tiles and the ESC hint off the edge"
+done
+
+(( _ub_fail == 0 )) \
+  && ok "the hero is visible on all three power/login surfaces, and the greeter scales its card to the panel"
+
 # ── 13ah. eww handlers must fit inside eww's run_command budget ──────────────
 # eww runs every :onclick/:onchange as `/bin/sh -c <cmd>` and SIGKILLs that
 # shell after :timeout, which DEFAULTS TO 200 MILLISECONDS (crates/eww

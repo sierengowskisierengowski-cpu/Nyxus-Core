@@ -534,7 +534,7 @@ five `~/.local/bin` call sites fixed afterwards in `c0be97f2`).
 | **Login (greetd + regreet)** | **Ships, correct** | `nyxus-greeter` copies `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png` → `/var/cache/regreet/nyxus-login-bg.png` on **every** greeter start; the art is present (3.6 MB); `/var/cache/regreet` + `/var/lib/greetd` are `drwxr-xr-x` **uid 950 = `greeter`** (the `4c7b52ca` bake fix worked — `unsquashfs` shows them as `brltty` only because this host's brltty happens to be uid 950); `regreet.css` `window` is a 0.35 scrim so the art reads through |
 | **hypridle** | **Ships, correct** | shipped `hypridle.conf` is byte-identical to the NS source of truth (`7c5738b5`) — 45 s idle-glass, 300 s dim + urban-alien saver, 600 s `loginctl lock-session` + dpms off, 900 s suspend. `exec-once = hypridle` is in the shipped `hyprland.conf` (line 97). `brightnessctl` + `nyxus-idle-glass.sh` both ship |
 | **Screensaver** | **Ships, correct** (staging hardened) | `nyxus-screensaver` execs `nyxus_screensaver.py` (not the retired matrix-rain saver) and pins `NYXUS_SCREENSAVER_WALL`; the payload ships in skel and is byte-identical across NS / skel / `/opt/nyxus-cache`; GTK4 + libadwaita + PyGObject all present; the four `app.nyxus.Screensaver` windowrules ship **and** `nyxus-hyprland-rules.conf` is `source=`d |
-| **NYXUS Power** | **wlogout was BROKEN AT RUNTIME — fixed.** eww overlay ships art | see below |
+| **NYXUS Power** | **wlogout was BROKEN AT RUNTIME — fixed.** eww overlay ships art (scrim lightened since — see the owner-decisions section) | see below |
 | **Backgrounds throughout** | **Ships** | desktop `wallpaper.conf` + `wallpaper.json` → urban-alien; `livewall.conf` is `LIVE=on` and the loop renders **from that still**; all 10 station wallpapers are alien art; lock/login/saver/wlogout all resolve to the same hero |
 
 ### 🔴 The one real regression — the power menu was un-theming itself
@@ -631,6 +631,147 @@ expects) gets refreshed. A pinned system wall is left alone.
   login/lock **anti-lockout recovery gate**.
 - `BOOTSTRAP_VERSION` deliberately **not** bumped again — r16 was already
   bumped today, so installed systems will re-pull these two scripts anyway.
+
+---
+
+## 👽 THE THREE OWNER DECISIONS — IMPLEMENTED (2026-07-30, later)
+
+All three of the items flagged above were answered by the owner and are now on
+`main`. Screenshots for every one of them:
+**`~/Pictures/nyxus-theme-2026-07-30/`**.
+
+| # | Surface | Change | Verified |
+|---|---|---|---|
+| 1 | greeter login card | `margin-left` 720px → **1360px**, `margin-right` 120px → **40px**, plus a per-panel rescale in `nyxus-greeter` | **`regreet --demo`**, real binary, real CSS, real art, at 1920×1080 on the owner's display |
+| 2 | eww `powermenu` (`Super+Escape`) | scrim `0.76/0.82` → **`0.52/0.60`** | **LIVE** on the owner's own eww daemon |
+| 3 | `nyxus_powermenu.py` (app menu) | urban-alien wall behind the tiles, ramped scrim | **LIVE**, window launched and screenshotted on the owner's session |
+
+### 1 · The login card was sitting on the alien
+
+The old margins were written for art with the subject on the LEFT.
+`nyxus-urban-alien.png` is centre-composed: measured on the actual
+`fit = "Cover"` crop at 1920×1080 (source 1536×1024, ×1.25, 100 px off top and
+bottom), the figure runs **x≈460 → x≈1550**, peace-sign hand to sneaker, and
+the graffiti wordmark spans the whole top band. `margin-left: 720px` put the
+card straight through the alien's legs and cut the figure in half. **That is
+what the owner was seeing when he said the login screen looked old** — the
+background was already correct on the 07.29 stick; the card was in the wrong
+place on it.
+
+`1360px / 40px` parks the card in the starfield right of the sneaker and below
+the tail of the wordmark's S. The whole figure and the whole wordmark stay
+visible.
+
+**The greeter now rescales those margins for the detected panel.** GTK4 CSS has
+no percentage margins and no `halign`, so the position can only be expressed in
+absolute pixels — and absolute pixels tuned for 1920 wide would push the card
+**off the right edge of a 1366×768 laptop, where the operator cannot type a
+password.** That is a lockout, i.e. exactly what the rest of `nyxus-greeter`
+exists to prevent. So before launching regreet it reads the panel's preferred
+mode straight from `/sys/class/drm/*/modes` (no compositor is up yet),
+recomputes the two margins, writes the sheet into the greeter-writable
+`/var/cache/regreet/`, and passes it with `regreet -s`. Fully guarded — any
+failure and regreet falls back to `/etc/greetd/regreet.css` unchanged.
+Card centre lands at 0.845·W down to about 1600 wide, then clamps so the 520 px
+card always fits (1024 wide → `480/24`, 1920 → `1360/40`, 3840 → `2729/80`).
+
+**`greetd/regreet.css` and `regreet.toml` were never staged by the bake.** NS
+carried a full copy of both and `build-iso.sh` installed neither, so the login
+screen shipped whatever was committed under `airootfs/etc/greetd/` and an edit
+to the source of truth reached no stick. They are staged now. (`regreet.toml`
+had already silently drifted — a copyright line.)
+
+**How this was verified, and its limit.** The greeter runs as the `greeter` user
+under greetd *before* login, so it cannot be exercised on a running desktop and
+nobody should try — restarting greetd risks the session. Instead:
+`regreet --demo -c … -s …`, which is the real 0.5.0 binary the ISO also ships
+(`greetd-regreet 0.5.0-1` in the squashfs pacman db — same version, confirmed),
+rendering the real stylesheet over the real wall at the real 1920×1080. Three
+candidate placements were rendered and compared before picking this one. This
+is a faithful render of the layout; it is **not** proof of the greetd/cage/DRM
+path, which only a boot can give.
+
+### 2 · NYXUS · POWER scrim — 0.76/0.82 → 0.52/0.60
+
+Roughly doubles what survives of the ufo-shop mural. Rendered at four values on
+the owner's display (`0.76/0.82`, `0.52/0.60`, `0.44/0.52`, `0.36/0.44`) and
+judged from the screenshots: at `0.36/0.44` the card's edges dissolve into the
+mural and it stops reading as a panel; `0.52/0.60` is the point where the art is
+fully legible and the card is still clearly a card.
+
+**Label legibility does not depend on this number** and the measurement says so:
+`.powermenu-root` and `.power-btn` stack their own fills over the scrim, so even
+over the **brightest 1 %** of the art the white glyph holds 18.5:1 and the
+grey label 11.5:1 (WCAG AA wants 4.5). Confirmed visually with a 1:1 crop of the
+button row before and after — indistinguishable.
+
+### 3 · The app-menu power window had no art
+
+`nyxus_powermenu.py` now uses the same construction as `nyxus_screensaver.py` —
+`Gtk.Overlay` + `Gtk.Picture` at `ContentFit.COVER` + a scrim box — resolving the
+wall from `/usr/share/backgrounds/nyxus` → `~/.config/hypr/walls` →
+`/opt/nyxus-cache/hypr-walls`, with `NYXUS_POWERMENU_WALL` to override. No wall,
+no change: it falls back to the flat `rgba(5,1,13,0.96)` it always had.
+
+Two things that only showed up by running it:
+
+- **`overlay.set_measure_overlay(root, True)` is mandatory here.** The Picture is
+  `set_can_shrink(True)` and therefore requests no size, so the overlay measured
+  nothing, the window collapsed to `set_default_size(680, 540)`, and the outer
+  tiles and the ESC hint were clipped off the edge. With the measure flag the
+  window is 758×646 again, byte-for-byte the pre-change layout.
+- **The scrim is ramped, not flat.** `ESC TO DISMISS` is 9 px `#6a6e78` sitting
+  directly on the wall, and at a flat `0.55` it was unreadable over the nebula.
+  A `text-shadow` outline was tried first and GTK did not carry it far enough.
+  The gradient inks the top and bottom bands where the loose text lives and runs
+  **lighter than 0.55** through the middle where only tiles and gutters are — so
+  it shows more art, not less.
+
+No colour was introduced or changed on any of the three surfaces. ALIEN NEON
+holds; the only new values are ink alphas of the existing void `rgba(5,x,1x)`.
+
+### Gate `13ub` — "visible", not just "pinned"
+
+`13ua` proves the hero is *wired up*. It says nothing about whether you can see
+it, and on this date the answer on all three surfaces was no. `13ub` asserts the
+part `13ua` cannot: login-card `margin-left` ≥ 1200 **and** in the plain
+one-declaration-per-line shape the greeter's rescale rewrites · the greeter
+still generates that per-panel sheet · `build-iso.sh` stages `regreet.css` ·
+NS ↔ airootfs identity for both greetd files · the powermenu scrim is not back
+above 0.70 · `nyxus_powermenu.py` keeps both its wall and its
+`set_measure_overlay`.
+
+### ⚠ Two things the next agent should not repeat
+
+- **eww 0.5.0 hot-reloads on config file change — writing `~/.config/eww/eww.yuck`
+  IS an `eww reload`.** Proven here: with a window open, editing the yuck
+  changed 93.5 % of its pixels with no `eww reload` command issued. So the
+  "never `eww reload` the real daemon" rule in Section 7 must be read as "never
+  *write* his live eww config while deck windows are up". Work in a throwaway
+  `eww --config /tmp/<dir> daemon` instead — a separate config dir gets a
+  separate socket and a separate daemon, and only the windows you open.
+  (The live write here was done deliberately, at a moment when only the four
+  bars were up; all four survived and the daemon count stayed at 1.)
+- **A throwaway eww probe must be closed, and `eww … kill` is not enough.**
+  An `eww --config … open <win>` client can outlive the daemon it started and
+  keep its layer surface mapped. One was left up for ~10 minutes here and,
+  being a fullscreen `overlay`-layer surface with no input region, it swallowed
+  every pointer event on the desktop — which a second agent then had to
+  diagnose from scratch (it is the incident behind gate `13ai`). Kill the
+  `eww … open` **process by PID** and confirm with `hyprctl layers` that the
+  namespace is gone.
+
+### Fidelity caveat on everything above
+
+This box is **Hyprland 0.55.4**; the ISO ships **0.56.1**. `~/.local/bin` is
+fully populated here and ships **EMPTY**. Live confirmation on this machine is
+strong evidence for **visual / CSS / widget** questions — which is all three of
+these items — and is **not** evidence for path resolution or
+compositor-version-specific behaviour. That exact false confidence is what
+produced the `~/.local/bin` bug fixed earlier the same day. Anything in the
+second category gets checked against the extracted squashfs at
+`/home/cosmic/iso-inspect/airootfs.sfs`, which is how the regreet version match
+above was established.
 
 ---
 

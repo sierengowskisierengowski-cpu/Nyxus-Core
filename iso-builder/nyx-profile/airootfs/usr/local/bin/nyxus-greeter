@@ -94,9 +94,55 @@ fi
 # success and stop the chain. Real crashes exit 1 and still fall through.
 trap 'echo "[$(date -Iseconds)] got TERM (greetd teardown) — exiting chain" >>"$LOG" 2>&1; exit 0' TERM INT
 
+# ── CARD PLACEMENT · scale the login card to the panel (rev 2026-07-30) ─────
+# regreet.css positions the credential card with ABSOLUTE pixel margins, because
+# GTK4 CSS has no percentage margins and no halign. The shipped numbers are
+# tuned for 1920x1080, where they park the card in the starfield to the right of
+# the centre-composed alien on nyxus-urban-alien.png. On a narrower panel
+# (a 1366x768 laptop, a 4:3 projector) those same absolute margins would shove
+# the card past the right edge and the operator could not type a password —
+# a lockout, which is the exact failure mode this whole script exists to avoid.
+#
+# So: read the panel's preferred mode straight from DRM (no compositor is up
+# yet), recompute the two horizontal margins for that width, and hand regreet
+# the generated sheet with -s. FULLY GUARDED — any failure here leaves
+# REGREET_STYLE empty and regreet falls back to /etc/greetd/regreet.css.
+REGREET_STYLE=""
+{
+  _src="/etc/greetd/regreet.css"
+  _gen="${XDG_CACHE_HOME}/regreet.css"
+  _w=""
+  for _c in /sys/class/drm/card*-*; do
+    [ "$(cat "$_c/status" 2>/dev/null)" = "connected" ] || continue
+    _mode="$(head -1 "$_c/modes" 2>/dev/null)"
+    case "$_mode" in
+      [0-9]*x[0-9]*) _w="${_mode%%x*}"; break ;;
+    esac
+  done
+  if [ -s "$_src" ] && [ -n "$_w" ] && [ "$_w" -gt 0 ] 2>/dev/null; then
+    # Card is ~520px wide at the shipped font. Aim its centre at 0.845*W (the
+    # right margin of the art), then clamp so it can never overhang the edge.
+    _mr=$(( _w * 21 / 1000 )); [ "$_mr" -lt 24 ] && _mr=24
+    _ml=$(( (_w * 169 / 100) - _w + _mr ))          # 2*0.845*W - W + MR
+    _cap=$(( _w - _mr - 520 ))
+    [ "$_ml" -gt "$_cap" ] && _ml="$_cap"
+    [ "$_ml" -lt 0 ] && _ml=0
+    if sed -E "s/^([[:space:]]*)margin-left:[[:space:]]*[0-9]+px;/\1margin-left: ${_ml}px;/; \
+               s/^([[:space:]]*)margin-right:[[:space:]]*[0-9]+px;/\1margin-right: ${_mr}px;/" \
+           "$_src" >"$_gen" 2>/dev/null && [ -s "$_gen" ]; then
+      REGREET_STYLE="$_gen"
+      echo "[$(date -Iseconds)] login card scaled for ${_w}px panel (margin-left ${_ml}, margin-right ${_mr})" >>"$LOG" 2>&1
+    fi
+  fi
+} >>"$LOG" 2>&1 || true
+
 run_regreet() {  # $1 = extra env description
   echo "[$(date -Iseconds)] trying regreet ($1)" >>"$LOG" 2>&1
-  cage -s -- regreet >>"$LOG" 2>&1
+  if [ -n "$REGREET_STYLE" ]; then
+    cage -s -- regreet -s "$REGREET_STYLE" >>"$LOG" 2>&1
+  else
+    cage -s -- regreet >>"$LOG" 2>&1
+  fi
   rc=$?
   if [ "$rc" -ge 128 ]; then
     echo "[$(date -Iseconds)] regreet ($1) ended by signal ($rc) — greetd teardown, chain stops" >>"$LOG" 2>&1

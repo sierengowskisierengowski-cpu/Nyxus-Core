@@ -14,20 +14,40 @@ window {
     font-family: "Inter Display", "JetBrains Mono", sans-serif;
 }
 
-/* login card - frosted smoked glass, nudged toward the right third.
+/* login card - frosted smoked glass, held in the right margin of the art.
  * Scope: ONLY regreet's login frame. The earlier `box.horizontal > box`
  * selector was too broad — it also matched regreet's clock/message boxes and
  * painted them as extra frosted panels shoved 720px to the right, which showed
  * up as a stray "weird box" low on the login background. Target the frame only
- * so the background stays clean and only the credential card is styled. */
+ * so the background stays clean and only the credential card is styled.
+ *
+ * CARD PLACEMENT (rev 2026-07-30, owner decision).
+ * These margins were 720px/120px, written for art whose subject sat on the
+ * LEFT. The login wall has since been pinned to nyxus-urban-alien.png, which
+ * is CENTRE-COMPOSED: at `fit = "Cover"` on 1920x1080 the alien runs from
+ * x~460 to x~1550 (peace-sign hand to sneaker) and the NYXUS graffiti wordmark
+ * spans the whole top band. 720px landed the card squarely across the alien's
+ * legs and cut the figure in half — this is the "old login screen" the owner
+ * was seeing. 1360px/40px parks the card in the starfield to the right of the
+ * sneaker, below the tail of the wordmark's S, so the entire figure and the
+ * entire wordmark stay visible. Verified with `regreet --demo` (same 0.5.0 the
+ * ISO ships) at 1920x1080.
+ *
+ * These are ABSOLUTE pixels and this is a distro that boots on unknown panels,
+ * so a narrower screen would push the card off the edge — i.e. lock the
+ * operator out. nyxus-greeter therefore rescales these four values for the
+ * detected panel before launching regreet and passes the result with `-s`;
+ * the numbers below are the 1920x1080 case and the never-lock-out fallback if
+ * that generation fails. Keep the `margin-left:`/`margin-right:` lines in this
+ * exact one-declaration-per-line shape — the generator rewrites them by line. */
 frame, .frame {
     background-color: rgba(5, 2, 11, 0.82);
     border: 1px solid rgba(125, 61, 255, 0.32);
     border-top: 2px solid #7d3dff;
     border-radius: 16px;
     padding: 22px 26px;
-    margin-left: 720px;
-    margin-right: 120px;
+    margin-left: 1360px;
+    margin-right: 40px;
     box-shadow: 0 0 24px rgba(125, 61, 255, 0.30),
                 0 8px 28px rgba(0, 0, 0, 0.55);
 }

@@ -819,6 +819,18 @@ done
 if [[ -f "${NS}/greetd/nyxus-greeter" ]]; then
   install -m 0755 "${NS}/greetd/nyxus-greeter" "${LBIN}/nyxus-greeter"
 fi
+# ...and the greeter's own config + stylesheet. These were NOT staged: NS
+# carried a full copy of both and nothing ever installed it, so the login
+# screen shipped whatever happened to be committed under airootfs/etc/greetd
+# and an edit to the NS copy (the tree everything else here treats as the
+# source of truth) reached no stick. regreet.css in particular now carries the
+# card placement the owner approved, and nyxus-greeter rescales it per panel by
+# reading /etc/greetd/regreet.css — so this file has to be the current one.
+for _g in regreet.toml regreet.css; do
+  if [[ -f "${NS}/greetd/${_g}" ]]; then
+    install -Dm0644 "${NS}/greetd/${_g}" "${PROFILE_DIR}/airootfs/etc/greetd/${_g}"
+  fi
+done
 
 # ── Station decks + Jul-27 ops scripts (rev 2026-07-28) ─────────────────
 # nyxus-home-deck is the socket2 watcher that maps EVERY station to its eww

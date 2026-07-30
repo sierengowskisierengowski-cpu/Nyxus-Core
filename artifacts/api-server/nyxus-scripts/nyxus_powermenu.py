@@ -87,8 +87,25 @@ def _pm_css() -> str:
     pink = HUD_PALETTE.get("pink", "#ff2dad")
     css = hud_css_bundle("window.pm-window", ("pink",))
     css += f"""
+/* Stays as the base coat AND as the fallback: if no urban-alien wall resolves
+ * (see _find_wall) the window simply reads as it always did, flat void. */
 window.pm-window {{
     background: rgba(5, 1, 13, 0.96);
+}}
+/* Same ink as the screensaver's .nyx-scrim, but ramped instead of flat.
+ * The six tiles carry their own rgba(7,5,14,0.93) fill so their glyphs and
+ * labels never depend on the scrim; the title, "WHAT DO YOU WANT TO DO" and
+ * "ESC TO DISMISS" sit straight on the wall, and at a flat 0.55 the 9px hint
+ * was unreadable wherever the nebula was bright (a text-shadow outline was
+ * tried first and GTK did not carry it far enough). So: heavy ink in the top
+ * and bottom bands where the loose text lives, lighter than 0.55 through the
+ * middle where only tiles and gutters are — which shows MORE art, not less. */
+.pm-scrim {{
+    background: linear-gradient(to bottom,
+                rgba(5, 3, 14, 0.90)   0%,
+                rgba(5, 3, 14, 0.42)  24%,
+                rgba(5, 3, 14, 0.42)  72%,
+                rgba(5, 3, 14, 0.94) 100%);
 }}
 .pm-title {{
     font-family: "Permanent Marker", cursive;
@@ -99,12 +116,20 @@ window.pm-window {{
     letter-spacing: 0.06em;
     margin: 28px 0 4px 0;
 }}
+/* The two grey strings sit directly on the wall, not on a tile, so they are
+ * the only text the art can eat. An ink halo (no colour change — the ALIEN
+ * NEON greys stay exactly as they were) carries them over the graffiti. */
 .pm-subtitle {{
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
     color: #9aa0ad;
     letter-spacing: 0.26em;
     margin-bottom: 26px;
+    text-shadow: -1px 0 0 rgba(5, 1, 13, 0.95),
+                  1px 0 0 rgba(5, 1, 13, 0.95),
+                  0 -1px 0 rgba(5, 1, 13, 0.95),
+                  0  1px 0 rgba(5, 1, 13, 0.95),
+                  0 0 9px rgba(5, 1, 13, 1.0);
 }}
 .pm-hint {{
     font-family: "JetBrains Mono", monospace;
@@ -113,6 +138,11 @@ window.pm-window {{
     letter-spacing: 0.22em;
     margin-top: 22px;
     margin-bottom: 18px;
+    text-shadow: -1px 0 0 rgba(5, 1, 13, 0.95),
+                  1px 0 0 rgba(5, 1, 13, 0.95),
+                  0 -1px 0 rgba(5, 1, 13, 0.95),
+                  0  1px 0 rgba(5, 1, 13, 0.95),
+                  0 0 9px rgba(5, 1, 13, 1.0);
 }}
 """
     # Per-action hue tiles — HUD cards with solid top rule + bloom.
@@ -154,6 +184,31 @@ window.pm-window {{
     return css
 
 CSS = _pm_css()
+
+# ── URBAN-ALIEN CANVAS (rev 2026-07-30, owner decision) ─────────────────────
+# The eww Super+Escape overlay, hyprlock, the greeter and the idle screensaver
+# all wear nyxus-urban-alien; this window — the same menu, reached from the app
+# menu instead of the keybind — was the one power surface still painted flat.
+# Same resolution order as nyxus_screensaver so both agree on which file wins,
+# plus the offline cache dir nyxus_chrome uses. `/usr/share/backgrounds/nyxus`
+# is the shipped location; `~/.config/hypr/walls` is where a live install keeps
+# it, and on a dev box only the latter exists.
+_WALL_CANDIDATES = (
+    "/usr/share/backgrounds/nyxus/nyxus-urban-alien.png",
+    os.path.expanduser("~/.config/hypr/walls/nyxus-urban-alien.png"),
+    "/opt/nyxus-cache/hypr-walls/nyxus-urban-alien.png",
+)
+
+
+def _find_wall() -> str | None:
+    override = os.environ.get("NYXUS_POWERMENU_WALL", "")
+    for p in ((override,) if override else ()) + _WALL_CANDIDATES:
+        try:
+            if p and os.path.isfile(p):
+                return p
+        except Exception:
+            continue
+    return None
 
 
 def _run(cmd: list[str]) -> bool:
@@ -232,6 +287,32 @@ class PowermenuWindow(Adw.ApplicationWindow):
         root.append(subtitle)
         root.append(grid)
         root.append(hint)
+
+        wall = _find_wall()
+        if wall:
+            try:
+                overlay = Gtk.Overlay()
+                pic = Gtk.Picture.new_for_filename(wall)
+                pic.set_content_fit(Gtk.ContentFit.COVER)
+                pic.set_can_shrink(True)
+                pic.set_hexpand(True)
+                pic.set_vexpand(True)
+                overlay.set_child(pic)
+                scrim = Gtk.Box()
+                scrim.add_css_class("pm-scrim")
+                scrim.set_hexpand(True)
+                scrim.set_vexpand(True)
+                overlay.add_overlay(scrim)
+                overlay.add_overlay(root)
+                # Without this the overlay measures only the Picture, which is
+                # set_can_shrink(True) and therefore asks for nothing — the
+                # window collapses to set_default_size and clips the outer
+                # tiles and the ESC hint clean off. Measure the tile grid.
+                overlay.set_measure_overlay(root, True)
+                self.set_content(overlay)
+                return
+            except Exception:
+                pass
         self.set_content(root)
 
     def _make_tile(self, key, label, glyph, css, confirm, primary, fb):

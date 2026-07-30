@@ -1,6 +1,6 @@
 # ============================================================
 #  NYXUS — ReGreet configuration (themed Wayland greeter)
-#  © 2026 JOSEPH SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #  rev 2026-07-14 — Nyxus alien / "Nyxus Hyprland" login.
 #  Styling lives in /etc/greetd/regreet.css (loaded automatically).
 #  Background MUST live under /etc/greetd/ — the 'greeter' user cannot

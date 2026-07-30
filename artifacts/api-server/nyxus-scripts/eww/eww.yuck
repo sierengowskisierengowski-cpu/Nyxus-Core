@@ -2855,13 +2855,20 @@
         (nyxus_hub_layout)
         (box)))))
 
+;; Scrim was 0.76/0.82, which left the ufo-shop graffiti as a barely-readable
+;; smudge — the owner asked to see the art. 0.52/0.60 (rev 2026-07-30) roughly
+;; doubles what survives of it while the card still reads as a discrete panel;
+;; at 0.36/0.44, also rendered, the card's edges dissolve into the mural.
+;; Label legibility does not depend on this number: .powermenu-root and
+;; .power-btn stack their own fills, so measured over the brightest 1% of the
+;; art the white glyph holds 18.5:1 and the grey label 11.5:1 (WCAG AA is 4.5).
 ;; "fg" (TOP), not "overlay": same fullscreen-input-surface hazard as
 ;; nyxus-hub. See HANDOFF Section 7 and the defwindow nyxus-hub comment.
 (defwindow powermenu
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-powermenu"
   :geometry (geometry :width "100%" :height "100%" :anchor "center")
   (box :class "overlay-backdrop"
-       :style "background-image: linear-gradient(rgba(5,1,13,0.76), rgba(5,1,13,0.82)), url('assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
+       :style "background-image: linear-gradient(rgba(5,1,13,0.52), rgba(5,1,13,0.60)), url('assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
     (powermenu_layout)))
 
 ;; "fg" (TOP), not "overlay": same fullscreen-input-surface hazard as
