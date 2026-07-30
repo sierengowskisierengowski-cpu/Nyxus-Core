@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
-# NYXUS · Account privileged helper · rev 2026-05-13 r1
+# NYXUS · Account privileged helper · rev 2026-07-30 r2
 # Installed at /usr/local/libexec/nyxus-account-helper.
-# Invoked via pkexec from nyxus_account.py for the small set of ops that
-# need root: change shell, set avatar, add/remove from groups, lock/unlock.
+# Invoked via pkexec from nyxus_account.py and from Settings ▸ Your Account
+# for the small set of ops that need root: change the display name, change
+# the shell, set the avatar, add/remove groups, lock/unlock.
 set -u
 LOG=/var/log/nyxus/account.log
-mkdir -p "$(dirname "$LOG")"
-log()  { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; }
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
+# Logging must never be the reason an action fails, and must never write
+# its own errors over the helper's real stderr — Settings shows the LAST
+# stderr line to the user, so a "permission denied" from the log would
+# mask the actual validation message.
+# NOTE the brace group: `cmd >>"$LOG" 2>/dev/null` does NOT suppress a
+# failure to OPEN $LOG — bash reports that itself, before the redirect is
+# applied. The group is what puts the redirection error inside 2>/dev/null.
+log()  { { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; } 2>/dev/null || true; }
 fail() { echo "nyxus-account-helper: $*" >&2; log "FAIL: $*"; exit 2; }
 
 [[ $# -ge 2 ]] || { echo "usage: $0 <action> <user> [args]" >&2; exit 2; }
@@ -18,6 +26,16 @@ ACTION="$1"; USER="$2"; shift 2
 id -u "$USER" >/dev/null 2>&1            || fail "no such user: $USER"
 
 case "$ACTION" in
+  set-name)
+    # Display name (GECOS field 1). Settings ▸ Your Account writes this so
+    # the greeter, file managers and the Hub show a real name instead of
+    # the login. chfn rejects ':' and ',' itself; we reject them up front
+    # so the failure is a clear message rather than a chfn usage error.
+    [[ $# -eq 1 ]] || fail "usage: set-name <user> <display-name>"
+    [[ "$1" != *:* && "$1" != *,* ]] || fail "name may not contain ':' or ','"
+    [[ ${#1} -le 64 ]]               || fail "name too long (max 64)"
+    log "set-name $USER '$1'"; exec chfn -f "$1" "$USER"
+    ;;
   set-shell)
     [[ $# -eq 1 ]] || fail "usage: set-shell <user> <shell>"
     grep -qx "$1" /etc/shells || fail "shell not in /etc/shells"

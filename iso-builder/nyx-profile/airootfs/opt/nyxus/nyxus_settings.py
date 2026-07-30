@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ──────────────────────────────────────────────────────────────────────
-#  NYXUS · Settings                                  rev 2026.07.24-r16
+#  NYXUS · Settings                                  rev 2026.07.30-r17
 # ──────────────────────────────────────────────────────────────────────
 #  System control center for NYXUS. GTK4 + libadwaita Python app.
 #  AdwNavigationSplitView (sidebar + content), ALIEN NEON aesthetic,
@@ -46,7 +46,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 # ── App identity ──────────────────────────────────────────────────────
 APP_ID    = "io.nyxus.settings"
 APP_NAME  = "NYXUS Settings"
-APP_REV   = "rev 2026.07.24-r16"
+APP_REV   = "rev 2026.07.30-r17"
 WIN_W     = 1180
 WIN_H     = 740   # fits inside 768 with EWW bar present (§12)
 
@@ -136,7 +136,8 @@ GLYPHS = {
     "storage":       "\uf0a0",   # nf-fa-hdd_o
     "updates":       "\uf0ed",   # nf-fa-cloud_download
     "accessibility": "\uf29a",   # nf-fa-universal_access
-    "users":         "\uf007",   # nf-fa-user
+    "users":         "\uf0c0",   # nf-fa-users        (other people)
+    "account":       "\uf007",   # nf-fa-user         (your own account)
     "about":         "\uf05a",   # nf-fa-info_circle
     "search":        "\uf002",   # nf-fa-search
     "check":         "\uf00c",   # nf-fa-check
@@ -334,6 +335,98 @@ def fire_and_forget(cmd: str) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────
+# Privileged actions (polkit)
+#
+# Every root operation goes through a nyxus-*-helper under pkexec. Two
+# rules, both learned the hard way:
+#
+#   1. NEVER let a privileged call block forever. Without a polkit agent
+#      pkexec falls back to a TTY prompt; with no tty attached that can
+#      sit there holding the GTK callback. Every call is timeout-bounded
+#      and runs off the main loop.
+#   2. NEVER present a control we already know cannot work. If the helper
+#      or an authentication agent is missing, say so in the row instead
+#      of failing after the user has already typed something.
+# ──────────────────────────────────────────────────────────────────────
+LIBEXEC = Path("/usr/local/libexec")
+
+# Agents that can service a polkit request on this desktop. polkit-gnome is
+# what the ISO ships; the others are accepted so a customised session still
+# reports capable.
+_POLKIT_AGENTS = (
+    "polkit-gnome-authentication-agent-1",
+    "polkit-kde-authentication-agent-1",
+    "polkit-mate-authentication-agent-1",
+    "lxpolkit",
+    "hyprpolkitagent",
+    "pantheon-agent-polkit",
+)
+
+
+def polkit_agent_running() -> bool:
+    """True if some polkit authentication agent can show a prompt."""
+    for agent in _POLKIT_AGENTS:
+        if sh(["pgrep", "-x", agent], timeout=2)[0] == 0:
+            return True
+    # pgrep -x matches the comm name only; some agents are launched via a
+    # wrapper with a longer argv.
+    return sh(["pgrep", "-f", "polkit.*authentication-agent"],
+              timeout=2)[0] == 0
+
+
+def helper_path(name: str) -> Optional[Path]:
+    """Return the installed privileged helper, or None."""
+    p = LIBEXEC / name
+    return p if p.is_file() else None
+
+
+def privileged_status(helper: str) -> Tuple[bool, str]:
+    """(usable, human reason). Never raises."""
+    if not have("pkexec"):
+        return False, "pkexec is not installed — privileged changes are off"
+    if helper_path(helper) is None:
+        return False, (f"{helper} is not installed "
+                       f"(expected in {LIBEXEC}) — reinstall nyxus-scripts")
+    if not polkit_agent_running():
+        return False, ("no polkit authentication agent is running, so an "
+                       "admin prompt cannot be shown — log out and back in, "
+                       "or start polkit-gnome")
+    return True, "asks for an administrator password"
+
+
+def run_privileged(helper: str, args: List[str],
+                   on_done: Callable[[bool, str], None],
+                   *, timeout: int = 45) -> None:
+    """Run `helper args` under pkexec, off the GTK main loop.
+
+    on_done(ok, message) is delivered on the main thread. Bounded by
+    `timeout` so a stuck authentication can never wedge the UI; the
+    default is generous enough for a human to type a password.
+    """
+    usable, why = privileged_status(helper)
+    if not usable:
+        GLib.idle_add(on_done, False, why)
+        return
+    cmd = ["pkexec", str(LIBEXEC / helper), *args]
+
+    def _done(res: Tuple[int, str, str]) -> None:
+        rc, out, err = res
+        if rc == 0:
+            on_done(True, (out or "").strip())
+        elif rc == 126:
+            on_done(False, "cancelled — administrator approval not given")
+        elif rc == 127:
+            on_done(False, "authorisation failed or the helper is missing")
+        elif rc == 124:
+            on_done(False, "timed out waiting for administrator approval")
+        else:
+            detail = (err or out or "").strip().splitlines()
+            on_done(False, detail[-1][:120] if detail else f"failed (rc={rc})")
+
+    sh_async(cmd, _done, timeout=timeout)
+
+
+# ──────────────────────────────────────────────────────────────────────
 # Persistence
 # ──────────────────────────────────────────────────────────────────────
 def load_prefs() -> dict:
@@ -497,10 +590,18 @@ SECTIONS: Tuple[SectionDef, ...] = (
                "update,upgrade,pacman,aur,package,version", 1,
                "System"),
     # ── Account ─────────────────────────────────────────────────────────
+    SectionDef("account",       "Your Account",
+               "Your picture, display name and administrator status",
+               "account",
+               "me,my account,your info,profile,avatar,picture,photo,"
+               "display name,full name,real name,who am i,admin,"
+               "administrator,standard user,sign in,identity", 1,
+               "Account"),
     SectionDef("users",         "Users",
-               "Account info, password, groups, shell",
+               "Add, remove and manage other people's accounts",
                "users",
-               "user,account,password,group,shell,passwd,profile", 1,
+               "user,users,other people,account,password,group,shell,"
+               "passwd,add user,delete user,sudo,wheel", 1,
                "Account"),
     SectionDef("sync",          "NYXUS Account",
                "Opt-in sync of wallpaper, theme, settings",
@@ -950,6 +1051,22 @@ scale slider {{ background-color: {WHITE_PURE};
 .nyx-pill.warn    {{ color: {GREY_LIGHT}; border-color: {GREY_MID}; }}
 .nyx-pill.danger  {{ color: {DANGER_RED}; border-color: {DANGER_RED}; }}
 
+/* ── Account avatar (Your Account) ───────────────────────────────── */
+.nyx-avatar {{
+    border-radius: 999px;
+    border: 2px solid {NEON};
+    background-color: {GLASS_DEEPER};
+}}
+.nyx-avatar-initial {{
+    border-radius: 999px;
+    border: 2px solid {NEON};
+    background-color: {GLASS_DEEPER};
+    color: {WHITE_OFF};
+    font-family: '{FONT_DISPLAY}', '{FONT_UI}', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+}}
+
 /* ── Wallpaper grid (Appearance) ─────────────────────────────────── */
 .nyx-wall-tile {{
     border: 2px solid transparent;
@@ -991,7 +1108,12 @@ def install_css() -> None:
 # Shared helpers
 # ──────────────────────────────────────────────────────────────────────
 def status_pill(label: str, kind: str = "ok") -> Gtk.Label:
-    """Tiny status capsule used in titles and rows."""
+    """Tiny status capsule used in titles and rows.
+
+    kind: ok | warn | danger, or "info" for a neutral capsule that states
+    a fact without implying anything is right or wrong (e.g. "Standard
+    user" — accurate, and not a problem).
+    """
     lbl = Gtk.Label(label=label)
     lbl.add_css_class("nyx-pill")
     if kind in ("ok", "warn", "danger"):
@@ -1367,32 +1489,67 @@ def make_reset_group(page: "SectionPage",
     (e.g. delete a generated config file, restore a base template).
     Then triggers page.rebuild() so the user sees the new state.
     """
+    # A page "owns stored state" if it either persists a prefs namespace
+    # or overrides standard_extra_reset() to undo non-prefs state. Pages
+    # that own neither reflect live system state only, and a Reset button
+    # there is a dead end — it used to toast "reset to defaults" having
+    # popped nothing. Say so instead of lying.
+    owns_extra = (type(page).standard_extra_reset
+                  is not SectionPage.standard_extra_reset)
+    owns_state = bool(pref_namespaces) or owns_extra
+
+    if not owns_state:
+        grp = Adw.PreferencesGroup(
+            title="Reset",
+            description="This section has no saved settings of its own — "
+                        "every value on it is read live from the system, so "
+                        "there is nothing to restore.")
+        grp.add(empty_row(
+            "Nothing stored for this section",
+            "Change these settings back through the controls above, or "
+            "use the underlying tool listed under Advanced"))
+        return grp
+
     grp = Adw.PreferencesGroup(
         title="Reset",
         description="Restore this section to factory defaults. "
                     "Affects only this section's options.")
+
     def _do_reset() -> None:
         try:
             cur = load_prefs()
-            for ns in pref_namespaces:
+            cleared = [ns for ns in pref_namespaces if ns in cur]
+            for ns in cleared:
                 cur.pop(ns, None)
-            save_prefs(cur)
-            if extra_reset:
+            if cleared:
+                save_prefs(cur)
+            ran_extra = False
+            if extra_reset and owns_extra:
                 try:
                     extra_reset()
+                    ran_extra = True
                 except Exception as e:
                     log.warning("reset extra: %s", e)
-            page.toast("reset to defaults")
+            if cleared:
+                page.toast(f"reset: cleared {', '.join(cleared)}")
+            elif ran_extra:
+                page.toast("restored shipped defaults")
+            else:
+                page.toast("already at defaults — nothing stored")
             page.rebuild()
         except Exception as e:
             log.warning("reset failed: %s", e)
             page.toast(f"reset failed: {e}")
+
+    stored_now = [ns for ns in pref_namespaces if ns in load_prefs()]
+    if stored_now:
+        sub = f"Clears saved settings: {', '.join(stored_now)}"
+    elif owns_extra:
+        sub = "Restores this section's shipped defaults"
+    else:
+        sub = "Nothing is stored yet — this section is already at defaults"
     grp.add(action_row(
-        "Reset to defaults",
-        "Wipes this section's saved settings (other sections unaffected)",
-        "Reset",
-        _do_reset,
-        css="nyx-pill-warn"))
+        "Reset to defaults", sub, "Reset", _do_reset, css="nyx-pill-warn"))
     return grp
 
 
@@ -2008,7 +2165,7 @@ class SoundPage(SectionPage):
         self.add_group(tools)
         if have("pavucontrol"):
             tools.add(action_row("Open pavucontrol",
-                                 "Per-application mixer & routing",
+                                 "Per-application mixer &amp; routing",
                                  "Launch",
                                  lambda: fire_and_forget("pavucontrol")))
         if have("easyeffects"):
@@ -3473,7 +3630,7 @@ class ColorPage(SectionPage):
         if not profs:
             self._track(self.prof_group, empty_row(
                 "No imported profiles",
-                "Use Import & assign ICC on a display to add a "
+                "Use Import &amp; assign ICC on a display to add a "
                 "profile."))
         else:
             for p in profs[:24]:
@@ -3735,7 +3892,7 @@ class KeyboardPage(SectionPage):
         # window, which is what Super+/ opens (hyprland.conf).
         ext.add(action_row(
             "Open keyboard cheatsheet",
-            "Full list of system & Hyprland shortcuts",
+            "Full list of system &amp; Hyprland shortcuts",
             "Open",
             lambda: fire_and_forget("eww open --toggle hotkey-cheatsheet")))
 
@@ -4057,7 +4214,7 @@ class MousePage(SectionPage):
         # ── Touchpad gestures (libinput-gestures) ────────────────────
         gst_grp = Adw.PreferencesGroup(
             title="Touchpad gestures",
-            description="3- & 4-finger swipes powered by "
+            description="3- &amp; 4-finger swipes powered by "
                         "libinput-gestures (user systemd unit)")
         self.add_group(gst_grp)
         if not have("libinput-gestures"):
@@ -4616,7 +4773,7 @@ class PrivacyPage(SectionPage):
 class AppsPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = ["rofi", "drun", "nyxus-store",
                                 "nyxus_launcher"]
-    STANDARD_RESET_NS = ["apps"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Open user .desktop folder",
          "~/.local/share/applications/",
@@ -5083,7 +5240,7 @@ class AppsPage(SectionPage):
 # ──────────────────────────────────────────────────────────────────────
 class StoragePage(SectionPage):
     STANDARD_KEYBIND_TOKENS = ["nautilus", "nyxus-files", "thunar"]
-    STANDARD_RESET_NS = ["storage"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Run interactive disk usage (ncdu)",
          "Drill into ~/ to find large files",
@@ -5600,7 +5757,7 @@ class UpdatesPage(SectionPage):
             if have(helper):
                 tools.add(action_row(
                     f"AUR upgrade ({helper})",
-                    f"{helper} -Syu — includes AUR & repos",
+                    f"{helper} -Syu — includes AUR &amp; repos",
                     "Run",
                     lambda h=helper:
                         open_terminal(f"{h} -Syu", self.win)))
@@ -5993,7 +6150,7 @@ pacman -Syy
 class AccessibilityPage(SectionPage):
     KEY = "accessibility"
     STANDARD_KEYBIND_TOKENS = ["orca", "wvkbd", "magnus"]
-    STANDARD_RESET_NS = ["a11y", "font_scale"]
+    STANDARD_RESET_NS = ["font_scale"]
     STANDARD_ADVANCED = [
         ("Reset cursor size",
          "hyprctl keyword cursor:size 24",
@@ -6176,7 +6333,7 @@ class AccessibilityPage(SectionPage):
 # ──────────────────────────────────────────────────────────────────────
 class ParentalControlsPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["parental"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("View blocklist (/etc/hosts.nyxus-parental)",
          "Inspect the appended host entries",
@@ -6368,7 +6525,7 @@ class ParentalControlsPage(SectionPage):
 class AppPermissionsPage(SectionPage):
     KEY = "app_perms"
     STANDARD_KEYBIND_TOKENS = []  # no natural keybinds
-    STANDARD_RESET_NS = ["app_perms"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Reset ALL flatpak overrides",
          "Wipes every per-app permission override globally",
@@ -6538,11 +6695,399 @@ class AppPermissionsPage(SectionPage):
 
 
 # ──────────────────────────────────────────────────────────────────────
+# YOUR ACCOUNT — the "this is me" page (Windows 11 ▸ Accounts ▸ Your info)
+#
+# Deliberately separate from Users. Users is ADMINISTRATION (create,
+# delete, promote other people). This is IDENTITY: my picture, my name,
+# am I an administrator, how do I sign in. That split is what Windows and
+# macOS both do, and it is why the owner could not find "change my
+# picture" — it was buried in a multi-user admin page.
+#
+# Reads never need privilege (getent/id/loginctl). Writes go through
+# nyxus-account-helper under pkexec and degrade to a clear explanation
+# when polkit cannot service them — they never sit on a hidden prompt.
+# ──────────────────────────────────────────────────────────────────────
+AS_ICON_DIR = Path("/var/lib/AccountsService/icons")
+
+
+class AccountPage(SectionPage):
+    """Your account: picture, display name, administrator status."""
+
+    KEY = "account"
+    STANDARD_KEYBIND_TOKENS = []
+    STANDARD_RESET_NS = ["account"]
+    HELPER = "nyxus-account-helper"
+
+    # ── identity reads (always available) ─────────────────────────────
+    @staticmethod
+    def _me() -> str:
+        try:
+            return os.environ.get("USER") or Path.home().name
+        except Exception:
+            return "user"
+
+    @classmethod
+    def _entry(cls) -> dict:
+        rc, out, _ = sh(["getent", "passwd", cls._me()], timeout=2)
+        p = out.strip().split(":") if rc == 0 and out.strip() else []
+        if len(p) < 7:
+            return {}
+        return {"name": p[0], "uid": p[2], "gecos": p[4],
+                "home": p[5], "shell": p[6]}
+
+    @classmethod
+    def _groups(cls) -> List[str]:
+        rc, out, _ = sh(["id", "-Gn", cls._me()], timeout=2)
+        return out.split() if rc == 0 else []
+
+    @classmethod
+    def _display_name(cls) -> str:
+        gecos = (cls._entry().get("gecos") or "").split(",")[0].strip()
+        return gecos or cls._me()
+
+    @classmethod
+    def _avatar_path(cls) -> Optional[Path]:
+        """Where this account's picture actually lives, in the order the
+        rest of the system resolves it."""
+        for cand in (AS_ICON_DIR / cls._me(), Path.home() / ".face"):
+            try:
+                if cand.is_file() and cand.stat().st_size > 0:
+                    return cand
+            except Exception:
+                continue
+        return None
+
+    # ── page ──────────────────────────────────────────────────────────
+    def build(self) -> None:
+        self._usable, self._why = privileged_status(self.HELPER)
+
+        self.hero_grp = Adw.PreferencesGroup(title="You")
+        self.add_group(self.hero_grp)
+        self.pic_grp = Adw.PreferencesGroup(
+            title="Your picture",
+            description="Shown on the login screen, in the Hub and anywhere "
+                        "the system names you")
+        self.add_group(self.pic_grp)
+        self.name_grp = Adw.PreferencesGroup(
+            title="Your name",
+            description="Your display name — what people and apps call you, "
+                        "as distinct from the username you log in with")
+        self.add_group(self.name_grp)
+        self.signin_grp = Adw.PreferencesGroup(
+            title="Sign-in",
+            description="How you authenticate to this machine")
+        self.add_group(self.signin_grp)
+        self.admin_grp = Adw.PreferencesGroup(
+            title="Administrator access",
+            description="Administrators can change system-wide settings and "
+                        "install software. Membership of the wheel group is "
+                        "what grants it.")
+        self.add_group(self.admin_grp)
+        self.related_grp = Adw.PreferencesGroup(
+            title="Related settings",
+            description="Other places that show or use your account")
+        self.add_group(self.related_grp)
+
+        self._render()
+
+    def _render(self) -> None:
+        self._render_hero()
+        self._render_picture()
+        self._render_name()
+        self._render_signin()
+        self._render_admin()
+        self._render_related()
+        self.clear_pills()
+        self.add_pill(status_pill(
+            "administrator" if "wheel" in self._groups() else "standard",
+            "ok" if "wheel" in self._groups() else "warn"))
+
+    # ── hero ──────────────────────────────────────────────────────────
+    def _render_hero(self) -> None:
+        _clear_group(self.hero_grp)
+        info = self._entry()
+        me = self._me()
+        row = Adw.ActionRow(
+            title=self._display_name(),
+            subtitle=f"{me}  ·  uid {info.get('uid', '?')}")
+        row.add_prefix(self._avatar_widget(64))
+        row.add_suffix(status_pill(
+            "Administrator" if "wheel" in self._groups() else "Standard user",
+            "ok" if "wheel" in self._groups() else "info"))
+        self.hero_grp.add(row)
+
+        rc, host, _ = sh(["hostnamectl", "--static"], timeout=2)
+        self.hero_grp.add(kv_row(
+            "Signed in to", (host.strip() or "this machine")))
+        self.hero_grp.add(kv_row("Home folder", info.get("home", "?")))
+
+    def _avatar_widget(self, px: int) -> Gtk.Widget:
+        """Round avatar, or an initial when no picture is set."""
+        path = self._avatar_path()
+        if path is not None:
+            try:
+                pic = Gtk.Picture.new_for_filename(str(path))
+                pic.set_size_request(px, px)
+                pic.set_content_fit(Gtk.ContentFit.COVER)
+                pic.add_css_class("nyx-avatar")
+                pic.set_valign(Gtk.Align.CENTER)
+                return pic
+            except Exception as e:
+                log.warning("avatar render %s: %s", path, e)
+        initial = (self._display_name() or "?").strip()[:1].upper()
+        lbl = Gtk.Label(label=initial or "?")
+        lbl.set_size_request(px, px)
+        lbl.add_css_class("nyx-avatar-initial")
+        lbl.set_valign(Gtk.Align.CENTER)
+        return lbl
+
+    # ── picture ───────────────────────────────────────────────────────
+    def _render_picture(self) -> None:
+        _clear_group(self.pic_grp)
+        path = self._avatar_path()
+        where = (str(path) if path is not None
+                 else "no picture set — a letter is shown instead")
+        row = Adw.ActionRow(title="Your picture", subtitle=where)
+        row.add_prefix(self._avatar_widget(48))
+        btn = Gtk.Button(label="Choose…")
+        btn.add_css_class("nyx-pill")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.connect("clicked", lambda _b: self._pick_picture())
+        row.add_suffix(btn)
+        self.pic_grp.add(row)
+
+        if path is not None:
+            self.pic_grp.add(action_row(
+                "Remove picture",
+                "Go back to the plain initial",
+                "Remove",
+                self._remove_picture,
+                css="nyx-pill-warn"))
+
+        # Be explicit about the two-tier storage — the system-wide copy is
+        # the one the greeter can read, and it is the one that needs root.
+        if self._usable:
+            self.pic_grp.add(kv_row(
+                "Visible on the login screen",
+                "yes — copied to the system icon folder",
+                f"{AS_ICON_DIR}/{self._me()} (needs an admin password once)"))
+        else:
+            self.pic_grp.add(empty_row(
+                "Login screen will keep the old picture",
+                f"{self._why}. Your picture still changes everywhere "
+                f"inside your session."))
+
+    def _pick_picture(self) -> None:
+        dlg = Gtk.FileChooserNative(
+            title="Choose your account picture",
+            transient_for=self.win,
+            action=Gtk.FileChooserAction.OPEN,
+            accept_label="Use", cancel_label="Cancel")
+        flt = Gtk.FileFilter()
+        flt.set_name("Images")
+        for pat in ("png", "jpg", "jpeg", "webp", "bmp"):
+            flt.add_pattern(f"*.{pat}")
+            flt.add_pattern(f"*.{pat.upper()}")
+        dlg.add_filter(flt)
+        dlg.connect("response", self._on_picture_chosen)
+        dlg.show()
+        self._pic_dlg = dlg   # keep alive
+
+    def _on_picture_chosen(self, dlg, resp) -> None:
+        gfile = dlg.get_file() if resp == Gtk.ResponseType.ACCEPT else None
+        dlg.destroy()
+        if gfile is None:
+            return
+        src = gfile.get_path()
+        if not src:
+            return
+        # 1. ~/.face — always works, no privilege, and is what most
+        #    in-session surfaces read.
+        face = Path.home() / ".face"
+        try:
+            shutil.copy2(src, face)
+            face.chmod(0o644)
+        except Exception as e:
+            self.toast(f"could not set picture: {e}")
+            return
+        prefs = load_prefs()
+        prefs.setdefault("account", {})["picture_source"] = src
+        save_prefs(prefs)
+        self.toast("picture updated")
+        self._render()
+        # 2. System-wide copy for the greeter. AccountsService only reads
+        #    PNG reliably, and the helper enforces that, so convert first
+        #    when we can rather than handing it a rejected .jpg.
+        png = self._as_png(src)
+        if png is None:
+            self.toast("picture set for your session "
+                       "(login screen needs a PNG)")
+            return
+        run_privileged(
+            self.HELPER, ["set-avatar", self._me(), str(png)],
+            self._on_avatar_privileged)
+
+    @staticmethod
+    def _as_png(src: str) -> Optional[Path]:
+        """Return a PNG path for `src`, converting into the cache if the
+        source is not already a PNG. None if we cannot produce one."""
+        if src.lower().endswith(".png"):
+            return Path(src)
+        out = LOG_DIR / "account-picture.png"
+        for cmd in (["magick", src, str(out)],
+                    ["convert", src, str(out)],
+                    ["ffmpeg", "-y", "-i", src, str(out)]):
+            if not have(cmd[0]):
+                continue
+            if sh(cmd, timeout=15)[0] == 0 and out.is_file():
+                return out
+        return None
+
+    def _on_avatar_privileged(self, ok: bool, msg: str) -> None:
+        self.toast("picture set everywhere, including the login screen"
+                   if ok else f"login-screen picture unchanged — {msg}")
+        self._render_picture()
+
+    def _remove_picture(self) -> None:
+        try:
+            face = Path.home() / ".face"
+            if face.exists():
+                face.unlink()
+        except Exception as e:
+            self.toast(f"could not remove: {e}")
+            return
+        prefs = load_prefs()
+        prefs.get("account", {}).pop("picture_source", None)
+        save_prefs(prefs)
+        self.toast("picture removed")
+        self._render()
+
+    # ── display name ──────────────────────────────────────────────────
+    def _render_name(self) -> None:
+        _clear_group(self.name_grp)
+        entry_row = Adw.EntryRow(title="Display name")
+        entry_row.set_text(self._display_name())
+        save = Gtk.Button(label="Save")
+        save.add_css_class("nyx-pill-ok")
+        save.set_valign(Gtk.Align.CENTER)
+        save.set_sensitive(self._usable)
+        save.connect("clicked",
+                     lambda _b: self._save_name(entry_row.get_text().strip()))
+        entry_row.add_suffix(save)
+        self.name_grp.add(entry_row)
+        self.name_grp.add(kv_row(
+            "Username", self._me(),
+            "Fixed — renaming a Linux account breaks file ownership. "
+            "Create a second account under Users instead."))
+        if not self._usable:
+            self.name_grp.add(empty_row(
+                "Display name is read-only right now", self._why))
+
+    def _save_name(self, name: str) -> None:
+        if not name:
+            self.toast("name cannot be empty")
+            return
+        if ":" in name or "," in name:
+            self.toast("name cannot contain ':' or ','")
+            return
+        self.toast("asking for administrator approval…")
+        run_privileged(
+            self.HELPER, ["set-name", self._me(), name],
+            lambda ok, msg: (self.toast(
+                f"display name → {name}" if ok
+                else f"name unchanged — {msg}"), self._render()))
+
+    # ── sign-in ───────────────────────────────────────────────────────
+    def _render_signin(self) -> None:
+        _clear_group(self.signin_grp)
+        # passwd is genuinely interactive (old password, twice-typed new
+        # one). A terminal is the honest surface for it; say why.
+        self.signin_grp.add(action_row(
+            "Change your password",
+            "Opens a small terminal — your password is typed directly into "
+            "passwd and never passes through this app",
+            "Change",
+            lambda: open_terminal("passwd", self.win)))
+        info = self._entry()
+        self.signin_grp.add(kv_row("Login shell", info.get("shell", "?")))
+        rc, out, _ = sh(["last", "-n", "2", "-w", self._me()], timeout=3)
+        lines = [l for l in (out or "").splitlines() if l.strip()
+                 and not l.startswith("wtmp")]
+        if len(lines) > 1:
+            self.signin_grp.add(kv_row(
+                "Previous sign-in", " ".join(lines[1].split()[3:8])))
+        rc, out, _ = sh(["loginctl", "list-sessions", "--no-legend"],
+                        timeout=3)
+        mine = [l for l in (out or "").splitlines() if self._me() in l]
+        self.signin_grp.add(kv_row(
+            "Active sessions", str(len(mine)) if mine else "1"))
+
+    # ── administrator ─────────────────────────────────────────────────
+    def _render_admin(self) -> None:
+        _clear_group(self.admin_grp)
+        groups = self._groups()
+        is_admin = "wheel" in groups
+        self.admin_grp.add(kv_row(
+            "Account type",
+            "Administrator" if is_admin else "Standard user",
+            "You can make system-wide changes after confirming your password"
+            if is_admin else
+            "System-wide changes need an administrator's password"))
+        rc, out, _ = sh(["getent", "group", "wheel"], timeout=2)
+        parts = out.strip().split(":") if rc == 0 else []
+        members = parts[3].split(",") if len(parts) >= 4 and parts[3] else []
+        self.admin_grp.add(kv_row(
+            "Administrators on this machine",
+            ", ".join(members) if members else "(none)"))
+        self.admin_grp.add(kv_row(
+            "Your groups", " ".join(groups) if groups else "(none)"))
+        # Self-demotion/promotion is deliberately NOT offered here: a user
+        # removing their own last admin rights is unrecoverable without a
+        # rescue boot. Users owns that, with the full picture in view.
+        self.admin_grp.add(action_row(
+            "Manage who is an administrator",
+            "Add or remove other people's admin rights under Users",
+            "Open Users",
+            lambda: self.win.navigate_to_section("users")))
+
+    # ── related ───────────────────────────────────────────────────────
+    def _render_related(self) -> None:
+        _clear_group(self.related_grp)
+        for title, sub, key in (
+            ("Other people", "Add, remove and manage other accounts",
+             "users"),
+            ("Login screen", "What the greeter shows before you sign in",
+             "loginscreen"),
+            ("NYXUS Account", "Optional cloud sync for your settings bundle",
+             "sync"),
+            ("Privacy &amp; Security", "What apps may see and do", "privacy"),
+        ):
+            self.related_grp.add(action_row(
+                title, sub, "Open",
+                lambda k=key: self.win.navigate_to_section(k)))
+
+    def standard_advanced_rows(self):
+        return [
+            ("Where your picture is stored",
+             f"~/.face for this session, {AS_ICON_DIR}/{self._me()} "
+             f"for the login screen",
+             "Open",
+             lambda: fire_and_forget(f"xdg-open {Path.home()}")),
+            ("Show raw account record",
+             "getent passwd + id — exactly what the system knows",
+             "Show",
+             lambda: open_terminal(
+                 f"getent passwd {self._me()}; id; "
+                 f"read -p 'enter to close'", self.win)),
+        ]
+
+
+# ──────────────────────────────────────────────────────────────────────
 # USERS — current user, groups, password change
 # ──────────────────────────────────────────────────────────────────────
 class UsersPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["users"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Change password (terminal)",
          "Runs passwd in a terminal",
@@ -7006,6 +7551,46 @@ HYPRLOCK_ACCENT = HOME / ".config" / "hypr" / "hyprlock-accent.conf"
 SDDM_THEME_USER = Path("/usr/share/sddm/themes/nyxus/theme.conf.user")
 
 
+# Accent swatches are painted by one display-level provider registered
+# ABOVE the app stylesheet. Registering per-widget at PRIORITY_APPLICATION
+# is what made every swatch render blank: install_css() sits at
+# PRIORITY_APPLICATION+100 and its generic `button {…}` rule wins, because
+# GTK4 orders by provider priority before selector specificity.
+_ACCENT_CHIP_PRIORITY = Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 200
+_accent_chip_provider: Optional[Gtk.CssProvider] = None
+_accent_chip_seen: set = set()
+
+
+def _accent_chip_class(hex_val: str) -> str:
+    """Return a CSS class that paints a swatch `hex_val`, registering the
+    rule on the display the first time each colour is requested."""
+    global _accent_chip_provider
+    cls = "nyx-swatch-" + re.sub(r"[^0-9a-f]", "", hex_val.lower())
+    if cls in _accent_chip_seen:
+        return cls
+    _accent_chip_seen.add(cls)
+    rules = "".join(
+        f"button.{c} {{ background:#{c[len('nyx-swatch-'):]}; "
+        f"background-image:none; border:1px solid rgba(255,255,255,0.18); "
+        f"border-radius:10px; min-width:60px; min-height:44px; }}"
+        f"button.{c}.selected {{ border:2px solid #ffffff; }}"
+        for c in sorted(_accent_chip_seen))
+    display = Gdk.Display.get_default()
+    if display is None:
+        return cls
+    try:
+        if _accent_chip_provider is not None:
+            Gtk.StyleContext.remove_provider_for_display(
+                display, _accent_chip_provider)
+        _accent_chip_provider = Gtk.CssProvider()
+        _accent_chip_provider.load_from_data(rules.encode())
+        Gtk.StyleContext.add_provider_for_display(
+            display, _accent_chip_provider, _ACCENT_CHIP_PRIORITY)
+    except Exception as e:
+        log.warning("accent swatch css: %s", e)
+    return cls
+
+
 def _hex_to_rgb(hex_str: str) -> Tuple[int, int, int]:
     s = hex_str.lstrip("#")
     if len(s) == 3:
@@ -7163,20 +7748,13 @@ class AppearancePage(SectionPage):
             chip.add_css_class("nyx-accent-chip")
             if hex_val.lower() == current.lower():
                 chip.add_css_class("selected")
-            # Inline CSS provider for the chip color (per-widget)
-            css = Gtk.CssProvider()
-            css.load_from_data(
-                f"button.nyx-accent-chip {{"
-                f"  background: {hex_val};"
-                f"  border: 1px solid rgba(255,255,255,0.18);"
-                f"  border-radius: 10px;"
-                f"  min-width: 60px; min-height: 44px;"
-                f"}}"
-                f"button.nyx-accent-chip.selected {{"
-                f"  border: 2px solid #ffffff;"
-                f"}}".encode())
-            chip.get_style_context().add_provider(
-                css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            # Per-swatch colour. This MUST outrank the app stylesheet:
+            # install_css() registers the global `button {…}` rule on the
+            # display at PRIORITY_APPLICATION+100, and GTK resolves by
+            # provider priority before specificity — a chip provider at
+            # plain PRIORITY_APPLICATION loses and every swatch renders
+            # as a blank dark button.
+            chip.add_css_class(_accent_chip_class(hex_val))
             chip.connect("clicked",
                          lambda _b, h=hex_val: self._set_accent(h))
             flow.append(chip)
@@ -9595,7 +10173,7 @@ class ControllersPage(SectionPage):
         elif have("jstest"):
             tools.add(action_row(
                 "Test in terminal (jstest)",
-                "Live axis & button readout",
+                "Live axis &amp; button readout",
                 "Open",
                 lambda: open_terminal(
                     "jstest /dev/input/js0 || (echo 'no js0'; read _)",
@@ -10360,7 +10938,7 @@ class SyncPage(SectionPage):
         # Connection — key is `url` (matches nyxus_account.py CLI/UI)
         conn = Adw.PreferencesGroup(
             title="Connection",
-            description="Sync server endpoint & access token (chmod 600)")
+            description="Sync server endpoint &amp; access token (chmod 600)")
         self.add_group(conn)
         if cfg_err:
             conn.add(empty_row("Could not read account.json", cfg_err))
@@ -10521,11 +11099,11 @@ class DropPage(SectionPage):
         # Tools
         tools = Adw.PreferencesGroup(
             title="Tools",
-            description="Send files & text · keybind Super + Ctrl + D")
+            description="Send files &amp; text · keybind Super + Ctrl + D")
         self.add_group(tools)
         tools.add(action_row(
             "Open NYXUS Drop",
-            "Send files & text to paired devices from the full UI",
+            "Send files &amp; text to paired devices from the full UI",
             "Open",
             lambda: fire_and_forget("nyxus-drop"),
             css="nyx-pill-ok"))
@@ -10712,7 +11290,7 @@ def run(cmd, timeout: int = 5):
 # ──────────────────────────────────────────────────────────────────────
 class LanguagePage(SectionPage):
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["language"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Open /etc/locale.conf",
          "System-wide locale (admin)",
@@ -10780,7 +11358,7 @@ class LanguagePage(SectionPage):
         # ── Picker ─────────────────────────────────────────────
         pick = Adw.PreferencesGroup(
             title="Display language",
-            description="Applied at next sign-in. Sign out & back in "
+            description="Applied at next sign-in. Sign out &amp; back in "
                         "to see translated UI everywhere.")
         self.add_group(pick)
 
@@ -10911,7 +11489,7 @@ class VirtPage(SectionPage):
     """QEMU/KVM + libvirt + virt-manager front door."""
     KEY = "virt"
     STANDARD_KEYBIND_TOKENS = ["virt-manager"]
-    STANDARD_RESET_NS = ["virt"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Open virsh shell",
          "virsh -c qemu:///system",
@@ -11076,7 +11654,7 @@ class ContainersPage(SectionPage):
     """Podman + Distrobox container manager."""
     KEY = "containers"
     STANDARD_KEYBIND_TOKENS = ["distrobox", "podman"]
-    STANDARD_RESET_NS = ["containers"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("podman info",
          "Engine + runtime + storage info",
@@ -11216,7 +11794,7 @@ class ContainersPage(SectionPage):
 
 class KernelPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["kernel"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Open /etc/default/grub",
          "Boot defaults (admin)",
@@ -11548,7 +12126,7 @@ class GamingPage(SectionPage):
 
 class EditorsPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = ["code", "helix", "micro", "nvim", "vim"]
-    STANDARD_RESET_NS = ["editors"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Show xdg-mime defaults for text/*",
          "Which editor handles each text mimetype",
@@ -11657,7 +12235,7 @@ class EditorsPage(SectionPage):
 # ──────────────────────────────────────────────────────────────────────
 class UsbPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["usb_firewall"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("View usbguard rules",
          "/etc/usbguard/rules.conf",
@@ -11815,7 +12393,7 @@ class UsbPage(SectionPage):
 
 class SecBootPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["secboot"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("sbctl status (terminal)",
          "Full Secure Boot setup state",
@@ -11909,7 +12487,7 @@ class SecBootPage(SectionPage):
 
 class VpnPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = ["nm-applet"]
-    STANDARD_RESET_NS = ["vpn"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Open NetworkManager applet",
          "Tray icon + connection picker",
@@ -12033,7 +12611,7 @@ class VpnPage(SectionPage):
 
 class DohPage(SectionPage):
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["doh"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("View /etc/resolv.conf",
          "Active DNS resolver state",
@@ -12120,7 +12698,7 @@ class MacRandomPage(SectionPage):
     """MAC address randomization (off / per-scan / always)."""
     KEY = "mac_random"
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["mac_random"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("View NM conf.d snippet",
          "/etc/NetworkManager/conf.d/99-nyxus-mac.conf",
@@ -13281,10 +13859,10 @@ class WelcomePage(SectionPage):
     # Real wizard steps (must match nyxus_welcome.py STEPS ids).
     # hello + ready are always shown — skipping them would break the flow.
     SKIPPABLE = (
-        ("region",     "Skip region & language"),
+        ("region",     "Skip region &amp; language"),
         ("network",    "Skip network setup"),
         ("account",    "Skip account setup"),
-        ("appearance", "Skip appearance (theme & wallpaper)"),
+        ("appearance", "Skip appearance (theme &amp; wallpaper)"),
         ("privacy",    "Skip privacy choices"),
     )
 
@@ -14330,7 +14908,7 @@ class CompositorPage(SectionPage):
     KEY = "compositor"
     STANDARD_KEYBIND_TOKENS = ["killactive", "fullscreen", "togglefloating",
                                "pseudo", "togglesplit"]
-    STANDARD_RESET_NS = ["compositor"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Edit hyprland.conf", "Main compositor config", "Open",
          lambda: open_terminal(
@@ -14525,7 +15103,7 @@ class ReactiveFxPage(SectionPage):
     """Audio/mood-reactive layer: mood, beat, tint, supernova."""
     KEY = "reactive"
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["reactive"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Edit reactive shard",
          "~/.config/hypr/conf.d/nyxus-reactive.conf", "Open",
@@ -14562,7 +15140,7 @@ class MissionControlPage(SectionPage):
     """Mission Control — workspace/window overview (missiond)."""
     KEY = "mission"
     STANDARD_KEYBIND_TOKENS = ["mission", "missiond", "overview"]
-    STANDARD_RESET_NS = ["mission"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Edit mission shard",
          "~/.config/hypr/conf.d/nyxus-hyprland-mission.conf", "Open",
@@ -14597,7 +15175,7 @@ class SessionModesPage(SectionPage):
     """Hacker Mode, Ghost Mode, and emergency Panic."""
     KEY = "sessionmodes"
     STANDARD_KEYBIND_TOKENS = ["hacker-mode", "ghost", "panic"]
-    STANDARD_RESET_NS = ["sessionmodes"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = []
 
     def build(self) -> None:
@@ -14647,7 +15225,7 @@ class FirewallPage(SectionPage):
     """firewalld system firewall (distinct from the USB Firewall page)."""
     KEY = "firewall"
     STANDARD_KEYBIND_TOKENS = []
-    STANDARD_RESET_NS = ["firewall"]
+    STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Inspect zones + rules", "sudo firewall-cmd --list-all", "Open",
          lambda: open_terminal(
@@ -14714,6 +15292,7 @@ PAGE_CLASSES = {
     "storage":       StoragePage,
     "updates":       UpdatesPage,
     "accessibility": AccessibilityPage,
+    "account":       AccountPage,
     "users":         UsersPage,
     "about":         AboutPage,
     "backup":        BackupPage,
