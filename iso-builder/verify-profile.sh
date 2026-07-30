@@ -1883,6 +1883,130 @@ done < <({
 (( _ag_fail == 0 )) \
   && ok "checked ${_ag_n} shipped file(s) — none dispatch the hidden name:0 workspace"
 
+# ── 13ua. URBAN-ALIEN idle/login/power surfaces stay urban-alien ─────────────
+# e5c381d1 (2026-07-24) pinned the login screen, the lock screen and the idle
+# screensaver to nyxus-urban-alien, and af1acb85 (2026-07-25) gave wlogout the
+# same hero as its canvas. Every one of those is a one-line path in a file the
+# bake reads from a DIFFERENT tree than the one you probably edited, and one of
+# them (wlogout) was being silently reverted at RUNTIME by nyxus-gen-backdrop.
+# This gate asserts the whole chain, on both surfaces the bake reads, so
+# "urban-alien everywhere" cannot quietly decay back into stock art again.
+hd "13ua. urban-alien login / lock / screensaver / power surfaces"
+_UA_SYS="/usr/share/backgrounds/nyxus/nyxus-urban-alien.png"
+_ua_fail=0
+_uafail() { fail "$*"; _ua_fail=$((_ua_fail + 1)); }
+
+# The art itself must ship, or every pin below silently falls back.
+[[ -s "${AIROOT}${_UA_SYS}" ]] \
+  || _uafail "${_UA_SYS} is not in the airootfs — hyprlock, the greeter, the screensaver and wlogout all resolve to this exact system path and every one of them falls back to flat ink without it"
+
+# hyprlock (lock / re-login) background is the pinned system hero, not the
+# retired rotating ~/.cache/nyxus/lock-wall.png.
+for _f in "${NS}/hyprlock.conf" "${AIROOT}/etc/skel/.config/hypr/hyprlock.conf"; do
+  if [[ -r "${_f}" ]]; then
+    grep -qE "^[[:space:]]*path[[:space:]]*=[[:space:]]*${_UA_SYS}[[:space:]]*$" "${_f}" \
+      || _uafail "$(basename "$(dirname "${_f}")")/$(basename "${_f}"): hyprlock background is not pinned to ${_UA_SYS}"
+  else
+    _uafail "missing ${_f}"
+  fi
+done
+
+# The greeter copies the hero into the greeter-writable regreet cache on every
+# start. regreet reads /var/cache/regreet/nyxus-login-bg.png, NOT the seed in
+# /etc/greetd, so this copy is the only thing that makes the login screen
+# urban-alien.
+for _f in "${NS}/greetd/nyxus-greeter" "${AIROOT}/usr/local/bin/nyxus-greeter"; do
+  if [[ -r "${_f}" ]]; then
+    grep -q 'nyxus-urban-alien.png' "${_f}" \
+      || _uafail "$(basename "${_f}") does not pin the login background to nyxus-urban-alien"
+  else
+    _uafail "missing ${_f}"
+  fi
+done
+# ...and the dirs it writes into must be pre-created + chowned to `greeter` at
+# bake, because greeter cannot mkdir under root-owned /var/lib and /var/cache.
+grep -q 'chown.*greeter.*/var/cache/regreet\|/var/cache/regreet' \
+     "${AIROOT}/root/customize_airootfs.sh" 2>/dev/null \
+  || _uafail "customize_airootfs.sh no longer provisions /var/cache/regreet — the greeter runs unprivileged and every cp into it will silently no-op, leaving the login screen with no background at all"
+
+# The screensaver launcher must run the urban-alien saver, not the retired
+# matrix-rain one, and must pin the wall it renders.
+for _f in "${NS}/nyxus-screensaver" "${AIROOT}/usr/local/bin/nyxus-screensaver"; do
+  if [[ -r "${_f}" ]]; then
+    grep -q 'nyxus_screensaver\.py' "${_f}" \
+      || _uafail "$(basename "${_f}") does not launch nyxus_screensaver.py (the urban-alien saver)"
+    # prose comments about the retired saver are fine; a live line is not.
+    grep -vE '^[[:space:]]*#' "${_f}" | grep -q 'nyxus_matrix_saver' \
+      && _uafail "$(basename "${_f}") still launches nyxus_matrix_saver.py — that is the superseded matrix-rain effect the owner did not want; the urban-alien saver is canonical"
+    grep -q "NYXUS_SCREENSAVER_WALL=.*nyxus-urban-alien.png" "${_f}" \
+      || _uafail "$(basename "${_f}") does not pin NYXUS_SCREENSAVER_WALL to the urban-alien hero"
+  else
+    _uafail "missing ${_f}"
+  fi
+done
+# The saver payload has to actually ship. skel/.config/nyxus is NOT in the
+# bake's wipe list, so an unstaged payload survives by accident — until
+# somebody edits the NS copy and wonders why the stick never changes.
+[[ -s "${AIROOT}/etc/skel/.config/nyxus/nyxus_screensaver.py" ]] \
+  || _uafail "nyxus_screensaver.py is not in skel/.config/nyxus — hypridle launches it by absolute \$HOME path and gets nothing"
+grep -q 'nyxus_screensaver.py' "${HERE}/build-iso.sh" \
+  || _uafail "build-iso.sh does not stage nyxus_screensaver.py from NS into skel — the shipped saver would be whatever is committed in airootfs, not the source of truth"
+
+# hypridle is the only thing that drives any of it.
+for _f in "${NS}/hypridle.conf" "${AIROOT}/etc/skel/.config/hypr/hypridle.conf"; do
+  if [[ -r "${_f}" ]]; then
+    grep -q 'nyxus-screensaver' "${_f}" \
+      || _uafail "$(basename "$(dirname "${_f}")")/hypridle.conf never launches nyxus-screensaver — the idle screen is dead no matter how good the saver is"
+    grep -q 'loginctl lock-session' "${_f}" \
+      || _uafail "$(basename "$(dirname "${_f}")")/hypridle.conf never locks the session — idle would never reach hyprlock"
+  else
+    _uafail "missing ${_f}"
+  fi
+done
+grep -qE '^exec-once = hypridle$' "${AIROOT}/etc/skel/.config/hypr/hyprland.conf" 2>/dev/null \
+  || _uafail "hyprland.conf does not exec-once hypridle — nothing starts the idle pipeline, so neither the screensaver nor the 10-minute lock ever fires"
+
+# wlogout — the urban-alien canvas, and the runtime rewriter that used to eat it.
+for _f in "${NS}/wlogout-style.css" "${AIROOT}/etc/skel/.config/wlogout/style.css"; do
+  if [[ -r "${_f}" ]]; then
+    grep -q "url(\"${_UA_SYS}\")" "${_f}" \
+      || _uafail "$(basename "${_f}") lost the urban-alien canvas (background-image: url(\"${_UA_SYS}\"))"
+  else
+    _uafail "missing ${_f}"
+  fi
+done
+for _f in "${NS}/nyxus-gen-backdrop" "${AIROOT}/usr/local/bin/nyxus-gen-backdrop"; do
+  if [[ -r "${_f}" ]]; then
+    if grep -qF "r'background-image:\\s*url\\(\"[^\"]+\"\\)\\s*;'" "${_f}"; then
+      _uafail "$(basename "${_f}") rewrites the FIRST background-image in wlogout/style.css whatever it points at. nyxus-set-wallpaper calls this on every wallpaper change — including the one at login and on every station switch — so the pinned urban-alien canvas is replaced by a 42px-blurred derivative within seconds of every boot. Scope the regex to starfall-backdrop.png"
+    else
+      grep -q 'starfall-backdrop\\.png' "${_f}" \
+        || warn "$(basename "${_f}") no longer scopes its wlogout rewrite to starfall-backdrop.png — check it cannot clobber a pinned hero"
+    fi
+  else
+    _uafail "missing ${_f}"
+  fi
+done
+
+# NS is the source of truth and the bake copies it over skel; any drift here
+# means the file you read in one tree is not the file that boots.
+for _pair in \
+  "hyprlock.conf:etc/skel/.config/hypr/hyprlock.conf" \
+  "hypridle.conf:etc/skel/.config/hypr/hypridle.conf" \
+  "nyxus-screensaver:usr/local/bin/nyxus-screensaver" \
+  "nyxus_screensaver.py:etc/skel/.config/nyxus/nyxus_screensaver.py" \
+  "nyxus-gen-backdrop:usr/local/bin/nyxus-gen-backdrop" \
+  "wlogout-style.css:etc/skel/.config/wlogout/style.css" \
+  "greetd/nyxus-greeter:usr/local/bin/nyxus-greeter" ; do
+  _src="${NS}/${_pair%%:*}"; _dst="${AIROOT}/${_pair#*:}"
+  [[ -r "${_src}" && -r "${_dst}" ]] || continue
+  cmp -s "${_src}" "${_dst}" \
+    || _uafail "${_pair%%:*} differs between nyxus-scripts (source of truth) and airootfs — the bake installs the NS copy, so the airootfs edit ships nothing"
+done
+
+(( _ua_fail == 0 )) \
+  && ok "urban-alien is pinned end to end: greeter -> hyprlock -> screensaver -> wlogout, on both trees the bake reads"
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

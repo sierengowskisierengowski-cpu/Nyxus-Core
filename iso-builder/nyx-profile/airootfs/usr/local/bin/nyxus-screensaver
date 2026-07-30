@@ -20,4 +20,15 @@ export NYXUS_SCREENSAVER_WALL="${NYXUS_SCREENSAVER_WALL:-/usr/share/backgrounds/
 if pgrep -f nyxus_screensaver >/dev/null 2>&1; then
     exit 0
 fi
-exec python3 "$HOME/.config/nyxus/nyxus_screensaver.py"
+
+# The payload lives in skel at ~/.config/nyxus/, but nyxus_install.sh deploys
+# app python into ~/.nyxus/ (-> /opt/nyxus). Hard-coding one of the three meant
+# a single missing copy made the idle screen do nothing at all, silently, with
+# hypridle reporting success. Take the first that exists.
+for _saver in "$HOME/.config/nyxus/nyxus_screensaver.py" \
+              "$HOME/.nyxus/nyxus_screensaver.py" \
+              "/opt/nyxus/nyxus_screensaver.py"; do
+    [ -f "$_saver" ] && exec python3 "$_saver"
+done
+echo "nyxus-screensaver: nyxus_screensaver.py not found in ~/.config/nyxus, ~/.nyxus or /opt/nyxus" >&2
+exit 1
