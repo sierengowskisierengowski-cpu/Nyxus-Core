@@ -2092,6 +2092,46 @@ done
 (( _ub_fail == 0 )) \
   && ok "the hero is visible on all three power/login surfaces, and the greeter scales its card to the panel"
 
+# ── 13uc. every wallpaper a config names has a source the BAKE can reach ─────
+# The wallpaper staging glob is `install "${NS}"/nyxus-*.png`, which only sees
+# the ROOT of nyxus-scripts. Walls that live one directory down in
+# nyxus-scripts/hypr-walls/ are invisible to it — that is the same bug the
+# 2026-07-29 fix patched for hypr-walls/rotation/, and it was still true for
+# nyxus-urban-alien-mono.png, the wallpaper stations-hacker.json puts on ALL
+# TEN stations. It shipped anyway, because usr/share/backgrounds/nyxus is not
+# in the bake's wipe list and a committed copy sat there — so hacker mode
+# looked fine while the file had no source of truth the bake would ever read.
+# skel/.config/hypr IS wiped, so that surface simply lost it.
+#
+# Assert the property that actually matters: for every wallpaper NAME any
+# shipped config references, some file the staging globs reach must exist.
+hd "13uc. every configured wallpaper has a source the bake stages"
+_uc_fail=0
+_uc_names="$( { for _j in "${NYXCFG}/stations.json" "${NYXCFG}/stations-hacker.json" \
+                          "${NYXCFG}/wallpaper.json"; do
+                  [[ -r "${_j}" ]] && grep -oE '"[A-Za-z0-9_.-]+\.png"' "${_j}" | tr -d '"'
+                done
+                if [[ -r "${NS}/wall-rotation.list" ]]; then
+                  grep -vE '^[[:space:]]*(#|$)' "${NS}/wall-rotation.list" \
+                    | sed -E 's#.*/##; s/[[:space:]]*$//; /\.png$/! s/$/.png/'
+                fi
+              } | sort -u )"
+_uc_n=0
+while IFS= read -r _w; do
+  [[ -n "${_w}" ]] || continue
+  _uc_n=$((_uc_n + 1))
+  # the two globs build-iso.sh actually installs from
+  [[ -f "${NS}/${_w}" || -f "${NS}/hypr-walls/rotation/${_w}" ]] && continue
+  if [[ -f "${NS}/hypr-walls/${_w}" ]]; then
+    fail "${_w} is referenced by a shipped config and exists at nyxus-scripts/hypr-walls/${_w}, but the bake only globs nyxus-scripts/*.png and hypr-walls/rotation/*.png — nothing stages it. Move it to the root of nyxus-scripts"
+  else
+    fail "${_w} is referenced by a shipped config and has NO source anywhere under nyxus-scripts — it can only ship as a committed airootfs blob, which skel/.config/hypr does not keep because the bake wipes that tree"
+  fi
+  _uc_fail=$((_uc_fail + 1))
+done <<< "${_uc_names}"
+(( _uc_fail == 0 )) \
+  && ok "all ${_uc_n} configured wallpapers resolve to a file the bake installs"
+
 # ── 13ah. eww handlers must fit inside eww's run_command budget ──────────────
 # eww runs every :onclick/:onchange as `/bin/sh -c <cmd>` and SIGKILLs that
 # shell after :timeout, which DEFAULTS TO 200 MILLISECONDS (crates/eww

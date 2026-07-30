@@ -775,6 +775,133 @@ above was established.
 
 ---
 
+## 🎨 URBAN-ALIEN ART-STYLE AUDIT (2026-07-30, evening) — ⛔ DECISION NEEDED
+
+> Owner: *"I want all urban theme alien images to be like those, that same
+> style urban alien and same style picture… and everything else, for all urban
+> alien images."* The body-shop mural behind NYXUS · POWER
+> (`eww/assets/nyxus-hero-ufo-shop.png`) is the reference he likes.
+> **Assessment only — no artwork was generated or restyled.** Boards:
+> `~/Pictures/nyxus-style-audit-2026-07-30/`.
+
+### The reference style, measured (this is the spec)
+
+Not impressions — numbers, from `nyxus-hero-ufo-shop.png`:
+
+| property | reference value |
+|---|---|
+| mean luma | **0.086** (median 0.061) |
+| frame below luma 0.10 | **70%** |
+| frame above luma 0.65 | **0.2%** — there is essentially no white in it |
+| mean saturation (non-black px) | **0.79** |
+| hue weight, sat×val weighted | blue **50%** · violet **30%** · magenta **16%** · rose **4%** |
+| off-arc hue weight (red/orange/yellow/green/cyan) | **0.1%** |
+
+So the style is: **a near-black night frame, one narrow hue arc from blue
+through violet to magenta, extreme saturation inside that arc, and no white.**
+Subject is aliens in a lived-in urban night environment — signage, wet
+reflective ground, a saucer — rendered semi-photographic with neon rim light.
+No giant wordmark.
+
+**Note the spec is narrower than the palette.** ALIEN NEON legitimately
+contains `#39ff14` green, `#ff8a1e` orange, `#ffe600` yellow, `#2bd2ff` cyan —
+those are *UI accent* colours. The reference *artwork* uses effectively none of
+them. Do not "fix" a wall by grading brand colours out of it, and do not treat
+a green pill in a bar as off-style.
+
+### Scoring every shipped image against that spec
+
+`off-arc%` = colour weight outside blue→rose. `TVD` = hue-histogram distance
+from the reference (0 = identical).
+
+| family | count | verdict |
+|---|---|---|
+| `hypr-walls/rotation/nyxus-rot-*.png` | 28 | **23 on-spec, 4 marginal, 1 dead.** off-arc ≈ 0.0%, TVD 0.08–0.35, dark 50–97%. **This set already IS the style.** |
+| `eww/assets/nyxus-hero-crew-meet.png` | 1 | **On-spec, TVD 0.11** — the reference's closest sibling, same world, different scene |
+| `nyxus-urban-alien` / `-desktop-hero` | 2 | on-spec by numbers (off-arc 4–7%, TVD 0.26) but a **different sub-genre**: alien posed over a giant NYXUS wordmark, brighter (luma 0.14–0.17, dark 46–56%) |
+| `nyxus-login-wall` | 1 | same wordmark sub-genre, off-arc 11%, TVD 0.44 — the cyan wordmark is the deviation |
+| **`nyxus-graffiti-01…24`** | **24** | **ALL OFF-STYLE, badly.** Rainbow paint-splatter stock art. off-arc 16–74%, TVD 0.51–0.94. Six are **>55% white**. And they are **192×108 to 300×168 pixels** |
+| `nyxus-graffiti-space` | 1 | off-arc 30%, TVD 0.61 — bright pop-art sticker collage, a different universe |
+| `nyxus-login-stars` · `nyxus-demon` · `nyxus-hyprlock-eye` | 3 | off-arc 28–85%. A B&W galaxy, a horned red-eyed demon (not alien, not urban), a stone eye |
+| `nyxus-bg-01…16` | 16 | not walls at all — neon splatter **UI strips** (586×116, 573×69 …). Only the api download route and `manifest.tsv` reference them. Out of scope, but they are off-spec if ever surfaced |
+| hacker-mode `-a` / `-b` / `-mono` | 3 | deliberately desaturated; judged against the mono treatment, not this spec |
+
+### 🔴 The finding that matters
+
+**The 24 `nyxus-graffiti-*` murals are the incoherence.** They are:
+
+- used as **5 of the 10 station wallpapers** (WAVE, CORE, MESH, SCRIBE, BIFROST
+  in `stations.json`), and
+- `nyxus_chrome._IMAGE_POOL` — i.e. the **signature background of every NYXUS
+  GTK app**, picked per-app by hash.
+
+They cannot be colour-graded onto the spec. Hue-rotating rainbow splatter to
+violet produces violet splatter, not an urban-alien scene — and at 192×108
+there is nothing to upscale to a 1920×1080 station wall (a 6.4× blow-up).
+**These need new artwork.**
+
+**`nyxus-graffiti-02.png` ships a visible "VectorStock" watermark and the URL
+`vectorstock.com/62536757` baked into the image.** That is a licensing problem
+on the ISO, not just a style problem. It is one of the 24. See board `F-`.
+
+### ✅ Fixed this pass (staging, not art)
+
+**`nyxus-urban-alien-mono.png` had no source the bake could reach.** It is the
+`unified_wallpaper` in `stations-hacker.json` — hacker mode puts it on **all ten
+stations**. The wallpaper staging glob is `install "${NS}"/nyxus-*.png`, which
+only sees the ROOT of `nyxus-scripts`; the mono wall lived one level down in
+`nyxus-scripts/hypr-walls/`. Exactly the bug the 2026-07-29 fix patched for
+`hypr-walls/rotation/`, still live for this file. It shipped anyway because
+`usr/share/backgrounds/nyxus` is not in the wipe list and a committed copy sat
+there — so hacker mode *looked* fine while the art had no source of truth, and
+`skel/.config/hypr/walls`, which IS wiped, simply lost it. Canonical copy is now
+at the NS root.
+
+**Gate `13uc`** (negative-tested) asserts the general property: every wallpaper
+name any shipped config references — `stations.json`, `stations-hacker.json`,
+`wallpaper.json`, `wall-rotation.list`, 38 names — must resolve to a file one of
+the bake's staging globs actually installs. It distinguishes "exists in
+`hypr-walls/` but unstaged" from "no source at all" and says which.
+
+### ⚠ Aspect-ratio trap — read before commissioning anything
+
+Every on-style image in this project is **1536×1024, i.e. 3:2**. Every surface
+that shows one — greeter `fit = "Cover"`, hyprlock, the screensaver, wlogout,
+the eww backdrops at `background-size: cover` — crops it to **16:9**. At
+1920×1080 that scales by 1.25 and throws away the top and bottom 100 scaled px:
+**15.6% of the authored image is never seen**, and the surviving band is source
+rows 80–944 of 1024. This is precisely what put the login card on the alien
+earlier today.
+
+**New art should be authored 16:9 (1920×1080 minimum, 2560×1440 preferred), or
+composed 3:2 with a deliberate 16% dead band top and bottom.**
+
+### 🛑 WHAT NEEDS NEW ART — owner decision, nothing invented
+
+There is **no tool in this tree that can produce scene artwork.** The three
+generators under `eww/scripts/` (`gen-graffiti-assets.py`,
+`gen-cosmic-flyout-assets.py`, `gen-starlight-assets.py`) are procedural PIL
+texture makers — spray strips, bar underlays, starfields. They cannot draw an
+alien in a body shop. The existing murals came from an external image
+generator. So this is a commissioning decision, not a scripting task.
+
+| # | slot | needs | size | why |
+|---|---|---|---|---|
+| 1 | **24 app / station murals** replacing `nyxus-graffiti-01…24` | new art | **1920×1080** | wrong style, 192×108–300×168, one carries a stock watermark |
+| 2 | `nyxus-graffiti-space` (PULSE station) | new art or repoint | 1920×1080 | bright pop-art collage, off-spec at 30% off-arc |
+| 3 | `nyxus-demon` (in `wall-rotation.list`) | drop or replace | 1920×1080 | a demon; not alien, not urban |
+| 4 | `nyxus-login-stars` | drop or replace | 1920×1080 | monochrome galaxy, no subject |
+| 5 | `nyxus-rot-black-void` | drop | — | 99.8% pure black, one star; a dead slot in the rotation |
+
+**Cheaper alternative worth considering before commissioning 24 images:** the
+28-image rotation set is already on-spec and already 1536×1024. Repointing the
+five graffiti stations and `nyxus_chrome._IMAGE_POOL` at the rotation set is a
+**config change, not new art**, and would make the whole desktop coherent
+immediately. It changes which mural ~20 app windows wear, so it is his call —
+flagged, not done.
+
+---
+
 ## WHERE WE STAND — 2026-07-29 · ON MAIN · REBAKE REQUIRED
 
 > **PR #77–#81 are all on `main`.** Next step is a clean rebake — none of this
