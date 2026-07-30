@@ -449,6 +449,18 @@ chown greeter:greeter /var/lib/greetd /var/cache/regreet 2>/dev/null || true
 chmod 0755 /var/lib/greetd /var/cache/regreet
 systemctl enable greetd.service              2>/dev/null || true
 systemctl enable NetworkManager.service      2>/dev/null || true
+# ...but NOT NetworkManager-wait-online, which `systemctl enable NetworkManager`
+# drags in via Also=/preset (verified: the 2026.07.29 ISO ships the symlink at
+# etc/systemd/system/network-online.target.wants/). It runs `nm-online -s -q`
+# with NM_ONLINE_TIMEOUT=60, and BOTH docker.service and ollama.service are
+# After=network-online.target AND WantedBy=multi-user.target. systemd.target(5):
+# "Target units will automatically complement all configured dependencies of
+# type Wants= or Requires= with dependencies of type After=" — so
+# multi-user.target waits for them, graphical.target is Requires=+After=
+# multi-user.target, and greetd sits behind that. On a live boot with no
+# configured network that is up to 60 idle seconds in front of the login
+# screen, for a target nothing on this image actually needs.
+systemctl disable NetworkManager-wait-online.service 2>/dev/null || true
 systemctl enable systemd-timesyncd.service   2>/dev/null || true
 systemctl enable bluetooth.service           2>/dev/null || true
 systemctl enable thermald.service            2>/dev/null || true

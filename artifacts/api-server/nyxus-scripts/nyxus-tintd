@@ -31,7 +31,13 @@ export PATH="${HOME}/.local/bin:${PATH}"
 
 PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-tintd.pid"
 COLORFILE="${XDG_RUNTIME_DIR:-/tmp}/nyxus-border-colors"
-SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+# Both vars guarded: `set -u` is on, and the two lines above already concede
+# that XDG_RUNTIME_DIR can be unset here. Unguarded, this line aborted the
+# daemon with "unbound variable" before the socket check below could report it.
+_RUNDIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+_HIS="${HYPRLAND_INSTANCE_SIGNATURE:-}"
+SOCK="${_RUNDIR}/hypr/${_HIS}/.socket2.sock"
+[[ -S "${SOCK}" ]] || SOCK="/tmp/hypr/${_HIS}/.socket2.sock"
 
 command -v socat >/dev/null || { echo "tintd: socat missing" >&2; exit 1; }
 [[ -S "${SOCK}" ]] || { echo "tintd: no hyprland event socket" >&2; exit 1; }

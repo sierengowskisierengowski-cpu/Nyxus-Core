@@ -99,5 +99,5 @@
 # dunst's native popups.
 [nyxus-eww-popup]
     appname = "*"
-    script = /home/nyx/.local/bin/nyxus-notif-to-eww
+    script = /usr/local/bin/nyxus-notif-to-eww
     skip_display = true

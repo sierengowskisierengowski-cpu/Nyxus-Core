@@ -370,6 +370,27 @@ BUILD_STAMP="nyxus-${ISO_DATE}-${BUILD_COMMIT}${BUILD_DIRTY}-x86_64"
 sed -i -E "s/^iso_version=\".*\"/iso_version=\"${ISO_DATE}\"/" "${PROFILEDEF}"
 sed -i -E "s/^BUILD_ID=.*/BUILD_ID=${BUILD_STAMP}/" "${OSRELEASE}"
 
+# ── squashfs compressor override ─────────────────────────────────────────
+# The profile defaults to zstd because xz decode cost is paid on every cold
+# read for the whole live session — measured 7.6x slower reads for -10.8%
+# image size on this image's own content (see profiledef.sh for the numbers).
+# `sudo NYX_SQUASH_COMP=xz ./build-iso.sh` restores the pre-2026.07.30 xz
+# image if size ever matters more than speed.
+NYX_SQUASH_COMP="${NYX_SQUASH_COMP:-zstd}"
+case "${NYX_SQUASH_COMP}" in
+  zstd)
+    sed -i -E "s|^airootfs_image_tool_options=\(.*\)|airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '19' '-b' '1M')|" "${PROFILEDEF}"
+    ;;
+  xz)
+    sed -i -E "s|^airootfs_image_tool_options=\(.*\)|airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M')|" "${PROFILEDEF}"
+    warn "NYX_SQUASH_COMP=xz — smaller ISO, but ~7.6x slower cold reads on the live stick"
+    ;;
+  *)
+    fail "NYX_SQUASH_COMP must be 'zstd' or 'xz' (got '${NYX_SQUASH_COMP}')"; exit 1
+    ;;
+esac
+ok "squashfs compressor    → ${NYX_SQUASH_COMP}  ($(grep -oP "^airootfs_image_tool_options=\K.*" "${PROFILEDEF}"))"
+
 # A dedicated, human-readable stamp file. `cat /etc/nyxus-build` on the booted
 # stick answers "is this the ISO I just baked?" in one command.
 cat > "${PROFILE_DIR}/airootfs/etc/nyxus-build" <<BUILDSTAMP

@@ -54,26 +54,46 @@ MESH_STATION="${NYXUS_MESH_STATION:-MESH}"
 SCRIBE_STATION="${NYXUS_SCRIBE_STATION:-SCRIBE}"
 ARSENAL_STATION="${NYXUS_ARSENAL_STATION:-ARSENAL}"
 
+# station -> window. Adding a station means adding ONE line here.
+# Declared ONCE at global scope, not rebuilt inside _sync: _sync runs on every
+# workspace event, and the map is static.
+declare -A MAP=(
+  ["$HOME_STATION"]=home-deck
+  ["$START_STATION"]=start-panel
+  ["$GHOST_STATION"]=ghost-deck
+  ["$FORGE_STATION"]=forge-deck
+  ["$LAB_STATION"]=lab-deck
+  ["$OPS_STATION"]=ops-deck
+  ["$PULSE_STATION"]=pulse-deck
+  ["$WAVE_STATION"]=wave-deck
+  ["$CORE_STATION"]=core-deck
+  ["$MESH_STATION"]=mesh-deck
+  ["$SCRIBE_STATION"]=scribe-deck
+  ["$ARSENAL_STATION"]=arsenal-deck
+)
+
+# NUMERIC ALIASES (2026-07-30). The bar's station pills dispatch by NUMBER
+# (`hyprctl dispatch workspace 1`, eww.yuck station_pill) while this watcher
+# looks the deck up by workspace NAME. That only lines up because
+# nyxus-stations.conf carries `defaultName:OPS` on workspace 1 — one dropped or
+# unsourced shard and every numbered station reports `.name` as "1".."10", no
+# map entry matches, and _sync closes every deck and opens none. That is
+# indistinguishable from "clicking a station does nothing", with no error
+# anywhere. Alias the numbers to the same decks so the pills work even when the
+# names are missing.
+_STATIONS_JSON="${HOME}/.config/nyxus/stations.json"
+if [[ -r "${_STATIONS_JSON}" ]] && command -v jq >/dev/null 2>&1; then
+  while IFS=$'\t' read -r _sid _sname; do
+    [[ -n "${_sid}" && -n "${_sname}" ]] || continue
+    [[ -n "${MAP[$_sname]:-}" ]] && MAP["$_sid"]="${MAP[$_sname]}"
+  done < <(jq -r '.stations[] | [(.id|tostring), .name] | @tsv' "${_STATIONS_JSON}" 2>/dev/null)
+fi
+
 _sync() {
   local ws
   ws="$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.name // empty')"
   [[ -z "$ws" ]] && return 0
 
-  # station -> window. Adding a station means adding ONE line here.
-  declare -A MAP=(
-    ["$HOME_STATION"]=home-deck
-    ["$START_STATION"]=start-panel
-    ["$GHOST_STATION"]=ghost-deck
-    ["$FORGE_STATION"]=forge-deck
-    ["$LAB_STATION"]=lab-deck
-    ["$OPS_STATION"]=ops-deck
-    ["$PULSE_STATION"]=pulse-deck
-    ["$WAVE_STATION"]=wave-deck
-    ["$CORE_STATION"]=core-deck
-    ["$MESH_STATION"]=mesh-deck
-    ["$SCRIBE_STATION"]=scribe-deck
-    ["$ARSENAL_STATION"]=arsenal-deck
-  )
   local want="${MAP[$ws]:-}"
 
   # CLOSE EVERYTHING ELSE, THEN OPEN THE ONE WE WANT. Written as a loop over
@@ -110,8 +130,20 @@ _sync() {
 for _ in $(seq 1 30); do eww ping >/dev/null 2>&1 && break; sleep 1; done
 _sync
 
-SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
-[[ -S "${SOCK}" ]] || SOCK="/tmp/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+# `set -u` is on. Both of these were referenced UNGUARDED, so an exec-once
+# context missing either one killed the watcher right here — after the single
+# startup _sync, so one deck was up and then no station ever changed anything
+# again. The lock-file comment 80 lines up already warns that XDG_RUNTIME_DIR
+# "is set in a login shell but NOT in some exec-once/systemd contexts"; that
+# lesson never made it down to this line.
+_RUNDIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+_HIS="${HYPRLAND_INSTANCE_SIGNATURE:-}"
+if [[ -z "${_HIS}" ]]; then
+  # Last resort: pick the newest live instance socket dir.
+  _HIS="$(ls -1t "${_RUNDIR}/hypr" /tmp/hypr 2>/dev/null | grep -v ':$' | grep . | head -1)"
+fi
+SOCK="${_RUNDIR}/hypr/${_HIS}/.socket2.sock"
+[[ -S "${SOCK}" ]] || SOCK="/tmp/hypr/${_HIS}/.socket2.sock"
 if [[ -S "${SOCK}" ]] && command -v socat >/dev/null 2>&1; then
   socat -U - "UNIX-CONNECT:${SOCK}" | while read -r line; do
     case "${line}" in workspace\>*|focusedmon\>*) _sync ;; esac

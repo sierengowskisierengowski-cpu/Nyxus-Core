@@ -1587,6 +1587,265 @@ else
   ok "skel/.local/bin is empty/absent — bare command names are the only portable form"
 fi
 
+# ── 13aa. ~/.local/bin OUTSIDE the hypr configs ───────────────────────────────
+# Gate 13z covers hyprland.conf / hyprlock.conf / the conf.d shards. The same
+# bug class lives in every OTHER shipped config that names an executable, and
+# two real instances were found there on 2026-07-30 after 13z was already green:
+#
+#   skel/.config/dunst/dunstrc  -> script = /home/nyx/.local/bin/nyxus-notif-to-eww
+#   skel/.config/eww/scripts/hotkey-record.sh -> exec "${HOME}/.local/bin/nyxus-hotkey"
+#
+# The dunst one was the worse of the two: that rule also sets skip_display=true,
+# so dunst suppressed its own popup AND the eww bridge could not start —
+# notifications were swallowed entirely on the stick, which is also why nothing
+# ever surfaced an error toast for any of the other broken features.
+hd "13aa. dead ~/.local/bin paths outside the hypr configs"
+_aa_fail=0; _aa_files=0
+_AA_RE='(\$\{?HOME\}?|~|/home/[a-z][a-z0-9_-]*)/\.local/bin/'
+while IFS= read -r _f; do
+  [[ -f "${_f}" ]] || continue
+  _aa_files=$((_aa_files + 1))
+  _rel="${_f#"${HERE}/"}"
+  while IFS= read -r _hit; do
+    [[ -z "${_hit}" ]] && continue
+    _ln="${_hit%%:*}"; _txt="${_hit#*:}"
+    # Comments and prose are fine; only lines that actually name an executable
+    # matter. Skip anything whose first non-space char starts a comment.
+    printf '%s' "${_txt}" | grep -qE '^[[:space:]]*(#|//|\*)' && continue
+    _tool="$(printf '%s' "${_txt}" | grep -oE "${_AA_RE}[A-Za-z0-9_.-]+" \
+               | head -1 | sed 's|.*/||')"
+    [[ -z "${_tool}" ]] && continue
+    if [[ -e "${AIROOT}/usr/local/bin/${_tool}" ]]; then
+      fail "${_rel}:${_ln} reaches '${_tool}' through ~/.local/bin — EMPTY on the ISO. It ships in /usr/local/bin; use the bare name (or the absolute /usr/local/bin path where PATH is not guaranteed, e.g. dunstrc)"
+      _aa_fail=$((_aa_fail + 1))
+    else
+      warn "${_rel}:${_ln} reaches '${_tool}' through ~/.local/bin, and '${_tool}' is not in /usr/local/bin either — that feature cannot work on the ISO at all"
+    fi
+  done < <(grep -nE "${_AA_RE}" "${_f}" 2>/dev/null)
+done < <({
+  # Everything under skel that can name a program, minus the hypr tree that
+  # gate 13z already owns.
+  find "${AIROOT}/etc/skel/.config" -type f \
+       \( -name '*.sh' -o -name '*.conf' -o -name '*.yuck' -o -name '*rc' \
+          -o -name '*.py' -o -name '*.json' -o -name '*.desktop' \) 2>/dev/null \
+    | grep -v '/\.config/hypr/'
+  # ...and the NS originals the bake actually repopulates skel FROM.
+  find "${NS}/eww" -type f 2>/dev/null
+  ls "${NS}"/nyxus-dunstrc "${NS}"/nyxus-rofi* "${NS}"/nyxus-wlogout* 2>/dev/null
+} | sort -u)
+(( _aa_fail == 0 )) \
+  && ok "checked ${_aa_files} shipped config(s) outside hypr — none reach a tool through ~/.local/bin"
+
+# ── 13ab. every shipped station launch resolves to something on the ISO ──────
+# 2026-07-30: stations FORGE and CORE shipped `on-created-empty:cursor` and
+# `on-created-empty:thunar`. NEITHER binary is in the image (`cursor` is not
+# packaged for Arch at all; `thunar` was never in packages.x86_64) — so
+# clicking those two station pills genuinely did nothing, with no error and
+# nothing in the journal. `btop` was the same story from the other direction:
+# the profile ships THREE btop themes plus btop.conf into skel and four launch
+# paths fall back to it, and btop itself was not in packages.x86_64.
+#
+# Rule enforced: the LAST fallback in every launch chain must resolve, because
+# that is the only branch the ISO is guaranteed to reach. Unresolvable EARLIER
+# branches are fine by design (that is what `command -v` guards are for) but
+# are reported as warnings so a silently-never-taken branch is visible.
+hd "13ab. station on-created-empty targets exist on the ISO"
+_STATIONS_JSON="${HERE}/../artifacts/nyxus-config/stations.json"
+if [[ -r "${_STATIONS_JSON}" ]] && command -v jq >/dev/null 2>&1; then
+  _PKGS="${PROFILE}/packages.x86_64"
+  _ab_fail=0; _ab_n=0
+  # A command resolves if it ships as a nyxus tool, is a listed package (the
+  # pkg name matches the binary for every launcher used here), or is a shell
+  # builtin/coreutil that is always present.
+  _resolves() {
+    local c="$1"
+    [[ -e "${AIROOT}/usr/local/bin/${c}" ]] && return 0
+    [[ -e "${AIROOT}/usr/bin/${c}" ]]       && return 0
+    grep -qxF "${c}" "${_PKGS}" 2>/dev/null && return 0
+    case "${c}" in sh|bash|exec|true|echo|cd|python3|env) return 0 ;; esac
+    return 1
+  }
+  while IFS=$'\t' read -r _id _name _launch; do
+    [[ -n "${_launch}" ]] || continue
+    _ab_n=$((_ab_n + 1))
+    # Pull out every candidate program in the chain, in order: the words that
+    # follow `exec`/`command -v`, plus the leading word of the whole launch.
+    mapfile -t _cands < <(
+      printf '%s\n' "${_launch}" \
+        | grep -oE '(command -v|exec) +[A-Za-z0-9_.-]+' \
+        | awk '{print $NF}'
+      printf '%s\n' "${_launch}" | awk '{print $1}'
+    )
+    # De-dup while preserving order; drop the sh/exec noise words.
+    _chain=(); for _c in "${_cands[@]}"; do
+      case "${_c}" in sh|exec|""|-*) continue ;; esac
+      [[ " ${_chain[*]} " == *" ${_c} "* ]] || _chain+=("${_c}")
+    done
+    (( ${#_chain[@]} )) || continue
+    _last="${_chain[-1]}"
+    for _c in "${_chain[@]}"; do
+      _resolves "${_c}" && continue
+      if [[ "${_c}" == "${_last}" ]]; then
+        fail "station ${_id} (${_name}): last-resort launch '${_c}' is NOT on the ISO — this station opens NOTHING. Add it to packages.x86_64 or append a fallback that does resolve"
+        _ab_fail=$((_ab_fail + 1))
+      else
+        warn "station ${_id} (${_name}): '${_c}' is not on the ISO — that branch never fires (guarded, so not fatal)"
+      fi
+    done
+  done < <(jq -r '.stations[] | [(.id|tostring), .name, (.launch // "")] | @tsv' "${_STATIONS_JSON}")
+  (( _ab_fail == 0 )) \
+    && ok "all ${_ab_n} station launch chains end in a program the ISO actually installs"
+
+  # The shipped conf.d snapshot is regenerated from this JSON by
+  # nyxus-hacker-mode, so the two must agree or the first mode flip silently
+  # changes what the stations do.
+  _SNAP="${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-stations.conf"
+  _drift=0
+  while IFS=$'\t' read -r _id _launch; do
+    [[ -n "${_launch}" ]] || continue
+    grep -qF "workspace = ${_id}, persistent:true, defaultName:" "${_SNAP}" 2>/dev/null || continue
+    grep -qF "on-created-empty:${_launch}" "${_SNAP}" 2>/dev/null \
+      || { warn "nyxus-stations.conf station ${_id} has drifted from stations.json — the first hacker-mode flip will rewrite it"; _drift=$((_drift + 1)); }
+  done < <(jq -r '.stations[] | [(.id|tostring), (.launch // "")] | @tsv' "${_STATIONS_JSON}")
+  (( _drift == 0 )) && ok "nyxus-stations.conf snapshot matches stations.json (a hacker-mode flip is a no-op)"
+else
+  warn "stations.json unreadable or jq missing — skipped station launch check"
+fi
+
+# ── 13ac. nothing avoidable sits between plymouth and the greeter ────────────
+# The 2026.07.27 ISO took 102s from splash to login. HANDOFF blamed
+# nyxus-firstboot.service being Type=oneshot on multi-user.target; that fix DID
+# ship in 07.29 and the owner reported no change, because it was only part of
+# the picture. systemd.target(5): "Target units will automatically complement
+# all configured dependencies of type Wants= or Requires= with dependencies of
+# type After=" — so multi-user.target waits for EVERYTHING enabled into it, and
+# graphical.target is Requires=+After= multi-user.target with greetd behind it.
+# Each assertion below removes one measured item from that path.
+hd "13ac. splash → greeter critical path"
+_FB_UNIT="${AIROOT}/etc/systemd/system/nyxus-firstboot.service"
+if grep -qE '^Type=simple' "${_FB_UNIT}" 2>/dev/null; then
+  ok "nyxus-firstboot.service is Type=simple (does not hold multi-user.target open)"
+else
+  fail "nyxus-firstboot.service is not Type=simple — a oneshot here blocks multi-user.target, and graphical.target/greetd sit behind it"
+fi
+
+_HP_FRAG="${AIROOT}/etc/nyxus-firstboot.d/06-honeypot-stack.sh"
+if grep -q '/run/archiso' "${_HP_FRAG}" 2>/dev/null; then
+  ok "06-honeypot-stack.sh skips live media (no ~1GB docker load in front of the greeter)"
+else
+  fail "06-honeypot-stack.sh has no live-media guard — it will docker-load ~1GB off the USB on every live boot"
+fi
+
+_HPFW="${AIROOT}/usr/lib/systemd/system/nyxus-honeypot-firewall.service"
+if grep -q 'ConditionPathExists=!/run/archiso' "${_HPFW}" 2>/dev/null; then
+  ok "nyxus-honeypot-firewall.service skips live media (does not force a full dockerd start before login)"
+else
+  fail "nyxus-honeypot-firewall.service runs on live media: Requires=+After=docker.service and WantedBy=multi-user.target means dockerd must fully start before the greeter, to lock down containers that the live-media guard already skipped"
+fi
+
+_CUST="${AIROOT}/root/customize_airootfs.sh"
+if grep -qE '^\s*systemctl disable NetworkManager-wait-online\.service' "${_CUST}" 2>/dev/null; then
+  ok "NetworkManager-wait-online.service is disabled (docker/ollama no longer wait up to 60s for a network the live stick has not configured)"
+else
+  fail "customize_airootfs.sh does not disable NetworkManager-wait-online.service — 'systemctl enable NetworkManager' pulls it in, and docker.service + ollama.service are both After=network-online.target AND WantedBy=multi-user.target"
+fi
+
+# ── 13ad. squashfs compressor ────────────────────────────────────────────────
+# Measured on this image's own content (2140MB of /usr/bin + /usr/lib/systemd,
+# single-threaded, warm cache so only decode cost is compared):
+#   xz  -Xbcj x86 -b 1M -Xdict-size 1M  ->  647.0 MB, 29.5s  ( 72 MB/s)
+#   zstd -Xcompression-level 19 -b 1M   ->  716.7 MB,  3.9s  (549 MB/s)
+# squashfs inflates a WHOLE 1MiB block to serve one 4KiB read, so under xz every
+# cold file touch costs ~14.5ms of CPU. A desktop session start touches
+# thousands of them. This is a WARN, not a FAIL — xz is a legitimate choice if
+# ISO size ever matters more than live-session speed.
+hd "13ad. squashfs compressor"
+_COMPLINE="$(grep -E '^airootfs_image_tool_options=' "${PROFILE}/profiledef.sh" 2>/dev/null)"
+case "${_COMPLINE}" in
+  *"'zstd'"*) ok "airootfs squashfs uses zstd (~7.6x faster cold reads than xz on this content)" ;;
+  *"'xz'"*)   warn "airootfs squashfs uses xz — ~7.6x slower cold reads for ~10.8% less size. Deliberate? bake with NYX_SQUASH_COMP to be explicit" ;;
+  "")         fail "profiledef.sh has no airootfs_image_tool_options line" ;;
+  *)          warn "unrecognised squashfs compressor: ${_COMPLINE}" ;;
+esac
+
+# ── 13ae. layerrule catch-all must not sit below the explicit rules ──────────
+# Hyprland applies layerrules in file order, LAST match wins. The
+# `^(nyxus.*)$` catch-all in nyxus-hyprland-layerblur.conf calls itself a
+# catch-all "for future surfaces", but it shipped BELOW every explicit
+# per-namespace rule, so it was really a global override that silently ate
+# them. docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md §7.4 warns about exactly
+# this ("the catch-all can undo `blur off`") and the frosted rectangular
+# "shadow box" behind the bars was fought twice partly because of it.
+# Moved to the top on 2026-07-30. This gate keeps it there.
+hd "13ae. layer-blur catch-all is a floor, not an override"
+_LB="${AIROOT}/etc/skel/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf"
+if [[ -r "${_LB}" ]]; then
+  _catch="$(grep -nE '^layerrule = .*match:namespace \^\(nyxus\.\*\)\$' "${_LB}" \
+              | tail -1 | cut -d: -f1)"
+  _lastspecific="$(grep -nE '^layerrule = .*match:namespace nyxus-' "${_LB}" \
+                     | tail -1 | cut -d: -f1)"
+  if [[ -z "${_catch}" ]]; then
+    warn "no ^(nyxus.*)$ catch-all in nyxus-hyprland-layerblur.conf — new eww surfaces will ship with no blur rule at all"
+  elif [[ -z "${_lastspecific}" ]]; then
+    warn "nyxus-hyprland-layerblur.conf has a catch-all but no explicit nyxus-* rules"
+  elif (( _catch < _lastspecific )); then
+    ok "catch-all at line ${_catch} precedes the last explicit nyxus-* rule (line ${_lastspecific}) — explicit rules win"
+  else
+    fail "the ^(nyxus.*)\$ catch-all is at line ${_catch}, BELOW the last explicit nyxus-* rule (line ${_lastspecific}). Hyprland's last-match-wins means the catch-all overrides every per-namespace rule in this file, including any 'blur off'. Move the catch-all above them"
+  fi
+
+  # Every eww namespace that is not the catch-all itself should have its own
+  # rule now that the catch-all is only a floor.
+  _EWWDIR="${AIROOT}/etc/skel/.config/eww"
+  _missing=0
+  while IFS= read -r _ns; do
+    [[ -n "${_ns}" ]] || continue
+    grep -qE "^layerrule = .*match:namespace ${_ns}\$" "${_LB}" && continue
+    warn "eww namespace '${_ns}' has no explicit layerrule — it only gets the catch-all floor"
+    _missing=$((_missing + 1))
+  done < <(grep -rhoE ':namespace "nyxus-[a-z0-9-]+"' "${_EWWDIR}" 2>/dev/null \
+             | sed -E 's/.*"(nyxus-[a-z0-9-]+)"/\1/' | sort -u)
+  (( _missing == 0 )) && ok "every declared eww namespace has an explicit layerrule"
+else
+  fail "nyxus-hyprland-layerblur.conf is not in skel conf.d"
+fi
+
+# ── 13af. no `set -u` script dies on an unset session variable ───────────────
+# nyxus-home-deck, nyxus-soundd and nyxus-tintd all ran `set -u` and then
+# built their Hyprland socket path from a BARE ${XDG_RUNTIME_DIR} and
+# ${HYPRLAND_INSTANCE_SIGNATURE}. In each of the three the immediately
+# preceding line already used ${XDG_RUNTIME_DIR:-/tmp} — the author knew it
+# could be unset and the guard just never reached the next line. Unset either
+# variable and bash aborts the whole script with "unbound variable", so
+# nyxus-home-deck did its one startup sync and then died: the station decks
+# worked exactly once and then no station ever opened anything again, silently.
+hd "13af. set -u scripts guard session env vars"
+_af_fail=0; _af_n=0
+while IFS= read -r _s; do
+  [[ -f "${_s}" ]] || continue
+  grep -qE '^set -[a-z]*u' "${_s}" || continue
+  _af_n=$((_af_n + 1))
+  while IFS= read -r _hit; do
+    [[ -z "${_hit}" ]] && continue
+    _ln="${_hit%%:*}"; _txt="${_hit#*:}"
+    printf '%s' "${_txt}" | grep -qE '^[[:space:]]*#' && continue
+    _var="$(printf '%s' "${_txt}" \
+              | grep -oE '\$\{(XDG_RUNTIME_DIR|HYPRLAND_INSTANCE_SIGNATURE)\}' \
+              | head -1 | tr -d '${}')"
+    [[ -z "${_var}" ]] && continue
+    # Most of these scripts open with
+    #   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    # which makes every later bare use safe. Only flag a variable that is
+    # never given a default anywhere in the file.
+    grep -qE "^[[:space:]]*(export[[:space:]]+)?${_var}=\"?\\\$\{${_var}:-" "${_s}" && continue
+    fail "$(basename "${_s}"):${_ln} uses bare \${${_var}} under 'set -u' and never defaults it — if the session does not export it the script aborts on this line with 'unbound variable', before any of its own error handling runs. Either add \${${_var}:-<fallback>} here or hoist an 'export ${_var}=\"\${${_var}:-...}\"' to the top like nyxus-eww-launch-safe does"
+    _af_fail=$((_af_fail + 1))
+  done < <(grep -nE '\$\{(XDG_RUNTIME_DIR|HYPRLAND_INSTANCE_SIGNATURE)\}[^:]' "${_s}" 2>/dev/null)
+done < <(find "${NS}" -maxdepth 1 -type f ! -name '*.conf' ! -name '*.md' \
+              ! -name '*.json' ! -name '*.css' 2>/dev/null | sort)
+(( _af_fail == 0 )) \
+  && ok "checked ${_af_n} 'set -u' script(s) — all session env vars are guarded"
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

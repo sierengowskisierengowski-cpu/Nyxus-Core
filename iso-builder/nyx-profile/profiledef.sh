@@ -24,7 +24,29 @@ bootmodes=(
 arch="x86_64"
 pacman_conf="pacman.conf"
 airootfs_image_type="squashfs"
-airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M')
+# ── SQUASHFS COMPRESSION — zstd, NOT xz (changed 2026-07-30) ─────────────────
+# archiso's stock releng profile uses xz, and so did every NYXUS ISO up to and
+# including 2026.07.29. That default is written for a ~1GB installer image.
+# NYXUS's airootfs is 7.3GB, and xz decode cost is paid on EVERY cold read for
+# the whole life of the live session.
+#
+# MEASURED on this builder box, same 2140MB of the real 07.29 image
+# (/usr/bin + /usr/lib/systemd), single-threaded unsquashfs, warm page cache
+# so USB I/O is excluded and only decode cost is compared:
+#
+#     -comp xz  -Xbcj x86 -b 1M -Xdict-size 1M   647.0 MB   29.5 s   ( 72 MB/s)
+#     -comp zstd -Xcompression-level 19 -b 1M    716.7 MB    3.9 s   (549 MB/s)
+#
+# => 7.6x faster reads for +10.8% image size (whole ISO ~8.06GB -> ~8.9GB).
+# Per 1MiB squashfs block that is ~14.5ms of CPU under xz vs ~1.9ms under zstd,
+# and squashfs must inflate a WHOLE block to serve a single 4KiB read — so a
+# desktop session start, which touches thousands of scattered small files,
+# spends most of its time inflating. This is the dominant cause of the "eww
+# takes minutes to appear / everything loads slowly" reports on the 07.29 stick.
+#
+# To bake the old xz image: `sudo NYX_SQUASH_COMP=xz ./build-iso.sh`
+# (build-iso.sh rewrites this line in the staged profile copy).
+airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '19' '-b' '1M')
 bootstrap_tarball_compression=(zstd -c -T0 --auto-threads=logical --long -19)
 file_permissions=(
   ["/root"]="0:0:750"

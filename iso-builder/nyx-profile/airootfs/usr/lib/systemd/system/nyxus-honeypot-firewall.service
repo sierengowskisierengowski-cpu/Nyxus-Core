@@ -4,6 +4,14 @@ After=docker.service
 Requires=docker.service
 # Reapply if docker is restarted (which rebuilds its iptables chains).
 PartOf=docker.service
+# NEVER on live media (2026-07-30). systemd.target(5): a target unit implicitly
+# gains After= on everything in its Wants=, so multi-user.target waits for this
+# oneshot to COMPLETE; Requires=+After=docker.service in turn forces dockerd to
+# finish starting first. graphical.target is Requires=+After=multi-user.target,
+# with greetd behind it. On live media 06-honeypot-stack.sh already skips the
+# containers entirely, so there are no honeypot chains to lock down and this
+# only buys a full dockerd start on the path to the login screen.
+ConditionPathExists=!/run/archiso
 
 [Service]
 Type=oneshot

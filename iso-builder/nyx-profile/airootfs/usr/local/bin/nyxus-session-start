@@ -17,6 +17,25 @@ set -euo pipefail
 # them, regardless of how the session was started.
 export PATH="${HOME}/.local/bin:${PATH}"
 
+# /usr/local/bin GUARANTEE (2026-07-30). Every nyxus tool ships to
+# /usr/local/bin; ~/.local/bin does not exist at all on the live ISO (verified:
+# the 2026.07.29 image has zero entries under /home/nyx/.local/bin, and there is
+# no /etc/skel/.local either). The hypr configs therefore invoke tools by BARE
+# NAME and resolve them off PATH. greetd currently hands us a PATH that happens
+# to contain /usr/local/bin, but nothing in this tree asserts that, and if it
+# ever stops being true every keybind and exec-once in the desktop dies silently
+# and identically to the ~/.local/bin bug. Assert it here instead of trusting it.
+# This is NOT the banned hardcoded `env = PATH,/home/cosmic/...` from PR #77 —
+# that pinned an absolute path for a user who does not exist on the stick.
+case ":${PATH}:" in
+  *:/usr/local/bin:*) ;;
+  *) export PATH="${PATH}:/usr/local/bin" ;;
+esac
+case ":${PATH}:" in
+  *:/usr/local/sbin:*) ;;
+  *) export PATH="${PATH}:/usr/local/sbin" ;;
+esac
+
 export XDG_CURRENT_DESKTOP=Hyprland
 export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=Hyprland

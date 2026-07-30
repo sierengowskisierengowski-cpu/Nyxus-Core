@@ -1,6 +1,6 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **Last updated: 2026-07-30 ~13:00 EDT (⛔ THE "MY BAKE LOOKS OLD" MYSTERY IS SOLVED — the ISO was right every time; the CONFIGS reached their own tools through an EMPTY `~/.local/bin`. Fixed + gate 13z. bootstrap r16 · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
+> **Last updated: 2026-07-30 ~14:30 EDT (⛔ THE "MY BAKE LOOKS OLD" MYSTERY IS SOLVED — the ISO was right every time; the CONFIGS reached their own tools through an EMPTY `~/.local/bin`. Fixed + gate 13z. bootstrap r16 · then a SECOND pass fixed the 102s boot, the slow-everything (squashfs `xz`→`zstd`, 7.6× faster cold reads), the dead station launches and the layer-blur ordering — gates 13aa–13af. The Hub trap + dead Hub clicks are STILL OPEN and need a live session. · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
 > and the same problems got re-diagnosed and re-broken multiple times, costing the
@@ -230,6 +230,266 @@ Two separate things, neither of them a regression:
    - lock the screen (hyprlock) → weather line + lock art + track info render
    - UI blips audible on window open/close (`nyxus-soundd`)
 3. **Note which session the greeter preselects** — see OPEN item 2 above.
+
+---
+
+## ⛔ WHERE WE STAND — 2026-07-30 (later) · THE OTHER SEVEN SYMPTOMS · REBAKE REQUIRED
+
+> Companion to the `~/.local/bin` section above, **not a replacement for it.**
+> That one explains why the desktop looked stale. It does **not** explain the
+> 102-second wait, the slow-everything, or the flicker. Those are separate and
+> are fixed here. Everything below is on `main`'s working tree, `verify-profile`
+> passes, and **nothing is in a stick yet.**
+>
+> The owner reported eight symptoms. Below is what each one actually was.
+> Three of them I could not fix from here and they are flagged honestly — do
+> **not** read this section as "all clear".
+
+### 🐌 The 102s splash→greeter wait was never one bug (symptom 1)
+
+`nyxus-firstboot.service` really was `Type=oneshot` on `multi-user.target`, and
+that really was fixed in 07.29 — the shipped unit is `Type=simple` and the
+`06-honeypot-stack.sh` live-media guard is present, both verified in the
+squashfs. The owner saw no improvement because **two more things sat on the
+same path**, and `multi-user.target` waits for all of them:
+
+| What | Why it blocked the greeter | Fix |
+|---|---|---|
+| `NetworkManager-wait-online.service` | `systemctl enable NetworkManager` pulls it in. `docker.service` and `ollama.service` are both `After=network-online.target` **and** `WantedBy=multi-user.target`, so on a live stick with no configured network the whole target stalled on its 60s timeout | `systemctl disable`d in `customize_airootfs.sh` |
+| `nyxus-honeypot-firewall.service` | `Requires=`+`After=docker.service`, `WantedBy=multi-user.target` — so dockerd had to *fully* start before login, in order to firewall containers that `06-honeypot-stack.sh`'s live-media guard had already skipped | `ConditionPathExists=!/run/archiso` |
+
+`systemd.target(5)`: *"Target units will automatically complement all configured
+dependencies of type `Wants=` or `Requires=` with dependencies of type
+`After=`."* `graphical.target` is `Requires=`+`After=` `multi-user.target`, and
+greetd sits behind it. **Anything enabled into `multi-user.target` is in front
+of the login screen.** That is the general rule; the two rows above are just
+today's instances of it. Gate **13ac** asserts all four items on this path.
+
+### 🐌 Everything-is-slow was the squashfs compressor (symptoms 3 and 6)
+
+`profiledef.sh` compressed `airootfs` with `xz`. Measured on this image's own
+content (2140 MB of `/usr/bin` + `/usr/lib/systemd`, single-threaded, warm
+cache, so only decode cost is compared):
+
+| Compressor | Size | Decompress | Throughput |
+|---|---|---|---|
+| `xz -Xbcj x86 -b 1M -Xdict-size 1M` | 647.0 MB | 29.5 s | 72 MB/s |
+| `zstd -Xcompression-level 19 -b 1M` | 716.7 MB | 3.9 s | **549 MB/s** |
+
+**7.6× faster cold reads for 10.8% more ISO.** This matters far more than the
+raw ratio suggests: squashfs inflates a whole 1 MiB block to serve a single
+4 KiB read, so under `xz` *every* cold file touch costs ~14.5 ms of CPU, and
+starting a desktop session touches thousands of them. Switched to `zstd`.
+`NYX_SQUASH_COMP=xz ./build-iso.sh` puts it back if the owner ever wants size
+over speed; gate **13ad** warns (does not fail) when `xz` is selected, since
+that is a legitimate choice and not a bug.
+
+### 🎛 Station pills, decks, and the launch chain (symptom 5)
+
+Three genuinely separate problems, all now fixed:
+
+1. **Two stations pointed at software that is not on the ISO.** FORGE was
+   `on-created-empty:cursor` and CORE was `on-created-empty:thunar`. `cursor` is
+   not packaged for Arch at all and `thunar` was never in `packages.x86_64`, so
+   those two pills switched workspace and then opened nothing, with no error and
+   nothing in the journal. Both now use `command -v` chains ending in a program
+   that is definitely installed. `btop` was the same story from the other
+   direction — the profile ships three btop themes and four launch paths fall
+   back to it, and btop itself was missing; added to `packages.x86_64`.
+2. **The pills dispatch by NUMBER, the deck watcher maps by NAME.** `station_pill`
+   runs `hyprctl dispatch workspace 1`; `nyxus-home-deck` reads
+   `activeworkspace.name` and looks up `OPS`. Those only line up because
+   `nyxus-stations.conf` carries `defaultName:OPS`. One dropped or unsourced
+   shard and every numbered station reports `.name` as `"1"`, no map entry
+   matches, and `_sync` closes every deck and opens none — which is exactly
+   "clicking a station does nothing". `nyxus-home-deck` now aliases the numeric
+   ids to the same decks, read from `stations.json` at startup, so the pills work
+   with or without the names.
+3. **`nyxus-stations.conf` is a generated snapshot of `stations.json`** and can
+   drift, in which case the first hacker-mode flip silently rewrites what the
+   stations do. Regenerated, and gate **13ab** now checks both the drift and that
+   the *last* fallback in every launch chain resolves to something the ISO
+   installs. Earlier branches are allowed to miss — that is what `command -v`
+   guards are for — but they are reported so a never-taken branch is visible.
+
+Note **BIFROST (station 9) has no deck and that is by design** — it is not a bug
+and does not need one.
+
+### 🧨 `set -u` + an unset session variable = a daemon that dies mid-line
+
+`nyxus-home-deck`, `nyxus-soundd` and `nyxus-tintd` all run `set -u` and then
+built their Hyprland socket path from a bare `${XDG_RUNTIME_DIR}` and
+`${HYPRLAND_INSTANCE_SIGNATURE}`. In all three, the *immediately preceding line*
+already used `${XDG_RUNTIME_DIR:-/tmp}` — the author knew it could be unset and
+the guard just never reached the next line. `nyxus-home-deck` even carries an
+80-line-earlier comment saying that variable "is set in a login shell but NOT in
+some exec-once/systemd contexts".
+
+Unset either variable and bash aborts with `unbound variable` **at that line**,
+which for `nyxus-home-deck` means it completes its one startup sync and then
+dies: the decks appear once and no station ever opens anything again, silently.
+
+**Honesty note:** `pam_systemd` is in the greetd PAM chain and Hyprland exports
+`HYPRLAND_INSTANCE_SIGNATURE` to `exec-once` children, so both variables are
+*normally* set and this is **not proven** to be what the owner hit. It is a
+latent trap that produces exactly the reported symptom, it is free to fix, and
+the codebase already defends against it in ten other scripts. All three now
+guarded; gate **13af** covers all 114 `set -u` scripts and understands the
+`export VAR="${VAR:-default}"` idiom, so it does not fire on scripts that hoist
+the guard to the top.
+
+### 🖼 Layer-blur file order was load-bearing and backwards (symptom 4)
+
+The CSS half of the "shadow box" was genuinely fixed on Jul 26 (the ink
+drop-shadow in `@mixin obsidian-vessel`) and that fix **is** in the 07.29 image —
+verified, zero `0 6px 18px` in the shipped `eww.css`, bars/rails all
+`background: transparent`. So that is not what regressed.
+
+What was wrong: Hyprland applies `layerrule`s in file order, **last match wins**,
+and the `^(nyxus.*)$` catch-all sat at the *bottom* of
+`nyxus-hyprland-layerblur.conf` — below every explicit per-namespace rule. A rule
+that calls itself "catch-all for future surfaces" was in fact a global override
+silently eating all of them, which is precisely the trap
+`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md` §7.4 warns about ("the catch-all can
+undo `blur off`"). **Moved to the top**, so it is now the floor it always claimed
+to be and an explicit rule below it actually wins. Also added rules for the seven
+numbered station decks, which shipped on 07.29 with no rule of their own. Gate
+**13ae** keeps the ordering and reports namespaces that have no explicit rule.
+
+Effective blur is **unchanged** by this — every explicit rule currently carries
+the same values as the catch-all. The point is that a fix is now *possible*.
+There is a ready-to-use owner A/B at the bottom of that file
+(`hyprctl keyword layerrule 'blur off, match:namespace ^(nyxus-bar-.*)$'`,
+instant and reversible, no rebake) plus four commented-out `blur off` lines. It
+is left commented because turning bar blur off also removes the frost behind the
+pills — that is a look decision, not a bug fix. **If the boxes survive this
+bake, run the A/B and tell the next agent the answer.**
+
+### 🩹 `~/.local/bin`, continued — two sites the hypr sweep did not cover
+
+Gate 13z scans the hypr tree. The same bug class lives in every other shipped
+config that names an executable, and two real instances were still there after
+13z went green:
+
+- `skel/.config/dunst/dunstrc` → `script = /home/nyx/.local/bin/nyxus-notif-to-eww`.
+  **This was the worse of the two.** That rule also sets `skip_display=true`, so
+  dunst suppressed its own popup *and* the eww bridge could not start —
+  notifications were swallowed outright on the stick, which is also why nothing
+  ever surfaced an error toast for any of the other broken features. Now an
+  absolute `/usr/local/bin` path, because dunst's PATH is not ours to assume.
+- `eww/scripts/hotkey-record.sh` → `exec "${HOME}/.local/bin/nyxus-hotkey"`, now
+  a bare name.
+
+Gate **13aa** scans the 517 shipped configs *outside* the hypr tree for this.
+
+Also hardened `nyxus-session-start` to guarantee `/usr/local/bin` and
+`/usr/local/sbin` are on PATH. greetd currently hands us a PATH that happens to
+contain them, but nothing asserted it, and if that ever stopped being true every
+bare-name keybind and `exec-once` would die silently and identically to the
+`~/.local/bin` bug. This is **not** the banned hardcoded
+`env = PATH,/home/cosmic/...` from PR #77 — that pinned an absolute path for a
+user who does not exist on the stick.
+
+### 🚫 STILL OPEN — not fixed, needs the owner or a live session
+
+Be clear with the owner about these three. They are **not** addressed by this
+rebake.
+
+1. **The Hub trap (symptom 7) and dead Hub clicks (symptom 8).** Every Hub
+   `:onclick` target was traced and **all of them resolve on the ISO** — bare
+   names in `/usr/local/bin`, no `~/.local/bin`, no `${EWW_CMD}`. Escape and
+   `Super+Shift+Escape` are real, sourced binds and `nyxus-hub-close` hard-
+   restarts a wedged eww. polkit allows `poweroff`/`reboot`/`suspend` for the
+   active session and `nyx` is in `wheel`, so power actions *should* work. Two
+   concrete suspects, neither safe to change blind:
+   - `nyxus-hub` is a full-screen **`overlay`**-layer input surface with no
+     input region — a direct violation of the rule in §7 of this file, and the
+     same shape as the `nyxus-start` GTK4 trap that was already killed once.
+   - `defwidget nyxus_hub_layout` wraps **every** Hub control, close buttons
+     included, in `(eventbox :onclick "true")`. It is there to stop clicks
+     reaching the outer dismiss handler, but if it consumes pointer events
+     instead of propagating them, *nothing* inside the Hub works — which is
+     symptom 8 exactly, and would also explain symptom 7, from one cause.
+
+   **Do not "fix" this by guessing.** Layer/focus changes to a full-screen eww
+   surface are how this build trapped the desktop before and forced hard resets.
+   Reproduce it in a live session, confirm with `hyprctl layers -j` whether the
+   eventbox is eating the clicks, then change one thing. `nyxus-panic` is the
+   escape hatch; tell the owner it exists.
+
+2. **`nyxus-hub-open` closes all four bars before mapping the Hub.** It has a
+   real reason (releasing gtk-layer-shell exclusive zones so the Hub is not laid
+   out short) and it *does* restore them if the Hub fails to map. But if the Hub
+   maps and then cannot be dismissed, the user is on bare wallpaper with no bars
+   and no hub — that is the "trapped" report. Left alone because removing it
+   reintroduces the dead-strip bug it was written to fix.
+
+3. **The login screen (symptom 2) — nothing newer was ever built.** Searched
+   every local and remote ref: there are exactly four `regreet.css` blobs in all
+   of history, all the same "Void Sign-In" design. `main`'s is the newest and
+   the best of them — it is the only one carrying ALIEN NEON *and* the fix that
+   narrowed the over-broad `frame, .frame, box.horizontal > box` selector, which
+   in the older variants also matched regreet's clock and message boxes and
+   painted them as stray frosted panels shoved 720 px right. The newest off-main
+   greeter commit is Jul 14. **"The login screen is the one before the fix" has
+   no lost work behind it — a new greeter is net-new work, not a bug hunt.**
+
+### 🌿 Branch audit — nothing valuable is missing from `main`
+
+Asked and answered: every branch `git cherry` flags is a squash-merge false
+positive, junk, or content `main` has moved past. Verified by comparing blob
+hashes file-by-file, not by trusting `git cherry`. **Zero open PRs** (81 total,
+68 merged); the closed-unmerged ones were all superseded by later consolidations.
+
+- **`babysit/land-open-prs` — do not merge; delete it.** All three things
+  HANDOFF said it was holding are already on `main` byte-identical (the recovery
+  gate, the path-traversal fix, the offline GTK4 deploy). Merging it would
+  *regress* three files: `nyxus_install.sh` would lose 239 lines of newer
+  offline logic, `Main.qml` would revert to the DARK MIRROR palette, and
+  `nyxus-sync` would revert to the banned violet `#a06bff`. Its remote is
+  already `[gone]` and PR #56 is closed as merged.
+  Note the recovery gate would not have helped symptom 7 anyway — it is a
+  password bypass for the *login and lock screens*, it targets SDDM (abandoned
+  for greetd on Jul 14), and nothing invokes `nyxus-recovery-setup` on a shipped
+  ISO, so it is inert until run by hand.
+- **`origin/nyxus-hyprland-055-fixes` looks alarming at 44 commits and is not.**
+  It branched May 19, its newest commit is Jul 10, and its content was absorbed
+  by `471c1c50` on Jul 12. `main` has since replaced the palette entirely.
+- **All three stashes are safe to drop.** `stash@{0}` is a reverse delta that
+  would rip out Arsenal, the C2 teamserver and the BlackArch wiring (251,603
+  deletions); `stash@{1}` has an empty tracked diff; `stash@{2}` is superseded
+  live tuning. **Do not apply any of them.**
+- **`local-stash-work` — confirmed junk, still do not merge.**
+- The only genuinely missing tracked file in the whole repo is
+  `iso-builder/hardening/nyxus-fim.rules` (+ its `.example`), 32 lines of audit
+  rules from `a9b40cc1`. Real, absent, and irrelevant to all eight symptoms.
+
+### 🛡 New verify-profile gates (all negative-tested)
+
+`13z` is the concurrent agent's. These are additive and named to stay clear of it:
+
+| Gate | Asserts |
+|---|---|
+| `13aa` | No shipped config **outside** the hypr tree reaches a tool through `~/.local/bin` (517 files) |
+| `13ab` | Every station launch chain ends in a program the ISO installs; `nyxus-stations.conf` has not drifted from `stations.json` |
+| `13ac` | The four things on the splash→greeter path stay off it |
+| `13ad` | Warns when the squashfs compressor is `xz` |
+| `13ae` | The layer-blur catch-all stays **above** the explicit rules; reports namespaces with no rule of their own |
+| `13af` | No `set -u` script uses a bare `${XDG_RUNTIME_DIR}` / `${HYPRLAND_INSTANCE_SIGNATURE}` it never defaults |
+
+### 🔜 NEXT (this section)
+
+1. **Rebake.** `verify-profile` passes. Expect the ISO ~70 MB larger and the bake
+   itself noticeably faster (zstd compresses far quicker than xz too).
+2. **Time the boot.** Splash→greeter should drop a long way. If it does not,
+   `systemd-analyze critical-chain graphical.target` on the stick names the next
+   offender — that command is the whole diagnostic, do not guess again.
+3. **Then test the Hub deliberately, knowing `nyxus-panic` is the way out.**
+   Confirm whether clicks inside it register at all. That single answer settles
+   symptoms 7 and 8 and is the one thing that could not be determined from the
+   image.
+4. Click every station pill and confirm a deck appears — except **BIFROST**,
+   which has none by design.
 
 ---
 
@@ -1501,6 +1761,25 @@ Verify a flashed stick from the agent side (no sudo needed):
   frost a rectangular “shadow box” behind tall transparent bars — see
   [`docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md`](./docs/EWW_CHROME_REVERT_BRIEF_2026-07-26.md).
   Saucer/time only when owner explicitly restarts that workstream.
+- **Hyprland `layerrule` order is LAST-MATCH-WINS (2026-07-30).** The
+  `^(nyxus.*)$` catch-all in `nyxus-hyprland-layerblur.conf` must stay at the
+  **top** of the file. It spent months at the bottom, where it silently
+  overrode every explicit per-namespace rule below it — so a `blur off` written
+  anywhere in that file was dead on arrival. Gate `13ae` enforces the ordering.
+- **`set -u` + `${XDG_RUNTIME_DIR}` / `${HYPRLAND_INSTANCE_SIGNATURE}`
+  (2026-07-30).** Neither is guaranteed in an `exec-once`/systemd context.
+  Under `set -u` a bare reference aborts the script *on that line*, before any
+  of its own error handling — a daemon can complete its startup work and then
+  vanish with no log. Always `${VAR:-fallback}`, or hoist
+  `export VAR="${VAR:-…}"` to the top the way `nyxus-eww-launch-safe` does.
+  Gate `13af`.
+- **Anything enabled into `multi-user.target` is in front of the login screen
+  (2026-07-30).** `systemd.target(5)`: targets auto-complement `Wants=`/
+  `Requires=` with `After=`, and `graphical.target` is `Requires=`+`After=`
+  `multi-user.target` with greetd behind it. This is how a honeypot firewall
+  unit and `NetworkManager-wait-online` put ~100s in front of the greeter on a
+  live stick. Live-only work belongs behind
+  `ConditionPathExists=!/run/archiso`. Gate `13ac`.
 
 ---
 

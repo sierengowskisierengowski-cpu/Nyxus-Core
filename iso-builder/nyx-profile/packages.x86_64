@@ -32,6 +32,14 @@ unzip
 zip
 tar
 htop
+# btop was NEVER in this list, yet the profile ships /etc/skel/.config/btop/
+# (btop.conf + nyxus-prism.theme + SharkDash.theme + nyxus-hacker.theme) and
+# four shipped launch paths fall back to it (stations GHOST + MESH, the OPS
+# deck quick-launch grid, nyxus-hacker-mode's btop theme swap). Verified
+# absent from the 2026.07.29 image: no /usr/bin/btop anywhere in the squashfs.
+# So the whole Jul-29 hacker-mode btop work was dead on the stick and two
+# station fallbacks resolved to nothing. (2026-07-30)
+btop
 fastfetch
 
 # ── boot ───────────────────────────────────────────────────────────
