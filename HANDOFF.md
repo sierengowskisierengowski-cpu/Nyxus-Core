@@ -515,6 +515,119 @@ hashes file-by-file, not by trusting `git cherry`. **Zero open PRs** (81 total,
 
 ---
 
+## 👽 URBAN-ALIEN THEME — WHERE IT ACTUALLY SHIPS (audit 2026-07-30)
+
+> The owner asked, plainly: *"where does the urban-alien theme actually exist,
+> where does it ship, and where was it never built?"* Audited against the
+> **baked 07.29 squashfs**, not the repo. Headline: **four of the five surfaces
+> were already right on that stick** — the theming work in `e5c381d1` (Jul 24)
+> is real, is on `main`, and does ship. One surface was being undone at
+> runtime. Nothing is stranded on an unmerged branch.
+
+`e5c381d1 feat(theme): urban-alien on login/lock/screensaver + reworked
+hypridle pipeline` is on `main` and every one of its ten files is present in
+the 07.29 image (the only delta is `hyprlock.conf`, which differs solely by the
+five `~/.local/bin` call sites fixed afterwards in `c0be97f2`).
+
+| Surface | Verdict | Evidence from the 07.29 squashfs |
+|---|---|---|
+| **Login (greetd + regreet)** | **Ships, correct** | `nyxus-greeter` copies `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png` → `/var/cache/regreet/nyxus-login-bg.png` on **every** greeter start; the art is present (3.6 MB); `/var/cache/regreet` + `/var/lib/greetd` are `drwxr-xr-x` **uid 950 = `greeter`** (the `4c7b52ca` bake fix worked — `unsquashfs` shows them as `brltty` only because this host's brltty happens to be uid 950); `regreet.css` `window` is a 0.35 scrim so the art reads through |
+| **hypridle** | **Ships, correct** | shipped `hypridle.conf` is byte-identical to the NS source of truth (`7c5738b5`) — 45 s idle-glass, 300 s dim + urban-alien saver, 600 s `loginctl lock-session` + dpms off, 900 s suspend. `exec-once = hypridle` is in the shipped `hyprland.conf` (line 97). `brightnessctl` + `nyxus-idle-glass.sh` both ship |
+| **Screensaver** | **Ships, correct** (staging hardened) | `nyxus-screensaver` execs `nyxus_screensaver.py` (not the retired matrix-rain saver) and pins `NYXUS_SCREENSAVER_WALL`; the payload ships in skel and is byte-identical across NS / skel / `/opt/nyxus-cache`; GTK4 + libadwaita + PyGObject all present; the four `app.nyxus.Screensaver` windowrules ship **and** `nyxus-hyprland-rules.conf` is `source=`d |
+| **NYXUS Power** | **wlogout was BROKEN AT RUNTIME — fixed.** eww overlay ships art | see below |
+| **Backgrounds throughout** | **Ships** | desktop `wallpaper.conf` + `wallpaper.json` → urban-alien; `livewall.conf` is `LIVE=on` and the loop renders **from that still**; all 10 station wallpapers are alien art; lock/login/saver/wlogout all resolve to the same hero |
+
+### 🔴 The one real regression — the power menu was un-theming itself
+
+`nyxus-gen-backdrop` (STARFALL, Jul 11) rewrote the **first**
+`background-image: url(...)` in `~/.config/wlogout/style.css`, whatever it
+pointed at. When it was written the shipped stylesheet said
+`background-image: none`, so the regex never matched and it was a harmless
+no-op. On **2026-07-25** `af1acb85` gave wlogout the deliberate "URBAN-ALIEN
+CANVAS" (`url("/usr/share/backgrounds/nyxus/nyxus-urban-alien.png")`) — which
+became the first match. `nyxus-set-wallpaper` calls gen-backdrop on **every**
+wallpaper change, and that includes the one at login and one per station
+switch, so the crisp hero was replaced by a 42px-blurred / 0.42-brightness /
+violet-tinted derivative within seconds of every boot, on every stick since.
+**The stylesheet was correct in git the whole time.** Same shape as the
+`~/.local/bin` bug: shipped correctly, defeated at runtime.
+
+**Fixed:** the wlogout rewrite is now opt-in — only a url that is already
+`…starfall-backdrop.png` (or the `BACKDROP_HOME` placeholder the code still
+expects) gets refreshed. A pinned system wall is left alone.
+
+### Also fixed this pass
+
+- **The bake never staged `nyxus_screensaver.py`.** It staged only the retired
+  `nyxus_matrix_saver.py`. The urban-alien saver shipped purely because
+  `skel/.config/nyxus` is not in the bake's `rm -rf` list — so an edit to the
+  **NS copy, the source of truth, would silently never have reached a stick.**
+  Both savers are staged now.
+- **`nyxus-screensaver` hard-coded one of three payload locations.** skel puts
+  it in `~/.config/nyxus/`, `nyxus_install.sh` puts app python in `~/.nyxus/`
+  (→ `/opt/nyxus`). One missing copy and the idle screen did nothing at all,
+  silently, while hypridle reported success. It falls through all three now.
+- **verify-profile gate `13ua`** (negative-tested) asserts the whole chain on
+  both trees the bake reads: hero art present · hyprlock pinned to it ·
+  greeter pins it · `customize_airootfs.sh` still provisions
+  `/var/cache/regreet` · saver launcher + payload + bake staging ·
+  hypridle launches the saver and locks · `exec-once = hypridle` ·
+  wlogout keeps the canvas · **gen-backdrop cannot clobber a pinned hero** ·
+  NS ↔ airootfs byte-identity for all seven files.
+
+### 🎨 OWNER DECISIONS — not guessed, flag only
+
+1. **The greeter art and the greeter LAYOUT no longer match.**
+   `regreet.css` pushes the login card to the right third
+   (`margin-left: 720px`) and its own comment says that is *"so the alien art
+   on the left stays visible"* — it was composed against the seed
+   `/etc/greetd/nyxus-login-bg.png`, a purpose-built **1920×1080** wall with the
+   alien on the LEFT and clean sky on the right. `e5c381d1` repointed the live
+   background at `nyxus-urban-alien.png`, which is **1536×1024** with the alien
+   dead CENTRE, cover-cropped to 16:9. The login card will land on top of the
+   alien. Options: (a) keep urban-alien and move the card back toward centre or
+   left; (b) point the greeter at `nyxus-login-wall.png` / the existing seed,
+   both of which are composed for a right-side card; (c) crop a 16:9
+   urban-alien variant with the subject on the left. **Not changed.**
+2. **"NYXUS Power" is three different surfaces** and only one of them is
+   wlogout:
+   - `Super+Shift+E` → **wlogout** — the urban-alien hero canvas (the one that
+     was being clobbered; now fixed).
+   - `Super+Escape` → the **eww `powermenu` overlay**, the one actually
+     labelled **"NYXUS · POWER"**. It *does* carry alien art —
+     `assets/nyxus-hero-ufo-shop.png`, aliens spraying a UFO in a graffiti body
+     shop — but behind a `rgba(5,1,13,0.76)`→`0.82` ink scrim, so roughly 20%
+     of it survives. The Hub uses the same trick at `0.95`→`0.98`, i.e. all but
+     invisible. If the owner wants the art to actually read, that is a scrim
+     number, not missing work. **Not changed** — chrome opacity is exactly the
+     kind of unrequested visual edit this file warns against.
+   - `nyxus-powermenu` → `/opt/nyxus/nyxus_powermenu.py`, a standalone GTK4
+     window reachable from the app menu. Flat `rgba(5,1,13,0.96)`, **no art at
+     all**. Owner's call whether it should match.
+
+### Noted, not touched
+
+- `skel/.config/wlogout/nyxus-palette.css` is committed but wiped at bake and
+  never restaged, so it does not ship. It is also unreferenced — wlogout's GTK
+  CSS parser does not follow `@import` and `style.css` says so. Dead either way.
+- `nyxus-scripts/nyxus-wlogout.tar.gz` still contains a **DARK MIRROR rev
+  2026-05-07** monochrome stylesheet with `background-image: none !important`.
+  The Jul-23 brand purge missed it. Nothing extracts it (only the api-server
+  download route names it), but it would revert the canvas if anything ever did.
+- `/usr/share/nyxus/wall-rotation.list` is now dead for its stated purpose —
+  `nyxus-greeter` stopped reading it when the login background was pinned.
+- `.power-btn` in `eww.css` loads `url("assets/fog-vessel.png")` from the
+  **stylesheet**, which per the Jul-28 finding does not resolve; only inline
+  `:style` urls do (which is why the powermenu backdrop above works). Cosmetic.
+- **Nothing relevant is stranded on a branch.** Every unmerged commit touching
+  these files is older Obsidian-Prism / copper / Eclipse / cream-era work that
+  was deliberately purged. `babysit/land-open-prs` still holds the unrelated
+  login/lock **anti-lockout recovery gate**.
+- `BOOTSTRAP_VERSION` deliberately **not** bumped again — r16 was already
+  bumped today, so installed systems will re-pull these two scripts anyway.
+
+---
+
 ## WHERE WE STAND — 2026-07-29 · ON MAIN · REBAKE REQUIRED
 
 > **PR #77–#81 are all on `main`.** Next step is a clean rebake — none of this
