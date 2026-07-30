@@ -99,6 +99,208 @@
 
 ---
 
+## 🪟 2026-07-30 (evening) · THE BOTTOM STRIP, THE BLUE SCREENSAVER, AND THE LIVE SYNC
+
+> Three owner reports, all answered by measurement on his running Hyprland
+> session (PID 7466, Hyprland 0.55.4, eDP-1 1920x1080). **Two of the three had
+> the same root cause and it is arithmetic, not a guess.** His live `~/.config`
+> was also ~700 lines behind `main` and has now been synced; backups and the
+> restore command are recorded below.
+
+### 🔢 ONE NUMBER EXPLAINS TWO BUGS: `reserved [0, 40, 0, 158]`
+
+`hyprctl monitors -j` on this panel:
+
+| | |
+|---|---|
+| monitor | 1920x1080 |
+| `reserved` (l,t,r,b) | **`[0, 40, 0, 158]`** — `bar-top` y=4 h=36, `bar-bottom` y=922 h=150 |
+| usable height | 1080 − 40 − 158 = **882** |
+
+Anything that asks for a **1080-tall** box while the bars hold those exclusive
+zones gets **centred in the 882**, not in the monitor:
+
+```
+y = reserved_top + (usable_h − requested_h) / 2
+  = 40 + (882 − 1080) / 2
+  = −59          → bottom edge at 1021 → a 59px strip of live desktop
+```
+
+**−59 was measured on three different surfaces**, two of them different
+subsystems entirely. This is Hyprland's `arrangeLayerArray` / window-layout
+rule: bounds are the *usable* area unless `exclusive_zone == −1`.
+
+| Surface | Kind | measured `y` | bottom edge |
+|---|---|---|---|
+| `nyxus-powermenu` (Super+Escape) | eww layer surface | **−59** | 1021 |
+| `nyxus-hub` opened with a bare `eww open` | eww layer surface | **−59** | 1021 |
+| `com.nyxus.matrixsaver` | **toplevel window** | **−59** | 1021 |
+
+`nyxus-hub` opened through **`nyxus-hub-open`** measured **y=0, bottom 1080** —
+because that script closes the four bars *synchronously* before mapping. That
+is the only reason the Hub ever looked right, and it is why the Hub and the
+power menu behaved differently.
+
+### 🐛 Bug 1 — the bottom strip under NYXUS Power (owner's report, reproduced)
+
+`dashboard` / `nyxus-hub` / `powermenu` / `cheatsheet` were all
+`:geometry (geometry :width "100%" :height "100%" :anchor "center")`.
+
+The codebase already has a mechanism for this — `overlay-shield.sh`, referenced
+by a `defpoll` per overlay, hides the bars while an overlay is up. **It works,
+but it is a 2-SECOND poll**, so every open looked like this:
+
+```
+t=1s   nyxus-powermenu  y=-59  bottom=1021   ← 59px of desktop showing
+t=3s   nyxus-powermenu  y=0    bottom=1080   ← shield fired, bars gone
+```
+
+That two-second window is the whole bug. "There's usually always a gap on the
+bottom then you can see my regular screen" is exactly right.
+
+**Fix: `:anchor "top center"`, not `"center"`.** With a top anchor Hyprland
+puts the surface at `bounds.y` and keeps its requested height, so it runs
+`40 → 1120` and the bottom of the screen is covered *from the first frame*,
+independent of the shield's timing. Once the shield does fire the surface
+snaps to `0 → 1080`. Measured both phases.
+
+Applied to all **nine** fullscreen eww windows across both trees the bake
+reads: `eww.yuck` (dashboard, nyxus-hub, powermenu, cheatsheet, screensaver)
+plus `snap.yuck`, `mission.yuck`, `deepcore.yuck`, `splash.yuck`.
+
+**Things that were tried and do NOT work — do not re-try them:**
+- **Dropping `:initial ""` from the shield defpolls** so the poll would run at
+  open time. Measured: made it *worse* — the shield did not fire at all inside
+  1.6 s where it previously fired at ~2 s.
+- **An exclusive-zone setting.** eww's `:exclusive` is a **bool**; it selects
+  auto or 0 and can never emit the `−1` that would make Hyprland use the full
+  monitor as the bounds. There is no `layerrule` for it either.
+- **Guessing a margin.** Not needed — the anchor removes the dependency on the
+  reserved values entirely, which is the point. Do not hardcode 40 or 158.
+
+### 🐛 Bug 2 — `pin on` and `fullscreen on` cancel each other
+
+**Hyprland refuses to fullscreen a pinned window** (pin implies floating). Both
+savers carried `pin on` *and* `fullscreen on` in `nyxus-hyprland-rules.conf`,
+so the pin won and neither saver was ever fullscreen. Measured, same session:
+
+| | matrix saver | alien saver |
+|---|---|---|
+| with `pin on` | `[0,−59] 1920x1080 fullscreen 0 pinned true` | `[510,156] 900x650 fullscreen 0` |
+| without | — | **`[0,0] 1920x1080 fullscreen 2`** |
+
+The alien saver was the worse of the two: it never requests a size, so it
+mapped as a **900×650 card floating in the middle of the desktop**.
+
+`pin` bought nothing — a fullscreen saver already covers its workspace and both
+savers quit on any input. **Removed from both.** Gate `13pb`.
+
+Second, independent defect in the same chain: `nyxus_screensaver.py` calls
+`self.fullscreen()` in `__init__`, which runs **before the wayland surface
+exists**, and wlroots drops it. `nyxus_matrix_saver.py` already carried the
+fix and says why in its own comment — *"fullscreen AFTER the surface is
+mapped, else wlroots ignores it"*. The alien saver now does the same
+`GLib.idle_add(win.fullscreen)` after `present()`. Honest note: with the pin
+removed the window rule alone is sufficient, so the `idle_add` is belt and
+braces — it keeps the saver correct if the rules shard ever falls out of the
+bake again, which it has done three times.
+
+### 👽 Bug 3 — "the screensaver was the old blue one": his LIVE session was stale
+
+Answered definitively; it is **(a)**, not (b) or (c). No third screensaver
+exists.
+
+| Evidence | Finding |
+|---|---|
+| `~/.local/bin/nyxus-screensaver` (what the session resolves) | dated **Jul 22 22:49**, `exec python3 ~/.config/nyxus/nyxus_matrix_saver.py` — the **matrix-rain** saver |
+| live `~/.config/hypr/hypridle.conf` | old "Comet-Fire r2" rev, 180/300/420/600, comment reads *"launch the alien **matrix-rain** screensaver"* |
+| live `nyxus-hyprland-rules.conf` | had rules for `com.nyxus.matrixsaver` only — no `app.nyxus.Screensaver` block at all |
+| `main` (`artifacts/.../nyxus-screensaver`) | urban-alien launcher, pins the hero, falls through three payload paths |
+| **the 07.29 ISO** (`unsquashfs` of `airootfs.sfs`) | ships the **correct** urban-alien launcher **and** the 45/300/600/900 hypridle |
+
+So the stick was right and the builder box was two revisions behind — the same
+shape as the `~/.local/bin` bug, in the opposite direction. Searched for a
+third implementation and there is none: the only other saver surface is the eww
+`screensaver` window (a violet **starfield**, `starfield-lock-base.png`, mean
+RGB 8/4/17), and **nothing on the idle path opens it** — the only callers are
+rofi's "Lock Screen" entry and `rofi-scripts/power.sh`. Worth knowing if he
+ever reports a "blue starfield" reached from a menu; hypridle cannot produce it.
+
+The matrix saver's palette is mint `#26ffb7` + violet `#984dff` over the dark
+wall, which is a fair match for "the old blue one".
+
+### 🔄 The live session is now synced with `main`
+
+His `~/.config` was measured against the **exact mapping `build-iso.sh` uses**
+(not guessed): 34 config files behind, 5 absent, plus 34 differing and 61
+missing `nyxus-*` tools in `~/.local/bin`. **177 files updated.**
+
+**Backups (deletes nothing, fully reversible):**
+
+```bash
+~/nyxus-live-backup-20260730-150614.tar.gz          # 318M · .config/{eww,hypr,nyxus,wlogout,dunst,btop,cava}
+~/nyxus-live-localbin-backup-20260730-150614.tar.gz # 129M · .local/bin
+# restore:  tar -xzf ~/nyxus-live-backup-20260730-150614.tar.gz -C ~
+#           tar -xzf ~/nyxus-live-localbin-backup-20260730-150614.tar.gz -C ~
+```
+
+**Deliberately NOT synced — these are runtime-generated and the repo ships
+empty stubs. Copying them would have destroyed live state:**
+
+- `~/.config/hypr/hyprlock-accent.conf` — live holds the **generated** PRISM
+  values (`$nyxus_accent_r = 125` …); the repo copy is a three-line comment.
+  Overwriting it would have left hyprlock with undefined accent variables.
+- `~/.config/hypr/nyxus-monitors.conf` — Settings ▸ Displays owns this.
+
+**Local-only files found, none destroyed:** 19 `eww.*.bak-*` snapshots (+ one
+`eww.yuck.CORRUPT`), and three scripts with no counterpart in either tree —
+`eww/scripts/gen-liquid-gifs.py`, `start_feed.py`, `start_search.py`. Grepped
+both trees: **nothing references any of the three**, so they are unreferenced
+scratch. They are still on disk.
+
+`hypridle` was **restarted** (`hyprctl dispatch exec hypridle`) — it had been
+running since login with the old 180 s matrix pipeline and would not otherwise
+have picked up the new config. eww stayed at **one daemon / four bars**
+throughout; `hyprctl configerrors` is clean after `hyprctl reload`.
+
+Screenshots: **`~/Pictures/nyxus-live-sync-2026-07-30/`** — `08-BEFORE-…`
+shows the 59px strip, `06/07-…` the fix at both phases, `09-…` the fullscreen
+urban-alien saver, `10-…` the Hub.
+
+### 🛡 New gates (both negative-tested)
+
+| Gate | Asserts |
+|---|---|
+| `13pa` | No shipped `.yuck` on either tree declares a 100%x100% window with `:anchor "center"`; and every `NS/eww/*.yuck` is byte-identical to its skel copy |
+| `13pb` | Neither saver class carries `pin on`; both carry `fullscreen on`; and `nyxus_screensaver.py` re-asserts fullscreen after `present()` on all three trees |
+
+Negative-tested by reverting each fix in turn: `13pa` fired with the file and
+line number of every centred window, `13pb` fired per class per tree. `13pb`
+matches with `grep -F` on comment-stripped lines — the class patterns contain
+literal backslashes (`com\.nyxus\.matrixsaver`) and an ERE built from them
+matches nothing, which is how the first draft passed while asserting nothing.
+
+### ⚠ What is NOT verified by any of this
+
+- **Everything above is Hyprland 0.55.4.** The ISO ships **0.56.1**. The layout
+  arithmetic is core wlr-layer-shell behaviour and very unlikely to move, but
+  it is not proof for the stick. Gate `13x` already warns on the skew.
+- **Boot-time surfaces cannot be checked live and remain unverified:** the
+  greeter (runs as `greeter` under greetd before login), plymouth, first-boot
+  timing, and the squashfs `zstd` switch. Those need a bake.
+- `/usr/share/backgrounds/nyxus/` **does not exist on the builder box** (root
+  owned, no sudo), so the saver resolved its wall through the
+  `~/.config/hypr/walls/` fallback. The pinned system path is only exercised on
+  a real stick.
+- One line inside `nyxus_screensaver.py` in this commit (`nyxus-graffiti-space`
+  → `nyxus-desktop-hero` in the wall candidate list) is **agent `4e21a37e`'s
+  in-flight art work**, not mine. It is inseparable from the file and was
+  committed rather than risk a write race on a shared working tree. Its other
+  in-flight edits (docs, `stations.json`, `wall-rotation.list`, 20 staged image
+  deletions) were left untouched.
+
+---
+
 ## ⛔ WHERE WE STAND — 2026-07-30 · WHY EVERY STICK "LOOKED OLD" · REBAKE REQUIRED
 
 > The owner flashed the `2026.07.29` ISO, booted it, and reported seeing "my
