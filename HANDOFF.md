@@ -1,5 +1,18 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
+> **★★★ WHERE WE STAND — 2026-07-31 ~00:40 EDT · SESSION RECOVERY ★★★**  
+> The Jul 30 evening multi-agent session died mid-flight (machine freeze + Cursor
+> billing block). ~65 uncommitted paths were at risk. **Salvaged onto `main` as
+> WIP commits** (art repoint `5b3d3f3b`, docs `92978719`, login greeter
+> `ad15cf11`, SDDM quarantine `fcba423b`). Settings Increment 1 was already on
+> main as `20953054`.  
+> **Full brief (read first):** [`docs/SESSION_RECOVERY_BRIEF_2026-07-31.md`](./docs/SESSION_RECOVERY_BRIEF_2026-07-31.md)  
+> **Still broken for the owner:** blank graphical login (TTY3 workaround), Hub /
+> Power gap now at the **TOP** (`3de4a38b` overshot), Settings Increment 2 not
+> started, login-card eye candy / Hub background / deep audit still queued.  
+> **⛔ DO NOT BAKE** until login is verified live and the gap is fixed. Do not
+> merge `local-stash-work`. Do not re-do work listed as landed in the brief.
+
 > **Last updated: 2026-07-30 ~14:30 EDT (⛔ THE "MY BAKE LOOKS OLD" MYSTERY IS SOLVED — the ISO was right every time; the CONFIGS reached their own tools through an EMPTY `~/.local/bin`. Fixed + gate 13z. bootstrap r16 · then a SECOND pass fixed the 102s boot, the slow-everything (squashfs `xz`→`zstd`, 7.6× faster cold reads), the dead station launches and the layer-blur ordering — gates 13aa–13af. The Hub trap + dead Hub clicks are STILL OPEN and need a live session. · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
 > anything.** It exists because this project got scattered across duplicate clones
