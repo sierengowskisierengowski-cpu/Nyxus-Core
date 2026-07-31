@@ -220,7 +220,7 @@ LAUNCHERS=(
   nyxus-hub-apps nyxus-hub-close nyxus-hub-launch nyxus-hub-open nyxus-hub-search
   nyxus-launch-bifrost nyxus-launch-meli nyxus-lens
   nyxus-livewall-flagship nyxus-livewall-generate nyxus-live-wallpaper
-  nyxus-living nyxus-lock-art nyxus-lock-track nyxus-mood
+  nyxus-living nyxus-lock-art nyxus-lock-cava nyxus-lock-track nyxus-mood
   nyxus-notifications nyxus-notif-to-eww nyxus-nowplaying nyxus-overlay-open nyxus-stage-system-walls
   nyxus-palette-extract nyxus-panic nyxus-persist-login
   nyxus-plugins nyxus-plymouth-install nyxus-postinstall nyxus-pulsed

@@ -73,7 +73,7 @@ LAUNCHERS=(
   nyxus-ghost-helper nyxus-glow nyxus-graffiti-wall nyxus-hacker-mode nyxus-home
   nyxus-hotkey nyxus_hotcorners.py nyxus-hub-apps nyxus-hub-close nyxus-hub-launch
   nyxus-hub-open nyxus-hub-search nyxus-launch-bifrost nyxus-launch-meli nyxus-lens nyxus-livewall-flagship
-  nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art
+  nyxus-livewall-generate nyxus-live-wallpaper nyxus-living nyxus-lock-art nyxus-lock-cava
   nyxus-lock-track nyxus-mission-control-toggle nyxus-mood nyxus-notifications
   nyxus-notif-to-eww nyxus-nowplaying nyxus-overlay-open nyxus-palette-extract nyxus-panic nyxus-stage-system-walls
   nyxus-persist-login
