@@ -303,3 +303,16 @@ AXIOM 19, honeypot 12) which are still one `git checkout` from being lost.
 - **Let the bars settle between probes.** Back-to-back open/close runs race
   `nyxus-hub-close`'s async restore and produce duplicated bars (reserved
   `[0,80,0,316]`), which looks exactly like a geometry bug and is not one.
+
+---
+
+## 8. Branch audit follow-up — 2026-07-31 ~06:30 EDT
+
+| Action | Detail |
+|---|---|
+| **FF `main` ← `origin/main`** | Picked up `58cfc11a` (DARK MIRROR purge) + `096eeef5` (unverified top-gap candidate) |
+| **Merged** | `fix/overlay-gap-and-login-pickup` (FF): `63447519` `9e2a005d` `b72a19f5` `7f54cd3a` |
+| **Not merged** | `local-stash-work`; deleted local `babysit/land-open-prs`; left alone: restore-last-night, cloud-agent, hyprland-055, vault archives, deep-internal (already squash-landed) |
+| **Stashes** | Verified HANDOFF claim; dropped all (incl. temporary dirty `nyxus-fix-login.sh` WIP superseded by `63447519`) |
+| **Bake** | Hub/Power gap is fixed+verified live; **still do not bake** until blank login is verified on the owner's box after apply+reboot |
+

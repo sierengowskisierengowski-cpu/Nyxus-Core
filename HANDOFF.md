@@ -1,5 +1,22 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
+> **★★ BRANCH AUDIT — 2026-07-31 ~06:30 EDT ★★**  
+> Swept local + `origin` branches so nothing valuable sits only off `main`.  
+> **Merged (FF) into `main`:** `fix/overlay-gap-and-login-pickup` → tip `7f54cd3a`
+> (SDDM quarantine into the real `nyxus-fix-login.sh`, measured top-gap fix +
+> `nyxus-overlay-open`, lock/saver security + walls staging, Hub hero scrim).  
+> **Pushed:** local `main` was *behind* `origin/main` by 2 (`58cfc11a`,
+> `096eeef5`) — fast-forwarded; then the 4 fix-branch commits were unpublished
+> on `origin/main` and are pushed with this note.  
+> **Deliberately NOT merged:** `local-stash-work` (junk); `babysit/land-open-prs`
+> (**deleted** locally — would regress `nyxus_install.sh` + banned palettes;
+> remote already gone); `cursor/restore-last-night-state-15e2` / cloud-agent /
+> hyprland-055 / vault archives / deep-internal-audit (already on `main` via
+> squash or superseded). **Stashes:** all four verified and dropped (reverse
+> delta / empty / superseded / temporary fix-login WIP).  
+> Still open: blank login needs **live** apply+reboot; Settings Increment 2.
+
+
 > **★★★★ 2026-07-31 (latest) · HUB/POWER GAP — FIXED AND VERIFIED LIVE ★★★★**  
 > Measured with `hyprctl` on the running compositor, in both phases. The three
 > previous passes each *reasoned* about this and each moved the gap to the
