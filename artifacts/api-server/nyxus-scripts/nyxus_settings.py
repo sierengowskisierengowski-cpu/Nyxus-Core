@@ -1583,8 +1583,57 @@ def make_advanced_group(rows: List[Tuple[str, str, str, Callable[[], None]]],
     return grp
 
 
-def open_terminal(cmd: str, win=None) -> bool:
-    """Run `cmd` in whatever terminal is installed. Returns True on success."""
+# Commands that genuinely need a terminal because they PROMPT or take over
+# the screen. Everything else is a read-only dump and belongs in a native
+# window (see show_output). Kept deliberately broad: a false positive costs
+# a terminal window (today's behaviour), a false negative would route an
+# interactive prompt into a read-only text view where it hangs unanswerable.
+# NOTE the lookbehinds on `passwd`: it must be the COMMAND, not the file.
+# `less /etc/passwd` and `getent passwd` are read-only and were being sent
+# to a terminal purely because the word appeared in them.
+_NEEDS_TTY = re.compile(
+    r'(?<!/)(?<!getent )\bpasswd\b'
+    r'|\b(chsh|visudo|gpasswd|useradd|userdel|usermod|nmtui|htop|btop'
+    r'|top|ncdu|evtest|nano|vim|vi|ssh|sudo -e)\b'
+    r'|read\s+_|-Syu\b|pacman -S\s|yay -S\s|paru -S\s')
+
+# `… | less` is not interactivity, it is a pager — and a scrollable native
+# window IS the pager. Strip it rather than spawning a terminal just to
+# page text we are about to display anyway.
+_PAGER_TAIL = re.compile(r'\s*\|\s*(less|more)(\s+-\S+)*\s*$')
+
+
+def open_terminal(cmd: str, win=None, *,
+                  needs_tty: Optional[bool] = None,
+                  title: str = "Output") -> bool:
+    """Show the result of `cmd`. Only spawns a terminal when it must.
+
+    ★ THE OWNER'S NO-TERMINAL RULE: every setting opens its own page; the
+    Settings app must never dump the user into a shell. This function used
+    to ALWAYS spawn foot/alacritty with a "press enter to close" prompt —
+    114 call sites did that, and on a machine with no terminal installed
+    they silently did nothing at all.
+
+    Now the default is the native viewer (show_output). A terminal is used
+    only for commands that prompt or take over the screen, detected by
+    _NEEDS_TTY, or forced with needs_tty=True. Those remaining cases are
+    the ones that still deserve a purpose-built dialog — converting them
+    is what finishes the rule, and each needs its own UI, not this.
+    """
+    plain = _PAGER_TAIL.sub("", cmd)
+
+    # `${EDITOR:-nano} <path>` gets a real editor window, not a modal nano
+    # inside a spawned terminal.
+    m = _EDITOR_CMD.match(plain)
+    if m and needs_tty is not True:
+        show_editor(m.group("path"), win, title=title if title != "Output" else "")
+        return True
+
+    if needs_tty is None:
+        needs_tty = bool(_NEEDS_TTY.search(plain))
+    if not needs_tty:
+        show_output(title, plain, win)
+        return True
     for term in ("foot", "alacritty", "kitty", "wezterm", "xterm"):
         if have(term):
             try:
@@ -1600,6 +1649,245 @@ def open_terminal(cmd: str, win=None) -> bool:
     if win is not None:
         win.toast("no terminal found (install foot/alacritty/kitty)")
     return False
+
+
+def show_output(title: str, cmd, win=None, *,
+                subtitle: str = "", privileged: bool = False,
+                timeout: int = 60) -> None:
+    """Run a read-only command and show its output in a NATIVE window.
+
+    ★ THE NO-TERMINAL RULE. Settings must never drop the user into a shell:
+    every setting gets its own page. open_terminal() spawns foot/alacritty
+    and leaves a "press enter to close" prompt — that is a terminal, and on
+    a machine with no terminal installed it silently does nothing at all.
+
+    This is the drop-in for the READ-ONLY cases (status dumps, logs, file
+    listings). It runs the command off the GTK main loop, bounded by
+    `timeout`, and presents stdout+stderr in a scrollable monospace view
+    with a Copy button. Nothing here is interactive by design: a command
+    that needs to PROMPT the user (passwd, chsh, visudo) must get a real
+    dialog instead — piping a prompt into a text view would hang with no
+    way to answer it.
+    """
+    win_ = Adw.Window(title=title, modal=False)
+    win_.set_default_size(860, 560)
+    if win is not None:
+        try:
+            win_.set_transient_for(win.get_root() if hasattr(win, "get_root") else win)
+        except Exception:
+            pass
+
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    hb = Adw.HeaderBar()
+    if subtitle:
+        tw = Adw.WindowTitle(title=title, subtitle=subtitle)
+        hb.set_title_widget(tw)
+    box.append(hb)
+
+    spinner = Gtk.Spinner()
+    spinner.start()
+    status = Gtk.Label(label="running…")
+    status.add_css_class("dim-label")
+    bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    bar.set_margin_top(8)
+    bar.set_margin_start(12)
+    bar.set_margin_end(12)
+    bar.append(spinner)
+    bar.append(status)
+    box.append(bar)
+
+    tv = Gtk.TextView()
+    tv.set_editable(False)
+    tv.set_monospace(True)
+    tv.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+    tv.set_margin_top(8)
+    tv.set_margin_bottom(8)
+    tv.set_margin_start(12)
+    tv.set_margin_end(12)
+    sc = Gtk.ScrolledWindow()
+    sc.set_vexpand(True)
+    sc.set_child(tv)
+    box.append(sc)
+
+    copy_btn = Gtk.Button(label="Copy")
+    close_btn = Gtk.Button(label="Close")
+    close_btn.add_css_class("suggested-action")
+    close_btn.connect("clicked", lambda *_: win_.close())
+    foot = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    foot.set_halign(Gtk.Align.END)
+    foot.set_margin_bottom(12)
+    foot.set_margin_end(12)
+    foot.append(copy_btn)
+    foot.append(close_btn)
+    box.append(foot)
+
+    win_.set_content(box)
+    win_.present()
+
+    argv = cmd if isinstance(cmd, list) else ["sh", "-c", cmd]
+    if privileged:
+        argv = ["pkexec", *argv] if isinstance(cmd, list) else \
+               ["pkexec", "sh", "-c", cmd]
+
+    def _done(res: Tuple[int, str, str]) -> None:
+        rc, out, err = res
+        spinner.stop()
+        spinner.set_visible(False)
+        text = (out or "")
+        if err:
+            text += ("\n" if text else "") + err
+        if not text.strip():
+            text = "(no output)"
+        tv.get_buffer().set_text(text)
+        if rc == 0:
+            status.set_text("done")
+        elif rc == 124:
+            status.set_text(f"timed out after {timeout}s")
+        elif rc == 126:
+            status.set_text("cancelled — administrator approval not given")
+        else:
+            status.set_text(f"exited with status {rc}")
+        copy_btn.connect(
+            "clicked",
+            lambda *_: win_.get_clipboard().set(text))
+
+    sh_async(argv, _done, timeout=timeout)
+
+
+# `${EDITOR:-nano} /some/path` — the single most common terminal escape in
+# this app (13 sites). Opening a modal nano in a spawned terminal is the
+# opposite of "its own little settings page", so these get a real editor.
+_EDITOR_CMD = re.compile(
+    r'^\s*(?P<sudo>sudo\s+)?\$\{?EDITOR:-[a-z]+\}?\s+(?P<path>[^\s;&|]+)')
+
+
+def show_editor(path: str, win=None, *, title: str = "") -> None:
+    """Edit a config file in a NATIVE window instead of spawning nano.
+
+    Saving a root-owned file goes through `pkexec install`, which raises the
+    normal graphical authentication prompt — no terminal, and no need for a
+    bespoke polkit policy since pkexec's default rule already covers
+    running a program as admin after authentication.
+
+    The file is written via a temp file + install(1) rather than a shell
+    redirect so a failed write cannot truncate the original.
+    """
+    p = Path(os.path.expanduser(os.path.expandvars(path)))
+    title = title or p.name
+
+    win_ = Adw.Window(title=f"Edit {title}", modal=False)
+    win_.set_default_size(900, 640)
+    if win is not None:
+        try:
+            win_.set_transient_for(win.get_root() if hasattr(win, "get_root") else win)
+        except Exception:
+            pass
+
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    hb = Adw.HeaderBar()
+    hb.set_title_widget(Adw.WindowTitle(title=f"Edit {title}", subtitle=str(p)))
+    box.append(hb)
+
+    status = Gtk.Label(label="")
+    status.add_css_class("dim-label")
+    status.set_halign(Gtk.Align.START)
+    status.set_margin_start(12)
+    status.set_margin_top(6)
+    box.append(status)
+
+    tv = Gtk.TextView()
+    tv.set_monospace(True)
+    tv.set_margin_top(8)
+    tv.set_margin_bottom(8)
+    tv.set_margin_start(12)
+    tv.set_margin_end(12)
+    sc = Gtk.ScrolledWindow()
+    sc.set_vexpand(True)
+    sc.set_child(tv)
+    box.append(sc)
+
+    # Load. An unreadable file is read back through pkexec rather than
+    # showing an empty buffer that would overwrite it on save.
+    try:
+        tv.get_buffer().set_text(p.read_text())
+        loaded = True
+    except PermissionError:
+        rc, out, _ = sh(["pkexec", "cat", str(p)], timeout=45)
+        loaded = rc == 0
+        tv.get_buffer().set_text(out if loaded else "")
+        if not loaded:
+            status.set_text("could not read this file")
+            tv.set_editable(False)
+    except FileNotFoundError:
+        tv.get_buffer().set_text("")
+        status.set_text("new file — it does not exist yet")
+        loaded = True
+    except Exception as e:
+        tv.get_buffer().set_text("")
+        status.set_text(f"could not read: {e}")
+        tv.set_editable(False)
+        loaded = False
+
+    def _save(*_a) -> None:
+        buf = tv.get_buffer()
+        text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), False)
+        try:
+            if os.access(p, os.W_OK) or (
+                    not p.exists() and os.access(p.parent, os.W_OK)):
+                p.write_text(text)
+                status.set_text("saved")
+                if win is not None and hasattr(win, "toast"):
+                    win.toast(f"{title} saved")
+                return
+        except Exception as e:
+            status.set_text(f"save failed: {e}")
+            return
+        # Root-owned: temp file + pkexec install, never a shell redirect.
+        try:
+            import tempfile
+            fd, tmp = tempfile.mkstemp(prefix="nyxus-edit-")
+            with os.fdopen(fd, "w") as fh:
+                fh.write(text)
+            os.chmod(tmp, 0o644)
+        except Exception as e:
+            status.set_text(f"could not stage the edit: {e}")
+            return
+
+        def _done(res: Tuple[int, str, str]) -> None:
+            rc, _o, err = res
+            try:
+                os.unlink(tmp)
+            except Exception:
+                pass
+            if rc == 0:
+                status.set_text("saved (as administrator)")
+                if win is not None and hasattr(win, "toast"):
+                    win.toast(f"{title} saved")
+            elif rc == 126:
+                status.set_text("cancelled — administrator approval not given")
+            else:
+                detail = (err or "").strip().splitlines()
+                status.set_text(detail[-1][:120] if detail else f"save failed (rc={rc})")
+
+        status.set_text("saving…")
+        sh_async(["pkexec", "install", "-m644", tmp, str(p)], _done, timeout=60)
+
+    save_btn = Gtk.Button(label="Save")
+    save_btn.add_css_class("suggested-action")
+    save_btn.connect("clicked", _save)
+    save_btn.set_sensitive(loaded)
+    close_btn = Gtk.Button(label="Close")
+    close_btn.connect("clicked", lambda *_: win_.close())
+    foot = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    foot.set_halign(Gtk.Align.END)
+    foot.set_margin_bottom(12)
+    foot.set_margin_end(12)
+    foot.append(close_btn)
+    foot.append(save_btn)
+    box.append(foot)
+
+    win_.set_content(box)
+    win_.present()
 
 
 # ──────────────────────────────────────────────────────────────────────
