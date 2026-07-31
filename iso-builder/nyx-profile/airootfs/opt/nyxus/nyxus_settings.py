@@ -2117,6 +2117,168 @@ def update_system(win) -> None:
         privileged=True, timeout=1800)
 
 
+def show_password_change(win) -> None:
+    """Change the current user's password in a native dialog — no terminal.
+
+    Feeds current/new/new to passwd(1) over stdin exactly as a terminal
+    would, so the values only ever reach passwd, and changing one's OWN
+    password needs no root. A separate concern from admin-resetting another
+    user's password (that stays with the account helper under pkexec).
+    """
+    import threading
+    win_ = Adw.Window(title="Change password", modal=True)
+    win_.set_default_size(440, 340)
+    if win is not None:
+        try:
+            win_.set_transient_for(win.get_root() if hasattr(win, "get_root") else win)
+        except Exception:
+            pass
+
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    box.append(Adw.HeaderBar())
+    inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+    for m in (16, ):
+        inner.set_margin_top(m); inner.set_margin_bottom(m)
+        inner.set_margin_start(m + 4); inner.set_margin_end(m + 4)
+    box.append(inner)
+
+    def _field(label):
+        lbl = Gtk.Label(label=label, xalign=0)
+        lbl.add_css_class("dim-label")
+        ent = Gtk.PasswordEntry(show_peek_icon=True)
+        ent.set_hexpand(True)
+        inner.append(lbl)
+        inner.append(ent)
+        return ent
+
+    e_old = _field("Current password")
+    e_new = _field("New password")
+    e_conf = _field("Confirm new password")
+
+    status = Gtk.Label(xalign=0)
+    status.add_css_class("dim-label")
+    status.set_wrap(True)
+    inner.append(status)
+
+    change = Gtk.Button(label="Change password")
+    change.add_css_class("suggested-action")
+    cancel = Gtk.Button(label="Cancel")
+    cancel.connect("clicked", lambda *_: win_.close())
+    foot = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    foot.set_halign(Gtk.Align.END)
+    foot.append(cancel)
+    foot.append(change)
+    inner.append(foot)
+
+    def _done(ok, detail):
+        status.set_text(("✓ " if ok else "") + detail)
+        change.set_sensitive(True)
+        if ok:
+            if win is not None and hasattr(win, "toast"):
+                win.toast("Password changed")
+            GLib.timeout_add_seconds(2, lambda: (win_.close(), False)[1])
+        return False
+
+    def _apply(*_a):
+        old, new, conf = e_old.get_text(), e_new.get_text(), e_conf.get_text()
+        if not new:
+            status.set_text("Enter a new password."); return
+        if new != conf:
+            status.set_text("The new passwords don't match."); return
+        status.set_text("Changing…"); change.set_sensitive(False)
+
+        def _worker():
+            try:
+                p = subprocess.run(
+                    ["passwd"], input=f"{old}\n{new}\n{new}\n",
+                    capture_output=True, text=True, timeout=25)
+                out = (p.stdout + p.stderr).strip().splitlines()
+                ok = p.returncode == 0
+                detail = (out[-1][:140] if out
+                          else ("Password changed." if ok else "passwd failed."))
+            except Exception as e:  # noqa: BLE001
+                ok, detail = False, str(e)
+            GLib.idle_add(_done, ok, detail)
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    change.connect("clicked", _apply)
+    e_conf.connect("activate", _apply)
+    win_.set_content(box)
+    win_.present()
+
+
+def show_shell_change(win) -> None:
+    """Change the current user's login shell natively via the account helper
+    (pkexec), picking from /etc/shells — no chsh terminal prompt."""
+    import getpass
+    import pwd
+    user = getpass.getuser()
+    try:
+        current = pwd.getpwnam(user).pw_shell
+    except Exception:
+        current = ""
+    shells = []
+    try:
+        for line in Path("/etc/shells").read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and Path(line).exists():
+                shells.append(line)
+    except Exception:
+        shells = ["/bin/bash", "/bin/sh"]
+    shells = sorted(set(shells))
+
+    win_ = Adw.Window(title="Change login shell", modal=True)
+    win_.set_default_size(460, 220)
+    if win is not None:
+        try:
+            win_.set_transient_for(win.get_root() if hasattr(win, "get_root") else win)
+        except Exception:
+            pass
+    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    box.append(Adw.HeaderBar())
+    grp = Adw.PreferencesGroup(title=f"Login shell for {user}")
+    grp.set_margin_top(14); grp.set_margin_start(14); grp.set_margin_end(14)
+    box.append(grp)
+    row = Adw.ComboRow(title="Shell", subtitle=current or "current")
+    mdl = Gtk.StringList()
+    for s in shells:
+        mdl.append(s)
+    row.set_model(mdl)
+    if current in shells:
+        row.set_selected(shells.index(current))
+    grp.add(row)
+    status = Gtk.Label(xalign=0)
+    status.add_css_class("dim-label")
+    status.set_margin_start(18)
+    box.append(status)
+
+    apply = Gtk.Button(label="Apply")
+    apply.add_css_class("suggested-action")
+    cancel = Gtk.Button(label="Cancel")
+    cancel.connect("clicked", lambda *_: win_.close())
+    foot = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+    foot.set_halign(Gtk.Align.END)
+    foot.set_margin_end(14); foot.set_margin_bottom(14)
+    foot.append(cancel); foot.append(apply)
+    box.append(foot)
+
+    def _apply(*_a):
+        shell = shells[row.get_selected()]
+        status.set_text("Applying…"); apply.set_sensitive(False)
+
+        def _cb(ok, msg):
+            status.set_text(("✓ shell changed" if ok else msg))
+            apply.set_sensitive(True)
+            if ok and win is not None and hasattr(win, "toast"):
+                win.toast("Login shell changed")
+        run_privileged("nyxus-account-helper", ["set-shell", user, shell], _cb)
+
+    apply.connect("clicked", _apply)
+    win_.set_content(box)
+    win_.present()
+
+
 # ──────────────────────────────────────────────────────────────────────
 # DISPLAY — hyprctl monitors, brightnessctl, gammastep / hyprsunset
 # ──────────────────────────────────────────────────────────────────────
@@ -7466,10 +7628,10 @@ class AccountPage(SectionPage):
         # one). A terminal is the honest surface for it; say why.
         self.signin_grp.add(action_row(
             "Change your password",
-            "Opens a small terminal — your password is typed directly into "
-            "passwd and never passes through this app",
+            "Change your password in a private dialog — the value only reaches "
+            "passwd",
             "Change",
-            lambda: open_terminal("passwd", self.win)))
+            lambda: show_password_change(self.win)))
         info = self._entry()
         self.signin_grp.add(kv_row("Login shell", info.get("shell", "?")))
         rc, out, _ = sh(["last", "-n", "2", "-w", self._me()], timeout=3)
@@ -7552,9 +7714,9 @@ class UsersPage(SectionPage):
     STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
         ("Change password (terminal)",
-         "Runs passwd in a terminal",
+         "Change your password",
          "Run",
-         lambda: open_terminal("passwd", None)),
+         lambda: show_password_change(None)),
         ("Show all groups for current user",
          "groups",
          "Show",
@@ -7681,9 +7843,9 @@ class UsersPage(SectionPage):
         # Password
         self.cur_grp.add(action_row(
             "Change my password",
-            "Opens a terminal with passwd (interactive prompts are needed)",
+            "Change your account password",
             "Change",
-            lambda: open_terminal("passwd", self.win)))
+            lambda: show_password_change(self.win)))
 
         # Avatar
         face = Path.home() / ".face"
@@ -7701,9 +7863,9 @@ class UsersPage(SectionPage):
         # Shell editor
         self.cur_grp.add(action_row(
             "Change my shell",
-            "Opens chsh in a terminal",
+            "Pick your login shell",
             "Edit",
-            lambda: open_terminal("chsh", self.win)))
+            lambda: show_shell_change(self.win)))
 
     def _set_gecos(self, user: str, full_name: str) -> None:
         sh_async(
