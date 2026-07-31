@@ -8,8 +8,8 @@
 >
 > | | |
 > |---|---|
-> | **HEAD** | `36f7dd41` (`docs(handoff): mark main BAKE READY for 2026-07-31 ISO`) — bake from this tip |
-> | **Sync** | `main` == `origin/main` (0 ahead / 0 behind) after the push below |
+> | **HEAD** | `3980a7a3` (tip of `main` / `origin/main`) — bake from this tip. BAKE READY body landed in `36f7dd41` |
+> | **Sync** | `main` == `origin/main` (0 ahead / 0 behind) |
 > | **Tree** | Clean (only untracked `.claude/` — do not commit) |
 > | **verify-profile.sh** | **PASS** (exit 0). WARNs only: customize not +x (mkarchiso chmods); Hyprland host 0.55.4 vs ISO 0.56.0 skew; optional station apps (`cursor`/`strawberry`/`audacious`/`thunar`) absent; some eww namespaces on catch-all layer-blur floor |
 > | **Disk** | `/` has **~203G free** (well above the ~40G bake headroom). `iso-builder/out/` holds ~30G of older ISOs (07.26–07.29) — optional cleanup, not blocking |
