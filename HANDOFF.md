@@ -8,7 +8,7 @@
 >
 > | | |
 > |---|---|
-> | **HEAD** | `3980a7a3` (tip of `main` / `origin/main`) — bake from this tip. BAKE READY body landed in `36f7dd41` |
+> | **HEAD** | tip of `main` / `origin/main` — run `git rev-parse HEAD` before bake (BAKE READY note from `36f7dd41` onward) |
 > | **Sync** | `main` == `origin/main` (0 ahead / 0 behind) |
 > | **Tree** | Clean (only untracked `.claude/` — do not commit) |
 > | **verify-profile.sh** | **PASS** (exit 0). WARNs only: customize not +x (mkarchiso chmods); Hyprland host 0.55.4 vs ISO 0.56.0 skew; optional station apps (`cursor`/`strawberry`/`audacious`/`thunar`) absent; some eww namespaces on catch-all layer-blur floor |
