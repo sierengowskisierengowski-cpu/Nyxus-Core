@@ -22,8 +22,10 @@
 #   1. A per-key allowlist regex below. A key that is not listed is
 #      rejected outright; a value that does not match its pattern is
 #      rejected with a plain message.
-#   2. Values are written with printf '%q', which emits a form bash can
-#      re-read literally no matter what characters survived step 1.
+#   2. Values are written single-quoted (see shquote), so whatever survived
+#      step 1 is inert when the file is sourced. NOT printf '%q': its
+#      output cannot be reversed by a plain-text reader, so every save
+#      re-escaped the last one and values drifted.
 # Do not "simplify" either one away, and do not add a key without giving
 # it a pattern.
 set -u
@@ -145,7 +147,88 @@ write_conf() {
   mv -f "$tmp" "$CONF" || fail "could not install $CONF"
 }
 
-[[ $# -ge 1 ]] || { echo "usage: $0 <set KEY VALUE | reset | show>" >&2; exit 2; }
+# ── apply the contract to the thing that actually renders ────────────────
+# The contract is the record of intent; regreet.toml is the derived
+# artifact. regreet reads /etc/greetd/regreet.toml, which the `greeter`
+# user cannot write — but this helper already runs as root at the moment
+# the user presses Apply, so the translation happens here rather than
+# teaching the bash greeter to parse TOML at login time.
+#
+# ★ A malformed regreet.toml breaks LOGIN, not just theming. So: only the
+# three keys the contract owns are touched, the edit is done in python
+# (never sed across a structured file), the result is parsed back before
+# it is installed, and the swap is atomic. If anything fails the existing
+# file is left exactly as it was — a stale greeting is survivable, an
+# unparseable greeter config is not.
+REGREET_TOML=/etc/greetd/regreet.toml
+
+apply_regreet() {
+  [[ -f "$REGREET_TOML" ]] || { log "regreet.toml absent — nothing to apply"; return 0; }
+  command -v python3 >/dev/null 2>&1 || { log "python3 absent — skipping regreet apply"; return 0; }
+
+  python3 - "$REGREET_TOML" \
+      "${CUR[NYXUS_LOGIN_GREETING]}" \
+      "${CUR[NYXUS_LOGIN_SHOW_CLOCK]}" \
+      "${CUR[NYXUS_LOGIN_CLOCK_FORMAT]}" <<'PY' || { log "regreet apply failed — left unchanged"; return 0; }
+import re, sys, os, tempfile
+
+path, greeting, show_clock, clock_fmt = sys.argv[1:5]
+src = open(path, encoding="utf-8").read()
+
+def set_key(text, section, key, value):
+    """Replace key= inside [section] only. Never touches other sections."""
+    sec = re.search(rf'^\[{re.escape(section)}\]\s*$', text, re.M)
+    if not sec:
+        return text
+    start = sec.end()
+    nxt = re.search(r'^\[', text[start:], re.M)
+    end = start + (nxt.start() if nxt else len(text) - start)
+    body = text[start:end]
+    esc = value.replace('\\', '\\\\').replace('"', '\\"')
+    line = f'{key} = "{esc}"'
+    # [ \t]* not \s* — \s matches newlines, so the pattern swallowed the
+    # line break before the key and welded it onto the section header
+    # ("[appearance]greeting_msg = ..."), which is not valid TOML.
+    if re.search(rf'^[ \t]*{re.escape(key)}[ \t]*=', body, re.M):
+        body = re.sub(rf'^[ \t]*{re.escape(key)}[ \t]*=.*$', line, body,
+                      count=1, flags=re.M)
+    else:
+        body = body.rstrip("\n") + "\n" + line + "\n"
+    return text[:start] + body + text[end:]
+
+out = set_key(src, "appearance", "greeting_msg", greeting)
+if show_clock == "1":
+    out = set_key(out, "widget.clock", "format", clock_fmt)
+    # A clock section that does not exist cannot be given a format.
+    if not re.search(r'^\[widget\.clock\]\s*$', out, re.M):
+        out = out.rstrip("\n") + f'\n\n[widget.clock]\nformat = "{clock_fmt}"\nresolution = "1000ms"\n'
+else:
+    # Drop the whole [widget.clock] block: regreet shows the clock whenever
+    # the section is present, so blanking `format` is not "off".
+    out = re.sub(r'^\[widget\.clock\]\s*$.*?(?=^\[|\Z)', '', out, flags=re.M | re.S)
+
+# Parse back before installing. tomllib is stdlib on 3.11+; if it is not
+# available we still refuse to install something we could not check.
+try:
+    import tomllib
+    tomllib.loads(out)
+except ModuleNotFoundError:
+    pass
+except Exception as e:
+    sys.stderr.write(f"refusing to install unparseable regreet.toml: {e}\n")
+    sys.exit(1)
+
+d = os.path.dirname(path)
+fd, tmp = tempfile.mkstemp(dir=d, prefix=".regreet.toml.")
+with os.fdopen(fd, "w", encoding="utf-8") as fh:
+    fh.write(out)
+os.chmod(tmp, 0o644)
+os.replace(tmp, path)
+PY
+  log "applied contract to $REGREET_TOML"
+}
+
+[[ $# -ge 1 ]] || { echo "usage: $0 <set KEY VALUE | reset | show | apply>" >&2; exit 2; }
 ACTION="$1"; shift
 
 case "$ACTION" in
@@ -155,6 +238,7 @@ case "$ACTION" in
     load_current
     CUR[$1]="$2"
     write_conf
+    apply_regreet
     log "set $1=$2"
     echo "ok"
     ;;
@@ -170,13 +254,20 @@ case "$ACTION" in
       shift 2
     done
     write_conf
+    apply_regreet
     echo "ok"
     ;;
   reset)
     local_k=""
     for local_k in "${ORDER[@]}"; do CUR[$local_k]="${DEFAULTS[$local_k]}"; done
     write_conf
+    apply_regreet
     log "reset to defaults"
+    echo "ok"
+    ;;
+  apply)
+    load_current
+    apply_regreet
     echo "ok"
     ;;
   show)
