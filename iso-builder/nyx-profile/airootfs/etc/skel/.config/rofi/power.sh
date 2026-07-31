@@ -42,7 +42,7 @@ case "$CHOICE" in
         loginctl suspend 2>/dev/null || systemctl suspend
         ;;
     "$LOCK")
-        eww open screensaver 2>/dev/null || loginctl lock-session 2>/dev/null || true
+        loginctl lock-session 2>/dev/null || true
         ;;
     "$LOGOUT")
         if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then

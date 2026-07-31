@@ -1,26 +1,57 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
-> **★★★★ 2026-07-31 (later) · HUB/POWER GAP — CANDIDATE FIX, UNVERIFIED LIVE ★★★★**  
-> Root cause of the top-gap regression: the "top center" anchor comment in
-> `eww.yuck` claimed the overlay "snaps to y=0" once `overlay-shield.sh` closes
-> the bars — that claim is what the owner's report contradicts. `eww close`
-> does unmap `bar-top`, but nothing evidences Hyprland reconfiguring the
-> already-mapped fullscreen overlay's position afterward, so it likely stays
-> pinned at `y=reserved_top` (40) for the life of the window — a **permanent**
-> top gap, not a 2s transient. Added `:y "-40"` to cancel that offset (same
-> constant as `bar-top`'s own `y "4" + height "36px"`) on all 8 affected
-> windows: `dashboard`, `nyxus-hub`, `powermenu`, `cheatsheet`, `screensaver`
-> (`eww.yuck`), `snap-picker` (`snap.yuck`), `mission` (`mission.yuck`),
-> `deepcore` (`deepcore.yuck`). `splash.yuck` deliberately NOT touched — it
-> opens before the bars exist, so `bounds.y` is 0 there already, no bug.  
-> **This sandbox has no display/compositor — I cannot run Hyprland or
-> `hyprctl` to confirm this actually fixes it.** Verify live before trusting:
-> open each window, `hyprctl clients -j` (or screenshot) in both the
-> bars-visible AND bars-hidden (post-shield, ~2s later) phases, confirm
-> `y=0` and no strip at either edge in both. If it's still wrong, the
-> Hyprland-reconfigure-on-relayout assumption above is the thing to
-> re-examine, not the arithmetic — do not re-guess a different margin
-> without measuring first.
+> **★★★★ 2026-07-31 (latest) · HUB/POWER GAP — FIXED AND VERIFIED LIVE ★★★★**  
+> Measured with `hyprctl` on the running compositor, in both phases. The three
+> previous passes each *reasoned* about this and each moved the gap to the
+> opposite edge; this one measured first.
+>
+> **What the measurement showed** (reserved `[0,40,0,158]`):
+> ```
+> powermenu   (shield wired) y=40 for ~2.2s, then snaps to y=0
+> screensaver (no shield)    y=40 at t=0.1s ... y=40 at t=4.0s — forever
+> ```
+> So the original `eww.yuck` comment was **right** — Hyprland *does* re-lay-out
+> the surface when `bar-top`'s zone goes away. `096eeef5`'s correction of that
+> comment was **wrong**, and its `:y "-40"`-on-all-8 would have put the gap back
+> at the **bottom** on every window whose bars do close. Two different causes
+> shared one symptom: a ~2.2s transient on shielded windows, and a permanent
+> gap on windows that never had a shield wired (`deepcore` — its `DEEP_SHIELD`
+> var is defined but referenced by nothing — plus `screensaver`, `mission`,
+> `snap-picker`).
+>
+> **★ THE RULE — the strategy follows `:stacking`.** That is what decides
+> whether the bars have to move at all. Get this backwards and the gap returns
+> at the other edge:
+>
+> | `:stacking` | renders | strategy |
+> |---|---|---|
+> | `"fg"` | **below** `bar-left/right` — bars must close anyway | open via **`nyxus-overlay-open <win>`**, which releases the exclusive zones **before** the surface maps → `y=0`, no margin, no timing dependency |
+> | `"overlay"` | **above** the bars — they stay up | keep **`:y "-40"`** to cancel the fixed `reserved_top` |
+>
+> `"fg"`: `dashboard`, `powermenu`, `cheatsheet`, `nyxus-hub` (the Hub already
+> did this via `nyxus-hub-open` — which is exactly why it never showed the gap).
+> `"overlay"`: `screensaver`, `deepcore`, `mission`, `snap-picker`.
+> `hotkey-cheatsheet` is 720x640, not fullscreen — no gap, leave it alone.
+> `splash.yuck` still untouched: it opens before the bars exist.
+>
+> **Two bugs found while verifying** (both fixed):
+> - `overlay-shield.sh` **raced the opener**. The opener creates the lock,
+>   closes the bars, then maps — and in that window eww has not yet registered
+>   the new window, so the shield's orphan branch reopened the bars it had just
+>   closed. Bar surfaces went **4 → 6 → 8**, and the restored `bar-top` shoved
+>   the overlay back to `y=40`. Fixed with a 3s grace period on the lock's age.
+> - `restore_bars()` returned early on a lock dir with no `bars` file **without
+>   clearing the dir**, so the later `mkdir "$lock"` failed forever and the
+>   shield became a permanent no-op — bars never hid again until reboot.
+>
+> **Verified live** (clean run, bars settled between phases):
+> `powermenu` y=0 from t=0.3s through t=4.8s, bars 4→0, all four restored on
+> dismiss · `screensaver` y=0 h=1080 bars stay 4 · `deepcore` y=0 h=1080 bars
+> stay 4.
+>
+> ⚠ `nyxus-overlay-open` had to be added to **both** installer allowlists
+> (`install.sh`, `nyxus_install.sh`) — they deploy an explicit list, so a new
+> script silently never reaches an installed system.
 
 > **★★★ WHERE WE STAND — 2026-07-31 ~00:40 EDT · SESSION RECOVERY ★★★**  
 > The Jul 30 evening multi-agent session died mid-flight (machine freeze + Cursor
@@ -29,13 +60,33 @@
 > `ad15cf11`, SDDM quarantine `fcba423b`). Settings Increment 1 was already on
 > main as `20953054`.  
 > **Full brief (read first):** [`docs/SESSION_RECOVERY_BRIEF_2026-07-31.md`](./docs/SESSION_RECOVERY_BRIEF_2026-07-31.md)  
-> **Still broken for the owner:** blank graphical login (TTY3 workaround), Hub /
-> Power gap now at the **TOP** (`3de4a38b` overshot) — candidate fix above,
-> **unverified live**, Settings Increment 2 not started, login-card eye candy /
-> Hub background / deep audit still queued.  
-> **⛔ DO NOT BAKE** until login is verified live and the gap fix above is
-> confirmed. Do not merge `local-stash-work`. Do not re-do work listed as
-> landed in the brief.
+> **Still broken for the owner:** blank graphical login (TTY3 workaround) —
+> the fix is committed and the root cause is confirmed, but it needs one root
+> command + a reboot to apply (see below). Settings Increment 2 not started,
+> login-card eye candy / Hub background / deep audit still queued.  
+> **✅ Hub / Power gap — FIXED and verified live** (see the block above).  
+> **⛔ DO NOT BAKE** until login is verified live. Do not merge
+> `local-stash-work`. Do not re-do work listed as landed in the brief.
+>
+> **★ LOGIN — the fix shipped in a file nothing ran.** The Jul 31 salvage
+> committed the SDDM quarantine to a **new** file, `scripts/nyxus-form-login.sh`
+> (a byte-identical copy), instead of updating `scripts/nyxus-fix-login.sh`.
+> Nothing references "form-login"; the recovery brief recorded it as a phantom
+> `M` and concluded the content was committed. It was not — `HEAD`'s
+> `nyxus-fix-login.sh` was still the pre-quarantine version. Now corrected: the
+> quarantine lives in `nyxus-fix-login.sh` and the duplicate is gone.
+>
+> Root cause is **confirmed live, not inferred**:
+> `/etc/sddm.conf.d/nyxus.conf.bak-2026-07-21` is still on the box, sorts after
+> `10-nyxus.conf` (SDDM merges *every* file in that dir by name, last wins), and
+> re-supplies `DisplayServer=wayland` (weston is not installed) while replacing
+> `GreeterEnvironment` and dropping `QT_QUICK_BACKEND=software`. The journal
+> shows `SDDM::Auth::HELPER_DISPLAYSERVER_ERROR` at **Jul 31 02:18**. The
+> quarantine loop was tested against a replica of the live directory: it moves
+> the `.bak`, keeps both NYXUS drop-ins, and continues.
+> **Needs root to apply** (owner is fingerprint-only, so an agent cannot):
+> `sudo bash scripts/nyxus-fix-login.sh`, then reboot with TTY3 kept as the
+> escape hatch until a graphical login is confirmed.
 
 > **Last updated: 2026-07-30 ~14:30 EDT (⛔ THE "MY BAKE LOOKS OLD" MYSTERY IS SOLVED — the ISO was right every time; the CONFIGS reached their own tools through an EMPTY `~/.local/bin`. Fixed + gate 13z. bootstrap r16 · then a SECOND pass fixed the 102s boot, the slow-everything (squashfs `xz`→`zstd`, 7.6× faster cold reads), the dead station launches and the layer-blur ordering — gates 13aa–13af. The Hub trap + dead Hub clicks are STILL OPEN and need a live session. · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching

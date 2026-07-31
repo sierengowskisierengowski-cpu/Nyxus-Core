@@ -226,3 +226,80 @@ Restore guidance for the Jul 30 live sync is in HANDOFF § "THE BOTTOM STRIP, TH
 ---
 
 *End of recovery brief. Keep this file; append rather than rewrite if a later agent continues the salvage.*
+
+---
+
+# APPENDIX A — 2026-07-31 (later) · PICKUP SESSION
+
+Continues the salvage. Written by the session that picked up after the Cursor
+swarm and the phone session both stopped. **Everything below was measured on
+the running box, not reasoned about.**
+
+## A.1 What the phone session did (commits authored `Claude`, on `main`)
+
+| Commit | What | Verdict |
+|---|---|---|
+| `58cfc11a` | purge last DARK MIRROR palette from `nyxus_security.py` | kept as-is |
+| `096eeef5` | `:y "-40"` on all 8 fullscreen windows — self-described as unverified | **half wrong, corrected** |
+
+`096eeef5` rewrote the `eww.yuck` anchor comment to say the surface never
+snaps to `y=0`. That is false — measured, `powermenu` goes 40 → 0 at ~2.2s.
+Its `:y "-40"` is right only for windows whose bars never close, and would have
+moved the gap to the **bottom** on the rest. Reverted for the `"fg"` windows,
+kept for the `"overlay"` ones. The branch `claude/iso-bake-verification-ln6c3v`
+is just that session's stale pointer at `58cfc11a`; despite the name, **no ISO
+bake verification was done**.
+
+## A.2 The recovery brief's own error (§3 "Phantom note")
+
+§3 records `scripts/nyxus-form-login.sh` showing as `M` while `git hash-object`
+matched `HEAD`, and concludes the content was committed. **It was not.** The
+salvage created `nyxus-form-login.sh` as a *new* byte-identical file instead of
+updating **`nyxus-fix-login.sh`**, which is the name every doc and the script's
+own usage line uses. `HEAD:scripts/nyxus-fix-login.sh` was still pre-quarantine,
+so the blank-screen fix shipped in a file nothing invokes. Corrected here.
+
+## A.3 Fixed and verified in this session
+
+1. **Login** — quarantine moved onto `nyxus-fix-login.sh`, duplicate deleted.
+   Root cause confirmed live (`HELPER_DISPLAYSERVER_ERROR`, Jul 31 02:18; the
+   `.bak` drop-in still present). Loop tested against a replica of
+   `/etc/sddm.conf.d`. **Still needs root + reboot to apply.**
+2. **Hub/Power gap** — fixed by `:stacking`, verified in both phases. See
+   HANDOFF's top block for the rule and the numbers.
+3. **`overlay-shield.sh` race** — the shield reopened the bars the opener had
+   just closed (surfaces 4 → 6 → 8), shoving the overlay back to y=40. 3s grace
+   period on the lock age.
+4. **`overlay-shield.sh` permanent wedge** — `restore_bars()` left a
+   bars-file-less lock dir in place, after which `mkdir "$lock"` failed forever
+   and the shield never hid the bars again until reboot.
+5. **Installer allowlists** — `nyxus-overlay-open` added to `install.sh` and
+   `nyxus_install.sh`; they deploy an explicit list, so new scripts silently
+   never reach an installed system. Worth auditing for other recent additions.
+
+## A.4 Still open (unchanged from §6, minus the gap)
+
+Login apply+reboot (needs root) · Settings Increment 2 (greetd contract — **no
+code exists**, only transcript intent) · login-card eye candy · Hub background
+· docs finish pass · custom file layout assessment (never answered) · live sync
+· deep audit · bake. Plus, from the Jul 28 brief and still true: **no ISO has
+ever been boot-verified** to show the "Install NYXUS" icon (four now exist), the
+EDR pre-filter (~2,000 events/min still dropped), Axiom's AppImage, and the
+uncommitted vault repos (RedForge/CIPHER/GSL/Forge/Trainer 5 dirty paths each,
+AXIOM 19, honeypot 12) which are still one `git checkout` from being lost.
+
+## A.5 Traps this session adds
+
+- **A new script is not deployed just because it is committed.** Both
+  installers carry an explicit script allowlist.
+- **`eww reload` can desync the daemon from the compositor** — `active-windows`
+  returned empty while Hyprland still had every surface mapped, including a
+  stuck `screensaver`. Recovery: `pkill -9 -x eww` (destroys the orphaned
+  surfaces) then `nyxus-eww-launch-safe`.
+- **Do not probe overlays with bare `eww open`** — `eww open screensaver` hung
+  as a live process and left the window mapped. Everything in
+  `nyxus-overlay-open` / `nyxus-hub-close` is wrapped in `timeout` for this
+  reason; test the same way.
+- **Let the bars settle between probes.** Back-to-back open/close runs race
+  `nyxus-hub-close`'s async restore and produce duplicated bars (reserved
+  `[0,80,0,316]`), which looks exactly like a geometry bug and is not one.

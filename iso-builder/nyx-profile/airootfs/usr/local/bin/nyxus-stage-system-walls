@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# nyxus-stage-system-walls — repair /usr/share/backgrounds/nyxus on a system
+# that was installed before a wall was added, or whose walls are unreadable.
+#
+# rev 2026-07-31 r1 · NEEDS ROOT
+#
+# ── WHY ──────────────────────────────────────────────────────────────────
+# Several NYXUS surfaces pin art to the SYSTEM path on purpose, so it works
+# for every user with no per-login seeding:
+#
+#   hyprlock.conf   background.path = /usr/share/backgrounds/nyxus/nyxus-urban-alien.png
+#   nyxus-screensaver  NYXUS_SCREENSAVER_WALL=<same>
+#
+# Each of those falls back silently when the file is missing — hyprlock to
+# its flat `color = rgb(05010D)` ink. Measured on the owner's box 2026-07-31:
+# that is the "plain blue lock screen" report. The ISO profile stages 56
+# walls into this directory, so a FRESHLY INSTALLED system is fine; a box
+# installed before a given wall was added never receives it, and nothing
+# reports the gap because every consumer degrades quietly.
+#
+# The same directory was also found holding 83 files at mode 600 owned by
+# root — readable only by root, so any user-session app (the screensaver,
+# hyprlock, the wallpaper engine) silently gets nothing from them. Art is
+# not secret; it must be world-readable.
+#
+# ── WHAT IT DOES ─────────────────────────────────────────────────────────
+# 1. Copies any wall present in the user's ~/.config/hypr/walls that is
+#    MISSING from /usr/share/backgrounds/nyxus.
+# 2. Normalises every file in that directory to 0644 so user sessions can
+#    read it.
+# Idempotent, and it never overwrites an existing system wall — a system
+# wall may deliberately differ from a user's local copy.
+set -euo pipefail
+
+SYS_DIR="/usr/share/backgrounds/nyxus"
+
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "nyxus-stage-system-walls: needs root (writes ${SYS_DIR})" >&2
+  echo "  try: sudo nyxus-stage-system-walls" >&2
+  exit 1
+fi
+
+# Resolve the invoking user's home even under sudo.
+REAL_USER="${SUDO_USER:-${USER:-root}}"
+USER_HOME="$(getent passwd "${REAL_USER}" | cut -d: -f6)"
+USER_WALLS="${USER_HOME}/.config/hypr/walls"
+
+mkdir -p "${SYS_DIR}"
+
+copied=0
+skipped=0
+if [[ -d "${USER_WALLS}" ]]; then
+  shopt -s nullglob
+  for src in "${USER_WALLS}"/*.png "${USER_WALLS}"/*.jpg "${USER_WALLS}"/*.jpeg; do
+    base="${src##*/}"
+    if [[ -e "${SYS_DIR}/${base}" ]]; then
+      skipped=$(( skipped + 1 ))
+      continue
+    fi
+    install -m644 "${src}" "${SYS_DIR}/${base}"
+    echo "  + staged ${base}"
+    copied=$(( copied + 1 ))
+  done
+  shopt -u nullglob
+else
+  echo "  ! no user walls dir at ${USER_WALLS} — nothing to stage" >&2
+fi
+
+# Art must be world-readable; 0600 art is invisible to every user session.
+fixed=0
+while IFS= read -r -d '' f; do
+  perm="$(stat -c %a "$f")"
+  if [[ "$perm" != "644" ]]; then
+    chmod 644 "$f"
+    fixed=$(( fixed + 1 ))
+  fi
+done < <(find "${SYS_DIR}" -type f -print0)
+
+echo "nyxus-stage-system-walls: staged ${copied}, already present ${skipped}, permissions fixed ${fixed}"
+
+# Report the two pinned consumers so the operator can see the repair landed.
+for pinned in "${SYS_DIR}/nyxus-urban-alien.png"; do
+  if [[ -r "$pinned" ]]; then
+    echo "  ok  ${pinned} (hyprlock + screensaver background)"
+  else
+    echo "  !!  ${pinned} STILL MISSING — hyprlock will fall back to flat ink" >&2
+  fi
+done

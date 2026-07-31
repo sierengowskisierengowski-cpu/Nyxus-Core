@@ -205,10 +205,6 @@
 (deflisten STARLIGHT :initial '{"f":0,"tw":0.5}'
                  "~/.config/eww/scripts/starlight-anim.sh")
 
-;; ── starfield lock veil (fullscreen screensaver) ─────────────────────
-(deflisten STARFIELD :initial '{"f":0}'
-                 "~/.config/eww/scripts/starfield-lock-anim.sh")
-
 ;; trapped fog drift inside obsidian pill vessels (rev 2026-07-12)
 
 ;; ── live moon phase (starlight top bar tile) ─────────────────────────
@@ -1291,22 +1287,6 @@
 ;; ═════════════════════════════════════════════════════════════════════
 ;; SCREENSAVER
 ;; ═════════════════════════════════════════════════════════════════════
-
-(defwidget screensaver_layout []
-  (eventbox :onclick "~/.config/eww/scripts/starfield-lock-reveal.sh --dismiss &"
-    (box :class "saver-root"
-         :style "background-image: url('assets/starfield-lock-twinkle-${STARFIELD.f}.png'), url('assets/starfield-lock-base.png');"
-         :orientation "v" :halign "center" :valign "center"
-         :space-evenly false :spacing 28
-      (button :class "saver-center-star"
-              :onclick "~/.config/eww/scripts/starfield-lock-reveal.sh &"
-              :tooltip "double-click ✦ to unlock"
-        (image :class "saver-star-img" :path "assets/starfield-center-star.png"
-               :image-width 96 :image-height 96))
-      (label :class "saver-clock" :text "${TIME.hm}")
-      (label :class "saver-date"  :text "${TIME.long}")
-      (label :class "saver-brand" :text "NYXUS · ALIEN NEON")
-      (label :class "saver-hint"  :text "double-click ✦ to unlock · click elsewhere to dismiss"))))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; WINDOWS
@@ -2942,10 +2922,6 @@
   :geometry (geometry :x "0" :y "120" :width "420px" :height "70px" :anchor "bottom center")
   (osd_mic_layout))
 
-(defwindow screensaver
-  :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-screensaver"
-  :geometry (geometry :y "-40" :width "100%" :height "100%" :anchor "top center")
-  (screensaver_layout))
 
 ;; ═════════════════════════════════════════════════════════════════════
 ;; SPRINT 1 · QUICK SETTINGS

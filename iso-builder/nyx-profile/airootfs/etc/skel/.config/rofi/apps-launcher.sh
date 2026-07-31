@@ -25,7 +25,7 @@ menu() {
   Screenshot (region)
   Key Cheat Sheet
   Power Menu
-  Lock Screen (screensaver)
+  Lock Screen
 EOF
 }
 
@@ -49,5 +49,5 @@ case "$pick" in
   *Screenshot*)       python3 ~/.nyxus/nyxus_screenshot.py region ;;
   *Cheat\ Sheet*)     eww open --toggle hotkey-cheatsheet & ;;
   *Power\ Menu*)      bash ~/.config/rofi/power.sh ;;
-  *Lock\ Screen*)     eww open screensaver & ;;
+  *Lock\ Screen*)     loginctl lock-session & ;;
 esac
