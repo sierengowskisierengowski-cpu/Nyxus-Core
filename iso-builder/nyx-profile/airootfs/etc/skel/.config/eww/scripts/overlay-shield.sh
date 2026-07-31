@@ -12,15 +12,39 @@ lock="${runtime}/nyxus-overlay-shield.d"
 OVERLAY_RE='^(dashboard|powermenu|cheatsheet|deepcore|mission|nyxus-hub|hotkey-cheatsheet|hotkey-recorder|screensaver|quicksettings|wifi|bluetooth|mixer|calendar|notifications|brightness-flyout|updates|snap-picker): '
 
 restore_bars() {
-  [[ -f "${lock}/bars" ]] || return 0
-  while read -r b; do
-    [[ -n "$b" ]] && eww open "$b" 2>/dev/null || true
-  done < "${lock}/bars"
+  # A lock dir with no `bars` file inside is the signature of a run that was
+  # killed between `mkdir "$lock"` and writing the stash. Returning early
+  # here WITHOUT clearing the dir used to wedge the shield permanently: the
+  # `mkdir "$lock"` below then failed on every later invocation, so the
+  # script exited before it could ever hide the bars again, and every
+  # fullscreen overlay kept its reserved-zone gap until the next reboot.
+  # Always clear the lock, whether or not there was anything to restore.
+  if [[ -f "${lock}/bars" ]]; then
+    while read -r b; do
+      [[ -n "$b" ]] && eww open "$b" 2>/dev/null || true
+    done < "${lock}/bars"
+  fi
   rm -rf "$lock"
 }
 
 # Orphan lock from crash/kill — no overlay active but bars were stashed.
+#
+# ⚠ GRACE PERIOD — do not remove. nyxus-overlay-open / nyxus-hub-open create
+# this lock, stash the bars, close them, and only THEN map the overlay. For
+# that window eww has not yet registered the new window, so `active-windows`
+# does not list it and this branch would conclude the lock is orphaned and
+# reopen the bars the opener just closed. Measured 2026-07-31: bar surfaces
+# went 4 -> 6 -> 8 mid-open, the restored bar-top put reserved_top back to
+# 40, and the overlay was shoved from y=0 back to y=40 — the very gap the
+# opener exists to prevent. A lock younger than the grace period means an
+# open is in flight; leave it alone. Real orphans are seconds-to-minutes old
+# and are still collected on the next poll.
 if [[ -d "$lock" ]]; then
+  _age=$(( $(date +%s) - $(stat -c %Y "$lock" 2>/dev/null || echo 0) ))
+  if [[ "$_age" -lt 3 ]]; then
+    echo ""
+    exit 0
+  fi
   act="$(eww active-windows 2>/dev/null || true)"
   if ! grep -qE "$OVERLAY_RE" <<<"$act"; then
     restore_bars

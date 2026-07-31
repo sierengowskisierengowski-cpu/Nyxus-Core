@@ -62,7 +62,5 @@
 
 (defwindow deepcore
   :monitor 0 :stacking "overlay" :focusable false :namespace "nyxus-deepcore"
-  ;; :y "-40" cancels bar-top's reserved-zone offset — see eww.yuck's
-  ;; "top center" comment on defwindow dashboard. UNVERIFIED LIVE.
   :geometry (geometry :y "-40" :width "100%" :height "100%" :anchor "top center")
   (box :class "overlay-backdrop" (deepcore_layout)))

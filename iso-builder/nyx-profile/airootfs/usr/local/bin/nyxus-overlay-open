@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# nyxus-overlay-open <window> — map ANY fullscreen eww overlay with no gap.
+#
+# rev 2026-07-31 r1
+#
+# ── WHY THIS EXISTS ──────────────────────────────────────────────────────
+# A 100%x100% eww window is laid out by gtk-layer-shell inside the USABLE
+# area, not the monitor. While the four bars are up their exclusive zones
+# reserve [0, 40, 0, 158], so a "top center"-anchored overlay maps at
+# y=reserved_top (40) — a 40px strip of bare desktop across the top of every
+# fullscreen overlay.
+#
+# MEASURED on the live box 2026-07-31 (hyprctl layers, not reasoning):
+#   powermenu   (shield wired)  y=40 for ~2.2s, then snaps to y=0
+#   screensaver (no shield)     y=40 at t=0.1s ... y=40 at t=4.0s — forever
+# So the surface DOES get repositioned when the bars go away; it just waits
+# on overlay-shield.sh's 2s defpoll. Windows that never had a shield wired
+# (deepcore — its DEEP_SHIELD var is defined but referenced by nothing —
+# plus hotkey-cheatsheet, screensaver, mission, snap-picker) never snap at
+# all and show the gap permanently. Same symptom, two different causes.
+#
+# ── WHY NOT A NEGATIVE MARGIN ────────────────────────────────────────────
+# `:y "-40"` looks like the obvious fix and is correct ONLY while the bars
+# are up. The moment the shield closes them the surface is re-laid-out
+# against the real monitor, and -40 pushes it 40px OFF the top edge — the
+# gap reappears at the BOTTOM. That is the same overshoot that moved this
+# bug from the bottom edge (3de4a38b) to the top; do not reintroduce it.
+# eww 0.5's `:exclusive` is a bool, so there is no exclusive_zone=-1 to ask
+# the compositor to ignore other layers' reserved zones.
+#
+# ── THE FIX ──────────────────────────────────────────────────────────────
+# Release the exclusive zones BEFORE the surface maps, so it is laid out
+# against the real monitor and starts at y=0. This is exactly what
+# nyxus-hub-open already does, and the Hub is the one fullscreen overlay
+# that never showed the gap. No arithmetic, correct in every phase.
+#
+# Restore is nyxus-hub-close's job — a deny-list closer bound to Escape that
+# reopens whatever was stashed in $lock/bars. Do not duplicate that here.
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+win="${1:?usage: nyxus-overlay-open <eww-window>}"
+
+runtime="${XDG_RUNTIME_DIR:-/tmp}"
+lock="${runtime}/nyxus-overlay-shield.d"
+
+command -v eww >/dev/null 2>&1 || exit 0
+
+# Bounded eww call — a wedged daemon blocks the bare CLI on its socket
+# forever, and that is the state that once trapped the user fullscreen with
+# no bars. Every call below is time-boxed.
+ew() { timeout -k 2 "$1" eww --no-daemonize "${@:2}" 2>/dev/null; }
+
+# Wedged daemon? Do not start closing bars we may not be able to reopen —
+# hand off to the recovery path instead.
+if ! ew 3 ping >/dev/null 2>&1; then
+  exec nyxus-hub-close
+fi
+
+# Toggle off if this overlay is already up (preserves the `--toggle`
+# behaviour the keybinds had before they were pointed at this script).
+if ew 4 active-windows | grep -q "^${win}:"; then
+  exec nyxus-hub-close
+fi
+
+# Stash the currently-open bars (only if not already stashed) so
+# nyxus-hub-close / the overlay-shield watcher can restore them.
+mkdir -p "$lock"
+if [[ ! -f "$lock/bars" ]]; then
+  bars=$(ew 4 active-windows | awk -F': ' '/^bar-/{print $1}')
+  [[ -n "$bars" ]] && printf '%s\n' $bars > "$lock/bars"
+fi
+
+# Release the exclusive zones before the overlay maps.
+for b in bar-top bar-bottom bar-left bar-right; do
+  ew 4 close "$b" || true
+done
+
+# Wait for the compositor to ACTUALLY drop the zones before mapping. A blind
+# `sleep` here is a guess: `eww close` returns as soon as the request is sent,
+# not when the surface is unmapped, so the overlay can still be laid out
+# against the old reserved area and map at y=40. Poll the real value instead
+# (measured: it clears in well under 40ms, so this normally costs one probe)
+# and cap the wait so a missing/wedged hyprctl can never stall the open.
+if command -v hyprctl >/dev/null 2>&1; then
+  for _ in $(seq 1 40); do
+    _top=$(hyprctl monitors -j 2>/dev/null \
+           | python3 -c 'import json,sys
+try: print(json.load(sys.stdin)[0]["reserved"][1])
+except Exception: print(0)' 2>/dev/null || echo 0)
+    [[ "${_top:-0}" == "0" ]] && break
+    sleep 0.02
+  done
+else
+  sleep 0.15
+fi
+
+if ! ew 8 open "$win"; then
+  # Overlay failed to map — restore the bars NOW so the user is never left
+  # on a bare wallpaper with no bars and no overlay.
+  echo "nyxus-overlay-open: ${win} failed to open — restoring bars" >&2
+  exec nyxus-hub-close
+fi
+exit 0

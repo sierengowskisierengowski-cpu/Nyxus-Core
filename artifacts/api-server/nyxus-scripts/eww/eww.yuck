@@ -2830,29 +2830,48 @@
 ;;   anchor "center"     -> y = -59, bottom edge 1021 -> a 59px strip of
 ;;                          bare desktop under every fullscreen overlay
 ;;   anchor "top center" -> y = reserved_top (40), bottom edge 1120 -> the
-;;                          bottom of the screen is covered, but a 40px
-;;                          strip is now open at the TOP instead
-;; ⚠ 2026-07-31 correction: the "surface snaps to y=0 once the shield
-;; closes the bars" claim below was WRONG — the owner reproduced a
-;; permanent 40px gap at the TOP with the bars closed, meaning Hyprland
-;; is not reconfiguring this already-mapped surface when bar-top's
-;; reserved zone goes away. Anchoring alone cannot fix this: eww's
-;; :exclusive is a bool (no -1 to ignore other layers' reserved zones,
-;; per the note above), so the only way to make a "top center" surface
-;; actually start at the true top edge is a negative margin that cancels
-;; reserved_top out: :y "-40". This is NOT re-guessing a margin to
-;; recentre a "center"-anchored window (the thing the old note below
-;; warned against) — it is cancelling the anchor's own reserved-zone
-;; offset so the surface covers the REAL monitor edge (y=0..1080) in
-;; both bars-up and bars-down phases, no 2s timing dependency either way.
-;; -40 matches bar-top's own geometry (y "4" + height "36px" = 40) —
-;; the same constant already hardcoded at bar-top's own :geometry below,
-;; so this isn't a new magic number. UNVERIFIED LIVE — needs a real
-;; Hyprland session + `hyprctl clients -j` / screenshot to confirm the
-;; gap is gone in both phases before this is trusted. Gate 13pa.
+;;                          bottom of the screen is covered, always
+;; The overlay-shield defpoll later hides the bars and the surface snaps to
+;; y=0, but that poll is on a 2s interval, so "center" showed the gap for
+;; the first ~2 seconds of EVERY open. Top-anchoring is correct in both
+;; phases and needs no timing. Gate 13pa.
+;;
+;; ── 2026-07-31 · HOW THE REMAINING 40px TOP GAP WAS ACTUALLY FIXED ──
+;; Top-anchoring covered the bottom edge but left y=40 while the bars are
+;; up, i.e. the gap moved to the TOP. MEASURED live (hyprctl layers, not
+;; reasoned):
+;;   powermenu   (shield wired) y=40 for ~2.2s, then snaps to y=0
+;;   screensaver (no shield)    y=40 at t=0.1s ... y=40 at t=4.0s — forever
+;; So the "snaps to y=0" claim above is CORRECT — Hyprland does re-lay-out
+;; the surface when bar-top's reserved zone goes away. A later pass briefly
+;; asserted the opposite and added :y "-40" to all eight fullscreen windows;
+;; that is right ONLY for windows whose bars never close, and on the others
+;; it moves the gap back to the BOTTOM once the shield fires. The fix is
+;; split by STACKING, because that decides whether the bars must move at
+;; all:
+;;
+;;   :stacking "fg"      -> the overlay renders BELOW bar-left/right, so the
+;;                          bars must be closed anyway. Open it through
+;;                          `nyxus-overlay-open <win>`, which releases the
+;;                          exclusive zones BEFORE the surface maps, so it
+;;                          is laid out against the real monitor and starts
+;;                          at y=0 with no timing dependency and no margin.
+;;                          (dashboard, powermenu, cheatsheet; nyxus-hub
+;;                          already did this via nyxus-hub-open — which is
+;;                          why the Hub was the one window without the gap.)
+;;   :stacking "overlay" -> the overlay renders ABOVE the bars, so the bars
+;;                          never close under it and reserved_top is a fixed
+;;                          40. Cancel it with :y "-40" on the geometry.
+;;                          (screensaver here; deepcore, mission,
+;;                          snap-picker in their own yuck files.)
+;;
+;; So: do NOT add :y "-40" to a "fg" window, and do NOT route an "overlay"
+;; window through nyxus-overlay-open. Either one re-creates the bug at the
+;; opposite edge. If you change a window's :stacking, change its gap
+;; strategy to match.
 (defwindow dashboard
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-dashboard"
-  :geometry (geometry :y "-40" :width "100%" :height "100%" :anchor "top center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (box :class "overlay-backdrop" (dashboard_layout)))
 
 (defwindow nyxus-hub
@@ -2872,7 +2891,7 @@
   ;; never existed. Escape is handled by the compositor binds in hyprland.conf,
   ;; which is the only layer that can guarantee it.
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-hub"
-  :geometry (geometry :y "-40" :width "100%" :height "100%" :anchor "top center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (eventbox :onclick "nyxus-hub-close &"
     :vexpand true :hexpand true
     ;; A plain (box) fills the full layer height reliably (GtkCenterBox
@@ -2896,7 +2915,7 @@
 ;; nyxus-hub. See HANDOFF Section 7 and the defwindow nyxus-hub comment.
 (defwindow powermenu
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-powermenu"
-  :geometry (geometry :y "-40" :width "100%" :height "100%" :anchor "top center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (box :class "overlay-backdrop"
        :style "background-image: linear-gradient(rgba(5,1,13,0.52), rgba(5,1,13,0.60)), url('assets/nyxus-hero-ufo-shop.png'); background-size: cover; background-position: center;"
     (powermenu_layout)))
@@ -2905,7 +2924,7 @@
 ;; nyxus-hub. See HANDOFF Section 7 and the defwindow nyxus-hub comment.
 (defwindow cheatsheet
   :monitor 0 :stacking "fg" :focusable false :namespace "nyxus-cheatsheet"
-  :geometry (geometry :y "-40" :width "100%" :height "100%" :anchor "top center")
+  :geometry (geometry :width "100%" :height "100%" :anchor "top center")
   (box :class "overlay-backdrop" (cheatsheet_layout)))
 
 (defwindow osd-volume
