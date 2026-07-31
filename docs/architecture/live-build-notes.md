@@ -29,7 +29,7 @@ The live machine is the source of truth, not the repo — the repo mirrors it:
 - Accent color follows the current wallpaper — computed via `~/.config/nyxus/accent.json`, applied by `/usr/local/bin/nyxus-apply-accent`.
 - Palette source of truth: `nyxus-palette.css` + `nyxus_palette.py` — **must be edited in lockstep**, they are not auto-generated from each other.
 - Newest direction (as of the July 2026 home-page rebuild): a borderless "ghost HUD" look — transparent, no boxes, glow text only.
-- Current wallpaper reference: `nyxus-graffiti-space.png` (5120×2880); animated loops live at `walls/live/<stem>-live.mp4`.
+- Current wallpaper reference: `nyxus-urban-alien.png` (1536×1024); animated loops live at `walls/live/<stem>-live.mp4`. (Was `nyxus-graffiti-space.png` until 2026-07-30, when that image was dropped for being off the urban-alien style spec.)
 
 ---
 
@@ -72,7 +72,7 @@ The build runs 4 EWW bars: `bar-bottom` (main), `bar-top` (ticker), `bar-left` (
 - `nyxus-wall-fx` (Python, `~/.local/bin`): cava audio pulse → mpv saturation/gamma/speed; Hyprland `socket2` `workspacev2>>ID,NAME` events → per-workspace hue tints. Workspaces are **named** (1 WEB, 2 CODE, 3 TERM, 4 FILES, 5 MEDIA, 6 COMMS) — always key off the numeric ID, never the name. Toggle: `SUPER+SHIFT+P`.
 - `nyxus-spray` (Python, GTK3 + GtkLayerShell + cairo): spray-paint overlay, `SUPER+G`. Trail mode (`T` / `--trail`) paints on cursor move without a click. The paint surface must grow with `size-allocate` — layer-shell maps small then expands, otherwise paint gets stuck in one corner.
 - FX binds live in `~/.config/hypr/conf.d/nyxus-fx.conf`. **`conf.d` files are sourced explicitly at the end of `hyprland.conf`, not via glob** — new drop-in files need an explicit `source =` line added, or they're silently ignored.
-- `nyxus-livewall-generate` scenes: `nyxus-graffiti-space` and `nyxus-void-vortex` (counter-rotating churn, vortex core at 935,545 on a 1920×1080 grid) have dedicated logic; everything else uses the generic engine.
+- `nyxus-livewall-generate` scenes: `nyxus-void-vortex` (counter-rotating churn, vortex core at 935,545 on a 1920×1080 grid) has dedicated logic; everything else uses the generic engine. The `nyxus-graffiti-space` scene engine is still in the script but its key is dead since 2026-07-30 — the image was dropped, so that branch can no longer be selected. Its hand-tuned coordinates are kept for re-keying to another scene.
 - Probing the mpv IPC socket: use `socat - UNIX-CONNECT:/path`. Plain `socat - /path` **creates a regular file** if the socket is gone, which masks the real problem.
 - `pkill`/`pgrep -f "nyxus-..."` run from a tool call can match the tool's own bash eval line — anchor the pattern or use pidfiles instead.
 - `nyxus-workspace-wallpaperd` (systemd user unit, parallel session) swaps `swaybg` per workspace from `~/.config/nyxus/workspaces.json`. Currently all workspaces map to graffiti-space — idempotent, harmless to leave running under mpvpaper.
@@ -94,7 +94,7 @@ The 12-addon eye-candy layer was verified end-to-end and pushed on 2026-07-08 (c
 **Still open (as of 2026-07-08, unconfirmed current status):**
 - Packages never installed (require interactive sudo password): `sudo pacman -S --needed satty tesseract tesseract-data-eng zbar` + `yay -S wshowkeys`. Blocks Shot/Lens OCR+QR and the keystroke-display overlay.
 - A graffiti wallpaper-pack worktree/branch with uncommitted work (3 category dirs, `nyxus-fluid-wallpaper`, a generator script) vanished mid-session on 2026-07-08 — likely clobbered by a parallel agent session, nothing recoverable in git history. Would need regenerating if still wanted.
-- `home-hud-rebuild` branch was merged; the live `nyxus-home` was newer than the branch at merge time (had MPRIS `MusicCard`) — live state was synced into skel instead. `Super+Home` (not `Super+0`) opens the HOME workspace (`name:0`).
+- `home-hud-rebuild` branch was merged; the live `nyxus-home` was newer than the branch at merge time (had MPRIS `MusicCard`) — live state was synced into skel instead. `Super+Home` (not `Super+0`) opens the HOME workspace. ⚠ **Superseded 2026-07-26/30:** the workspace is `name:HOME`, **not** `name:0` — a *numeric* `name:0` resolves into Hyprland's hidden SPECIAL range (id `-1337`) and was never visible, which is why gate `13ag` now hard-fails any `workspace name:0`. The GTK4 `nyxus-home` app is also **disabled** now; the eww `home-deck` window replaced it.
 - User requested a fully reactive "living theme": all colors (borders/bars/buttons) pulse and shift with notifications, email, music, and the focused/hovered app. Partial pieces exist — `nyxus-beatd` (music→border spin), `nyxus-tintd` (per-app border tint, off by default, publishes `$XDG_RUNTIME_DIR/nyxus-border-colors`), `nyxus-wall-fx` (audio+workspace→wallpaper), the accent engine. **Missing piece:** a notification/event→color-pulse daemon plus EWW bar reactivity. Not started as of last record — this maps to the "premium/rich features" backlog in the build brief (`docs/NYXUS_BUILD_BRIEF.md` §9).
 
 ---

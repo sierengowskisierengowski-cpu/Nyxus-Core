@@ -1,5 +1,18 @@
 # Web and API Deployment
 
+> ⚠ **Read first (2026-07-30): the `nyxus-core.replit.app` production host is
+> RETIRED.** There is no public deployment of the API or the web surfaces. Every
+> URL naming that host anywhere in the tree is a **dead fallback**, not a live
+> endpoint. Choosing a replacement host is an open owner decision.
+>
+> Two consequences worth internalising:
+> 1. **The ISO does not depend on it.** The offline cache at `/opt/nyxus-cache` is
+>    baked from `artifacts/api-server/nyxus-scripts/` and first boot works with no
+>    network. The bake hard-fails rather than ship an online-only ISO.
+> 2. `artifacts/api-server/dist/` is **not** the ISO's payload source and should
+>    not be built for a bake — see
+>    [`build-pipeline.md`](build-pipeline.md).
+
 ## Scope
 
 Deployment surfaces in this repository are centered in `artifacts/`, with `artifacts/api-server` acting as a core distribution service.

@@ -1,176 +1,226 @@
 # NYXUS — Print-Before-Flash Checklist
 
-> Print this page. Tick boxes with a real pen. The ISO build can't be
-> reproduced from inside Replit — these steps run on your **Arch Linux
-> host** with root + archiso installed.
+> **Rewritten 2026-07-30.** The previous revision of this file was written for
+> the May-2026 build and had gone dangerously stale: it named the ISO `nyx-*`,
+> expected it to be **1.8–2.2 GB** (it is ~**9.5–10 GB**), told you to build
+> `dist/` "or the ISO becomes online-only" (the bake prefers the git tree and
+> `dist/` is a known bake hazard), and pointed at `~/nyxus-iso` instead of the
+> one canonical repo. Everything below was re-derived from `build-iso.sh`,
+> `profiledef.sh` and `HANDOFF.md` on 2026-07-30.
+
+> The canonical narrative procedure lives in
+> [`HANDOFF.md` §6](./HANDOFF.md) — this file is the printable tick-list version.
+> **Read `HANDOFF.md` first.** It carries the current bake-readiness state,
+> which this file deliberately does not duplicate.
+
+Print this page. Tick boxes with a real pen. The bake runs on the owner's
+**Arch Linux host** with root + `archiso`. An agent cannot run it (sudo on this
+machine is fingerprint-only).
 
 ---
 
 ## 0 · Pre-flight (host machine)
 
 - [ ] Running on **Arch Linux** (not Manjaro, not EndeavourOS — base Arch)
-- [ ] `mkarchiso` installed: `sudo pacman -S archiso`
-- [ ] At least **8 GB** free disk in `/tmp` (work dir) + `~/nyxus-iso/out` (output)
-- [ ] You can `sudo` without password prompt mid-build (or be ready to type it)
-- [ ] USB stick ≥ **4 GB** ready, contents you don't care about (it'll be wiped)
+- [ ] `mkarchiso` installed: `sudo pacman -S --needed archiso squashfs-tools libisoburn dosfstools`
+- [ ] **≥ 40 GB free** for the work dir plus **≥ 12 GB** for `iso-builder/out/`.
+      The ISO is ~9.5–10 GB and the squashfs work dir needs real headroom.
+      Old ISOs in `out/` are gitignored and stack up fast — clear them first.
+- [ ] `sudo` available for the whole run (fingerprint prompt mid-build is fine)
+- [ ] USB stick ≥ **16 GB**, contents you don't care about (it will be wiped)
+- [ ] Prebuilt Kage-Ryu packages present at
+      `~/Projects/arch-custom-kernel/linux-kage-ryu/` — **the bake hard-fails
+      without them** so it can never silently ship kernel-less
 
 ---
 
-## 1 · Sync the repo
+## 1 · Sync the canonical repo
+
+**There is exactly one canonical repo: `~/Nyxus-Core`, branch `main`.** Any
+lowercase `~/nyxus-core`, `~/.nyxus-backup-*`, `~/nyxus-KNOWN-GOOD-*` or
+`~/Backups/nyxus*` is a stale snapshot — never bake from one.
 
 ```bash
-cd ~/nyxus-iso         # or wherever you cloned it
-git pull               # latest commit
+cd ~/Nyxus-Core
+git pull --rebase
+git status          # MUST say nothing to commit
 ```
 
-- [ ] Working tree clean (`git status` says nothing to commit)
-- [ ] On the branch you intend to ship from
+- [ ] Working tree clean — **a bake reads the profile as it runs**, so an
+      in-flight edit ships a partial change set (this really happened on
+      2026-07-22 and cost a stick)
+- [ ] On `main`
+- [ ] Nothing else is editing the repo (no other agent mid-write)
 
 ---
 
-## 2 · Build dist/ — populates the offline cache
-
-> **CRITICAL.** Skip this and the ISO becomes online-only. The user's
-> first boot at the coffee shop with no Wi-Fi will fail.
+## 2 · Gate the profile
 
 ```bash
-pnpm install
-pnpm --filter @workspace/api-server run build
+bash iso-builder/verify-profile.sh
 ```
 
-- [ ] `artifacts/api-server/dist/nyxus-scripts/` exists and contains 152+ files (~52 MB)
-- [ ] No build errors
+- [ ] Exits **PASS**. It is not decoration — its gates encode bugs that already
+      shipped: bake-wipe gaps, `~/.local/bin` unreachable tools, unsourced
+      shards, station drift, greeter path, `workspace name:0`, layer-blur
+      ordering, eww handler timeouts. If a gate fails, fix the cause; do not
+      bypass it.
 
-Verify:
-```bash
-ls artifacts/api-server/dist/nyxus-scripts/ | wc -l    # expect ≥ 100 (currently ~152)
-du -sh artifacts/api-server/dist/nyxus-scripts/        # expect roughly ~50M
-ls artifacts/api-server/dist/nyxus-scripts/nyxus-bootstrap     # must exist
-ls artifacts/api-server/dist/nyxus-scripts/nyxus-wait-bootstrap # must exist
-ls artifacts/api-server/dist/nyxus-scripts/nyxus_install.sh    # must exist
-```
+> The offline cache at `/opt/nyxus-cache` is staged from
+> **`artifacts/api-server/nyxus-scripts/`** (the git source of truth) and the
+> bake **hard-fails** if `nyxus_install.sh` would be missing, so an online-only
+> ISO can no longer ship silently. `artifacts/api-server/dist/nyxus-scripts` is
+> only a *fallback* and is rejected outright if it contains host symlinks —
+> you do **not** need to build it, and historically it poisoned bakes.
 
 ---
 
 ## 3 · Bake the ISO
 
 ```bash
-cd iso-builder
+cd ~/Nyxus-Core/iso-builder
 sudo ./build-iso.sh
+# sudo NYX_WITH_KAGE_RYU=0 ./build-iso.sh   # stock-kernel-only debug ISO
+# sudo NYX_SQUASH_COMP=xz  ./build-iso.sh   # smaller ISO, ~7.6x slower cold reads
 ```
 
-Watch for these lines in the output:
+Watch for:
 
 - [ ] `✓ configs: hypr / eww / dunst / rofi / wlogout / alacritty`
 - [ ] `✓ bootstrap shims: nyxus-bootstrap / nyxus-wait-bootstrap`
-- [ ] `✓ offline cache: 152 files in /opt/nyxus-cache/ (52M)` — if you see `! dist/nyxus-scripts/ not found`, **STOP**, go back to step 2
-- [ ] `✓ SDDM theme staged`
-- [ ] `✓ deployed N python files` (Phantom)
-- [ ] `✓ ISO baked → .../out/nyx-*.iso` (filename version may have shifted)
+- [ ] `✓ offline cache: N files … first boot works with NO internet`
+- [ ] Kage-Ryu staged into the profile-local `[nyxus-local]` repo and the three
+      live boot menus rewritten (Kage entry #0, stock as labelled rescue)
+- [ ] `✓ ISO baked → .../out/nyxus-<YYYY.MM.DD>-x86_64.iso`
 
-Total time: **5–15 minutes** depending on host CPU.
+Bake wall-clock time on this host is **not currently recorded** — do not trust
+the "5–15 minutes" figure the May-2026 revision of this file carried, which was
+for a ~2 GB ISO. Since 2026-07-30 the squashfs compressor is `zstd` rather than
+`xz`, which compresses considerably faster, so the bake is quicker than it was
+immediately before that change. **Time it on the next bake and record it here.**
 
 ---
 
 ## 4 · Verify the ISO
 
 ```bash
-cd iso-builder/out
-ls -lh nyx-*.iso          # expect one file, ~1.8–2.2 GB
-ISO=$(ls -t nyx-*.iso | head -1)   # capture latest
-sha256sum "$ISO"          # write this down
+cd ~/Nyxus-Core/iso-builder/out
+ls -lh nyxus-*.iso
+ISO=$(ls -t nyxus-*.iso | head -1)
+sha256sum "$ISO"
+bsdtar -tf "$ISO" | head            # no root needed
 ```
 
-- [ ] Size is in the 1.8–2.2 GB range (smaller = something didn't bake; larger = fine)
-- [ ] You wrote the SHA-256 down somewhere you'll find it later
+- [ ] Size is ~**9.5–10 GB**. Dramatically smaller means something did not bake.
+- [ ] SHA-256 written down
 
 ---
 
 ## 5 · Flash to USB
 
-**Find your USB device first:**
 ```bash
-lsblk          # identify the right /dev/sdX — get this WRONG and you wipe your laptop disk
+lsblk          # identify the USB — get this WRONG and you wipe your system disk
 ```
 
-- [ ] You identified the USB as `/dev/sdX` (replace X below) — **triple-check it's not your system disk**
+On the owner's machine the USB is normally `/dev/sda` (SanDisk 57 GB) and the
+internal disk is `/dev/nvme0n1`. **Never put `nvme` as `of=`.** The letter moves
+between boots — re-check every time.
 
-**Flash (dd method — works on any Linux host):**
 ```bash
-sudo dd if="$ISO" of=/dev/sdX bs=4M status=progress conv=fsync
+sudo dd if="$ISO" of=/dev/sda bs=4M status=progress oflag=sync
 sync
 ```
 
-**Or Ventoy (drag-and-drop, recommended if you flash multiple ISOs):**
-- [ ] Ventoy already installed on the USB → just copy the .iso to the Ventoy partition
+- [ ] Target triple-checked
+- [ ] Verify after flashing (no sudo needed):
+      `lsblk -o NAME,SIZE,FSTYPE,LABEL /dev/sda` → `iso9660` +
+      label **`NYXUS_2026_07`** + an `ARCHISO_EFI` vfat partition
+
+**Ventoy** also works — copy the `.iso` onto the Ventoy partition.
 
 ---
 
 ## 6 · Boot it
 
-- [ ] BIOS/UEFI: USB is first in boot order, Secure Boot **OFF**
-- [ ] Boots to the NYX live image, autologins as `nyx` / password `nyx`
-- [ ] You land in **Hyprland** (not a TTY)
+- [ ] Boot menu (MSI: **F11**) → pick the **"UEFI: SanDisk"** entry.
+      The 🐉 dragon GRUB menu is **UEFI-only**; a Legacy/BIOS boot gets the
+      plain syslinux text menu. That is not a bug.
+- [ ] Boot entry **#0 is Kage-Ryu**; "stock linux (rescue)" is the fallback.
+      If Kage fails with `unknown filesystem type 'iso9660'`, boot the rescue
+      entry and re-check the kernel's `CONFIG_ISO9660_FS` / `SQUASHFS` /
+      `BLK_DEV_LOOP`.
+- [ ] 🛸 UFO "Cosmic Arrival" plymouth splash
+- [ ] Greeter appears. **Note which session the dropdown preselects** — the ISO
+      ships three `wayland-sessions` entries and `NYXUS (Hyprland)` is not
+      guaranteed to be first. This is an open item in `HANDOFF.md`.
+- [ ] Login `nyx` / `nyx`
+- [ ] `cat /etc/nyxus-build` → the source commit matches the tip you baked
 
-### What to expect on first login (~60 seconds)
+### What to expect on first login
 
 | Time | What you see |
 |------|--------------|
-| 0s   | Bare Hyprland desktop (black). A small notification top-right: `NYXUS · first-boot setup starting — installing chrome, ~60 seconds…` |
-| ~5s  | Notification updates: `downloaded installer · running install…` (or `using offline cache…` if no Wi-Fi) |
-| ~30–60s | EWW bars appear (top/bottom/left/right), wallpaper paints, NYXUS Home opens on workspace 0 |
-| ~60s | Final notification: `NYXUS · ready · welcome, nyx` |
+| 0s | Wallpaper still paints immediately (the static image, then the live loop swaps in behind it) |
+| ~5s | Notification: `downloaded installer · running install…` or `using offline cache…` |
+| ~30–60s | All four eww bars appear (top/bottom/left/right); the HOME deck is on `Super+Home` |
+| ~60s | `NYXUS · ready · welcome, nyx` |
 
-If you only see the bare desktop after **2 minutes** → check `/tmp/nyxus-bootstrap.log` for what failed.
+Bare desktop after **2 minutes** → `cat /tmp/nyxus-bootstrap.log`.
+Slow **splash → greeter** → `systemd-analyze critical-chain graphical.target`
+on the stick. That command names the offender; do not guess.
 
 ---
 
-## 7 · Recovery
+## 7 · Post-boot smoke test
 
-**Force re-run the bootstrap:**
+- [ ] Every station pill 1–10 opens a deck — **except BIFROST (9), which has no
+      deck by design**
+- [ ] `Super+Home` / `Super+End` / `Super+Delete` reach HOME / START / LAB
+- [ ] `Super+Alt+L` living theme (borders pulse — proves `nyxus-living` ran)
+- [ ] `Super+O` shaders · `Super+T` tint · `Super+Z` spray
+- [ ] `Super+Ctrl+W` whispers · `Super+Alt+Shift+S` supernova ·
+      `Super+Alt+Shift+G` graffiti wall
+- [ ] Lock the screen → weather line + lock art + track info all render
+- [ ] UI blips audible on window open/close (`nyxus-soundd`)
+- [ ] Notifications actually appear (dunst → eww bridge)
+- [ ] The Hub opens **and dismisses** (`Escape`, `Super+Shift+Escape`).
+      `nyxus-panic` and `Super+Ctrl+Shift+Escape` are the escape hatches.
+- [ ] `calamares` is present: `command -v calamares`
+
+## 8 · Recovery
+
 ```bash
-rm ~/.nyxus/.bootstrapped && nyxus-bootstrap
+rm ~/.nyxus/.bootstrapped && nyxus-bootstrap   # force re-run
+cat /tmp/nyxus-bootstrap.log                   # what failed
 ```
 
-**See what happened during install:**
-```bash
-cat /tmp/nyxus-bootstrap.log
-```
-
-**No Wi-Fi on first boot, offline cache also failed:**
-
-You'll have a bare Hyprland desktop with a red error notification top-right
-and a `NYXUS-FIRST-BOOT-FAILED.txt` file on the desktop.
-
-```bash
-# Open a terminal (no EWW bar exists yet):
-#   SUPER + RETURN          → NYXUS terminal
-#   SUPER + SHIFT + RETURN  → raw Alacritty (use this if NYXUS terminal fails)
-nmtui                  # Wi-Fi setup
-nyxus-bootstrap        # re-run
-```
-
-**Useful keybinds while the desktop is bare:**
+No Wi-Fi and the offline cache also failed → bare Hyprland, a red toast, and a
+`NYXUS-FIRST-BOOT-FAILED.txt` on the desktop.
 
 | Keys | Action |
 |------|--------|
-| `SUPER + RETURN` | NYXUS terminal |
-| `SUPER + SHIFT + RETURN` | Raw Alacritty (fallback) |
-| `SUPER + Q` | Close focused window |
-| `SUPER + R` | App launcher (rofi) |
-| `SUPER + SHIFT + E` | Logout menu |
-| `SUPER + SHIFT + H` | NYXUS health audit |
+| `Super+Return` | Terminal (kitty → alacritty → foot) |
+| `Super+Shift+Return` | Alacritty first (use if the above fails) |
+| `Super+Q` | Close focused window |
+| `Super+Space` | App launcher |
+| `Super+Shift+D` | Run a command (rofi) |
+| `Super+Shift+E` | Logout menu |
+| `Super+Shift+H` | NYXUS Doctor (health audit) |
+
+Then `nmtui` for Wi-Fi and `nyxus-bootstrap` to retry.
+
+Full keybind reference: [`docs/KEYBINDS.md`](docs/KEYBINDS.md).
 
 ---
 
-## 8 · Install to disk
+## 9 · Install to disk
 
-Once the live session is fully NYXUS-themed and you've poked around enough
-to be sure it works on your hardware, run the disk installer (Phantom's
-job 2 — separate workflow).
+Only after the live session is fully themed and you have poked at it enough to
+trust it on this hardware. Calamares copies both kernels and
+`nyxus-set-grub-default-kage` flips the installed GRUB default to Kage-Ryu.
 
-- [ ] You're ready to commit a real disk install
-- [ ] You backed up anything on the target disk
+- [ ] Ready to commit a real disk install
+- [ ] Target disk backed up
 
 ---
 

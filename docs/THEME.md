@@ -1,9 +1,15 @@
 # NYXUS Theme Reference — "ALIEN NEON"
 
 > Single source-of-truth for every color, font, and effect token used across
-> the NYXUS desktop (EWW bars/menus, GTK apps, Hyprland, login/lock). Worker-B
-> owns this file (Phase 5.1). Phase 2 (login/lock) consumes the accent + surface
-> tokens documented in [§8](#8-tokens-for-phase-2-loginlock).
+> the NYXUS desktop (EWW bars/menus, GTK apps, Hyprland, login/lock).
+> Login/lock consumes the accent + surface tokens documented in
+> [§8](#8-tokens-for-phase-2-loginlock).
+>
+> **Fact-checked against `nyxus_palette.py`, `accent.json` and the shipped
+> configs on 2026-07-30.** Four stale statements were corrected in place and are
+> annotated inline so nobody re-derives them: the accent "follows the wallpaper"
+> (it does not), §8 pointing at "DARK MIRROR", the `eww.scss.source` void-fill
+> mirror claim, and §11's screensaver / hyprlock / brand-art rows.
 
 > **Palette LOCKED 2026-07-23.** The single accent preset is `prism` and
 > `follow_wallpaper` is **false**. The older "DARK MIRROR" / "OBSIDIAN PRISM"
@@ -23,7 +29,7 @@ every surface.
 |-------|---------|------|
 | **Monochrome / surface palette** | `~/.config/eww/nyxus-palette.css` **and** `~/.nyxus/nyxus_palette.py` | White→grey ramp, triple-black surfaces, glows, hairlines, shadows, blur, radii, fonts. Edited **in lockstep** — the `.css` and `.py` are NOT generated from each other. |
 | **Hypr palette mirror** | `~/.config/hypr/nyxus-palette.css` | Identical copy of the eww palette css so Hyprland-side consumers `@import` the same tokens. |
-| **Live accent** | `~/.config/nyxus/accent.json` → `nyxus-apply-accent` → `~/.config/eww/accent.scss` (`$nyxus-accent-*`), `_nyxus_accent.scss`, GTK `@define-color accent_*`, `hyprlock-accent.conf` | The 4 accent slots (primary/secondary/warn/ok). Follows the wallpaper. **Do not hand-edit** the generated `accent.scss` / GTK accent block — change `accent.json` and re-run `nyxus-apply-accent`. |
+| **Live accent** | `~/.config/nyxus/accent.json` → `nyxus-apply-accent` → `~/.config/eww/accent.scss` (`$nyxus-accent-*`), `_nyxus_accent.scss`, GTK `@define-color accent_*`, `hyprlock-accent.conf` | The 4 accent slots (primary/secondary/warn/ok). ⛔ **Does NOT follow the wallpaper** — `follow_wallpaper: false`, locked 2026-07-23 (this line said "Follows the wallpaper" until 2026-07-30; it was wrong and it contradicted §3 of this same file). **Do not hand-edit** the generated `accent.scss` / GTK accent block — change `accent.json` and re-run `nyxus-apply-accent prism`. |
 | **Fixed HUD neon family** | `~/.config/eww/eww.scss.source` header (`$neon-*`) mirrors `nyxus_palette.py` `HUD_*` | Preset-independent neon hues used by monitoring widgets. |
 
 **Rule:** app CSS must `@import` the palette and reference the `@define-color`
@@ -59,8 +65,16 @@ Legacy aliases (same values): `nyx_glass_dark`/`GLASS_DARK`,
 
 EWW HUD deep-void fills — `nyxus_palette.py` is canon:
 `HUD_VOID` = `rgba(5,6,10,0.97)` (root sheet, from `VOID` `#05060a`),
-`HUD_CARD_BG` = `rgba(7,8,14,0.93)` (card fill). `eww.scss.source` mirrors these
-as `$void-deep` / `$void-card`.
+`HUD_CARD_BG` = `rgba(7,8,14,0.93)` (card fill).
+
+> ⚠ **`eww.scss.source` does not currently match these** (measured 2026-07-30):
+> it declares `$void-deep: rgba(5,1,13,0.97)` and `$void-card: rgba(7,5,14,0.93)`.
+> The two sets are visually indistinguishable near-blacks, so this is a
+> bookkeeping divergence rather than a rendering bug — but it is a real
+> divergence, and the earlier claim in this file that the SCSS "mirrors these"
+> was false. `nyxus_palette.py` is the canon; the SCSS is what actually paints
+> eww. Reconcile deliberately if you touch either, and note that `eww.css` has
+> drifted ~3500 lines from `eww.scss.source`, so **do not recompile casually**.
 
 ### Glow / hairline / shadow
 | CSS name | Value | Use |
@@ -223,8 +237,11 @@ veil), not noisy.
 
 ## 8. Tokens for Phase 2 (login/lock)
 
-Phase 2 owns hyprlock/SDDM styling; consume these tokens so login matches DARK
-MIRROR. Accent is exposed to hyprlock via generated `~/.config/hypr/hyprlock-accent.conf`:
+Consume these tokens so login and lock match **ALIEN NEON**. (This paragraph said
+"so login matches DARK MIRROR" until 2026-07-30 — a leftover from the purged
+brand.) The live greeter is **greetd → `nyxus-greeter` → regreet under cage**;
+SDDM is dormant. Accent is exposed to hyprlock via the generated
+`~/.config/hypr/hyprlock-accent.conf`:
 
 `hyprlock-accent.conf` **ships empty** (so `hyprlock.conf`'s `source =` resolves
 on a fresh account) and is written by `nyxus-apply-accent` at runtime. With the
@@ -297,25 +314,46 @@ Recommended login/lock surface tokens:
 
 ---
 
-## 11. Shipped signature components (current reality · rev 2026-07-15)
+## 11. Shipped signature components (current reality · rev **2026-07-30**)
 
 The ALIEN NEON tokens above drive these live surfaces. All are shipped and
 verified; none are placeholders.
 
 | Component | Where | Notes |
 |-----------|-------|-------|
-| **The Hub** | `eww.yuck` `nyxus_hub_layout`; `nyxus-hub-open` / `nyxus-hub-launch` / `nyxus-hub-close` / `nyxus-hub-apps` / `nyxus-hub-search` | Redesigned full-screen launcher/command surface: NYXUS/ALL app toggle, search, now-playing, and a STATIONS footer switcher (OP..ED, from `stations.json`) + power actions. Opened via `nyxus-hub-open` (stashes+closes the bars so the overlay maps truly fullscreen, restores on any failure); closed by `nyxus-hub-close` and by the global `Escape` / `Super+Shift+Escape` binds. Every eww CLI call in the open/close path is `timeout`-bounded and a wedged daemon triggers hard recovery (`pkill -9 eww` → `nyxus-eww-launch-safe`), so the user can never be trapped. |
+| **The Hub** | `eww.yuck` `nyxus_hub_layout`; `nyxus-hub-open` / `nyxus-hub-launch` / `nyxus-hub-close` / `nyxus-hub-apps` / `nyxus-hub-search` | Full-screen launcher/command surface: NYXUS/ALL app toggle, search, now-playing, a STATIONS footer switcher (from `stations.json`) + power actions. Opened via `nyxus-hub-open` (stashes+closes the bars so it maps truly fullscreen, restores on any failure). **`:stacking "fg"` (TOP) since 2026-07-30** — it was `overlay`, which meant anything it launched landed *behind* it and read as dead (gate `13ai`). Three independent escape routes: bare `Escape`, `Super+Shift+Escape` (bare `eww close nyxus-hub` first), and `Super+Ctrl+Shift+Escape` (`eww close-all` → `nyxus-eww-launch-safe`, touching no NYXUS script). **eww SIGKILLs a widget handler after 200 ms**, so every handler must background the slow half — `(nyxus-hub-close; X) &`, never `nyxus-hub-close; X` (gate `13ah`). `(eventbox :onclick "true")` blocks nothing and has been deleted; do not re-add it. |
 | **Station rail** | `eww.yuck` `workspaces_rail` / `station_pill` | Left rail = HOME / START / 1-10, hue-tinted per station, driven by `~/.config/nyxus/stations.json`. Stations are OPS · FORGE · GHOST · PULSE · WAVE · CORE · MESH · SCRIBE · BIFROST · ARSENAL (9/10 were renamed from BLAST/EDGE on 2026-07-27). Named annex stations HOME / START / LAB live in `nyxus-stations-named.conf`; identity must stay identical across `stations.json` and `stations-hacker.json` — gate 13w asserts it. |
 | **Saucer center clock + music** | `eww.yuck` `.saucer-*` classes; `nyxus-nowplaying` | UFO-saucer center clock on `bar-bottom`; flips to a source-agnostic MPRIS now-playing readout when any player is active. |
 | **NYXUS PULSE** | `nyxus-pulsed` / `nyxus-beat*`; `~/.config/nyxus/pulse-cava.conf`, `cava.conf` | Cava-driven audio-reactive beat feed used by bar FX / visualizers. |
 | **HOME dashboard** | eww `home-deck` window on the **HOME** station (`Super+Home`) | Command deck: clock, weather, SYSTEM CORE rings + per-core bars, JETT AI EDR, HONEYPOT GRID, MUSIC DECK, NETWORK, Fans/Storage/Calendar/Notepad/Processes/Notifications/Password. **The GTK4 `nyxus-home` app is DISABLED** (it rendered an empty window); the eww deck replaced it, opened/closed by `nyxus-home-deck` following the Hyprland socket. The old workspace `name:0` was renamed `name:HOME` because a numeric `name:0` resolves into Hyprland's SPECIAL range and was never visible. |
-| **Matrix screensaver** | `~/.config/nyxus/nyxus_matrix_saver.py`; `nyxus-screensaver` | Idle/lock-adjacent matrix-rain saver in the neon palette. Launched by hypridle; quits on any key/click/motion and honours SIGTERM (can never trap the user). Ship copy: `artifacts/api-server/nyxus-scripts/nyxus_matrix_saver.py`. |
-| **hyprlock (UFO art)** | `~/.config/hypr/hyprlock.conf` + `hyprlock-accent.conf`; `assets/nyxus-hyprlock-ufo.png` | Lock screen over the UFO art + fullscreen starfield; consumes the generated accent tokens (§8). |
-| **Branded splash** | `eww/splash.yuck` + `.splash-*` in `eww.scss.source`; `assets/nyxus-splash-brand.png` | Session-start curtain = full-bleed graffiti "NYXUS HYPRLAND" brand art with top/bottom scrim for legible boot text. Pre-scaled to the panel resolution because the compile step strips `background-size`. |
-| **Brand art set** | `~/.config/eww/assets/nyxus-brand-*.png` | `nyxus`, `sierengowski`, `hyprland`, `nyxus-hyprland` graffiti wordmarks on nebula brick/wet-pavement scenes — the source for the splash backdrop and available for hero/branding surfaces. |
+| **Screensaver** | `nyxus-screensaver` → **`nyxus_screensaver.py`** | Urban-alien idle saver (dimmed alien skyline behind a glass card, violet↔magenta breathing pulse), pinned to `NYXUS_SCREENSAVER_WALL` = `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png`. Launched by hypridle at 300 s. The launcher falls through **three** payload locations (`~/.config/nyxus/` → `~/.nyxus/` → `/opt/nyxus/`) because a single hardcoded path meant the idle screen silently did nothing while hypridle reported success. Gate `13ua` asserts the whole chain. ⚠ **The matrix-rain saver (`nyxus_matrix_saver.py`) is RETIRED** — it still ships, and this table claimed until 2026-07-30 that it was what `nyxus-screensaver` launches. It is not. |
+| **hyprlock** | `~/.config/hypr/hyprlock.conf` + `hyprlock-accent.conf` | Lock screen over **`/usr/share/backgrounds/nyxus/nyxus-urban-alien.png`** + fullscreen starfield; consumes the generated accent tokens (§8). *(Earlier revisions of this table said "over the UFO art / `assets/nyxus-hyprlock-ufo.png`" — that asset still exists in `~/.config/eww/assets/` and `hypr-walls/`, but `hyprlock.conf` has been pinned to the urban-alien hero since `e5c381d1`.)* Also renders weather, lock art and track chip/title/artist — all five of those widgets were **dead on every stick** until 2026-07-30 because they invoked their tools through an empty `~/.local/bin` (gate `13z`). |
+| **Branded splash** | `eww/splash.yuck` + `.splash-*` in `eww.scss.source`; `~/.config/eww/assets/nyxus-splash-brand.png` | Session-start curtain = full-bleed graffiti "NYXUS HYPRLAND" brand art with top/bottom scrim for legible boot text. Pre-scaled to the panel resolution because the compile step strips `background-size`. |
+| **Login (greetd + regreet)** | `/etc/greetd/regreet.css` + `regreet.toml`, staged from `nyxus-scripts/greetd/`; `nyxus-greeter` | The urban-alien hero is re-copied to `/var/cache/regreet/nyxus-login-bg.png` on **every** greeter start. The login card sits at `margin-left: 1360px` / `margin-right: 40px` (2026-07-30) and `nyxus-greeter` **rescales both margins for the detected panel** from `/sys/class/drm/*/modes`, because GTK4 CSS has no percentage margins and absolute pixels tuned for 1920 would push the card off a 1366-wide screen — a lockout. Gates `13ua` / `13ub`. |
+| **NYXUS · POWER** | wlogout (`Super+Shift+E`) · eww `powermenu` (`Super+Escape`) · `nyxus_powermenu.py` (app menu) | **Three separate surfaces**, all now carrying the urban-alien art. wlogout was being un-themed at runtime by `nyxus-gen-backdrop` rewriting the first `background-image` url in its stylesheet on every wallpaper change; that rewrite is now opt-in to `starfall-backdrop.png` only. The eww overlay's scrim is `0.52/0.60` (was `0.76/0.82`); gate `13ub` fails if it goes back above `0.70`. |
+| **Brand art set** | `~/.config/eww/assets/nyxus-brand-*.png` | Three wordmarks ship: `nyxus-brand-hyprland`, `nyxus-brand-nyxus-hyprland`, `nyxus-brand-sierengowski` — graffiti on nebula brick/wet-pavement scenes, the source for the splash backdrop. *(A standalone `nyxus-brand-nyxus.png` is listed in older revisions of this table but has never existed.)* |
 
 ### Overlay safety (LOCKED)
 
-Every EWW overlay/flyout/fullscreen window is `:focusable false`. This is a
-**hard rule** — a focusable overlay previously created a keyboard trap that
-forced reboots. Never set any overlay back to `:focusable true`.
+Two hard rules, both bought with hard resets:
+
+1. **`:focusable true` on an eww window is a session-wide keyboard grab** in eww
+   0.5. A focusable overlay previously created a keyboard trap that forced
+   reboots.
+2. **Never put a full-screen *input* surface on the `overlay` layer.** While one
+   is mapped, nothing else on the desktop can be clicked, so anything it launches
+   lands behind it and reads as dead. `nyxus-hub`, `dashboard`, `powermenu` and
+   `cheatsheet` were moved to `:stacking "fg"` (TOP) on 2026-07-30 for exactly
+   this reason (gate `13ai`). `screensaver` stays on `overlay` deliberately.
+
+> ⚠ **Known live exception, flagged 2026-07-30, NOT changed by this audit:**
+> `defwindow start-search` in `eww.yuck` is `:stacking "overlay"` **and**
+> `:focusable true` — it is the only `:focusable true` in the file and it breaks
+> both rules at once. It is *mitigated*: `Super+Shift+Z` is a compositor bind that
+> runs `eww close start-search`, so there is a guaranteed way out that does not
+> depend on the surface itself. Left alone because eww surfaces were owned by a
+> concurrent workstream during this audit and because changing focus/layer on a
+> live search box without a session to test in is precisely how this build has
+> trapped the desktop before. **Owner/next agent: decide whether the search box
+> genuinely needs the keyboard grab, and if so document the exception here
+> instead of letting the rule read as absolute.**

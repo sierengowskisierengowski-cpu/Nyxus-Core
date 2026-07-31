@@ -11,20 +11,30 @@ Nyxus-Core is the platform repository for NYXUS and its NYX delivery image.
 
 NYXUS combines:
 - Arch-based operating environment composition
-- Hyprland-centered desktop/runtime configuration with **EWW** bars (top and bottom)
-- Native application payloads and install/runtime scripts — 12 desktop apps with launcher entries plus additional runtime utilities and overlay components
-- Web/API distribution surfaces for platform artifacts
-- ALIEN NEON · TRIPLE-BLACK LAYERED visual design system shared across all GUI components
+- A bespoke **Kage-Ryu** kernel (`linux-kage-ryu`, XanMod-based, Alder-Lake-tuned, security-lab config) as the **primary** kernel, with stock `linux` retained only as a rescue boot entry
+- Hyprland-centered desktop/runtime configuration with **EWW** — **four** bars (top, bottom, left rail, right rail) plus per-station decks, flyouts and OSDs
+- Native application payloads and install/runtime scripts — 13 GTK4 desktop apps with launcher entries (plus a CLI Doctor), additional runtime utilities and overlay components
+- Web/API distribution surfaces for platform artifacts — **no public host is currently deployed**
+- **ALIEN NEON** visual design system (urban-alien graffiti on triple-black glass) shared across all GUI components
 
-### Shipped chrome (r10)
+### Shipped chrome (verified 2026-07-30)
 
 - **Icon theme**: NYXUS-Dark (31 custom SVGs, inherits Papirus-Dark)
-- **Cursor theme**: NYXUS-Aurora (Hyprcursor + XCursor, 12+ shapes)
-- **Wallpaper pack**: 92 backgrounds (9 vector originals + 83 cosmic PNGs across `void` / `deepspace` / `blackhole` / `nebula` categories) — auto-mirrored to SDDM lockscreen, default `nyxus-nebula-01`
-- **Top bar**: live ticker marquee, per-flyout sized panels (network, audio, calendar, notifications, quick settings)
-- **Modes**: Game Mode and Focus Mode toggles (per-output blur/animation/notification policy)
-- **Workspaces**: named workspaces with per-workspace wallpaper via `nyxus-ws-wallpaperd`
-- **Onboarding**: first-run welcome tour (sentinel-gated)
+- **Cursor theme**: NYXUS-Aurora (Hyprcursor + XCursor, 12+ shapes). The name is
+  historical and **unrelated** to the deleted `aurora` accent preset
+- **Wallpaper pack**: alien art only. The **default is `nyxus-urban-alien.png`**,
+  and the same hero resolves for the desktop, the greeter, hyprlock, the
+  screensaver and wlogout. All 10 station wallpapers are alien art, with 32
+  images under `walls/rotation/`. *(This section previously said the default was
+  `nyxus-nebula-01` and that the pack was "auto-mirrored to SDDM lockscreen" —
+  both untrue since the 2026-07-23 alien-walls-only pass.)*
+- **Bars**: live ticker marquee, saucer centre clock that flips to a now-playing
+  face, CAVA visualizer, per-flyout sized panels (network, audio, calendar,
+  notifications, quick settings)
+- **Modes**: Game Mode and Focus Mode toggles (per-output blur/animation/notification policy); Hacker Mode (black / white / red monochrome transform)
+- **Stations**: 10 numbered stations + named annexes (HOME / START / LAB) + 10 companions, with per-station wallpaper via `nyxus-workspace-wallpaperd` *(the name `nyxus-ws-wallpaperd` used here previously has never existed)*
+- **Reactive layer**: the `nyxus-sense` bus → Mood Engine, Machine Whispers, Supernova, Graffiti Memory Wall, and a real threat signal (`nyxus-threatd`) rendered on the GHOST pill
+- **Onboarding**: first-run welcome tour (sentinel-gated) + the Welcome Transmission note
 - **Power**: battery health page, network usage tracker per-app
 - **Apps**: NYXUS Store curated catalog, accent picker theming engine, plugin/extension API for the bar
 - **System polish**: hot corners, night light (gammastep), dynamic wallpaper rotator (sunrise/sunset)
@@ -48,7 +58,23 @@ Nyxus-Core is a monorepo that centralizes:
 3. ISO staging mirrors required runtime payloads into the archiso profile.
 4. NYX ISO is baked and released as the canonical distribution image.
 
-The live ISO boots into NYXUS with a full chrome layer — Hyprland, EWW bars, Dunst notifications, SDDM login theme, the complete Python GTK4 app suite, and NYXUS Phantom (`nyxus-intel`) — all staged at build time from `artifacts/api-server/nyxus-scripts/`.
+The live ISO boots into NYXUS with a full chrome layer — Hyprland, four EWW bars,
+Dunst notifications, the **greetd → regreet (under cage)** login screen, the
+complete Python GTK4 app suite, and NYXUS Phantom (`nyxus-intel`) — all staged at
+build time from `artifacts/api-server/nyxus-scripts/`.
+
+> The SDDM QML theme is still staged but is **dormant**: SDDM was abandoned for
+> greetd on 2026-07-14 and is not in `packages.x86_64`. This line said "SDDM login
+> theme" until 2026-07-30.
+
+> ⚠ **The ISO does not boot a fully-formed desktop by itself, and
+> misunderstanding this is what made the build feel circular for months.** It
+> ships (1) a baked `/etc/skel` — the **core** desktop: hyprland.conf + its
+> shards, all eww bars, theme, wallpaper, keybinds, fully offline — and (2) a
+> first-boot bootstrap (`nyxus-bootstrap`) that layers the heavier web-apps and
+> chrome library on afterwards, from the pre-staged cache at
+> `/opt/nyxus-cache`. The core desktop must **never** depend on the network to
+> come up. Full explanation in [`../../HANDOFF.md`](../../HANDOFF.md) §3.
 
 
 ---

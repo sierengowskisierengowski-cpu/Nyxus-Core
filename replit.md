@@ -1,12 +1,27 @@
 # Replit Notes
 
-This file is limited to Replit-specific operational guidance.
+> ⚠ **The `nyxus-core.replit.app` production host is RETIRED (noted
+> 2026-07-30).** Nothing is deployed there. Every URL pointing at it anywhere in
+> the tree is a **dead fallback**, not a working endpoint — including
+> `resync_base` / `manifest_url` in `/etc/nyxus/nyxus.conf` and the
+> `nyxus-intel.tgz` fetch in `build-iso.sh` (which prefers the in-repo copy, so
+> the bake is unaffected). The ISO does **not** need it: the offline cache at
+> `/opt/nyxus-cache` is baked in and first boot works with no network.
+>
+> **This file is kept anyway, and is not just Replit trivia.** The
+> "User preferences" section below carries two standing owner rules — the
+> auth-lockout ban and the NYXUS BUILD STANDARD — that apply to the whole
+> project regardless of hosting. `AGENTS.md` points here for them. If the
+> Replit-specific framing is ever cleaned up, **those two sections must move,
+> not disappear.**
 
-For canonical project architecture and deployment documentation, use:
-- `docs/README.md`
-- `docs/architecture/*`
-- `docs/deployment/*`
-- `docs/overview/*`
+This file is limited to Replit-specific operational guidance plus the standing
+owner preferences below.
+
+For canonical project state and architecture documentation, use:
+- `HANDOFF.md` — **read this first**; the live build state
+- `docs/README.md` — the documentation map
+- `docs/architecture/*`, `docs/deployment/*`, `docs/overview/*`
 
 ## Replit Development Commands
 

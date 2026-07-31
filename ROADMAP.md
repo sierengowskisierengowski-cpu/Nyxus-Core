@@ -1,10 +1,17 @@
 # NYXUS v2 — Roadmap
 
-> **Status:** living document — updated as milestones are reached
+> **Status:** living document · **corrected 2026-07-30**
 >
 > This roadmap describes the intended direction for NYXUS (delivered via the
 > NYX ISO). It is written to reflect the *current* repository reality as a
 > starting point and to be honest about what is aspirational.
+>
+> ⚠ **Everything here is a GOAL, not a description of the build.** For what is
+> actually true today read **[`HANDOFF.md`](HANDOFF.md)** and
+> [`STATUS.md`](STATUS.md). Two goals in this file were being read as directives
+> and are now explicitly annotated with the owner decisions that override them
+> (Hyprland Lua, and the download host). Do not action a bullet here without
+> checking `HANDOFF.md` first.
 
 ---
 
@@ -14,11 +21,18 @@ NYXUS is a custom Arch Linux distribution built around Hyprland, designed
 to deliver an experience that feels cohesive, polished, and complete — closer
 to a commercial product than a hobbyist rice. The platform combines:
 
-- A hand-crafted Wayland desktop (Hyprland) with a unified design language
-  (DARK MIRROR · TRIPLE-BLACK LAYERED)
+- A hand-crafted Wayland desktop (Hyprland) with a unified design language:
+  **ALIEN NEON** — urban-alien graffiti on triple-black glass. *(The
+  "DARK MIRROR" name this line used to carry was **purged** on 2026-07-23 along
+  with its palette; see [`docs/THEME.md`](docs/THEME.md).)*
+- A bespoke **Kage-Ryu** kernel (XanMod, Alder-Lake-tuned, security-lab config)
+  as the primary kernel, with stock `linux` kept only as a rescue entry
 - A suite of native GTK4 Python applications replacing fragmented system tools
-- A download/distribution API and web presence at nyxus-core.replit.app
+- A download/distribution API and web presence — **host TBD.**
+  `nyxus-core.replit.app` is **retired**; no replacement has been chosen. This
+  is an open owner decision, not a working endpoint
 - An opinionated ISO build pipeline with automated verification
+  (`verify-profile.sh`, whose gates are regression tests for bugs that shipped)
 
 The v2 vision is to ship a bootable NYX ISO that a new user can flash to a USB,
 boot from bare metal, and have a fully working desktop environment within
@@ -77,10 +91,26 @@ boot from bare metal, and have a fully working desktop environment within
 ## Desktop / Hyprland Goals
 
 - **Hyprland Lua config:** all window rules, animations, and binds live in
-  `hyprland.lua` + `conf.d` shards; no deprecated `.conf` syntax.
-- **Named workspaces** with per-workspace wallpaper via `nyxus-ws-wallpaperd`.
-- **EWW bars** (top + bottom): all flyout panels (network, audio, calendar,
-  notifications, quick settings) open real system state; no placeholder data.
+  `hyprland.lua` + shards; no deprecated `.conf` syntax.
+
+  > ⛔ **OWNER DECISION 2026-07-28: DO NOT MIGRATE YET.** Hyprland 0.57 removes
+  > hyprlang, and this profile is `hyprland.conf` + 17 hyprlang shards, so a
+  > premature migration ships an ISO whose desktop config never loads. The
+  > migration is also **big-bang** — if `hyprland.lua` exists, `hyprland.conf` is
+  > never read — and three shards are *generated at runtime*
+  > (`nyxus-stations.conf`, `nyxus-freeform.conf`, `nyxus-monitors.conf`). Order
+  > of operations: **pin the Hyprland version first, stabilise the build, then
+  > migrate on a branch after 0.57 actually ships.** Gate `13x` hard-fails a bake
+  > if the repos offer ≥ 0.57 (override: `NYX_ALLOW_HYPRLAND=1`).
+  > `hyprlock`/`hypridle` keep hyprlang indefinitely; only the compositor entry
+  > point moves.
+
+- **Named workspaces** with per-workspace wallpaper via
+  `nyxus-workspace-wallpaperd`. *(The old name `nyxus-ws-wallpaperd` in this
+  file was wrong — no such binary has ever existed.)*
+- **EWW bars** (four: top, bottom, left rail, right rail): all flyout panels
+  (network, audio, calendar, notifications, quick settings) open real system
+  state; no placeholder data.
 - **Mission Control** (`nyxus-mission-control-toggle`): live workspace
   overview.
 - **Spotlight** (`nyxus-launcher`): file search via tracker3 → fd → find
@@ -123,14 +153,25 @@ boot from bare metal, and have a fully working desktop environment within
 
 ## Documentation / Community Goals
 
+- `HANDOFF.md`: the single mandatory entry point — live build state, delivery
+  model, do-not-repeat gotchas. Everything else is reference.
 - `README.md`: high-level overview with a clear "What works today" section.
-- `STATUS.md`: ground-truth snapshot updated with each significant change.
-- `ROADMAP.md`: (this file) publicly tracked vision.
+- `STATUS.md`: ground-truth repository/CI snapshot updated with each
+  significant change (**not** the same thing as bake readiness).
+- `ROADMAP.md`: (this file) publicly tracked vision — goals only.
 - `SHIPPING.md`: print-before-flash checklist for ISO releases.
+- `docs/KEYBINDS.md`: every active keybind, re-derived from the shipped config.
+- `docs/THEME.md` + `docs/DESIGN_CONTRACT.md`: the locked ALIEN NEON palette and
+  the banned-hex list, both generated from `nyxus_palette.py` / `accent.json`.
 - `docs/` hierarchy: architecture overview, deployment guides, design
-  contract, master checklist.
+  contract, master checklist, dated session briefs.
 - Contributor guide (`CONTRIBUTING.md`) — published.
 - Hardware compatibility matrix — not yet written.
+
+> **Standing rule for every doc in this list:** if a statement can be checked
+> against the tree, check it before writing it, and date the change. Docs that
+> assert a purged palette or a renamed path have twice sent agents to
+> reintroduce banned colour or chase deleted files.
 
 ---
 
@@ -144,10 +185,13 @@ boot from bare metal, and have a fully working desktop environment within
 
 ### Phase B — Verified live boot 🟡
 - Build NYX ISO on Arch Linux host using `build-iso.sh`
-- Boot to greetd + tuigreet, log in as `nyx`
-- `nyxus-bootstrap` completes, EWW bars appear, wallpaper loads
-- All 12 GTK4 apps launch without errors
+- Boot to **greetd → regreet (under cage)**, log in as `nyx` — tuigreet is the
+  text fallback, not the primary greeter
+- Kage-Ryu boots as entry #0 and mounts the live media (`iso9660`/`squashfs`/loop)
+- `nyxus-bootstrap` completes, all four EWW bars appear, wallpaper loads
+- All 13 GTK4 apps launch without errors
 - Settings app: every page reads real system state
+- Splash → greeter well under 15s (it was 102s; see `HANDOFF.md`)
 
 ### Phase C — Installer
 - Calamares disk install tested end-to-end on hardware

@@ -46,7 +46,7 @@ Status legend: **OK** = present, builds, reads+writes real state.
 | `sounds` | Sound Pack | freedesktop/canberra sound theme, per‑event toggles → `nyxus-sound` | OK |
 | `appearance` | Appearance | wallpaper, accent (`nyxus-apply-accent`), font scale, **Hot Corners**, **Dynamic Wallpaper** (self‑healing systemd --user units) | OK |
 | `accessibility` | Accessibility | `hyprctl` cursor size / animations, text scale, assistive‑tool launch + XDG autostart (magnus/wvkbd/orca) | OK |
-| `notifications` | Notifications | detects mako/dunst/swaync, DND toggle, USB‑arrival toasts (`nyxus-usb-watch`) | OK |
+| `notifications` | Notifications | detects mako/dunst/swaync, DND toggle, USB‑arrival toasts (`nyxus-usb-watch`) | ⚠ **`nyxus-usb-watch` does not ship** — absent from `/usr/local/bin` and from `nyxus-scripts` (verified 2026-07-30). The USB‑arrival row has no backing binary |
 | `language` | Language & Region | `nyxus_i18n` + `/etc/locale.conf` (pkexec) + `~/.config/nyxus/locale.conf` | **OK (fixed)** |
 | `editors` | Editors | curated editor bundle, `xdg-mime` default text‑editor | OK |
 | `dock` | Dock | pinned apps / position / autohide → `nyxus-dock` config | OK |
@@ -154,6 +154,12 @@ dead button):
    the missing companion apps (backup/updater/drop/record) + Hot Corners
    daemon; repointed the removed `nyxus-cheatsheet` button to the canonical
    `eww open --toggle cheatsheet` overlay. All wired into `nyxus_install.sh`.
+
+   > ⚠ **Note added 2026-07-30:** `nyxus-cheatsheet` does not ship (correct — it
+   > was removed). But the `cheatsheet` eww window is itself **superseded by
+   > `hotkey-cheatsheet`**, which is what the `Super+/` and `Super+Shift+/` binds
+   > actually open. Nothing else opens plain `cheatsheet`. If this Settings button
+   > is meant to match the keybind, it should target `hotkey-cheatsheet`.
 
 ## Known limitations / decisions for the coordinator
 

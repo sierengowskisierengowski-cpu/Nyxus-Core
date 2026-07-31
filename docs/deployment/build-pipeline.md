@@ -26,7 +26,18 @@ From repository root:
 
 - Missing required environment variables causes Vite build-time failures.
 - Building all packages from root may fail until per-package deployment environment variables are provided.
-- For ISO offline cache staging, API server dist output should be built before ISO baking.
+
+> ⚠ **Corrected 2026-07-30.** This section used to say *"For ISO offline cache
+> staging, API server dist output should be built before ISO baking."* **That is
+> wrong, and following it is actively harmful.** `build-iso.sh` stages
+> `/opt/nyxus-cache` from **`artifacts/api-server/nyxus-scripts/`** — the git
+> source of truth — and only falls back to `artifacts/api-server/dist/nyxus-scripts`
+> if the former is absent. Worse, the bake **rejects** `dist/` outright if it
+> contains dangling symlinks, which is exactly what a build on this host produces
+> (`/home/cosmic/…` links); `dist/` has historically poisoned bakes for that
+> reason. You do **not** need to build `dist/` before baking, and the bake
+> hard-fails rather than ship an online-only ISO. See
+> [`../../iso-builder/README.md`](../../iso-builder/README.md).
 
 
 ---

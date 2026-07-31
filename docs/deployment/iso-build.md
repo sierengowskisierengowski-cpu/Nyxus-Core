@@ -1,5 +1,18 @@
 # NYX ISO Build Pipeline
 
+> ⚠ **SUPERSEDED — read [`../../iso-builder/README.md`](../../iso-builder/README.md)
+> instead.** That file was re-derived from `build-iso.sh` on 2026-07-30 and is the
+> current description of the pipeline. This document is a May-2026 snapshot; the
+> stages below are broadly right in shape but several specifics are wrong, and the
+> four worst have been corrected inline (marked **CORRECTED 2026-07-30**) because
+> following them costs real time:
+>
+> - the output is `nyxus-<date>-x86_64.iso`, **not** `nyx-…`
+> - the offline cache comes from **`nyxus-scripts/`**, not `dist/nyxus-scripts/`
+> - the ISO is ~**9.5–10 GB**, not ~2 GB, so the disk figures were ~5× too small
+> - the **Kage-Ryu kernel** stage is missing entirely, and it is a hard bake
+>   requirement
+
 ## Definition
 
 The NYX ISO pipeline is implemented in `iso-builder/` and produces the NYX distribution image containing NYXUS runtime payloads.
@@ -9,7 +22,12 @@ The NYX ISO pipeline is implemented in `iso-builder/` and produces the NYX distr
 - Arch Linux host
 - Root access
 - `archiso` toolchain (`mkarchiso`, `squashfs-tools`, `libisoburn`, `dosfstools`)
-- Sufficient temporary disk space for build workspace (~6 GB in `/tmp`)
+- **CORRECTED 2026-07-30:** ~**40 GB** free for the build workspace plus ~12 GB
+  for `out/`. The old figure of "~6 GB in `/tmp`" was written when the ISO was
+  ~2 GB; it is now ~9.5–10 GB.
+- Prebuilt `linux-kage-ryu` packages at
+  `~/Projects/arch-custom-kernel/linux-kage-ryu/` — **the bake hard-fails without
+  them**, so it can never silently ship kernel-less.
 
 Install once:
 ```bash
@@ -47,11 +65,25 @@ NYX_ISO_DATE=2026.05.11 sudo ./build-iso.sh
 7. **Bootstrap shims** — stages `nyxus-bootstrap` and `nyxus-wait-bootstrap` (first-run installer hooks fired by Hyprland `exec-once`)
 8. **App launchers** — generates `/usr/local/bin/nyxus-*` wrapper scripts and `/usr/share/applications/io.nyxus.*.desktop` entries for 12 desktop apps
 9. **Phantom staging** — extracts `nyxus-intel.tgz` into `/opt/nyxus-intel/`, seals tamper manifest, stages Phantom launcher and desktop entry
-10. **Offline cache** — mirrors `artifacts/api-server/dist/nyxus-scripts/` to `/opt/nyxus-cache/` (enables offline-first bootstrap on first boot)
-11. **SDDM theme** — extracts `nyxus-sddm-theme.tar.gz` into `/usr/share/sddm/themes/nyxus/` and writes `sddm.conf.d/nyxus.conf`
-12. **OS-level docs** — mirrors `LICENSE.md`, `README.md`, `CHANGELOG.md`, `CREDITS.md` into `airootfs/etc/nyxus/`
-13. **`mkarchiso` execution** — bakes the squashfs and produces the ISO
-14. **Rename** — renames output to canonical `nyx-<ISO_DATE>-x86_64.iso`
+10. **Offline cache** — **CORRECTED 2026-07-30:** mirrors
+    **`artifacts/api-server/nyxus-scripts/`** (the git source of truth) to
+    `/opt/nyxus-cache/`. `dist/nyxus-scripts/` is only a *fallback* and is
+    **rejected outright** if it contains dangling symlinks — which is what a build
+    on this host produces, and it has poisoned bakes before. The bake
+    **hard-fails** if `nyxus_install.sh` would be missing, so an online-only ISO
+    can no longer ship silently.
+11. **SDDM theme** — extracts `nyxus-sddm-theme.tar.gz` into `/usr/share/sddm/themes/nyxus/` and writes `sddm.conf.d/nyxus.conf`. **Dormant** — the live greeter is greetd → regreet, not SDDM
+12. **Security lab** — stages Bifrost, Meli, the honeypot/Docker stack, jeTT and Arsenal (this stage did not exist when this document was written)
+13. **OS-level docs** — mirrors `LICENSE.md`, `README.md`, `CHANGELOG.md`, `CREDITS.md` into `airootfs/etc/nyxus/`
+14. **Kage-Ryu kernel** — **MISSING FROM THIS LIST until 2026-07-30.** Stages the
+    prebuilt packages into a profile-local `[nyxus-local]` repo, appends them to
+    `packages.x86_64`, and rewrites all three live boot menus (grub /
+    systemd-boot / syslinux) so Kage-Ryu is entry **#0** and stock `linux` is a
+    labelled **rescue** entry — all inside the throwaway profile copy.
+    `NYX_WITH_KAGE_RYU=0` opts out.
+15. **`mkarchiso` execution** — bakes the squashfs (`zstd` since 2026-07-30; `NYX_SQUASH_COMP=xz` reverts) and produces the ISO
+16. **Rename** — renames output to canonical **`nyxus-<ISO_DATE>-x86_64.iso`**
+    (**CORRECTED 2026-07-30** — this said `nyx-…`)
 
 ## Inputs and Outputs
 
@@ -63,7 +95,8 @@ NYX_ISO_DATE=2026.05.11 sudo ./build-iso.sh
 - SDDM theme tarball at `artifacts/api-server/nyxus-scripts/nyxus-sddm-theme.tar.gz`
 
 ### Output
-- `iso-builder/out/nyx-<ISO_DATE>-x86_64.iso`
+- **`iso-builder/out/nyxus-<ISO_DATE>-x86_64.iso`** (~9.5–10 GB, gitignored) ·
+  ISO label **`NYXUS_2026_07`** (**CORRECTED 2026-07-30**)
 
 ## Desktop Apps Staged (12 with .desktop entries)
 
@@ -84,10 +117,22 @@ NYX_ISO_DATE=2026.05.11 sudo ./build-iso.sh
 
 ## Common Caveats
 
-- ISO build is not supported in Replit environments.
-- Building without API dist cache produces an online-only first-boot path; run `pnpm --filter @workspace/api-server run build` first to enable offline fallback.
+- ISO build requires an Arch Linux host with root; it cannot run in a container
+  or on a non-Arch distribution.
+- **CORRECTED 2026-07-30:** the old caveat *"Building without API dist cache
+  produces an online-only first-boot path; run `pnpm --filter
+  @workspace/api-server run build` first"* is **wrong**. Do **not** build `dist/`
+  for a bake — the cache comes from `nyxus-scripts/`, and a `dist/` tree built on
+  this host carries `/home/cosmic/…` symlinks that the bake rejects.
+- **Bake only from a clean, committed, idle repo.** The bake reads the profile as
+  it runs, so an in-flight edit ships a partial change set (this cost a stick on
+  2026-07-22).
+- **Run `bash iso-builder/verify-profile.sh` first.** Its gates are regression
+  tests for bugs that already shipped.
 - Build host must be treated as part of release-chain integrity.
-- Set `NYXUS_INTEL_SHA256` in the environment to enforce tarball SHA verification (fail-closed).
+- Set `NYXUS_INTEL_SHA256` in the environment to enforce tarball SHA verification
+  (fail-closed). The network fallback for that tarball points at the **retired**
+  Replit host, so the in-repo copy is what is actually used.
 
 
 ---
