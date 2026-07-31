@@ -2878,7 +2878,7 @@
     ;; did not, leaving a ~44px transparent strip at the bottom where the
     ;; live video wallpaper bled through). The opaque backdrop rides here.
     (box :class "hub-backdrop" :orientation "v" :vexpand true :hexpand true
-         :style "background-color: rgb(3,1,9); background-image: linear-gradient(rgba(4,2,10,0.95), rgba(2,1,7,0.98)), url('assets/nyxus-hero-crew-meet.png'); background-size: cover; background-position: center;"
+         :style "background-color: rgb(3,1,9); background-image: linear-gradient(rgba(4,2,10,0.56), rgba(2,1,7,0.64)), url('assets/nyxus-hero-crew-meet.png'); background-size: cover; background-position: center;"
       (centerbox :vexpand true :hexpand true
         (box)
         (nyxus_hub_layout)
