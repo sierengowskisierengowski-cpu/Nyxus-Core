@@ -965,6 +965,74 @@ FOOTER_SECTION_TITLES = frozenset({"Keybinds", "Reset", "Advanced"})
 # rows, switches, sliders) and only override colour + radius + glow.
 # ──────────────────────────────────────────────────────────────────────
 CSS = f"""
+/* ── libadwaita named colours → NYXUS glass ─────────────────────────
+   The .nyx-* classes only styled the sidebar + chrome; the actual
+   settings CONTENT (Adw.PreferencesGroup cards, rows, switches, header
+   bars, popovers, my show_output/show_editor windows) fell back to
+   libadwaita's DEFAULT palette — grey cards, a blue accent — so the page
+   did not match the rest of the desktop. Overriding libadwaita's named
+   colours here re-skins every stock widget in one place. Accent tracks
+   the live prism violet so a re-accent moves Settings with everything
+   else. */
+@define-color window_bg_color {GLASS_DEEPER};
+@define-color window_fg_color {WHITE_OFF};
+@define-color view_bg_color {GLASS_DEEPER};
+@define-color view_fg_color {WHITE_OFF};
+@define-color card_bg_color {GLASS_DARK};
+@define-color card_fg_color {WHITE_OFF};
+@define-color headerbar_bg_color {GLASS_DEEPEST};
+@define-color headerbar_fg_color {WHITE_OFF};
+@define-color popover_bg_color {GLASS_DARK};
+@define-color popover_fg_color {WHITE_OFF};
+@define-color dialog_bg_color {GLASS_DARK};
+@define-color sidebar_bg_color {GLASS_DEEPEST};
+@define-color accent_color {NEON};
+@define-color accent_bg_color {NEON};
+@define-color accent_fg_color {WHITE_PURE};
+@define-color destructive_color {DANGER_RED};
+@define-color destructive_bg_color {DANGER_RED};
+@define-color success_color {NEON_OK};
+
+/* ── stock Adwaita content widgets → glass ──────────────────────────── */
+.boxed-list, list.boxed-list {{
+    background-color: {GLASS_DARK};
+    border: 1px solid {HAIRLINE_WHITE};
+    border-radius: {RADIUS_CARD}px;
+}}
+list.boxed-list > row {{
+    background-color: transparent;
+    border-bottom: 1px solid {HAIRLINE_INK};
+}}
+row.activatable:hover {{ background-color: alpha({NEON}, 0.08); }}
+row:selected, row.activatable:active {{ background-color: alpha({NEON}, 0.14); }}
+switch:checked {{ background-color: {NEON}; }}
+switch:checked:hover {{ background-color: {NEON}; box-shadow: 0 0 12px alpha({NEON}, 0.5); }}
+check:checked, radio:checked {{ background-color: {NEON}; border-color: {NEON}; }}
+headerbar {{
+    background-color: {GLASS_DEEPEST};
+    box-shadow: none;
+    border-bottom: 1px solid {HAIRLINE_WHITE};
+}}
+preferencesgroup > box > label.title,
+.title-4, .heading {{ color: {WHITE_PURE}; }}
+entry, spinbutton, .entry {{
+    background-color: {GLASS_DEEPER};
+    border: 1px solid {HAIRLINE_WHITE};
+    color: {WHITE_OFF};
+}}
+entry:focus-within {{
+    border-color: {NEON};
+    box-shadow: 0 0 14px alpha({NEON}, 0.30);
+}}
+button.suggested-action {{ background-color: {NEON}; color: {WHITE_PURE}; }}
+button.suggested-action:hover {{ box-shadow: 0 0 14px alpha({NEON}, 0.45); }}
+scrollbar slider {{ background-color: alpha({WHITE_OFF}, 0.18); }}
+scrollbar slider:hover {{ background-color: alpha({NEON}, 0.5); }}
+textview, textview text {{
+    background-color: {GLASS_DEEPER};
+    color: {WHITE_OFF};
+}}
+
 window, .nyx-bg {{
     background-color: {INK_BLACK};
     color: {WHITE_OFF};
