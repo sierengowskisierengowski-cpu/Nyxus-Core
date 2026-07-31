@@ -41,15 +41,15 @@ window {
  * that generation fails. Keep the `margin-left:`/`margin-right:` lines in this
  * exact one-declaration-per-line shape — the generator rewrites them by line. */
 frame, .frame {
-    background-color: rgba(5, 2, 11, 0.82);
-    border: 1px solid rgba(125, 61, 255, 0.32);
+    background-color: rgba(14, 10, 26, 0.42);
+    border: 1px solid rgba(125, 61, 255, 0.28);
     border-top: 2px solid #7d3dff;
-    border-radius: 16px;
-    padding: 22px 26px;
+    border-radius: 22px;
+    padding: 24px 28px;
     margin-left: 1360px;
     margin-right: 40px;
-    box-shadow: 0 0 24px rgba(125, 61, 255, 0.30),
-                0 8px 28px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 0 30px rgba(125, 61, 255, 0.32),
+                0 10px 34px rgba(0, 0, 0, 0.5);
 }
 frame > border { border: none; }
 
@@ -58,29 +58,33 @@ label {
     text-shadow: 0 0 8px rgba(238, 242, 250, 0.20);
 }
 
+/* Match the lock card: Caveat greeting in prism violet with a soft glow,
+   chunky Orbitron clock glowing the same accent — sharp, clean, eye-candy. */
 #greeting_label, .greeting {
     font-family: "Caveat", "Inter Display", cursive;
-    font-size: 26px;
-    color: #c8ccd6;
+    font-size: 30px;
+    color: #7d3dff;
+    text-shadow: 0 0 14px rgba(125, 61, 255, 0.5);
 }
 
 #clock_label, .clock {
     font-family: "Orbitron", "JetBrains Mono", monospace;
     font-weight: 800;
-    font-size: 30px;
-    color: #eef2fa;
-    text-shadow: 0 0 14px rgba(125, 61, 255, 0.45);
+    font-size: 38px;
+    color: #7d3dff;
+    text-shadow: 0 0 20px rgba(125, 61, 255, 0.6),
+                 0 0 40px rgba(125, 61, 255, 0.3);
 }
 
 /* text entry - void-deep with accent focus */
 entry {
-    background-color: rgba(5, 1, 13, 0.92);
+    background-color: rgba(10, 8, 20, 0.55);
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 10px;
+    border-radius: 12px;
     color: #eef2fa;
     caret-color: #7d3dff;
     font-family: "JetBrains Mono", monospace;
-    padding: 10px 12px;
+    padding: 11px 13px;
     min-height: 22px;
 }
 entry:focus, entry:focus-within {
