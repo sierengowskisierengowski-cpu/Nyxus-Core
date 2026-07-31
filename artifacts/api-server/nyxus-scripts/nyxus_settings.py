@@ -2095,6 +2095,28 @@ def show_editor(path: str, win=None, *, title: str = "") -> None:
     win_.present()
 
 
+# ── package install / update — no terminal ────────────────────────────
+# Installing software used to open `sudo pacman -S <pkg>` in a terminal.
+# The owner's rule is that a user never needs a terminal, so these run the
+# nyxus-pkg-helper under pkexec and show the result in the native output
+# window. The helper only knows `install <validated-names>` and `update`.
+PKG_HELPER = str(LIBEXEC / "nyxus-pkg-helper")
+
+
+def install_packages(win, title: str, *pkgs: str) -> None:
+    show_output(
+        f"Install {title}", [PKG_HELPER, "install", *pkgs], win,
+        subtitle="Installing… you'll be asked for your password once",
+        privileged=True, timeout=900)
+
+
+def update_system(win) -> None:
+    show_output(
+        "System update", [PKG_HELPER, "update"], win,
+        subtitle="Full upgrade… you'll be asked for your password once",
+        privileged=True, timeout=1800)
+
+
 # ──────────────────────────────────────────────────────────────────────
 # DISPLAY — hyprctl monitors, brightnessctl, gammastep / hyprsunset
 # ──────────────────────────────────────────────────────────────────────
@@ -6190,9 +6212,9 @@ class UpdatesPage(SectionPage):
             css="nyx-pill-ok"))
         tools.add(action_row(
             "Run full system upgrade",
-            "Opens a terminal with sudo pacman -Syu",
+            "Full system upgrade (asks for your password)",
             "Run",
-            lambda: open_terminal("sudo pacman -Syu", self.win)))
+            lambda: update_system(self.win)))
         for helper in ("paru", "yay"):
             if have(helper):
                 tools.add(action_row(
@@ -11134,9 +11156,9 @@ class BackupPage(SectionPage):
             self.add_group(grp)
             grp.add(action_row(
                 "Install Timeshift",
-                "Opens a terminal with sudo pacman -S timeshift",
+                "Installs Timeshift (asks for your password)",
                 "Install",
-                lambda: open_terminal("sudo pacman -S timeshift", self.win)))
+                lambda: install_packages(self.win, "Timeshift", "timeshift")))
             self.add_pill(status_pill("missing", "danger"))
             return
 
@@ -11466,10 +11488,10 @@ class DropPage(SectionPage):
             self.add_group(grp)
             grp.add(action_row(
                 "Install KDE Connect",
-                "Opens a terminal with sudo pacman -S kdeconnect",
+                "Installs KDE Connect (asks for your password)",
                 "Install",
-                lambda: open_terminal("sudo pacman -S kdeconnect",
-                                      self.win)))
+                lambda: install_packages(self.win, "KDE Connect",
+                                         "kdeconnect")))
             self.add_pill(status_pill("missing", "danger"))
             return
 
@@ -12707,7 +12729,7 @@ class UsbPage(SectionPage):
                 "Install usbguard",
                 "sudo pacman -S usbguard",
                 "Install",
-                lambda: open_terminal("sudo pacman -S usbguard", self.win)))
+                lambda: install_packages(self.win, "usbguard", "usbguard")))
             self.add_pill(status_pill("missing", "danger"))
             return
 

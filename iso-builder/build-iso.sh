@@ -1211,7 +1211,7 @@ mkdir -p "${LIBEXEC}" "${LBIN}"
 # build log to explain why. Add new helpers here.
 for h in nyxus-backup-helper nyxus-usbwatch-helper \
          nyxus-account-helper nyxus-doctor-helper \
-         nyxus-loginconfig-helper; do
+         nyxus-loginconfig-helper nyxus-pkg-helper; do
   if [[ -f "${NS}/${h}" ]]; then
     install -Dm755 "${NS}/${h}" "${LIBEXEC}/${h}"
   fi

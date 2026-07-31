@@ -632,7 +632,7 @@ if dl "com.nyxus.parental.policy" "/tmp/com.nyxus.parental.policy.new"; then
 fi
 
 # ── Completion wave helpers/policies (account/backup/doctor/usbwatch etc.) ──
-for h in nyxus-account-helper nyxus-backup-helper nyxus-doctor-helper nyxus-usbwatch-helper; do
+for h in nyxus-account-helper nyxus-backup-helper nyxus-doctor-helper nyxus-usbwatch-helper nyxus-loginconfig-helper nyxus-pkg-helper; do
   if dl "${h}" "/tmp/${h}.new"; then
     if sudo -n install -Dm0755 "/tmp/${h}.new" "/usr/local/libexec/${h}" 2>/dev/null; then
       ok "${h} → /usr/local/libexec/"

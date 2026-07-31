@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<!-- NYXUS package helper polkit policy   rev 2026-07-31 r1
+     Lets Settings install/update packages through nyxus-pkg-helper so the
+     user never needs a terminal. exec.path is the fixed helper binary
+     (which only runs `pacman install <validated-names>` or `pacman -Syu`),
+     NOT a generic interpreter. -->
+<policyconfig>
+  <vendor>NYXUS</vendor>
+  <vendor_url>https://github.com/sierengowskisierengowski-cpu/Nyxus-Core</vendor_url>
+  <icon_name>system-software-install</icon_name>
+
+  <action id="com.nyxus.pkg.manage">
+    <description>Install or update system packages</description>
+    <message>Authentication is required to install or update software.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/libexec/nyxus-pkg-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>
