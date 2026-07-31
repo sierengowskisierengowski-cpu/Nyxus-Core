@@ -2,6 +2,65 @@
 
 
 
+> **★★★★ WHERE WE STAND — 2026-07-31 ~16:50 EDT · BAKE READY ★★★★**  
+> **Status: BAKE READY.** Repo is clean idle `main`, profile verified, disk
+> and Kage-Ryu pkgs confirmed. Owner runs the bake (agent cannot sudo).
+>
+> | | |
+> |---|---|
+> | **HEAD** | `9345b028` (`docs(handoff): record PR #83 squash-landed on main`) — will be the parent of this HANDOFF note |
+> | **Sync** | `main` == `origin/main` (0 ahead / 0 behind) after this push |
+> | **Tree** | Clean (only untracked `.claude/` — do not commit) |
+> | **verify-profile.sh** | **PASS** (exit 0). WARNs only: customize not +x (mkarchiso chmods); Hyprland host 0.55.4 vs ISO 0.56.0 skew; optional station apps (`cursor`/`strawberry`/`audacious`/`thunar`) absent; some eww namespaces on catch-all layer-blur floor |
+> | **Disk** | `/` has **~203G free** (well above the ~40G bake headroom). `iso-builder/out/` holds ~30G of older ISOs (07.26–07.29) — optional cleanup, not blocking |
+> | **Kage-Ryu** | Findable at `~/Projects/arch-custom-kernel/linux-kage-ryu/` — `linux-kage-ryu-7.0.12-1` + headers (2026-07-24). Bake defaults `NYX_WITH_KAGE_RYU=1`. Opt out: `NYX_WITH_KAGE_RYU=0` |
+> | **PR #83** | Squash-merged as `6e378926`. Feat-branch tip content matches `main` (docs-only delta). **No open PRs.** |
+> | **Left behind (do not merge)** | `local-stash-work` (junk). Stale locals: `cursor/*`, `feat/kage-ryu-autoactivate-wiring`, `fix/overlay-gap-and-login-pickup`, `feat/settings-increment-2-no-terminal` (already squash-landed), `merge-pr-76` — all superseded or already on `main` |
+>
+> **Sync live session ≠ ISO boot.** Copying repo configs into `~/.config` only
+> updates the Hyprland session he is *already in*. It does **not** exercise
+> greetd/regreet, firstboot timing, squashfs, skel→home bootstrap, or the
+> dragon UEFI menu. To see **everything** shipped: bake → flash → UEFI boot.
+>
+> ### Exact bake + flash (owner, root)
+> ```bash
+> cd ~/Nyxus-Core/iso-builder
+> sudo ./build-iso.sh
+> # → iso-builder/out/nyxus-2026.07.31-x86_64.iso  (date follows bake day)
+>
+> # Confirm USB letter EVERY time (letter moves). NEVER of=/dev/nvme*
+> lsblk -o NAME,SIZE,TYPE,TRAN,MODEL,LABEL
+> sudo dd if=~/Nyxus-Core/iso-builder/out/nyxus-2026.07.31-x86_64.iso \
+>         of=/dev/sdX bs=4M status=progress oflag=sync
+> ```
+> Boot: MSI F11 → **UEFI: SanDisk** (or whatever the stick is) → dragon menu →
+> Kage-Ryu entry #0 (stock `linux` = rescue). Login `nyx` / `nyx`.
+>
+> ### Verify on the stick after boot
+> 1. **Login** — greetd greeter appears (not blank cursor). Fall-through /
+>    tuigreet path if regreet fails. Contract file path exists for Settings.
+> 2. **Hub / Power gap** — open Hub and NYXUS Power; no 40px top strip. Bars
+>    hide/restore cleanly on `"fg"` overlays; screensaver/deepcore stay edge-to-edge.
+> 3. **Settings** — Login Screen drives greetd contract (not dead SDDM path);
+>    theming/glass; most former terminal escapes are native windows (~5 left).
+> 4. **urban-alien** — greeter / hyprlock / screensaver / wlogout hero art.
+> 5. **Stations** — HOME/START/GHOST/FORGE/LAB/ARSENAL (+ WAVE/CORE etc.);
+>    launches work (guarded optional apps may no-op).
+> 6. **Build stamp** — `/etc/nyxus-build` matches this bake's source commit.
+> 7. **Kernel** — `uname -r` shows kage-ryu; GRUB entry #0 is Kage-Ryu.
+> 8. **Bars / wallpaper / reactive** — bars up, urban-alien wall, sense/mood live.
+>
+> ### Known unfinished (will still show on the stick — not bake blockers)
+> - Login card eye candy (time/weather polish) still incomplete vs owner wish.
+> - Settings not "Windows/Apple complete"; a few terminal escapes remain.
+> - Hub background redesign (owner request) not done as a separate pass.
+> - Live host still on Hyprland 0.55.4; ISO ships 0.56.0 — first stick boot is
+>   the real 0.56 verification.
+> - Live-box blank login (SDDM bak on *installed* system) is a host repair, not
+>   an ISO defect — fresh stick uses greetd. Optional:
+>   `sudo bash scripts/nyxus-fix-login.sh` + reboot on the installed box.
+> - Do **not** sync live session unless the owner explicitly asks; he chose ISO.
+
 > **★★ PR #83 LANDED ON MAIN — 2026-07-31 ~16:45 EDT ★★**  
 > Squash-merged https://github.com/sierengowskisierengowski-cpu/Nyxus-Core/pull/83  
 > as `6e378926` (`Settings: greetd login contract, full theming, no-terminal
