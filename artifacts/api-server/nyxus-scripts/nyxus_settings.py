@@ -2306,8 +2306,9 @@ class DisplayPage(SectionPage):
             tools.add(action_row("Open wlr-randr",
                                  "Inspect outputs in a terminal",
                                  "Launch",
-                                 lambda: open_terminal("wlr-randr; read _",
-                                                       self.win)))
+                                 lambda: show_output(
+                                     "Display outputs", "wlr-randr",
+                                     self.win)))
         if have("nwg-displays"):
             tools.add(action_row("Open nwg-displays",
                                  "GUI multi-monitor arranger",
@@ -5866,10 +5867,13 @@ class StoragePage(SectionPage):
     STANDARD_KEYBIND_TOKENS = ["nautilus", "nyxus-files", "thunar"]
     STANDARD_RESET_NS = []
     STANDARD_ADVANCED = [
-        ("Run interactive disk usage (ncdu)",
-         "Drill into ~/ to find large files",
-         "Run",
-         lambda: open_terminal("ncdu ~ || du -sh ~/* 2>/dev/null", None)),
+        ("Disk usage — largest items in home",
+         "The biggest folders and files directly under ~/",
+         "Show",
+         lambda: show_output(
+             "Disk usage — home",
+             "du -h -d1 ~ 2>/dev/null | sort -rh | head -40", None,
+             subtitle="Largest items directly under your home")),
         ("Vacuum systemd journal (>30 days)",
          "journalctl --vacuum-time=30d",
          "Vacuum",
@@ -12793,8 +12797,7 @@ class EditorsPage(SectionPage):
                 f"{sub}{' · not installed' if not present else ''}",
                 "Launch" if present else "Install",
                 (lambda b=binname: fire_and_forget(b)) if present
-                else (lambda b=binname: open_terminal(
-                    f"sudo pacman -S {b}; read -p 'enter to close'", self.win))))
+                else (lambda b=binname: install_packages(self.win, b, b))))
 
         # Default editor for text/* via xdg-mime
         default = Adw.PreferencesGroup(
@@ -13265,10 +13268,10 @@ class DohPage(SectionPage):
             self.add_group(grp)
             grp.add(action_row(
                 "Install dnscrypt-proxy",
-                "sudo pacman -S dnscrypt-proxy",
+                "Encrypted DNS — installs dnscrypt-proxy",
                 "Install",
-                lambda: open_terminal(
-                    "sudo pacman -S dnscrypt-proxy", self.win)))
+                lambda: install_packages(
+                    self.win, "dnscrypt-proxy", "dnscrypt-proxy")))
             self.add_pill(status_pill("missing", "danger"))
             return
 
