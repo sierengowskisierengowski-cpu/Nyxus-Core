@@ -316,3 +316,21 @@ AXIOM 19, honeypot 12) which are still one `git checkout` from being lost.
 | **Stashes** | Verified HANDOFF claim; dropped all (incl. temporary dirty `nyxus-fix-login.sh` WIP superseded by `63447519`) |
 | **Bake** | Hub/Power gap is fixed+verified live; **still do not bake** until blank login is verified on the owner's box after apply+reboot |
 
+---
+
+## 9. Branch audit follow-up — 2026-07-31 ~08:40 EDT (second pass)
+
+| Action | Detail |
+|---|---|
+| **Fetch** | `git fetch --all --prune` — clean |
+| **main** | `bfb01abc` — **0 ahead / 0 behind** `origin/main`. Nothing to push from prior landings. |
+| **Merged this pass** | **None** — no unique merge-ready commits sitting only off main |
+| **Open PR** | **#83** (DRAFT) `feat/settings-increment-2-no-terminal` — Increment 2 greetd `/etc/nyxus/login-screen.conf` contract + polkit helper + ~113→~21 terminal escapes. Already on origin; CI green; **not merged** because the greeter still does not *read* the contract (PR body "Not done"). |
+| **Stale duplicate** | `origin/fix/overlay-gap-and-login-pickup` tip carries the same two Settings commits (identical `git patch-id`) as the feat branch — leftover after PR #82; do not treat as new overlay work |
+| **Left alone** | `local-stash-work` (forbidden); vault archives; `nyxus-hyprland-055-fixes`; deep-internal (cherry-equivalent already on main via #77/#80); gone remote locals (cloud-agent, restore-last-night, etc.) |
+| **babysit** | Not present (good) |
+| **Stashes / WIP** | Empty stash list; working tree clean except untracked `.claude/` |
+| **Bake** | Still **do not bake** until blank login apply+reboot is verified live |
+
+**Correction to §A.4 / earlier brief:** Settings Increment 2 is no longer "no code" — it exists as draft PR #83 on origin. Greeter consumption + remaining ~21 interactive dialogs are still open.
+

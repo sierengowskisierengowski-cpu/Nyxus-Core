@@ -1,5 +1,19 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
+
+> **★★ BRANCH AUDIT — 2026-07-31 ~08:40 EDT (second pass) ★★**  
+> Re-fetched `origin`, rechecked every local/remote tip and open PRs.  
+> **Nothing new to merge.** `main` == `origin/main` at `bfb01abc` (0/0).  
+> **Open:** draft PR **#83** (`feat/settings-increment-2-no-terminal`) — greetd
+> login contract + no-terminal conversion; CI green; **left as draft** (greeter
+> does not consume the contract yet). Branch already on origin.  
+> **Accidentally duplicated (same patch-id) on** `origin/fix/overlay-gap-and-login-pickup`
+> — ignore; real tip for that work is the feat branch / PR #83. Overlay pickup
+> itself already merged via PR #82.  
+> **Still NOT merged:** `local-stash-work`; no `babysit/land-open-prs`.  
+> Archives / hyprland-055 / deep-internal / cloud-agent locals — superseded or
+> already squash-landed. No stashes. Untracked `.claude/` only (ignored for commit).
+
 > **★★ BRANCH AUDIT — 2026-07-31 ~06:30 EDT ★★**  
 > Swept local + `origin` branches so nothing valuable sits only off `main`.  
 > **Merged (FF) into `main`:** `fix/overlay-gap-and-login-pickup` → tip `7f54cd3a`
