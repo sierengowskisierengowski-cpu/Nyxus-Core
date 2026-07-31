@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# NYXUS · package privileged helper · rev 2026-07-31 r1
+# Installed at /usr/local/libexec/nyxus-pkg-helper.
+# Invoked via pkexec from Settings so the user can install/update packages
+# WITHOUT ever opening a terminal (the no-terminal mandate).
+#
+# ★ SECURITY. This runs pacman as root. Two guards, both required:
+#   1. Only two verbs exist — `install` and `update`. Nothing else runs.
+#   2. Every package name is validated against the Arch package-name
+#      grammar before it reaches pacman, so no shell metacharacter,
+#      option (`-`), or path can be smuggled in. --noconfirm is safe here
+#      because the caller already authenticated through polkit for this
+#      specific action; -Sy/-Syu never partial-upgrades (always full).
+set -u
+
+LOG=/var/log/nyxus/pkg.log
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
+# Brace group so a failed log-open cannot become the helper's last stderr
+# line (Settings shows that to the user). Same trap as nyxus-account-helper.
+log()  { { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; } 2>/dev/null || true; }
+fail() { echo "nyxus-pkg-helper: $*" >&2; log "FAIL: $*"; exit 2; }
+
+# Arch package names: start alnum, then alnum @ . _ + - . No leading dash
+# (would be read as an option), no slash, no whitespace, no shell chars.
+valid_pkg() { [[ "$1" =~ ^[a-z0-9][a-z0-9@._+-]*$ ]]; }
+
+[[ $# -ge 1 ]] || { echo "usage: $0 <install PKG... | update>" >&2; exit 2; }
+ACTION="$1"; shift
+
+case "$ACTION" in
+  install)
+    [[ $# -ge 1 ]] || fail "install needs at least one package"
+    for p in "$@"; do
+      valid_pkg "$p" || fail "invalid package name: $p"
+    done
+    log "install $*"
+    echo "▌ Installing: $*"
+    echo
+    # --needed skips already-installed; -S implies a fresh sync of the
+    # named packages' DBs without a dangerous partial -Sy of everything.
+    exec pacman -S --needed --noconfirm --noprogressbar "$@"
+    ;;
+  update)
+    [[ $# -eq 0 ]] || fail "update takes no arguments"
+    log "full system upgrade"
+    echo "▌ Full system upgrade (pacman -Syu)"
+    echo
+    exec pacman -Syu --noconfirm --noprogressbar
+    ;;
+  *)
+    fail "unknown action: $ACTION (only install/update)"
+    ;;
+esac

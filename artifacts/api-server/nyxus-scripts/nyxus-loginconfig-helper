@@ -1,0 +1,280 @@
+#!/usr/bin/env bash
+# NYXUS · Login screen contract helper · rev 2026-07-31 r1
+# Installed at /usr/local/libexec/nyxus-loginconfig-helper.
+# Invoked via pkexec from Settings ▸ Login Screen.
+#
+# ── WHAT THIS IS ─────────────────────────────────────────────────────────
+# Settings cannot write /etc, and the greeter cannot read the user's
+# dconf/JSON state (it runs as the `greeter` user, before any session
+# exists). This helper is the only writer of the contract between them:
+#
+#     /etc/nyxus/login-screen.conf
+#
+# It is a flat, shell-sourceable KEY=VALUE file because the consumer
+# (nyxus-greeter) is a bash script — a JSON contract would need a parser in
+# the one place we most want zero dependencies.
+#
+# ★ SECURITY — THE CONTRACT IS SOURCED BY ROOT.
+# nyxus-greeter runs `source` (or equivalent) on this file. Any value that
+# reached it unvalidated would be command injection with root privileges:
+#   NYXUS_LOGIN_GREETING='$(rm -rf /)'
+# Two independent defences, both required, neither sufficient alone:
+#   1. A per-key allowlist regex below. A key that is not listed is
+#      rejected outright; a value that does not match its pattern is
+#      rejected with a plain message.
+#   2. Values are written single-quoted (see shquote), so whatever survived
+#      step 1 is inert when the file is sourced. NOT printf '%q': its
+#      output cannot be reversed by a plain-text reader, so every save
+#      re-escaped the last one and values drifted.
+# Do not "simplify" either one away, and do not add a key without giving
+# it a pattern.
+set -u
+
+CONF_DIR=/etc/nyxus
+CONF="${CONF_DIR}/login-screen.conf"
+LOG=/var/log/nyxus/loginconfig.log
+
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
+# Brace group: `cmd >>"$LOG" 2>/dev/null` does NOT suppress a failure to
+# OPEN $LOG — bash reports that itself, before the redirect applies, and
+# Settings shows the LAST stderr line to the user. Same trap that made
+# nyxus-account-helper report "permission denied" for every rejection.
+log()  { { printf '%s %s\n' "$(date -Iseconds)" "$*" >>"$LOG"; } 2>/dev/null || true; }
+fail() { echo "nyxus-loginconfig-helper: $*" >&2; log "FAIL: $*"; exit 2; }
+
+# ── the schema ───────────────────────────────────────────────────────────
+# key -> validating regex. Adding a key here is the ONLY way to make it
+# settable; see the security note above.
+declare -A SCHEMA=(
+  [NYXUS_LOGIN_SHOW_CLOCK]='^[01]$'
+  [NYXUS_LOGIN_CLOCK_FORMAT]='^[A-Za-z0-9:%[:space:]/._-]{1,32}$'
+  [NYXUS_LOGIN_SHOW_WEATHER]='^[01]$'
+  [NYXUS_LOGIN_WEATHER_LOCATION]='^[A-Za-z0-9[:space:],._-]{0,64}$'
+  [NYXUS_LOGIN_WEATHER_UNITS]='^[CF]$'
+  [NYXUS_LOGIN_SHOW_USERNAME]='^[01]$'
+  [NYXUS_LOGIN_SHOW_ADMIN_BADGE]='^[01]$'
+  [NYXUS_LOGIN_GREETING]="^[A-Za-z0-9[:space:],.'!?-]{0,48}\$"
+  [NYXUS_LOGIN_BACKGROUND]='^/[A-Za-z0-9/._-]{1,200}\.(png|jpg|jpeg)$'
+)
+
+# Shipped defaults — also what `reset` restores.
+declare -A DEFAULTS=(
+  [NYXUS_LOGIN_SHOW_CLOCK]=1
+  [NYXUS_LOGIN_CLOCK_FORMAT]='%H:%M'
+  [NYXUS_LOGIN_SHOW_WEATHER]=0
+  [NYXUS_LOGIN_WEATHER_LOCATION]=''
+  [NYXUS_LOGIN_WEATHER_UNITS]='F'
+  [NYXUS_LOGIN_SHOW_USERNAME]=1
+  [NYXUS_LOGIN_SHOW_ADMIN_BADGE]=0
+  [NYXUS_LOGIN_GREETING]='welcome back'
+  [NYXUS_LOGIN_BACKGROUND]='/usr/share/backgrounds/nyxus/nyxus-urban-alien.png'
+)
+
+# Deterministic key order, so the file diffs cleanly between writes.
+ORDER=(
+  NYXUS_LOGIN_SHOW_CLOCK NYXUS_LOGIN_CLOCK_FORMAT
+  NYXUS_LOGIN_SHOW_WEATHER NYXUS_LOGIN_WEATHER_LOCATION
+  NYXUS_LOGIN_WEATHER_UNITS NYXUS_LOGIN_SHOW_USERNAME
+  NYXUS_LOGIN_SHOW_ADMIN_BADGE NYXUS_LOGIN_GREETING
+  NYXUS_LOGIN_BACKGROUND
+)
+
+validate() {
+  local k="$1" v="$2" pat="${SCHEMA[$1]:-}"
+  [[ -n "$pat" ]] || fail "unknown setting: $k"
+  [[ "$v" =~ $pat ]] || fail "invalid value for $k"
+  # A background must actually exist and be world-readable, or the greeter
+  # silently falls back to flat ink — the exact failure that made the lock
+  # screen look "plain blue" for days with nothing reporting it.
+  if [[ "$k" == "NYXUS_LOGIN_BACKGROUND" && -n "$v" ]]; then
+    [[ -f "$v" ]] || fail "background not found: $v"
+    [[ -r "$v" ]] || fail "background not readable: $v"
+  fi
+}
+
+# Read current values into CUR, falling back to DEFAULTS. Parsed by hand
+# rather than sourced — this helper must never execute the file it guards.
+declare -A CUR=()
+load_current() {
+  local k
+  for k in "${ORDER[@]}"; do CUR[$k]="${DEFAULTS[$k]}"; done
+  [[ -r "$CONF" ]] || return 0
+  local line key val
+  while IFS= read -r line; do
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" == *=* ]] || continue
+    key="${line%%=*}"; val="${line#*=}"
+    key="${key//[[:space:]]/}"
+    [[ -n "${SCHEMA[$key]:-}" ]] || continue
+    # Reverse of shquote() below: strip the surrounding single quotes, then
+    # turn each '\'' escape back into a bare quote. This MUST be the exact
+    # inverse of the writer — an approximate one re-escapes on every save
+    # and the value drifts ("welcome back" -> "welcome\ back" -> ...).
+    if [[ ${#val} -ge 2 && "$val" == \'*\' ]]; then
+      val="${val:1:${#val}-2}"
+      val="${val//\'\\\'\'/\'}"
+    fi
+    CUR[$key]="$val"
+  done < "$CONF"
+}
+
+# Single-quote a value for safe sourcing, escaping embedded quotes as '\''.
+# Deliberately NOT printf %q: %q's output is not reversible by a plain-text
+# parser, so every save re-escaped the previous save's backslashes and the
+# value drifted. This encoding is exactly invertible by load_current().
+shquote() {
+  local s="${1-}"
+  s="${s//\'/\'\\\'\'}"
+  printf "'%s'" "$s"
+}
+
+write_conf() {
+  mkdir -p "$CONF_DIR" || fail "cannot create $CONF_DIR"
+  local tmp; tmp="$(mktemp "${CONF}.XXXXXX")" || fail "cannot create temp file"
+  {
+    echo "# NYXUS — login screen contract."
+    echo "# Written by nyxus-loginconfig-helper; edited via Settings > Login Screen."
+    echo "# Consumed by nyxus-greeter. Values are single-quoted: safe to source."
+    echo "# Generated $(date -Iseconds)"
+    local k
+    for k in "${ORDER[@]}"; do
+      printf '%s=%s\n' "$k" "$(shquote "${CUR[$k]}")"
+    done
+  } > "$tmp" || fail "write failed"
+  chmod 0644 "$tmp"
+  # Atomic swap: the greeter may read this at any moment, including during
+  # a write. A partial contract would break login, not just theming.
+  mv -f "$tmp" "$CONF" || fail "could not install $CONF"
+}
+
+# ── apply the contract to the thing that actually renders ────────────────
+# The contract is the record of intent; regreet.toml is the derived
+# artifact. regreet reads /etc/greetd/regreet.toml, which the `greeter`
+# user cannot write — but this helper already runs as root at the moment
+# the user presses Apply, so the translation happens here rather than
+# teaching the bash greeter to parse TOML at login time.
+#
+# ★ A malformed regreet.toml breaks LOGIN, not just theming. So: only the
+# three keys the contract owns are touched, the edit is done in python
+# (never sed across a structured file), the result is parsed back before
+# it is installed, and the swap is atomic. If anything fails the existing
+# file is left exactly as it was — a stale greeting is survivable, an
+# unparseable greeter config is not.
+REGREET_TOML=/etc/greetd/regreet.toml
+
+apply_regreet() {
+  [[ -f "$REGREET_TOML" ]] || { log "regreet.toml absent — nothing to apply"; return 0; }
+  command -v python3 >/dev/null 2>&1 || { log "python3 absent — skipping regreet apply"; return 0; }
+
+  python3 - "$REGREET_TOML" \
+      "${CUR[NYXUS_LOGIN_GREETING]}" \
+      "${CUR[NYXUS_LOGIN_SHOW_CLOCK]}" \
+      "${CUR[NYXUS_LOGIN_CLOCK_FORMAT]}" <<'PY' || { log "regreet apply failed — left unchanged"; return 0; }
+import re, sys, os, tempfile
+
+path, greeting, show_clock, clock_fmt = sys.argv[1:5]
+src = open(path, encoding="utf-8").read()
+
+def set_key(text, section, key, value):
+    """Replace key= inside [section] only. Never touches other sections."""
+    sec = re.search(rf'^\[{re.escape(section)}\]\s*$', text, re.M)
+    if not sec:
+        return text
+    start = sec.end()
+    nxt = re.search(r'^\[', text[start:], re.M)
+    end = start + (nxt.start() if nxt else len(text) - start)
+    body = text[start:end]
+    esc = value.replace('\\', '\\\\').replace('"', '\\"')
+    line = f'{key} = "{esc}"'
+    # [ \t]* not \s* — \s matches newlines, so the pattern swallowed the
+    # line break before the key and welded it onto the section header
+    # ("[appearance]greeting_msg = ..."), which is not valid TOML.
+    if re.search(rf'^[ \t]*{re.escape(key)}[ \t]*=', body, re.M):
+        body = re.sub(rf'^[ \t]*{re.escape(key)}[ \t]*=.*$', line, body,
+                      count=1, flags=re.M)
+    else:
+        body = body.rstrip("\n") + "\n" + line + "\n"
+    return text[:start] + body + text[end:]
+
+out = set_key(src, "appearance", "greeting_msg", greeting)
+if show_clock == "1":
+    out = set_key(out, "widget.clock", "format", clock_fmt)
+    # A clock section that does not exist cannot be given a format.
+    if not re.search(r'^\[widget\.clock\]\s*$', out, re.M):
+        out = out.rstrip("\n") + f'\n\n[widget.clock]\nformat = "{clock_fmt}"\nresolution = "1000ms"\n'
+else:
+    # Drop the whole [widget.clock] block: regreet shows the clock whenever
+    # the section is present, so blanking `format` is not "off".
+    out = re.sub(r'^\[widget\.clock\]\s*$.*?(?=^\[|\Z)', '', out, flags=re.M | re.S)
+
+# Parse back before installing. tomllib is stdlib on 3.11+; if it is not
+# available we still refuse to install something we could not check.
+try:
+    import tomllib
+    tomllib.loads(out)
+except ModuleNotFoundError:
+    pass
+except Exception as e:
+    sys.stderr.write(f"refusing to install unparseable regreet.toml: {e}\n")
+    sys.exit(1)
+
+d = os.path.dirname(path)
+fd, tmp = tempfile.mkstemp(dir=d, prefix=".regreet.toml.")
+with os.fdopen(fd, "w", encoding="utf-8") as fh:
+    fh.write(out)
+os.chmod(tmp, 0o644)
+os.replace(tmp, path)
+PY
+  log "applied contract to $REGREET_TOML"
+}
+
+[[ $# -ge 1 ]] || { echo "usage: $0 <set KEY VALUE | reset | show | apply>" >&2; exit 2; }
+ACTION="$1"; shift
+
+case "$ACTION" in
+  set)
+    [[ $# -eq 2 ]] || fail "usage: set <KEY> <VALUE>"
+    validate "$1" "$2"
+    load_current
+    CUR[$1]="$2"
+    write_conf
+    apply_regreet
+    log "set $1=$2"
+    echo "ok"
+    ;;
+  set-many)
+    # Several keys in one authentication prompt — one pkexec instead of
+    # nine when the user changes a whole page.
+    (( $# % 2 == 0 )) || fail "set-many needs KEY VALUE pairs"
+    load_current
+    while (( $# )); do
+      validate "$1" "$2"
+      CUR[$1]="$2"
+      log "set $1=$2"
+      shift 2
+    done
+    write_conf
+    apply_regreet
+    echo "ok"
+    ;;
+  reset)
+    local_k=""
+    for local_k in "${ORDER[@]}"; do CUR[$local_k]="${DEFAULTS[$local_k]}"; done
+    write_conf
+    apply_regreet
+    log "reset to defaults"
+    echo "ok"
+    ;;
+  apply)
+    load_current
+    apply_regreet
+    echo "ok"
+    ;;
+  show)
+    load_current
+    for k in "${ORDER[@]}"; do printf '%s=%s\n' "$k" "${CUR[$k]}"; done
+    ;;
+  *)
+    fail "unknown action: $ACTION"
+    ;;
+esac

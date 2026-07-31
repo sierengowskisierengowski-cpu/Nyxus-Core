@@ -1204,8 +1204,14 @@ LBIN="${PROFILE_DIR}/airootfs/usr/local/bin"
 mkdir -p "${LIBEXEC}" "${LBIN}"
 
 # Wave-4 helper binaries authored in nyxus-scripts → /usr/local/libexec
+# NOTE this is an explicit allowlist, unlike the polkit loop below which
+# globs com.nyxus.*.policy. A helper added to nyxus-scripts but not named
+# here is silently absent from the ISO, and the Settings page that needs it
+# renders its "helper missing" state on a fresh install with nothing in the
+# build log to explain why. Add new helpers here.
 for h in nyxus-backup-helper nyxus-usbwatch-helper \
-         nyxus-account-helper nyxus-doctor-helper; do
+         nyxus-account-helper nyxus-doctor-helper \
+         nyxus-loginconfig-helper nyxus-pkg-helper; do
   if [[ -f "${NS}/${h}" ]]; then
     install -Dm755 "${NS}/${h}" "${LIBEXEC}/${h}"
   fi
