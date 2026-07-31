@@ -23,7 +23,13 @@ import cairo
 HOME   = os.path.expanduser("~")
 CFG    = os.path.join(HOME, ".config", "nyxus")
 GDIR   = os.path.join(CFG, "graffiti")
-BASE_SRC = os.path.join(HOME, ".config", "hypr", "walls", "nyxus-graffiti-space.png")
+# The memory wall sprays your activity onto a real wall in the art, so it wants
+# a scene with a large flat graffitied surface. It used nyxus-graffiti-space,
+# which was dropped on 2026-07-30 (bright pop-art collage, off the urban-alien
+# style spec). nyxus-rot-street-cosmos has the tag-friendly wall this needs and
+# is on-spec. Note the rotation/ subdir — the whole nyxus-rot-* set lives there.
+BASE_SRC = os.path.join(HOME, ".config", "hypr", "walls", "rotation",
+                        "nyxus-rot-street-cosmos.png")
 BASE     = os.path.join(GDIR, "base.png")          # scaled base cache
 LAYER    = os.path.join(GDIR, "layer.png")         # persistent accreting tags
 OUT      = os.path.join(GDIR, "graffiti-memory.png")

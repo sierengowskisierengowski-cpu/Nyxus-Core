@@ -17,28 +17,21 @@
 set -u
 
 LIST="${NYXUS_WALL_LIST:-${HOME}/.config/nyxus/wall-rotation.list}"
-WALLDIRS=("${HOME}/.config/hypr/walls" "/usr/share/backgrounds/nyxus")
+WALLDIRS=("${HOME}/.config/hypr/walls" "${HOME}/.config/hypr/walls/rotation" "/usr/share/backgrounds/nyxus")
 CACHE="${HOME}/.cache/nyxus"
 LOCK_WALL="${CACHE}/lock-wall.png"
 INTERVAL="${NYXUS_WALL_INTERVAL:-1200}"   # desktop daemon: rotate every 20 min
 
 # Built-in fallback set (used only if the list file is missing/empty).
-# ALIEN THEME ONLY — no hacker-mode / demon / sierengowski brand walls here
-# (they are not the alien desktop theme). These slugs exist as flat files in
-# both ~/.config/hypr/walls and /usr/share/backgrounds/nyxus.
-FALLBACK=(nyxus-urban-alien nyxus-login-wall nyxus-desktop-hero nyxus-graffiti-space nyxus-demon nyxus-hacker-mode-a nyxus-hacker-mode-b)
+# graffiti-space and demon were dropped 2026-07-30 (off the urban-alien style
+# spec). A fallback naming a deleted file silently costs you a rotation slot.
+FALLBACK=(nyxus-urban-alien nyxus-login-wall nyxus-desktop-hero nyxus-rot-saucer-alley nyxus-rot-subway-cosmos nyxus-hacker-mode-a nyxus-hacker-mode-b)
 
 resolve() {  # slug -> first existing file path
-  # Search each wall dir AND its rotation/ subdir. The curated alien set
-  # (nyxus-rot-*) ships under ~/.config/hypr/walls/rotation/, so without the
-  # rotation/ lookup every alien slug in wall-rotation.list silently failed to
-  # resolve and the rotator fell back to the non-alien built-in set.
-  local slug="$1" d ext sub
+  local slug="$1" d ext
   for d in "${WALLDIRS[@]}"; do
-    for sub in "" "/rotation"; do
-      for ext in png jpg jpeg svg; do
-        [ -f "${d}${sub}/${slug}.${ext}" ] && { printf '%s\n' "${d}${sub}/${slug}.${ext}"; return 0; }
-      done
+    for ext in png jpg jpeg svg; do
+      [ -f "${d}/${slug}.${ext}" ] && { printf '%s\n' "${d}/${slug}.${ext}"; return 0; }
     done
   done
   return 1

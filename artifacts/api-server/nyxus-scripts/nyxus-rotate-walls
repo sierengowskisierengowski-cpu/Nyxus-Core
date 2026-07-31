@@ -23,7 +23,9 @@ LOCK_WALL="${CACHE}/lock-wall.png"
 INTERVAL="${NYXUS_WALL_INTERVAL:-1200}"   # desktop daemon: rotate every 20 min
 
 # Built-in fallback set (used only if the list file is missing/empty).
-FALLBACK=(nyxus-urban-alien nyxus-login-wall nyxus-desktop-hero nyxus-graffiti-space nyxus-demon nyxus-hacker-mode-a nyxus-hacker-mode-b)
+# graffiti-space and demon were dropped 2026-07-30 (off the urban-alien style
+# spec). A fallback naming a deleted file silently costs you a rotation slot.
+FALLBACK=(nyxus-urban-alien nyxus-login-wall nyxus-desktop-hero nyxus-rot-saucer-alley nyxus-rot-subway-cosmos nyxus-hacker-mode-a nyxus-hacker-mode-b)
 
 resolve() {  # slug -> first existing file path
   local slug="$1" d ext

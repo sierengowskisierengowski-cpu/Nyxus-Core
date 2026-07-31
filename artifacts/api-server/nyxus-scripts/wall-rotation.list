@@ -1,8 +1,10 @@
 # ============================================================
 #  NYXUS - wallpaper rotation set  (ALIEN THEME ONLY)
 #  ~/.config/nyxus/wall-rotation.list
-#  Curated 2026-07-21 to the urban-alien graffiti-space art ONLY.
-#  Alien set includes urban-alien, graffiti, and demon. Hacker-mode art is
+#  Curated 2026-07-21; re-cut 2026-07-30 to the measured urban-alien style
+#  spec ONLY (see HANDOFF: near-black frame, blue->violet->magenta arc).
+#  Dropped that day: graffiti-space (pop-art collage), demon (not an alien),
+#  rot-black-void (99.8% pure black). Hacker-mode art is
 #  reserved for actual hacker-mode (not ambient rotation) — see nyxus-hacker-mode.
 #  Still excluded: kageryu dragon, sierengowski brand, void-vortex, cinematic packs.
 #  One slug per line; resolves in ~/.config/hypr/walls[/rotation]
@@ -14,8 +16,6 @@
 nyxus-urban-alien
 nyxus-login-wall
 nyxus-desktop-hero
-nyxus-graffiti-space
-nyxus-demon
 
 # -- urban-alien rotation collection (walls/rotation/) --
 nyxus-rot-alien-block-party
@@ -24,7 +24,6 @@ nyxus-rot-alien-pose
 nyxus-rot-beam-down
 nyxus-rot-beam-up
 nyxus-rot-big-bang
-nyxus-rot-black-void
 nyxus-rot-bodega-cosmos
 nyxus-rot-corner-store-night
 nyxus-rot-court-saucer

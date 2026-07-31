@@ -29,7 +29,10 @@ set -euo pipefail
 
 STILL="${1:-}"
 if [[ -z "${STILL}" ]]; then
-  STILL="$HOME/.config/hypr/walls/nyxus-graffiti-space.png"
+  # Was nyxus-graffiti-space.png, dropped 2026-07-30. wallpaper.conf normally
+  # overrides this two lines down; this is only the no-config default, and it
+  # has to name a file that exists or the script exits 1 before it gets there.
+  STILL="$HOME/.config/hypr/walls/nyxus-urban-alien.png"
   [[ -f "$HOME/.config/nyxus/wallpaper.conf" ]] && \
     . "$HOME/.config/nyxus/wallpaper.conf" 2>/dev/null && \
     STILL="${WALLPAPER_PATH:-$STILL}"
@@ -303,6 +306,10 @@ scene_generic() {
 }
 
 case "${STEM}" in
+  # DEAD KEY since 2026-07-30: nyxus-graffiti-space.png was dropped, so this
+  # branch can no longer be selected and everything falls to GENERIC.
+  # scene_graffiti() is kept intact because its hand-tuned coordinates are
+  # worth re-keying to another scene rather than rewriting from scratch.
   nyxus-graffiti-space) echo "engine: SCENE (graffiti-space)"; scene_graffiti ;;
   nyxus-void-vortex)    echo "engine: SCENE (void-vortex)";    scene_vortex ;;
   *)                    echo "engine: GENERIC";                scene_generic ;;

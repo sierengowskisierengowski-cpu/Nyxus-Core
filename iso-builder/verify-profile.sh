@@ -2132,6 +2132,66 @@ done <<< "${_uc_names}"
 (( _uc_fail == 0 )) \
   && ok "all ${_uc_n} configured wallpapers resolve to a file the bake installs"
 
+# ── 13ud. no shipped consumer names a wallpaper that does not exist ──────────
+# 13uc checks the STAGING half: a wallpaper a config names must have a source
+# the bake installs. This is the REFERENCE half, and it is the one that bites
+# when art is *removed* rather than added. On 2026-07-30 five images were
+# dropped (a VectorStock-watermarked mural, plus graffiti-space, demon,
+# login-stars and rot-black-void) and between them they were named in eleven
+# places nobody would think to grep: the station and workspace matrices, three
+# wall-rotation lists, nyxus-rotate-walls' built-in FALLBACK array,
+# nyxus-graffiti-wall's BASE_SRC, the screensaver's candidate chain,
+# nyxus-livewall-generate's no-config default, nyxus_install.sh's _soft_wall
+# list, nyxus_chrome's app-background pool, and two SDDM installers.
+#
+# A dangling wallpaper reference never errors. It falls through to a black
+# desktop, a blank lock surface, or flat cream behind every app window — which
+# is precisely the silent-failure shape this project keeps re-shipping.
+hd "13ud. every wallpaper a shipped consumer names actually exists"
+_ud_fail=0; _ud_refs=0
+# Names produced at RUNTIME rather than shipped as art. These are supposed to
+# be absent from the source tree; flagging them would train people to ignore
+# this gate.
+_UD_RUNTIME='nyxus-login-bg|nyxus-lock-wall|nyxus-wallpaper|nyxus-graffiti-memory|nyxus-live-|nyxus-collage-|nyxus-livewall-flagship'
+_UD_CONSUMERS=(
+  "${NS}/nyxus-rotate-walls"            "${NS}/nyxus-graffiti-wall"
+  "${NS}/nyxus-livewall-generate"       "${NS}/nyxus_screensaver.py"
+  "${NS}/nyxus_chrome.py"               "${NS}/nyxus_install.sh"
+  "${NS}/wall-rotation.list"            "${NS}/sddm-theme/install.sh"
+  "${NYXCFG}/stations.json"             "${NYXCFG}/stations-hacker.json"
+  "${NYXCFG}/workspaces.json"           "${NYXCFG}/wallpaper.json"
+  "${AIROOT}/etc/skel/.config/nyxus/stations.json"
+  "${AIROOT}/etc/skel/.config/nyxus/workspaces.json"
+  "${AIROOT}/etc/skel/.config/nyxus/wallpaper.json"
+  "${AIROOT}/etc/skel/.config/nyxus/wall-rotation.list"
+  "${AIROOT}/usr/share/nyxus/wall-rotation.list"
+  "${AIROOT}/usr/share/backgrounds/nyxus/manifest.tsv"
+)
+for _ud_f in "${_UD_CONSUMERS[@]}"; do
+  [[ -r "${_ud_f}" ]] || continue
+  # A wall-rotation.list stores bare slugs; everything else writes the filename.
+  # Strip comments first so a line explaining a REMOVED image is not read as a
+  # reference to it — that would make the gate impossible to ever satisfy.
+  while IFS= read -r _ud_w; do
+    [[ -n "${_ud_w}" ]] || continue
+    printf '%s' "${_ud_w}" | grep -qE "^(${_UD_RUNTIME})" && continue
+    _ud_refs=$((_ud_refs + 1))
+    [[ -f "${NS}/${_ud_w}.png" || -f "${NS}/hypr-walls/rotation/${_ud_w}.png" ]] && continue
+    fail "${_ud_f##*/} references the wallpaper '${_ud_w}', which exists nowhere the bake stages from. A missing wall does not error — it renders as a black desktop, a blank lock surface, or flat cream behind an app window"
+    _ud_fail=$((_ud_fail + 1))
+  done < <(sed -E 's/(^|[[:space:]])#.*$//; s@^[[:space:]]*(//|;;).*$@@' "${_ud_f}" \
+             | grep -oE 'nyxus-[a-z0-9][a-z0-9-]*\.png' | sed 's/\.png$//' | sort -u
+             if [[ "${_ud_f}" == *wall-rotation.list ]]; then
+               # NOTE: `tr -d '[:space:]'` here would delete the NEWLINES too and
+               # hand the loop all 29 slugs concatenated into one word, which is
+               # how this gate first shipped: it reported a single impossible
+               # filename instead of checking anything. Strip per line.
+               sed -E 's/#.*$//' "${_ud_f}" | grep -oE '^[[:space:]]*nyxus-[a-z0-9-]+' | sed 's/[[:space:]]//g' | sort -u
+             fi)
+done
+(( _ud_fail == 0 )) \
+  && ok "checked ${_ud_refs} wallpaper reference(s) across ${#_UD_CONSUMERS[@]} shipped consumers — none dangle"
+
 # ── 13ah. eww handlers must fit inside eww's run_command budget ──────────────
 # eww runs every :onclick/:onchange as `/bin/sh -c <cmd>` and SIGKILLs that
 # shell after :timeout, which DEFAULTS TO 200 MILLISECONDS (crates/eww

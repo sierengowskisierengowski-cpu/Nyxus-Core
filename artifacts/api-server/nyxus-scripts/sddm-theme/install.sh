@@ -39,8 +39,10 @@ rm -f "${THEME_DIR}/install.sh"
 # graffiti art, so the login wall now WINS this chain. The starfield used to
 # win, which is why a reinstall kept reverting the login screen away from the
 # rest of the theme. Priority: nyxus-login-wall.png (urban alien, matches
-# hyprlock) → nyxus-urban-alien.png → nyxus-login-stars.png (starfield,
-# legacy) → bundled background.png → network fetch.
+# hyprlock) → nyxus-urban-alien.png → bundled background.png → network fetch.
+# The nyxus-login-stars.png (starfield) rungs were removed 2026-07-30 when that
+# image was dropped for being a monochrome galaxy with no subject; a fallback
+# rung naming a deleted file is a rung that silently does nothing.
 # Scaled to 1920x1080 cover so the panel never letterboxes.
 _nyx_set_bg() {
     if command -v magick &>/dev/null; then
@@ -56,15 +58,12 @@ if [[ -f "${SCRIPT_DIR}/../nyxus-login-wall.png" ]]; then
 elif [[ -f "${SCRIPT_DIR}/../nyxus-urban-alien.png" ]]; then
     echo "${C_DIM}→${C_RST} Using NYXUS urban-alien hero"
     _nyx_set_bg "${SCRIPT_DIR}/../nyxus-urban-alien.png"
-elif [[ -f "${SCRIPT_DIR}/../nyxus-login-stars.png" ]]; then
-    echo "${C_DIM}→${C_RST} Using NYXUS starfield (legacy fallback)"
-    _nyx_set_bg "${SCRIPT_DIR}/../nyxus-login-stars.png"
 elif [[ -f "${SCRIPT_DIR}/background.png" ]]; then
     echo "${C_DIM}→${C_RST} Using bundled background.png"
 elif command -v curl &>/dev/null; then
-    echo "${C_WARN}→${C_RST} Downloading NYXUS starfield ..."
+    echo "${C_WARN}→${C_RST} Downloading NYXUS urban-alien wall ..."
     curl -fsSL -o "${THEME_DIR}/background.png" \
-        "${NYX_BASE}/nyxus-login-stars.png" \
+        "${NYX_BASE}/nyxus-urban-alien.png" \
         || echo "${C_WARN}⚠  Wallpaper download failed — drop a background.png in ${THEME_DIR}/${C_RST}"
 fi
 

@@ -546,18 +546,22 @@ for cf in hyprlock.conf hypridle.conf; do
 done
 
 # 4b.5 REMOVED (audit A8): branded hyprlock.conf no longer reads from
-# ~/.config/nyxus/wallpaper.png. It now reads ~/.config/hypr/walls/nyxus-login-stars.png.
-# That path is provisioned by the 4b.6 block immediately below.
+# ~/.config/nyxus/wallpaper.png. The wall it does read is provisioned by the
+# 4b.6 block immediately below.
 
 # 4b.6  Hyprland walls/ refresh — keeps the lockscreen + default desktop bg
 # in sync. hyprland.conf points swaybg at nyxus-urban-alien.png, and
-# hyprlock.conf points its background at nyxus-login-stars.png. Both must
-# live in ~/.config/hypr/walls/ or the session boots to a black screen
-# and Hyprlock 404s into a blank lock surface.
+# hyprlock.conf pins its background to the same hero at
+# /usr/share/backgrounds/nyxus/nyxus-urban-alien.png. (Until 2026-07-30 this
+# said nyxus-login-stars.png; that was already stale — e5c381d1 repointed
+# hyprlock on 2026-07-24 — and the starfield has since been dropped for being
+# a monochrome galaxy with no subject.) These must live in
+# ~/.config/hypr/walls/ or the session boots to a black screen and Hyprlock
+# 404s into a blank lock surface.
 HYPR_WALLS="$REAL_HOME/.config/hypr/walls"
 mkdir -p "$HYPR_WALLS"
 chown "$REAL_USER:$REAL_USER" "$HYPR_WALLS"
-for w in nyxus-login-stars.png nyxus-urban-alien.png nyxus-hyprlock-eye.png; do
+for w in nyxus-urban-alien.png nyxus-hyprlock-eye.png; do
   wdst="$HYPR_WALLS/$w"
   if curl -fsSL --max-time 60 "$PROD/$w" -o "$wdst.new"; then
     if [[ -s "$wdst.new" ]]; then
@@ -703,7 +707,7 @@ fi
 # 4.5b  Pull background images (palette mirror only — waybar refresh removed)
 NYX_BG_DIR="$NYX_HOME_DIR/backgrounds"
 mkdir -p "$NYX_BG_DIR"; chown "$REAL_USER:$REAL_USER" "$NYX_BG_DIR"
-for bg in nyxus-urban-alien.png nyxus-login-wall.png nyxus-desktop-hero.png nyxus-graffiti-space.png nyxus-monogram-mist.png nyxus-topbar-mist.png; do
+for bg in nyxus-urban-alien.png nyxus-login-wall.png nyxus-desktop-hero.png nyxus-monogram-mist.png nyxus-topbar-mist.png; do
   bgdst="$NYX_BG_DIR/$bg"
   if [[ ! -f "$bgdst" ]] || [[ "${1:-}" == "--force-bg" ]]; then
     if curl -fsSL --max-time 60 "$PROD/$bg" -o "$bgdst.new"; then

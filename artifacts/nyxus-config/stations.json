@@ -55,7 +55,7 @@
       "code": "PL",
       "hue": "gold",
       "tagline": "Comms · Signal · Chat",
-      "wallpaper": "nyxus-graffiti-space.png",
+      "wallpaper": "nyxus-rot-alien-hangout-music.png",
       "launch": "firefox",
       "half": { "name": "BEACON", "code": "BC", "hue": "gold", "tagline": "Beacon · Feeds · Boards" }
     },
@@ -65,7 +65,7 @@
       "code": "WV",
       "hue": "orange",
       "tagline": "Media · Sound · Stream",
-      "wallpaper": "nyxus-graffiti-01.png",
+      "wallpaper": "nyxus-rot-alien-block-party.png",
       "launch": "sh -c 'command -v strawberry >/dev/null && exec strawberry; command -v audacious >/dev/null && exec audacious; command -v cava >/dev/null && exec alacritty --title \"NYXUS WAVE\" -e cava; command -v pavucontrol >/dev/null && exec pavucontrol; exec alacritty'",
       "half": { "name": "MIXER", "code": "MX", "hue": "orange", "tagline": "Mixer · Levels · Routing" }
     },
@@ -75,7 +75,7 @@
       "code": "CR",
       "hue": "blue",
       "tagline": "Files · Data · Vault",
-      "wallpaper": "nyxus-graffiti-04.png",
+      "wallpaper": "nyxus-rot-warehouse-portal.png",
       "launch": "sh -c 'command -v thunar >/dev/null && exec thunar; command -v nautilus >/dev/null && exec nautilus; command -v nyxus-files >/dev/null && exec nyxus-files; exec alacritty'",
       "half": { "name": "VAULT", "code": "VT", "hue": "blue", "tagline": "Vault · Keys · Archive" }
     },
@@ -85,7 +85,7 @@
       "code": "MS",
       "hue": "pink",
       "tagline": "Network · NOC · Mesh",
-      "wallpaper": "nyxus-graffiti-08.png",
+      "wallpaper": "nyxus-rot-saucer-fleet.png",
       "launch": "sh -c 'alacritty --title \"GowskiNet NOC\" -e sh -c \"command -v sharknoc >/dev/null && exec sharknoc --watch || exec btop\"'",
       "half": { "name": "SCAN", "code": "SN", "hue": "pink", "tagline": "Scan · Hosts · Routes" }
     },
@@ -95,7 +95,7 @@
       "code": "SC",
       "hue": "purple",
       "tagline": "Notes · Docs · Scribe",
-      "wallpaper": "nyxus-graffiti-11.png",
+      "wallpaper": "nyxus-rot-corner-store-night.png",
       "launch": "sh -c 'command -v nyxus-notepad >/dev/null && nyxus-notepad || python3 ~/.nyxus/nyxus_notepad.py'",
       "half": { "name": "BOARD", "code": "BD", "hue": "purple", "tagline": "Board · Tasks · Plan" }
     },
@@ -105,7 +105,7 @@
       "code": "BF",
       "hue": "green",
       "tagline": "Guardian · EDR · Watch",
-      "wallpaper": "nyxus-graffiti-16.png",
+      "wallpaper": "nyxus-rot-beam-down.png",
       "launch": "nyxus-webapp bifrost",
       "half": { "name": "SENTRY", "code": "SY", "hue": "green", "tagline": "Sentry · Alerts · Feed" }
     },

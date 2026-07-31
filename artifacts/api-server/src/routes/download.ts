@@ -299,15 +299,12 @@ const ALLOWED_FILES: Record<string, string> = {
   "nyxus-urban-alien.png":        "nyxus-urban-alien.png",
   "nyxus-login-wall.png":         "nyxus-login-wall.png",
   "nyxus-desktop-hero.png":       "nyxus-desktop-hero.png",
-  "nyxus-graffiti-space.png":     "nyxus-graffiti-space.png",
   "nyxus-hacker-mode-a.png":      "nyxus-hacker-mode-a.png",
   "nyxus-hacker-mode-b.png":      "nyxus-hacker-mode-b.png",
-  "nyxus-demon.png":              "nyxus-demon.png",
 
   // ── ★ BRAND / UI CHROME ASSETS (logos, bars — not desktop wallpapers) ────
   "nyxus-taskbar-bg.png":         "nyxus-taskbar-bg.png",
   "nyxus-rightbar-bg.png":        "nyxus-rightbar-bg.png",
-  "nyxus-login-stars.png":        "nyxus-login-stars.png",
   "nyxus-monogram-mist.png":      "nyxus-monogram-mist.png",
   "nyxus-topbar-mist.png":        "nyxus-topbar-mist.png",
   "nyxus-hyprlock-eye.png":       "nyxus-hyprlock-eye.png",
@@ -336,7 +333,6 @@ const ALLOWED_FILES: Record<string, string> = {
 
   // ── ★ GRAFFITI ASSETS (24 chrome backgrounds) ────────────────────────────
   "nyxus-graffiti-01.png": "nyxus-graffiti-01.png",
-  "nyxus-graffiti-02.png": "nyxus-graffiti-02.png",
   "nyxus-graffiti-03.png": "nyxus-graffiti-03.png",
   "nyxus-graffiti-04.png": "nyxus-graffiti-04.png",
   "nyxus-graffiti-05.png": "nyxus-graffiti-05.png",

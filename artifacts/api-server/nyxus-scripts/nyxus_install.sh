@@ -447,14 +447,12 @@ _soft_wall() { dl "$1" "$WALLS_DIR/$1" || printf "  ${DIM}(optional wall missing
 _soft_wall "nyxus-urban-alien.png"
 _soft_wall "nyxus-login-wall.png"
 _soft_wall "nyxus-desktop-hero.png"
-_soft_wall "nyxus-graffiti-space.png"
 # UI chrome panels (not desktop wallpapers)
 _soft_wall "nyxus-taskbar-bg.png"
 _soft_wall "nyxus-rightbar-bg.png"
 _soft_wall "nyxus-monogram-mist.png"
 _soft_wall "nyxus-topbar-mist.png"
 _soft_wall "nyxus-hyprlock-eye.png"
-_soft_wall "nyxus-login-stars.png"
 _soft_wall "nyxus-bar-stone.png"
 
 # ── APP BACKGROUNDS (neon splat panels — used by all GTK apps) ────────────────

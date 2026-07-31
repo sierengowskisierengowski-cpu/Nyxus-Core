@@ -19,11 +19,14 @@ fi
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC="${REPO}/artifacts/api-server/nyxus-scripts/sddm-theme"
 THEME_DIR="/usr/share/sddm/themes/nyxus"
-STARS="${REPO}/artifacts/api-server/nyxus-scripts/nyxus-login-stars.png"
+# Was nyxus-login-stars.png until 2026-07-30; that starfield was dropped, and
+# copying a nonexistent file left SDDM on whatever background.png happened to
+# be in the theme dir.
+WALL="${REPO}/artifacts/api-server/nyxus-scripts/nyxus-urban-alien.png"
 
 mkdir -p "${THEME_DIR}" /etc/sddm.conf.d
 rsync -a --exclude='install.sh' "${SRC}/" "${THEME_DIR}/"
-[[ -f "$STARS" ]] && cp "$STARS" "${THEME_DIR}/background.png"
+[[ -f "$WALL" ]] && cp "$WALL" "${THEME_DIR}/background.png"
 chmod 755 "${THEME_DIR}"
 find "${THEME_DIR}" -type f -exec chmod 644 {} \;
 

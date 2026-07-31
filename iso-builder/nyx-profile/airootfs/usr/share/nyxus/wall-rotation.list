@@ -5,9 +5,17 @@
 #  The greeter runs as the `greeter` user and can only read system paths,
 #  so this list uses slugs that exist as FLAT files under
 #  /usr/share/backgrounds/nyxus/ (the greeter does not search rotation/).
-#  Curated 2026-07-23 to the urban-alien / "NYXUS HYPRLAND" graffiti art
-#  ONLY — includes demon / hacker-mode (alien art). Still excludes kageryu
-#  dragon, sierengowski brand, and cinematic non-alien packs.
+#  Re-cut 2026-07-30 to the measured urban-alien style spec (HANDOFF: a
+#  near-black frame, one blue->violet->magenta hue arc). Dropped that day:
+#  graffiti-space (pop-art collage), demon (not an alien), and the
+#  nyxus-graffiti-NN splatter set. Still excludes kageryu dragon,
+#  sierengowski brand, and cinematic non-alien packs.
+#
+#  NOTE: nothing reads this today. nyxus-greeter stopped consulting it when
+#  e5c381d1 pinned the login background to nyxus-urban-alien. It is kept
+#  correct so that re-enabling rotation is a one-line change and not an
+#  archaeology exercise — and because a list naming deleted files is exactly
+#  how a blank login background gets shipped.
 #  One slug per line; anything after '#' is a comment.
 #  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================================
@@ -15,12 +23,3 @@
 nyxus-urban-alien           # the urban-alien street scene
 nyxus-login-wall            # "NYXUS HYPRLAND CUSTOMS" alien shop
 nyxus-desktop-hero          # NYXUS alien hero scene
-nyxus-graffiti-space        # graffiti-space alien scene
-nyxus-demon
-nyxus-graffiti-01
-nyxus-graffiti-04
-nyxus-graffiti-08
-nyxus-graffiti-11
-nyxus-graffiti-16
-nyxus-graffiti-20
-nyxus-graffiti-24

@@ -77,19 +77,55 @@ def rainbow_markup(text: str) -> str:
     return "".join(out)
 
 
-# ── Graffiti image background (hand-painted walls, page-aware) ──────────────
-_IMAGE_POOL = [f"nyxus-graffiti-{i:02d}.png" for i in range(1, 25)]
+# ── Urban-alien image background (page-aware) ───────────────────────────────
+# This pool WAS `nyxus-graffiti-01..24`, and those were the wrong pictures: the
+# 2026-07-30 style audit measured them at 16-74% of their colour weight outside
+# the urban-alien hue arc, six of them more than half white, all of them between
+# 192x108 and 300x168 px — rainbow paint-splatter stock art, upscaled ~6x behind
+# every NYXUS window. One even carried a VectorStock watermark. The owner's
+# instruction was "the same style" everywhere, measured against the body-shop
+# mural, so the pool now points at the 28-image urban-alien rotation set, which
+# already scores on-spec (off-arc ~0.0%, 1536x1024) and needed no new art.
+#
+# nyxus-rot-black-void is deliberately absent: 99.8% pure black with one star,
+# which behind a window is indistinguishable from having no background at all.
+_IMAGE_POOL = [
+    "nyxus-rot-alien-block-party.png",   "nyxus-rot-alien-hangout-music.png",
+    "nyxus-rot-alien-pose.png",          "nyxus-rot-beam-down.png",
+    "nyxus-rot-beam-up.png",             "nyxus-rot-big-bang.png",
+    "nyxus-rot-bodega-cosmos.png",       "nyxus-rot-corner-store-night.png",
+    "nyxus-rot-court-saucer.png",        "nyxus-rot-deep-void-stars.png",
+    "nyxus-rot-empty-lot-saucer.png",    "nyxus-rot-fire-escape-nebula.png",
+    "nyxus-rot-floating-alien-city.png", "nyxus-rot-milkyway-void.png",
+    "nyxus-rot-nebula-cruise.png",       "nyxus-rot-rooftop.png",
+    "nyxus-rot-rooftop-session.png",     "nyxus-rot-saucer-alley.png",
+    "nyxus-rot-saucer-fleet.png",        "nyxus-rot-saucer-solo.png",
+    "nyxus-rot-saucer-underside.png",    "nyxus-rot-sierengowski.png",
+    "nyxus-rot-street-cosmos.png",       "nyxus-rot-subway-cosmos.png",
+    "nyxus-rot-subway-void.png",         "nyxus-rot-twin-moon-walk.png",
+    "nyxus-rot-warehouse-portal.png",
+]
 _IMAGE_BASE_URL = "https://nyxus-core.replit.app/api/download/nyxus"
 _IMAGE_CACHE_DIR = Path.home() / ".cache" / "nyxus" / "graffiti"
 
-# Local-first sources (rev 2026-07-23): the ISO ships every graffiti mural, so
-# app backgrounds must render OFFLINE — the old production server is retired.
+# Local-first sources (rev 2026-07-23): the ISO ships every mural, so app
+# backgrounds must render OFFLINE — the old production server is retired.
 # These dirs are checked before any network fetch; the retired URL above is now
 # only a dev-only last resort that simply fails silently offline.
+#
+# The rotation/ subdirs are NOT optional (rev 2026-07-30). Every nyxus-rot-*.png
+# lives one level down, so with only the three parent dirs listed here
+# _seed_from_local would miss the entire pool and every app window would fall
+# back to flat cream while trying to fetch from a server that no longer exists.
+# This is the same subdir miss that made 27 of the 32 rotation wallpapers absent
+# from every stick baked before 2026-07-29.
 _LOCAL_IMAGE_DIRS = [
     Path.home() / ".config" / "hypr" / "walls",
+    Path.home() / ".config" / "hypr" / "walls" / "rotation",
     Path("/opt/nyxus-cache/hypr-walls"),
+    Path("/opt/nyxus-cache/hypr-walls/rotation"),
     Path("/usr/share/backgrounds/nyxus"),
+    Path("/usr/share/backgrounds/nyxus/rotation"),
 ]
 
 
@@ -149,6 +185,11 @@ def _ensure_frost_tile(name: str) -> str:
     return ""
 
 # Per-app default image picks. Each NYXUS app has a signature mural.
+# These are INDICES into _IMAGE_POOL, and the pool was repointed on 2026-07-30
+# from the off-style graffiti splatter to the urban-alien rotation set, so every
+# app now wears a different (and on-style) scene than it did. The indices are
+# all < 27 so nothing falls out of range; the old per-key notes described the
+# retired splatter art and have been removed rather than left lying.
 _PAGE_IMAGE_OVERRIDE = {
     # nyxus_settings page keys
     "_home":         0,
@@ -161,15 +202,9 @@ _PAGE_IMAGE_OVERRIDE = {
     "printers":      8,  "gaming":        3,  "developer":     8,
     "wallpaper":    10,  "fonts":         6,  "about":         0,
     # other NYXUS apps
-    "_notepad":      6,   # mint lettering -- writerly
-    "_stickies":    10,   # rainbow on brick
-    "_sysmon":       8,   # MAN/STREET tags -- developer feel
-    "_control":     11,   # neon eye -- watchful
-    "_terminal":     8,   # developer
-    "_weather":      9,   # paint drips
-    "_quicksettings": 7,  # rainbow flow
-    "_widgets":      4,   # walls of crowns
-    "_web":          0,
+    "_notepad":      6,   "_stickies":    10,  "_sysmon":       8,
+    "_control":     11,   "_terminal":     8,  "_weather":      9,
+    "_quicksettings": 7,  "_widgets":      4,  "_web":          0,
 }
 
 
