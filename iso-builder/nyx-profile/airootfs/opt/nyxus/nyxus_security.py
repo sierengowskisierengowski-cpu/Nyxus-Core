@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ============================================================================
-#  NYXUS SECURITY CENTER  —  DARK MIRROR rev 2026-05-13 r1
+#  NYXUS SECURITY CENTER  —  ALIEN NEON rev 2026-05-13 r1
 #
 #  Unified, enterprise-grade security & privacy hub.  Windows-11 Defender
 #  Security Center / macOS "Privacy & Security" parity, plus NYXUS-only
@@ -65,19 +65,39 @@ APP_ID  = "io.nyxus.security"
 WIN_W   = 1180
 WIN_H   = 760
 
-# ── Palette (DARK MIRROR + status semantics) ────────────────────────────────
-NYXUS_GOLD = "#d4b87a"
-SUCCESS    = "#7ad99e"
-WARN       = "#e8c46a"
-DANGER     = "#ff6464"
-INFO       = "#7ab3e8"
-GLASS_DEEP = "rgba(8, 12, 20, 0.92)"
-GLASS_MED  = "rgba(15, 20, 32, 0.78)"
-GLASS_SOFT = "rgba(22, 28, 42, 0.55)"
-HAIR_W     = "rgba(255, 255, 255, 0.10)"
-TEXT_PRIM  = "#eef2fa"
-TEXT_DIM   = "#9aa0ad"
-TEXT_FAINT = "#6a6e78"
+# ── Palette (ALIEN NEON canon + status semantics) ────────────────────────────
+# Single source of truth pulled from nyxus_palette when available — same
+# try/except pattern as nyxus_settings.py so this app matches everyone else.
+try:
+    from nyxus_palette import (  # type: ignore
+        ACCENT_PRIMARY as NYXUS_GOLD,  # brand accent (was gold #d4b87a — banned)
+        ACCENT_OK as SUCCESS,
+        ACCENT_WARN as WARN,
+        CYAN_FIXED as INFO,
+        BLACK_VOID as GLASS_DEEP,
+        BLACK_INK as GLASS_MED,
+        BLACK_SMOKE as GLASS_SOFT,
+        HAIRLINE_WHITE as HAIR_W,
+        WHITE_OFF as TEXT_PRIM,
+        GREY_MID as TEXT_DIM,
+        GREY_TERTIARY as TEXT_FAINT,
+    )
+except Exception:
+    NYXUS_GOLD = "#7d3dff"   # violet — brand accent (prism)
+    SUCCESS    = "#39ff14"
+    WARN       = "#ff8a1e"
+    INFO       = "#2bd2ff"
+    GLASS_DEEP = "rgba(0, 0, 0, 0.92)"
+    GLASS_MED  = "rgba(8, 8, 14, 0.78)"
+    GLASS_SOFT = "rgba(14, 14, 22, 0.55)"
+    HAIR_W     = "rgba(255, 255, 255, 0.10)"
+    TEXT_PRIM  = "#eef2fa"
+    TEXT_DIM   = "#9aa0ad"
+    TEXT_FAINT = "#6a6e78"
+
+# DANGER stays local (matches nyxus_control.py + nyxus_settings.py's shared
+# "RESERVED for destructive only" secondary red — not part of nyxus_palette).
+DANGER = "#ff6464"
 
 # Nerd-font glyphs
 GLYPH = {
@@ -518,8 +538,8 @@ window, .background {{ background: {GLASS_DEEP}; color: {TEXT_PRIM}; }}
 }}
 .nyx-nav-row:hover {{ background: rgba(255,255,255,0.04); }}
 .nyx-nav-row.selected {{
-  background: rgba(212,184,122,0.10);
-  border: 1px solid rgba(212,184,122,0.35);
+  background: alpha({NYXUS_GOLD}, 0.10);
+  border: 1px solid alpha({NYXUS_GOLD}, 0.35);
 }}
 .nyx-nav-glyph {{
   font-family: "JetBrainsMono Nerd Font","FiraCode Nerd Font",monospace;
@@ -560,11 +580,11 @@ window, .background {{ background: {GLASS_DEEP}; color: {TEXT_PRIM}; }}
   border: 1px solid {HAIR_W};
   border-radius: 10px; padding: 7px 16px; font-weight: 500;
 }}
-.nyx-btn:hover {{ background: rgba(212,184,122,0.10);
-                  border-color: rgba(212,184,122,0.40); }}
+.nyx-btn:hover {{ background: alpha({NYXUS_GOLD}, 0.10);
+                  border-color: alpha({NYXUS_GOLD}, 0.40); }}
 .nyx-btn.primary {{
-  background: rgba(212,184,122,0.18);
-  border-color: rgba(212,184,122,0.55); color: {NYXUS_GOLD};
+  background: alpha({NYXUS_GOLD}, 0.18);
+  border-color: alpha({NYXUS_GOLD}, 0.55); color: {NYXUS_GOLD};
 }}
 .nyx-btn.danger {{
   background: rgba(255,100,100,0.10);
@@ -593,8 +613,8 @@ window, .background {{ background: {GLASS_DEEP}; color: {TEXT_PRIM}; }}
   font-size: 11.5px; color: {TEXT_DIM};
 }}
 .nyx-banner {{
-  background: rgba(212,184,122,0.08);
-  border: 1px solid rgba(212,184,122,0.35);
+  background: alpha({NYXUS_GOLD}, 0.08);
+  border: 1px solid alpha({NYXUS_GOLD}, 0.35);
   border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;
   color: {TEXT_PRIM};
 }}
@@ -1958,7 +1978,7 @@ class SecurityWindow(Gtk.ApplicationWindow):
         return True
 
 
-# ── Try to apply unified DARK MIRROR chrome ────────────────────────────────
+# ── Try to apply unified ALIEN NEON chrome ─────────────────────────────────
 try:
     sys.path.insert(0, os.path.expanduser("~/.nyxus"))
     from nyxus_chrome import install_chrome as _nyx_install_chrome  # noqa
