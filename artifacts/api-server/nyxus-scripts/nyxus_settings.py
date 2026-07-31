@@ -14174,8 +14174,189 @@ class LoginScreenPage(SectionPage):
         if have(self.HELPER):
             self._async_apply(["reset"], "login screen reset")
 
+    # ── greeter detection ─────────────────────────────────────────────
+    # This page used to assume SDDM. The SHIPPED system boots greetd (see
+    # iso-builder + nyxus-greeter); SDDM survives only on boxes installed
+    # before that switch. Driving the wrong one is why every control here
+    # was dead on a fresh install: the settings applied cleanly to a
+    # display manager that was not running the login screen.
+    GREETD_HELPER = "nyxus-loginconfig-helper"
+    GREETD_CONF = Path("/etc/nyxus/login-screen.conf")
+
+    def _active_greeter(self) -> str:
+        """Which display manager actually renders the login screen."""
+        for unit, name in (("greetd", "greetd"), ("sddm", "sddm")):
+            rc, out, _ = sh(["systemctl", "is-enabled", unit], timeout=3)
+            if rc == 0 and (out or "").strip() == "enabled":
+                return name
+        return "none"
+
+    def _contract(self) -> dict:
+        """Current login-screen contract. Reads never need privilege."""
+        helper = LIBEXEC / self.GREETD_HELPER
+        if not helper.exists():
+            return {}
+        rc, out, _ = sh([str(helper), "show"], timeout=4)
+        if rc != 0:
+            return {}
+        vals = {}
+        for line in (out or "").splitlines():
+            if "=" in line:
+                k, _, v = line.partition("=")
+                vals[k.strip()] = v.strip()
+        return vals
+
+    def _write_contract(self, pairs: List[str], success: str) -> None:
+        """One pkexec for the whole page, not one per control."""
+        run_privileged(
+            self.GREETD_HELPER, ["set-many", *pairs],
+            lambda ok, msg: self.toast(success if ok else f"login screen: {msg}"))
+
+    def _build_greetd_group(self, greeter: str) -> None:
+        """What the greetd greeter shows before sign-in.
+
+        Every control writes /etc/nyxus/login-screen.conf through
+        nyxus-loginconfig-helper, and nyxus-greeter reads it back. If the
+        helper is not installed the group says so rather than presenting
+        switches that quietly change nothing.
+        """
+        helper = LIBEXEC / self.GREETD_HELPER
+        if not helper.exists():
+            if greeter != "greetd":
+                return
+            grp = Adw.PreferencesGroup(title="Login screen")
+            grp.add(empty_row(
+                "nyxus-loginconfig-helper not installed",
+                f"greetd is the active greeter, but the helper that writes "
+                f"{self.GREETD_CONF} is missing, so nothing here could be "
+                f"saved. Expected at {helper}."))
+            self.add_group(grp)
+            self.add_pill(status_pill("helper missing", "warn"))
+            return
+
+        cur = self._contract()
+        on = lambda k, d="0": (cur.get(k, d) or d) == "1"
+
+        grp = Adw.PreferencesGroup(
+            title="Login screen",
+            description=("What the greeter shows before you sign in. "
+                         f"Applies to greetd — {'active' if greeter == 'greetd' else 'NOT the active greeter on this machine'}."))
+        self.add_group(grp)
+
+        if greeter != "greetd":
+            grp.add(empty_row(
+                f"Heads up: {greeter} is what runs here",
+                "These settings are written for greetd, which the shipped "
+                "system uses. They will take effect on an installed NYXUS, "
+                "not on this machine's current login."))
+
+        self._r_clock = Adw.SwitchRow(
+            title="Show the clock",
+            subtitle="Time on the login screen")
+        self._r_clock.set_active(on("NYXUS_LOGIN_SHOW_CLOCK", "1"))
+        grp.add(self._r_clock)
+
+        self._r_fmt = Adw.ComboRow(title="Clock format",
+                                   subtitle="How the time is written")
+        fmts = [("%H:%M", "24-hour (18:30)"),
+                ("%I:%M %p", "12-hour (06:30 PM)"),
+                ("%H:%M:%S", "24-hour with seconds")]
+        mdl = Gtk.StringList()
+        for _, label in fmts:
+            mdl.append(label)
+        self._r_fmt.set_model(mdl)
+        self._fmt_values = [f for f, _ in fmts]
+        try:
+            self._r_fmt.set_selected(
+                self._fmt_values.index(cur.get("NYXUS_LOGIN_CLOCK_FORMAT", "%H:%M")))
+        except ValueError:
+            self._r_fmt.set_selected(0)
+        grp.add(self._r_fmt)
+
+        self._r_greet = Adw.EntryRow(title="Greeting")
+        self._r_greet.set_text(cur.get("NYXUS_LOGIN_GREETING", "welcome back"))
+        grp.add(self._r_greet)
+
+        self._r_user = Adw.SwitchRow(
+            title="Show your name",
+            subtitle="Greet you by name instead of just the prompt")
+        self._r_user.set_active(on("NYXUS_LOGIN_SHOW_USERNAME", "1"))
+        grp.add(self._r_user)
+
+        self._r_admin = Adw.SwitchRow(
+            title="Show administrator badge",
+            subtitle="Mark accounts that can administer this machine")
+        self._r_admin.set_active(on("NYXUS_LOGIN_SHOW_ADMIN_BADGE"))
+        grp.add(self._r_admin)
+
+        wgrp = Adw.PreferencesGroup(
+            title="Weather on the login screen",
+            description="Uses the location you set in Settings > Date & Time.")
+        self.add_group(wgrp)
+
+        self._r_weather = Adw.SwitchRow(title="Show weather")
+        self._r_weather.set_active(on("NYXUS_LOGIN_SHOW_WEATHER"))
+        wgrp.add(self._r_weather)
+
+        self._r_loc = Adw.EntryRow(title="Location")
+        self._r_loc.set_text(cur.get("NYXUS_LOGIN_WEATHER_LOCATION", ""))
+        wgrp.add(self._r_loc)
+
+        self._r_units = Adw.ComboRow(title="Units")
+        umdl = Gtk.StringList()
+        umdl.append("Fahrenheit")
+        umdl.append("Celsius")
+        self._r_units.set_model(umdl)
+        self._r_units.set_selected(
+            0 if cur.get("NYXUS_LOGIN_WEATHER_UNITS", "F") == "F" else 1)
+        wgrp.add(self._r_units)
+
+        act = Adw.PreferencesGroup()
+        self.add_group(act)
+        row = Adw.ActionRow(
+            title="Apply login screen settings",
+            subtitle=f"Writes {self.GREETD_CONF} — asks for your password once")
+        btn = Gtk.Button(label="Apply")
+        btn.set_valign(Gtk.Align.CENTER)
+        btn.add_css_class("suggested-action")
+        btn.connect("clicked", lambda *_: self._apply_contract())
+        row.add_suffix(btn)
+        row.set_activatable_widget(btn)
+        act.add(row)
+
+        if self.GREETD_CONF.exists():
+            act.add(kv_row("Contract file", str(self.GREETD_CONF)))
+
+    def _apply_contract(self) -> None:
+        pairs = [
+            "NYXUS_LOGIN_SHOW_CLOCK", "1" if self._r_clock.get_active() else "0",
+            "NYXUS_LOGIN_CLOCK_FORMAT", self._fmt_values[self._r_fmt.get_selected()],
+            "NYXUS_LOGIN_GREETING", self._r_greet.get_text().strip(),
+            "NYXUS_LOGIN_SHOW_USERNAME", "1" if self._r_user.get_active() else "0",
+            "NYXUS_LOGIN_SHOW_ADMIN_BADGE", "1" if self._r_admin.get_active() else "0",
+            "NYXUS_LOGIN_SHOW_WEATHER", "1" if self._r_weather.get_active() else "0",
+            "NYXUS_LOGIN_WEATHER_LOCATION", self._r_loc.get_text().strip(),
+            "NYXUS_LOGIN_WEATHER_UNITS",
+            "F" if self._r_units.get_selected() == 0 else "C",
+        ]
+        self._write_contract(pairs, "login screen updated")
+
     # ── page build ────────────────────────────────────────────────────
     def build(self) -> None:
+        greeter = self._active_greeter()
+        self._build_greetd_group(greeter)
+        if greeter == "sddm":
+            self._build_sddm(greeter)
+        elif not (LIBEXEC / self.GREETD_HELPER).exists():
+            grp = Adw.PreferencesGroup(title="No login screen backend")
+            grp.add(empty_row(
+                "Neither greetd nor SDDM is enabled",
+                "Nothing on this system renders a graphical login, so "
+                "there is nothing to configure here."))
+            self.add_group(grp)
+            self.add_pill(status_pill("no greeter", "warn"))
+
+    def _build_sddm(self, greeter: str = "sddm") -> None:
         if not have(self.HELPER):
             grp = Adw.PreferencesGroup(title="Login screen helper missing")
             grp.add(empty_row(

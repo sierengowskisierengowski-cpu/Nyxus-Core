@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<!-- NYXUS login-screen contract polkit policy   rev 2026-07-31 r1
+
+     Authorises Settings > Login Screen to write /etc/nyxus/login-screen.conf
+     through nyxus-loginconfig-helper.
+
+     ★ exec.path names the HELPER BINARY, not a generic interpreter. The
+     older com.nyxus.loginscreen.* actions annotate /usr/bin/env, which
+     authorises running an arbitrary command as root once the admin has
+     authenticated. Do not copy that pattern here: the whole point of a
+     helper with a fixed schema is that the authorised program is the only
+     thing that can run, and it can only write keys it recognises.
+-->
+<policyconfig>
+  <vendor>NYXUS</vendor>
+  <vendor_url>https://github.com/sierengowskisierengowski-cpu/Nyxus-Core</vendor_url>
+  <icon_name>system-lock-screen</icon_name>
+
+  <action id="com.nyxus.loginconfig.write">
+    <description>Change the NYXUS login screen settings</description>
+    <message>Authentication is required to change what the login screen shows.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/libexec/nyxus-loginconfig-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>
