@@ -26,11 +26,50 @@ fi
 
 echo "▌ NYXUS Phase 2 — SDDM greeter rebuild for ${REAL_USER}"
 
-# 1. Single source-of-truth SDDM drop-in. Remove older conflicting ones
-#    (10-nyxus-login.conf set X11 but no software backend; nyxus.conf set a
-#    contradictory Wayland layer-shell env).
-rm -f /etc/sddm.conf.d/nyxus.conf /etc/sddm.conf.d/10-nyxus-login.conf
+# 1. Single source-of-truth SDDM drop-in.
+#
+#    ⚠ SDDM READS *EVERY FILE* IN /etc/sddm.conf.d — NOT just `*.conf`.
+#    It lists the directory, sorts by name, and merges each file in turn, so the
+#    LAST name wins. That means a hand-made backup like `nyxus.conf.bak-…` is
+#    not a backup at all: `n…` sorts after `10-…`, so it silently overrides the
+#    NYXUS drop-in. On 2026-07-30 that is exactly what locked the owner out —
+#    `nyxus.conf.bak-2026-07-21` survived the 2026-07-26 fix (which moved only
+#    `nyxus.conf`) and kept re-supplying the two fatal keys:
+#      DisplayServer=wayland      → SDDM launches `weston --shell=kiosk`, which
+#                                   is not installed → HELPER_DISPLAYSERVER_ERROR
+#      GreeterEnvironment=…       → REPLACES the whole variable, dropping
+#                                   QT_QUICK_BACKEND=software, which this
+#                                   hybrid-GPU panel needs → greeter SIGSEGV
+#    Both render as "blank screen + blinking cursor".
+#
+#    So do not remove named files — QUARANTINE anything in that directory that
+#    is not one of ours and that touches either key. Names are unbounded; the
+#    property is what matters.
 mkdir -p /etc/sddm.conf.d
+_quarantine="/root/nyxus-sddm-quarantine-$(date +%Y%m%d-%H%M%S)"
+_stray=0
+shopt -s nullglob dotglob
+for _f in /etc/sddm.conf.d/*; do
+  [[ -f "$_f" ]] || continue
+  case "${_f##*/}" in
+    10-nyxus.conf|10-nyxus-default-session.conf|00-nyxus-live.conf) continue ;;
+  esac
+  grep -qiE '^[[:space:]]*(DisplayServer|GreeterEnvironment)[[:space:]]*=' "$_f" || continue
+  mkdir -p "$_quarantine"
+  mv -f "$_f" "$_quarantine/"
+  echo "  ! quarantined ${_f} → ${_quarantine}/ (it overrode DisplayServer/GreeterEnvironment)"
+  _stray=$(( _stray + 1 ))
+done
+shopt -u nullglob dotglob
+# if/else rather than `[[ ... ]] && echo` so the run that DID quarantine
+# something says so instead of printing nothing. (The `&&` form was safe under
+# `set -e` — a failing test inside an AND-list is exempt from errexit — it was
+# just silent in the one case worth reporting.)
+if [[ "$_stray" -eq 0 ]]; then
+  echo "  ✓ no stray SDDM drop-ins in /etc/sddm.conf.d"
+else
+  echo "  → quarantined ${_stray} stray drop-in(s) into ${_quarantine}/"
+fi
 cat > /etc/sddm.conf.d/10-nyxus.conf <<EOF
 # NYXUS — login (rev 2026-07-14 · Phase 2 rebuild)
 # QT_QUICK_BACKEND=software is the fix for the hybrid-GPU greeter SIGSEGV
