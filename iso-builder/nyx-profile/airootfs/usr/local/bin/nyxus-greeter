@@ -136,19 +136,64 @@ REGREET_STYLE=""
   fi
 } >>"$LOG" 2>&1 || true
 
-run_regreet() {  # $1 = extra env description
+# ── FALL-THROUGH RULE (rev 2026-07-30) ──────────────────────────────────────
+# A layer only counts as "worked" if it stayed up long enough to have HOSTED a
+# login. Until 2026-07-30 this chain fell through on a non-zero status only, so
+# a greeter that exited **0** immediately — an unreadable `-s` sheet, a missing
+# config, cage failing to take DRM master — was read as success. The chain then
+# exited 0, greetd respawned default_session, it exited 0 again, and the machine
+# sat in a blank-screen respawn loop with tuigreet and agreety NEVER reached.
+# That is the exact lockout the four layers exist to prevent, so the runtime
+# guard the 2026-07-09 ancestor carried (STARTUP_OK_SECS / MAX_CRASHES) is back.
+#
+#   rc >= 128                  → killed by greetd after a real login: stop.
+#   rc == 0, ran >= OK_SECS    → a real greeter session ended: stop.
+#   anything else              → startup failure: record it, fall through.
+#
+# MAX_CRASHES demotes a layer for the rest of the boot (markers under
+# STATE_DIR) so greetd's respawn loop converges on a working layer instead of
+# flapping on a broken one.
+STARTUP_OK_SECS=5
+MAX_CRASHES=2
+STATE_DIR="/tmp/nyxus-greeter"
+mkdir -p "$STATE_DIR" 2>/dev/null || STATE_DIR="/tmp"
+
+layer_demoted() {  # layer_demoted NAME → 0 if it has already failed MAX_CRASHES times
+  _f="${STATE_DIR}/crash-${1}"
+  [ -f "$_f" ] || return 1
+  [ "$(wc -l <"$_f" 2>/dev/null || echo 0)" -ge "$MAX_CRASHES" ]
+}
+
+note_crash() {  # note_crash NAME RC RAN
+  printf '%s %s rc=%s after=%ss\n' "$(date -Iseconds 2>/dev/null)" "$1" "$2" "$3" \
+    >>"${STATE_DIR}/crash-$1" 2>/dev/null || true
+  echo "[$(date -Iseconds)] layer $1 failed (rc=$2 after ${3}s) — falling through" >>"$LOG" 2>&1
+}
+
+run_regreet() {  # $1 = layer name / renderer description
+  if layer_demoted "$1"; then
+    echo "[$(date -Iseconds)] layer $1 demoted this boot — skipping" >>"$LOG" 2>&1
+    return 1
+  fi
   echo "[$(date -Iseconds)] trying regreet ($1)" >>"$LOG" 2>&1
+  _start=$SECONDS
   if [ -n "$REGREET_STYLE" ]; then
     cage -s -- regreet -s "$REGREET_STYLE" >>"$LOG" 2>&1
   else
     cage -s -- regreet >>"$LOG" 2>&1
   fi
   rc=$?
+  _ran=$(( SECONDS - _start ))
   if [ "$rc" -ge 128 ]; then
     echo "[$(date -Iseconds)] regreet ($1) ended by signal ($rc) — greetd teardown, chain stops" >>"$LOG" 2>&1
     exit 0
   fi
-  return "$rc"
+  if [ "$rc" -eq 0 ] && [ "$_ran" -ge "$STARTUP_OK_SECS" ]; then
+    echo "[$(date -Iseconds)] regreet ($1) hosted a session for ${_ran}s and exited cleanly — chain stops" >>"$LOG" 2>&1
+    exit 0
+  fi
+  note_crash "$1" "$rc" "$_ran"
+  return 1
 }
 
 # ── NYXUS login wallpaper — urban-alien hero (rev 2026-07-24) ───────────
@@ -168,9 +213,19 @@ run_regreet() {  # $1 = extra env description
 } >>"$LOG" 2>&1 || true
 
 if command -v cage >/dev/null 2>&1 && command -v regreet >/dev/null 2>&1; then
-  run_regreet "gpu";                 [ $? -eq 0 ] && exit 0
-  WLR_RENDERER=pixman run_regreet "pixman/software"; [ $? -eq 0 ] && exit 0
-  echo "[$(date -Iseconds)] regreet failed both renderers -> text fallback" >>"$LOG" 2>&1
+  run_regreet "gpu"
+  WLR_RENDERER=pixman run_regreet "pixman/software"
+  # The generated per-panel sheet is the newest and least-proven thing in this
+  # script. If regreet cannot start with `-s`, that must NOT cost us the themed
+  # greeter: retry with no -s at all, which makes regreet read the shipped
+  # /etc/greetd/regreet.css. A mis-scaled card is survivable; a blank screen is
+  # not, and DRM /sys layout is the one input here we cannot test before boot.
+  if [ -n "$REGREET_STYLE" ]; then
+    echo "[$(date -Iseconds)] retrying regreet with the SHIPPED stylesheet (no -s)" >>"$LOG" 2>&1
+    REGREET_STYLE=""
+    run_regreet "shipped-css"
+  fi
+  echo "[$(date -Iseconds)] regreet failed every renderer -> text fallback" >>"$LOG" 2>&1
 fi
 
 if command -v tuigreet >/dev/null 2>&1; then
@@ -180,5 +235,13 @@ if command -v tuigreet >/dev/null 2>&1; then
        --cmd nyxus-session-start
 fi
 
-echo "[$(date -Iseconds)] launching agreety (bare)" >>"$LOG" 2>&1
-exec agreety --cmd nyxus-session-start
+# agreety ships inside the greetd package itself, so if greetd is running this
+# always exists — gate 13va asserts it. Guarded anyway: exiting non-zero with a
+# reason in the log beats exec'ing a session with no authentication behind it.
+if command -v agreety >/dev/null 2>&1; then
+  echo "[$(date -Iseconds)] launching agreety (bare)" >>"$LOG" 2>&1
+  exec agreety --cmd nyxus-session-start
+fi
+
+echo "[$(date -Iseconds)] FATAL: no greeter of any kind is installed (regreet/cage, tuigreet, agreety all absent)" >>"$LOG" 2>&1
+exit 1
