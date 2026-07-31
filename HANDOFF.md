@@ -1,6 +1,13 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
 
+
+> **★★ PR #83 LANDED ON MAIN — 2026-07-31 ~16:45 EDT ★★**  
+> Squash-merged https://github.com/sierengowskisierengowski-cpu/Nyxus-Core/pull/83  
+> as `6e378926` (`Settings: greetd login contract, full theming, no-terminal
+> (113→~5), + greetd switch (#83)`). CI was green; merge method matched #82
+> (squash). Local `main` == `origin/main`. Still NOT merged: `local-stash-work`.
+
 > **★★ BRANCH AUDIT — 2026-07-31 ~08:40 EDT (second pass) ★★**  
 > Re-fetched `origin`, rechecked every local/remote tip and open PRs.  
 > **Nothing new to merge.** `main` == `origin/main` at `bfb01abc` (0/0).  
