@@ -1,5 +1,27 @@
 # NYXUS — AGENT HANDOFF & BUILD STATE (read this FIRST)
 
+> **★★★★ 2026-07-31 (later) · HUB/POWER GAP — CANDIDATE FIX, UNVERIFIED LIVE ★★★★**  
+> Root cause of the top-gap regression: the "top center" anchor comment in
+> `eww.yuck` claimed the overlay "snaps to y=0" once `overlay-shield.sh` closes
+> the bars — that claim is what the owner's report contradicts. `eww close`
+> does unmap `bar-top`, but nothing evidences Hyprland reconfiguring the
+> already-mapped fullscreen overlay's position afterward, so it likely stays
+> pinned at `y=reserved_top` (40) for the life of the window — a **permanent**
+> top gap, not a 2s transient. Added `:y "-40"` to cancel that offset (same
+> constant as `bar-top`'s own `y "4" + height "36px"`) on all 8 affected
+> windows: `dashboard`, `nyxus-hub`, `powermenu`, `cheatsheet`, `screensaver`
+> (`eww.yuck`), `snap-picker` (`snap.yuck`), `mission` (`mission.yuck`),
+> `deepcore` (`deepcore.yuck`). `splash.yuck` deliberately NOT touched — it
+> opens before the bars exist, so `bounds.y` is 0 there already, no bug.  
+> **This sandbox has no display/compositor — I cannot run Hyprland or
+> `hyprctl` to confirm this actually fixes it.** Verify live before trusting:
+> open each window, `hyprctl clients -j` (or screenshot) in both the
+> bars-visible AND bars-hidden (post-shield, ~2s later) phases, confirm
+> `y=0` and no strip at either edge in both. If it's still wrong, the
+> Hyprland-reconfigure-on-relayout assumption above is the thing to
+> re-examine, not the arithmetic — do not re-guess a different margin
+> without measuring first.
+
 > **★★★ WHERE WE STAND — 2026-07-31 ~00:40 EDT · SESSION RECOVERY ★★★**  
 > The Jul 30 evening multi-agent session died mid-flight (machine freeze + Cursor
 > billing block). ~65 uncommitted paths were at risk. **Salvaged onto `main` as
@@ -8,10 +30,12 @@
 > main as `20953054`.  
 > **Full brief (read first):** [`docs/SESSION_RECOVERY_BRIEF_2026-07-31.md`](./docs/SESSION_RECOVERY_BRIEF_2026-07-31.md)  
 > **Still broken for the owner:** blank graphical login (TTY3 workaround), Hub /
-> Power gap now at the **TOP** (`3de4a38b` overshot), Settings Increment 2 not
-> started, login-card eye candy / Hub background / deep audit still queued.  
-> **⛔ DO NOT BAKE** until login is verified live and the gap is fixed. Do not
-> merge `local-stash-work`. Do not re-do work listed as landed in the brief.
+> Power gap now at the **TOP** (`3de4a38b` overshot) — candidate fix above,
+> **unverified live**, Settings Increment 2 not started, login-card eye candy /
+> Hub background / deep audit still queued.  
+> **⛔ DO NOT BAKE** until login is verified live and the gap fix above is
+> confirmed. Do not merge `local-stash-work`. Do not re-do work listed as
+> landed in the brief.
 
 > **Last updated: 2026-07-30 ~14:30 EDT (⛔ THE "MY BAKE LOOKS OLD" MYSTERY IS SOLVED — the ISO was right every time; the CONFIGS reached their own tools through an EMPTY `~/.local/bin`. Fixed + gate 13z. bootstrap r16 · then a SECOND pass fixed the 102s boot, the slow-everything (squashfs `xz`→`zstd`, 7.6× faster cold reads), the dead station launches and the layer-blur ordering — gates 13aa–13af. The Hub trap + dead Hub clicks are STILL OPEN and need a live session. · REBAKE REQUIRED)** · Owner: Joseph A. Sierengowski (`nyx` / `nyxus`)
 > If you are a new agent picking up NYXUS: **read this entire file before touching
