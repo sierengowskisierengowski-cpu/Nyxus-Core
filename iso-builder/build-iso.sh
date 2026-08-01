@@ -986,6 +986,20 @@ NYXUS_DIST=""
 _ns_src="${REPO_ROOT}/artifacts/api-server/nyxus-scripts"
 _dist_src="${REPO_ROOT}/artifacts/api-server/dist/nyxus-scripts"
 if [[ -d "${_ns_src}" && -f "${_ns_src}/nyxus_install.sh" ]]; then
+  # The dist/ branch below has rejected host-poisoned symlinks since 2026-07-24,
+  # but nobody applied the same check to nyxus-scripts itself — and it had ten
+  # of them, all pointing at /home/cosmic/Nyxus-Core/scripts/*.sh. On any other
+  # checkout those dangle, so `nyxus-boot-check` and `nyxus-persist-login` were
+  # allowlisted by install.sh and resolved to nothing. They are relative links
+  # now; this makes sure they stay that way.
+  if find "${_ns_src}" -type l ! -exec test -e {} \; -print -quit 2>/dev/null | grep -q .; then
+    fail "artifacts/api-server/nyxus-scripts has broken symlinks:"
+    find "${_ns_src}" -type l ! -exec test -e {} \; -print 2>/dev/null | while read -r _bl; do
+      fail "  ${_bl#${REPO_ROOT}/} -> $(readlink "${_bl}")"
+    done
+    fail "Point them at a path inside the repo (relative), or replace them with real files."
+    exit 1
+  fi
   NYXUS_DIST="${_ns_src}"
 elif [[ -d "${_dist_src}" && -f "${_dist_src}/nyxus_install.sh" ]]; then
   # Reject dist/ if it contains dangling symlinks outside the repo.
@@ -1008,7 +1022,11 @@ if [[ -z "${NYXUS_DIST}" ]]; then
   exit 1
 fi
 mkdir -p "${OFFLINE_CACHE}"
-cp -a "${NYXUS_DIST}/." "${OFFLINE_CACHE}/"
+# -L dereferences. The repo keeps a few scripts as symlinks into ../../scripts/
+# so there is one copy to edit; those links are relative and resolve fine in a
+# checkout, but they would point outside /opt/nyxus-cache on the ISO and land
+# as dangling links on the stick. Copy the contents, not the links.
+cp -aL "${NYXUS_DIST}/." "${OFFLINE_CACHE}/"
 # Drop build cruft that has no business in the shipped cache (python bytecode,
 # VCS, editor/agent dirs). Cheap size win; never touches payload files.
 find "${OFFLINE_CACHE}" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true

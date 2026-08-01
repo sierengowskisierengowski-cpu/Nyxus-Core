@@ -2478,6 +2478,71 @@ done
 (( _pb_fail == 0 )) \
   && ok "both savers can reach fullscreen (no pin conflict) and the payload re-asserts it after map"
 
+# ── 13pg. the two installer allowlists agree, and every name resolves ────────
+# install.sh (dev/repo deploy) and nyxus_install.sh (offline/ISO deploy) each
+# carry an explicit LAUNCHERS array. They are supposed to be the same list.
+# They were not: eight names in one, two in the other, so which tools you ended
+# up with depended on which installer ran. Two of the names also pointed at
+# symlinks that dangled on every machine but the author's, so they deployed
+# nothing at all.
+hd "13pg. installer allowlists agree and resolve"
+if ! command -v python3 >/dev/null 2>&1; then
+  warn "13pg: python3 not available — allowlist check skipped"
+else
+  _pg_out="$(python3 - "${HERE}/.." <<'PYEOF'
+import re, sys
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+ns = root / "artifacts/api-server/nyxus-scripts"
+
+def launchers(path):
+    m = re.search(r"^LAUNCHERS=\((.*?)^\)",
+                  Path(path).read_text(encoding="utf-8"), re.S | re.M)
+    if not m:
+        return None
+    return set(re.sub(r"#.*", "", m.group(1)).split())
+
+a = launchers(root / "install.sh")
+b = launchers(ns / "nyxus_install.sh")
+if a is None or b is None:
+    print("SKIP could not parse a LAUNCHERS array")
+    raise SystemExit(0)
+
+for name in sorted(a - b):
+    print(f"DIFF {name} is in install.sh but not nyxus_install.sh")
+for name in sorted(b - a):
+    print(f"DIFF {name} is in nyxus_install.sh but not install.sh")
+for name in sorted(a | b):
+    p = ns / name
+    if not p.exists():
+        target = f" -> {p.readlink()}" if p.is_symlink() else ""
+        print(f"DANGLING {name} is allowlisted but does not resolve under "
+              f"nyxus-scripts{target}")
+PYEOF
+)"
+  if grep -q '^SKIP' <<<"${_pg_out}"; then
+    warn "13pg: $(sed -n 's/^SKIP //p' <<<"${_pg_out}")"
+  elif [[ -z "${_pg_out}" ]]; then
+    ok "13pg: both installer allowlists match and every entry resolves"
+  else
+    while IFS= read -r _pg_line; do
+      [[ -n "${_pg_line}" ]] && fail "13pg: ${_pg_line#* }"
+    done <<<"${_pg_out}"
+  fi
+fi
+
+# Nothing under nyxus-scripts may be a symlink that does not resolve. build-iso
+# copies this tree into the ISO's offline cache; a link pointing outside the
+# repo lands on the stick as a dead file.
+_pg_broken=0
+while IFS= read -r _bl; do
+  [[ -n "${_bl}" ]] || continue
+  fail "13pg: ${_bl#${HERE}/../} is a broken symlink -> $(readlink "${_bl}")"
+  _pg_broken=$((_pg_broken + 1))
+done < <(find "${NS}" -type l ! -exec test -e {} \; -print 2>/dev/null)
+(( _pg_broken == 0 )) && ok "13pg: no dangling symlinks under nyxus-scripts"
+
 # ── 13pf. no FORBIDDEN palette hex in a shipped NYXUS surface ────────────────
 # nyxus_palette.FORBIDDEN is the banned list, and assert_no_forbidden() exists
 # so an app can check its own CSS — but nothing checked the tree, so banned

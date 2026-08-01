@@ -232,6 +232,13 @@ LAUNCHERS=(
   nyxus-voice nyxus-voiced nyxus-voice-install nyxus-voice-model
   nyxus-wall-cycle nyxus-wall-fx nyxus-wall-next nyxus-wallpaper-autostart
   nyxus-weather-line nyxus-whispers nyxus-welcome-note nyxus-dream sync-eww.sh
+  # 2026-08-01: the two lists had drifted apart in BOTH directions — eight
+  # names here, two the other way — so which tools you ended up with depended
+  # on which installer had run. verify-profile gate 13pg now fails on any
+  # difference. These eight came from install.sh.
+  nyxus-blackarch-full nyxus-bootstrap nyxus-eww-launch
+  nyxus-mission-control-toggle nyxus-record nyxus-wait-bootstrap
+  nyxus-welcome nyxus_hotcorners.py
 )
 _launch_ok=0; _launch_total=${#LAUNCHERS[@]}
 for _base in "${LAUNCHERS[@]}"; do

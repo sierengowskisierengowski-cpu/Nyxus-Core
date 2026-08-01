@@ -87,6 +87,11 @@ LAUNCHERS=(
   nyxus-voice-model nyxus-wait-bootstrap nyxus-wall-cycle nyxus-wall-fx
   nyxus-wall-next nyxus-wallpaper-autostart nyxus-weather-line nyxus-welcome nyxus-whispers sync-eww.sh
   nyxus-gamemode nyxus-focusmode
+  # 2026-08-01: kept in lockstep with nyxus_install.sh's LAUNCHERS (the
+  # offline/ISO deploy path). The two had drifted in both directions, so which
+  # tools an install ended up with depended on which installer ran.
+  # verify-profile gate 13pg fails the build on any difference.
+  nyxus-dream nyxus-welcome-note
 )
 
 declare -A MANIFEST_EWW=() MANIFEST_HYPR=() MANIFEST_NYXUS=() MANIFEST_BIN=() MANIFEST_DESKTOP=()
