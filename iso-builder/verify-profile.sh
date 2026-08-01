@@ -2763,6 +2763,184 @@ elif (( _slice_fail == 0 )); then
   ok "13pe: ${_slice_themes} GRUB theme(s) — every referenced box has all nine slices"
 fi
 
+# ── 13pi. packaged desktop subsystems are actually STARTED ───────────────────
+# WHY THIS EXISTS (2026-08-01, DE_COMPLETENESS_AND_EDITIONS_2026-07-31.md §1.2):
+# four subsystems were packaged, shipped, exposed in Settings and never started
+# by anything. Nothing failed, nothing logged, nothing looked wrong:
+#   * cliphist + wl-clipboard were installed and Settings ▸ Clipboard managed
+#     history size / persistence / a secrets filter — over a store no process
+#     ever wrote to. The two `wl-paste --watch cliphist store` lines existed in
+#     one place in the whole tree: inside a Python string literal in
+#     nyxus_clipboard.py, PRINTED to the user as setup instructions.
+#   * udisks2 + udiskie were installed and the only runtime mention of udiskie
+#     was nyxus-security calling `udiskie-umount -a` during a panic. Inserting
+#     a USB stick did nothing at all.
+#   * gnome-keyring's daemon was on the ISO via seahorse and nothing started
+#     it, so every libsecret consumer found no secret service.
+#   * the GTK4 desktop layer was built, staged and given a launcher, and no
+#     exec-once or unit ever ran it.
+# This is the same shape as gate 13y (nyxus-sense: built, consumed, never
+# launched) and it is invisible in exactly the same way, so it gets the same
+# treatment: assert the PAIRING — the package is listed AND a config Hyprland
+# actually sources starts it. Either half alone proves nothing.
+hd "13pi. every packaged desktop subsystem is started by a sourced config"
+
+_PI_HYPR="${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
+_PI_CONFD="${AIROOT}/etc/skel/.config/hypr/conf.d"
+if [[ ! -r "${_PI_HYPR}" ]]; then
+  fail "13pi: cannot read ${_PI_HYPR}"
+else
+  # The set of configs Hyprland really reads: hyprland.conf plus only the
+  # shards it `source =`s. A shard that ships unsourced must not satisfy this
+  # gate — that is the bug three shards have already shipped with.
+  _PI_FILES=("${_PI_HYPR}")
+  while read -r _pi_shard; do
+    [[ -z "${_pi_shard}" ]] && continue
+    [[ -f "${_PI_CONFD}/${_pi_shard}" ]] && _PI_FILES+=("${_PI_CONFD}/${_pi_shard}")
+  done < <(grep -oE 'source *= *~?/?[^ ]*conf\.d/[A-Za-z0-9._-]+\.conf' "${_PI_HYPR}" \
+             | sed 's|.*/||' | sort -u)
+
+  # subsystem | packages that supply it (any ONE is enough) | the token that
+  # proves a sourced config starts it
+  while IFS='|' read -r _pi_name _pi_pkgs _pi_token; do
+    [[ -z "${_pi_name}" ]] && continue
+
+    _pi_have_pkg=0
+    for _pi_p in ${_pi_pkgs//,/ }; do
+      if grep -Eq "^${_pi_p}\$" "${PROFILE}/packages.x86_64"; then
+        _pi_have_pkg=1
+        break
+      fi
+    done
+    if (( _pi_have_pkg == 0 )); then
+      fail "13pi: ${_pi_name}: none of [${_pi_pkgs}] is in packages.x86_64 — the autostart will be a no-op on the ISO"
+    fi
+
+    if grep -qF -- "${_pi_token}" "${_PI_FILES[@]}"; then
+      ok "13pi: ${_pi_name} is packaged and started (\`${_pi_token}\`)"
+    else
+      fail "13pi: ${_pi_name} is PACKAGED BUT NEVER STARTED — no config Hyprland sources contains '${_pi_token}'. Settings can expose it, but the backend will not be running"
+    fi
+  done <<'PAIRS'
+clipboard history (text)|cliphist|wl-paste --type text --watch cliphist store
+clipboard history (image)|cliphist|wl-paste --type image --watch cliphist store
+clipboard watcher binary|wl-clipboard|wl-paste
+removable-media automount|udiskie|udiskie -a
+secret store|gnome-keyring,seahorse|gnome-keyring-daemon --start
+desktop layer (right-click)|gtk4-layer-shell|nyxus-desktop
+PAIRS
+
+  # The desktop layer needs the GTK4 binding, not the GTK3 one. These two
+  # package names differ by one character and the profile shipped only the GTK3
+  # library for months; nyxus_desktop.py's import guard then execvp()s swaybg
+  # with one line on stderr, so a dead desktop layer and a live one are
+  # visually identical until you right-click.
+  if grep -Eq '^gtk4-layer-shell$' "${PROFILE}/packages.x86_64"; then
+    ok "13pi: gtk4-layer-shell listed (gtk-layer-shell is the GTK3 library and will not satisfy the import)"
+  else
+    fail "13pi: gtk4-layer-shell is NOT listed — nyxus_desktop.py's gi.require_version(\"Gtk4LayerShell\") fails and it silently execvp()s swaybg"
+  fi
+
+  # And it must not fight the wallpaper painters. nyxus-desktop is on the
+  # BOTTOM layer; nyxus-ws-wallpaperd (awww) and nyxus-live-wallpaper
+  # (mpvpaper) are on BACKGROUND, one layer below. An opaque desktop hides
+  # both — per-workspace wallpapers and the living wallpaper just stop being
+  # visible, with nothing to indicate why.
+  _PI_DTOML="${AIROOT}/etc/skel/.config/nyxus/desktop.toml"
+  if [[ ! -f "${_PI_DTOML}" ]]; then
+    fail "13pi: skel ships no .config/nyxus/desktop.toml — nyxus_desktop.py falls back to an OPAQUE fill and covers the BACKGROUND-layer wallpaper painters"
+  elif grep -Eq '^\s*bg_color\s*=\s*"(transparent|none|)"' "${_PI_DTOML}"; then
+    ok "13pi: desktop.toml keeps the desktop transparent — awww / mpvpaper stay visible under it"
+  else
+    warn "13pi: desktop.toml sets an opaque bg_color, so nyxus-desktop OWNS the background — stop nyxus-ws-wallpaperd.service or the two painters will fight"
+  fi
+fi
+
+# ── 13pj. one answer per toolkit theme, across all four surfaces ─────────────
+# WHY THIS EXISTS (2026-08-01, DE study §1.2-I): NYXUS declared its GTK theme in
+# four places and they disagreed. hyprland.conf, gtk-3.0/settings.ini and
+# gtk-4.0/settings.ini all asked for adw-gtk3-dark; /etc/environment.d then set
+# GTK_THEME=Adwaita:dark, and GTK_THEME has the HIGHEST precedence in GTK — so
+# plain Adwaita won wherever that variable reached, which is a different set of
+# apps than Hyprland's `env =` reaches (environment.d is read by the systemd
+# user manager; a greetd-launched Hyprland is not its child). Two correct
+# intentions, an unpredictable winner, and intermittent white dialogs.
+#
+# Qt was worse: QT_QPA_PLATFORMTHEME=adwaita-dark and QT_STYLE_OVERRIDE=
+# Adwaita-Dark both named adwaita-qt5/adwaita-qt6, which NO LONGER EXIST in the
+# Arch repos, while skel shipped qt5ct/ and qt6ct/ config dirs for packages
+# that were not installed either. Every Qt app rendered default light grey.
+hd "13pj. GTK/Qt theme declarations agree and name something that ships"
+
+_PJ_ENV="${AIROOT}/etc/environment.d/90-nyxus-theme.conf"
+_PJ_HYPR="${AIROOT}/etc/skel/.config/hypr/hyprland.conf"
+if [[ ! -r "${_PJ_ENV}" || ! -r "${_PJ_HYPR}" ]]; then
+  warn "13pj: 90-nyxus-theme.conf or hyprland.conf unreadable — theme coherence not checked"
+else
+  _pj_val() { grep -m1 -E "^${2}=" "$1" | cut -d= -f2- | sed 's/[[:space:]]*$//'; }
+  _pj_env_gtk="$(_pj_val "${_PJ_ENV}" GTK_THEME)"
+  _pj_env_qt="$(_pj_val "${_PJ_ENV}" QT_QPA_PLATFORMTHEME)"
+  _pj_hypr_gtk="$(grep -m1 -E '^env *= *GTK_THEME,' "${_PJ_HYPR}" \
+                    | sed 's/.*GTK_THEME,//; s/#.*//; s/[[:space:]]*$//')"
+  _pj_hypr_qt="$(grep -m1 -E '^env *= *QT_QPA_PLATFORMTHEME,' "${_PJ_HYPR}" \
+                   | sed 's/.*QT_QPA_PLATFORMTHEME,//; s/#.*//; s/[[:space:]]*$//')"
+
+  if [[ "${_pj_env_gtk}" == "${_pj_hypr_gtk}" ]]; then
+    ok "13pj: GTK_THEME agrees between environment.d and hyprland.conf (${_pj_env_gtk})"
+  else
+    fail "13pj: GTK_THEME disagrees — environment.d says '${_pj_env_gtk}', hyprland.conf says '${_pj_hypr_gtk}'. GTK_THEME outranks every settings.ini, so which one wins depends on how the app was launched"
+  fi
+
+  for _pj_ini in gtk-3.0 gtk-4.0; do
+    _pj_f="${AIROOT}/etc/skel/.config/${_pj_ini}/settings.ini"
+    [[ -r "${_pj_f}" ]] || continue
+    _pj_name="$(grep -m1 -E '^gtk-theme-name=' "${_pj_f}" | cut -d= -f2- | sed 's/[[:space:]]*$//')"
+    if [[ "${_pj_name}" == "${_pj_env_gtk}" ]]; then
+      ok "13pj: ${_pj_ini}/settings.ini agrees (${_pj_name})"
+    else
+      fail "13pj: ${_pj_ini}/settings.ini asks for '${_pj_name}' but GTK_THEME='${_pj_env_gtk}' overrides it"
+    fi
+  done
+
+  if [[ "${_pj_env_qt}" == "${_pj_hypr_qt}" ]]; then
+    ok "13pj: QT_QPA_PLATFORMTHEME agrees between environment.d and hyprland.conf (${_pj_env_qt})"
+  else
+    fail "13pj: QT_QPA_PLATFORMTHEME disagrees — environment.d says '${_pj_env_qt}', hyprland.conf says '${_pj_hypr_qt}'"
+  fi
+
+  # The platform theme has to be a plugin that is actually installed, else Qt
+  # silently falls back to Fusion's default light palette.
+  case "${_pj_env_qt}" in
+    qt5ct|qt6ct) _pj_need="qt5ct qt6ct" ;;
+    adwaita-dark|adwaita) _pj_need="adwaita-qt5 adwaita-qt6" ;;
+    gtk3|gtk2)   _pj_need="" ;;
+    *)           _pj_need="" ;;
+  esac
+  for _pj_p in ${_pj_need}; do
+    grep -Eq "^${_pj_p}\$" "${PROFILE}/packages.x86_64" \
+      && ok "13pj: ${_pj_p} in packages.x86_64 (QT_QPA_PLATFORMTHEME=${_pj_env_qt} resolves)" \
+      || fail "13pj: QT_QPA_PLATFORMTHEME=${_pj_env_qt} needs ${_pj_p}, which is not in packages.x86_64 — every Qt app falls back to light-grey Fusion"
+  done
+
+  # QT_STYLE_OVERRIDE outranks the `style=` key in qt5ct.conf/qt6ct.conf, so
+  # setting it defeats the NYXUS Qt configuration that skel ships.
+  if grep -q '^QT_STYLE_OVERRIDE=' "${_PJ_ENV}"; then
+    fail "13pj: QT_STYLE_OVERRIDE is set in 90-nyxus-theme.conf — it outranks the style= key in the qt5ct/qt6ct configs skel ships, so the NYXUS Qt palette never applies"
+  else
+    ok "13pj: QT_STYLE_OVERRIDE unset — the shipped qt5ct/qt6ct configs are free to apply"
+  fi
+
+  # skel has shipped qt5ct/ and qt6ct/ config dirs (style=Fusion + the
+  # nyxus-prism ALIEN NEON palette) since long before either package was
+  # listed, so nothing read either file.
+  for _pj_ct in qt5ct qt6ct; do
+    [[ -d "${AIROOT}/etc/skel/.config/${_pj_ct}" ]] || continue
+    grep -Eq "^${_pj_ct}\$" "${PROFILE}/packages.x86_64" \
+      && ok "13pj: skel ships .config/${_pj_ct}/ and ${_pj_ct} is installed to read it" \
+      || fail "13pj: skel ships .config/${_pj_ct}/ but ${_pj_ct} is not in packages.x86_64 — nothing reads that config"
+  done
+fi
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

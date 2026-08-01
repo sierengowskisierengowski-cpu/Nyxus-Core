@@ -598,7 +598,8 @@ for _shard in \
   nyxus-reactive.conf \
   nyxus-arsenal-apps.conf \
   nyxus-consoles.conf \
-  nyxus-stations-named.conf
+  nyxus-stations-named.conf \
+  nyxus-services.conf
 do
   if [[ -f "${NS}/${_shard}" ]]; then
     install -m 0644 "${NS}/${_shard}" "${SKEL}/.config/hypr/conf.d/${_shard}"

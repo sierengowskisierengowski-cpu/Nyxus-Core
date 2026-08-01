@@ -1,0 +1,18 @@
+# NYXUS Desktop — /opt/nyxus/desktop/nyxus_desktop.py
+#
+# The desktop layer is a click + icon surface, NOT the wallpaper painter.
+#
+# It runs on the BOTTOM layer-shell layer, which is one layer above the
+# BACKGROUND layer that nyxus-ws-wallpaperd (awww; per-workspace stills) and
+# nyxus-live-wallpaper (mpvpaper; the animated wall) paint on. An opaque
+# desktop would cover both, so per-workspace wallpapers and the living
+# wallpaper would stop being visible the moment the desktop layer started.
+#
+# bg_color = "transparent" leaves those two authoritative and keeps the desktop
+# to the job nothing else does: right-click on the wallpaper, and desktop icons.
+# wallpaper = "" for the same reason — set it (and an opaque bg_color) only if
+# you want nyxus-desktop to become the wallpaper painter, in which case stop
+# nyxus-ws-wallpaperd.service or the two will fight.
+wallpaper = ""
+fit = "fill"
+bg_color = "transparent"

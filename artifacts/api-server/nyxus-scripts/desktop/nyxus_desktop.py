@@ -117,6 +117,44 @@ def load_config() -> dict:
     return cfg
 
 
+def paints_background(cfg: dict) -> bool:
+    """True when this client owns the desktop background, false when it does
+    not and is only a click/icon surface over somebody else's wallpaper.
+
+    `bg_color` has been read out of desktop.toml and named in this file's
+    docstring since it was written, but was never applied — the fill was a
+    hardcoded `#080a10` in the CSS blob, so the surface was always opaque.
+    That matters, because this client sits on the BOTTOM layer-shell layer,
+    one layer ABOVE the BACKGROUND layer where nyxus-ws-wallpaperd (awww,
+    per-workspace stills) and nyxus-live-wallpaper (mpvpaper, the animated
+    wall) paint. An opaque fill here hides both, so simply starting the
+    desktop layer would have silently cost NYXUS per-workspace wallpapers and
+    the living wallpaper — features that already work.
+
+    `bg_color = "transparent"`, which is what skel ships, keeps those two
+    painters authoritative and reduces this surface to the job nothing else
+    does: catching right-clicks on the desktop and (from T2) holding icons.
+    """
+    return str(cfg.get("bg_color", DEFAULT_BG)).strip().lower() not in (
+        "transparent", "none", "",
+    )
+
+
+def bg_css(cfg: dict) -> bytes:
+    """CSS for the desktop's own background fill.
+
+    The window itself has to be styled too, not just the child box: GTK's
+    `window.background` paints an opaque theme fill regardless of what the
+    child does, so a transparent box over an opaque window is still opaque.
+    """
+    fill = str(cfg.get("bg_color", DEFAULT_BG)).strip() \
+        if paints_background(cfg) else "transparent"
+    return (
+        f"window.background {{ background: {fill}; }}\n"
+        f".nyxus-desktop-bg {{ background: {fill}; }}\n"
+    ).encode()
+
+
 def save_config(cfg: dict) -> None:
     lines = [
         f'wallpaper = "{cfg["wallpaper"]}"',
@@ -547,6 +585,12 @@ class DesktopSurface(Gtk.ApplicationWindow):
         self.overlay.add_overlay(self.icon_layer)
 
     def _apply_wallpaper(self, path: str) -> None:
+        # When bg_color is transparent another daemon owns the BACKGROUND
+        # layer under us. Painting here would cover it — including the
+        # per-workspace switch and the animated wall — so hot-swaps that
+        # arrive over IPC are persisted by the caller and ignored here.
+        if not paints_background(self.cfg):
+            return
         p = Path(os.path.expanduser(path or ""))
         if not p.exists():
             log.warning("wallpaper missing: %s", p)
@@ -1041,7 +1085,6 @@ class IPCServer(threading.Thread):
 
 # ---------- application ----------
 CSS = b"""
-.nyxus-desktop-bg { background: #080a10; }
 .nyxus-desktop-icons { background: transparent; }
 
 .nyxus-desktop-icon {
@@ -1110,7 +1153,7 @@ class DesktopApp(Gtk.Application):
     def do_startup(self) -> None:  # type: ignore[override]
         Gtk.Application.do_startup(self)
         provider = Gtk.CssProvider()
-        provider.load_from_data(CSS)
+        provider.load_from_data(bg_css(self.cfg) + CSS)
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(),
             provider,

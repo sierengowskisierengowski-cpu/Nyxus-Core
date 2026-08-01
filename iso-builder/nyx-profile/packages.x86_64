@@ -312,6 +312,57 @@ file-roller
 unrar
 libcanberra
 
+# ═══════════════════════════════════════════════════════════════════
+# DE COMPLETENESS — WAVE 1 (rev 2026-08-01)
+# docs/DE_COMPLETENESS_AND_EDITIONS_2026-07-31.md §2.1
+# Every entry here backs something that was already built, shipped and
+# exposed in Settings but could not run for want of a package.
+# ═══════════════════════════════════════════════════════════════════
+
+# gtk4-layer-shell — the GTK4 layer-shell binding.
+# /opt/nyxus/desktop/nyxus_desktop.py is a complete GTK4 layer-shell desktop
+# client (wallpaper paint per-monitor at the BOTTOM layer + right-click →
+# nyxus-context-menu.sh). It does gi.require_version("Gtk4LayerShell","1.0")
+# and this profile only ever listed `gtk-layer-shell`, which is the GTK **3**
+# library and a different package. The import guard's fallback is
+# os.execvp("swaybg", …) with a message on stderr nobody reads, so the desktop
+# layer degraded to a plain wallpaper with no right-click and NO visible error.
+gtk4-layer-shell
+
+# loupe — image viewer. There was no image viewer on the ISO at all, so every
+# PNG/JPEG resolved to Firefox (which claims those types) and opened in a
+# browser tab. Needed before a mimeapps.list has anything to point at.
+loupe
+
+# zathura + zathura-pdf-mupdf — PDF viewer, same story: no PDF reader shipped,
+# so application/pdf fell through to Firefox. The -pdf-mupdf plugin is what
+# actually renders PDF; zathura alone opens nothing.
+zathura
+zathura-pdf-mupdf
+
+# qt5ct + qt6ct — Qt theming, and the ONE consistent option available.
+# skel already ships ~/.config/qt5ct/qt5ct.conf and ~/.config/qt6ct/qt6ct.conf
+# (style=Fusion + the custom nyxus-prism ALIEN NEON palette) and NEITHER
+# package was installed, so nothing read either file and every Qt app rendered
+# default light grey.
+#
+# The DE study's §2.1 item 3 asked for `adwaita-qt5` + `adwaita-qt6` instead
+# (to match QT_QPA_PLATFORMTHEME=adwaita-dark in /etc/environment.d). Those
+# packages NO LONGER EXIST in the Arch repos — `pacman -Si adwaita-qt5` and
+# `adwaita-qt6` both resolve to nothing on a fully synced box (upstream
+# adwaita-qt is archived), and pacstrap ABORTS on an unknown package, so
+# listing them would have failed the bake outright. qt5ct/qt6ct is the
+# alternative the study itself offers in §1.3 row 7, and it is the better one
+# because the config it needs is already in skel and already on palette.
+qt5ct
+qt6ct
+
+# ffmpegthumbnailer — video thumbnails in Files. Image thumbnails already work
+# (nautilus pulls glycin); video and PDF had none. `tumbler` is deliberately
+# NOT added — it serves the thunar family, and no thunar-family file manager
+# ships here.
+ffmpegthumbnailer
+
 # ── archiso runtime requirements ──────────────────────────────────
 arch-install-scripts
 archinstall
