@@ -398,3 +398,301 @@ Whoever continues the Settings work should treat "the backend actually runs" as
 part of the completeness criterion, not just "the row is not blank."
 
 ---
+
+## 2. THE SHORTEST PATH TO "FEELS LIKE A REAL OS"
+
+The owner asked for the shortest path from where he is to a system that feels
+complete **to someone who has never used Linux**. That person's first hour is:
+log in, look at the desktop, right-click it, open a file, plug in a USB stick,
+copy and paste, change a setting. Everything below is ordered by that hour.
+
+### 2.1 Wave 1 — the ninety-minute wave
+
+Every item here is one package line or one `exec-once`. Together they close
+**five of the top six blockers**. This is the highest-leverage work available
+anywhere in the project right now.
+
+| # | Change | File | Closes |
+|---|---|---|---|
+| 1 | `+ gtk4-layer-shell` | `packages.x86_64` | Gap #4 |
+| 2 | `+ loupe` (image viewer), `+ zathura`, `+ zathura-pdf-mupdf` (PDF) | `packages.x86_64` | Gap #2 |
+| 3 | `+ adwaita-qt5`, `+ adwaita-qt6` | `packages.x86_64` | Gap #7 |
+| 4 | `+ ffmpegthumbnailer` | `packages.x86_64` | Gap #12 |
+| 5 | `exec-once = udiskie -at` | a new `conf.d` shard | Gap #3 |
+| 6 | `exec-once = wl-paste --type text --watch cliphist store` (+ image) | same shard | Gap #5 |
+| 7 | `exec-once = gnome-keyring-daemon --start --components=secrets` | same shard | Gap #8 |
+| 8 | `exec-once = nyxus-desktop` (guarded with `command -v`) | same shard | Gap #4 |
+
+> ⚠ **Three traps that apply to Wave 1 specifically, all already paid for once:**
+>
+> - **A new `conf.d` shard must be added to the bake's whitelist AND `source=`d
+>   from `hyprland.conf`.** Committing a shard into `airootfs` is not enough —
+>   the bake wipes `skel/.config/hypr` and repopulates from NS via a
+>   hand-maintained list. This has shipped broken **three** times
+>   (`nyxus-arsenal-apps.conf` twice, `nyxus-consoles.conf` once) **[DOC]**.
+>   Gate `13w` derives the requirement from `hyprland.conf` itself and will
+>   catch it — *if* the `source=` line is added.
+> - **Use bare command names, never `~/.local/bin/…`.** Gate `13z` hard-fails
+>   otherwise **[DOC]**.
+> - **Adding `gtk4-layer-shell` is necessary but not sufficient for the desktop
+>   layer.** `nyxus_desktop.py`'s import guard falls back to `swaybg` silently.
+>   If the package is added and the desktop still does not appear, the failure
+>   will look identical to it not being wired at all. **Verify with
+>   `hyprctl layers -j` for a bottom-layer namespace, not by looking at the
+>   screen** — a working `nyxus-desktop` and a `swaybg` fallback are visually
+>   identical until you right-click.
+
+**Wave 1 does not need a design decision from the owner.** It is entirely
+"connect the thing that is already there."
+
+### 2.2 Wave 2 — the MIME wave (the real work)
+
+Gap #1 is the largest single contributor to "feels unfinished" and the only
+Wave-1-or-2 item that is genuinely a day of work rather than an hour.
+
+Three pieces, in this order:
+
+1. **Declare handlers.** Add `MimeType=` to the NYXUS apps that are handlers:
+   `nyxus-files` (`inode/directory`), `nyxus-notepad` (`text/plain` and
+   friends), and any Intel/viewer app that genuinely opens a file type. **Do not
+   add `MimeType=` to launcher-style entries** — a `.desktop` claiming a type it
+   cannot open is worse than not claiming it.
+2. **Ship a `mimeapps.list` in skel** at `etc/skel/.config/mimeapps.list`,
+   covering at minimum: directories, plain text, source files, PDF, the common
+   image types, audio, video, archives, and `x-scheme-handler/http`+`https`+`mailto`.
+   Shipping it in **skel** rather than generating it at firstboot removes the
+   user-context bug entirely and makes it reviewable in git.
+3. **Fix or delete `03-mime-defaults.sh`.** As written it runs as root, targets
+   an uninstalled `kate`, and is redundant once (2) exists. Deleting it is the
+   honest option; if it is kept, it must run as `nyx`.
+
+> ⚠ **`xdg-open` is on the ISO only because chromium hard-depends on
+> `xdg-utils`** **[PKG]**. That is a load-bearing accident. **Add `xdg-utils`
+> and `xdg-user-dirs` explicitly to `packages.x86_64`.** `xdg-user-dirs` is
+> reached only transitively via `nautilus → xdg-user-dirs-gtk` — and firstboot
+> fragment `02-xdg-user-dirs.sh` calls `xdg-user-dirs-update` with `|| true`, so
+> if that chain ever breaks the user silently gets no `~/Documents`,
+> `~/Downloads`, `~/Pictures`. This is doubly important for the daily edition,
+> which drops chromium (§3.2).
+
+### 2.3 Wave 3 — the one observation
+
+**On the very next stick boot, before anything else: read the greeter's session
+dropdown and write down what is preselected.** That single observation settles
+§1.2-A and most of §1.2-H. Then, in the same session:
+
+- open a file picker from Firefox (portal FileChooser),
+- start a screen share in a browser (portal ScreenCast),
+- plug in a USB stick,
+- right-click the wallpaper.
+
+Four actions, under a minute, and they convert four **[INFER]** rows in this
+document into **[DOC]** rows.
+
+### 2.4 Wave 4 — declare it
+
+The owner's framing — *"Hyprland is a compositor, not a desktop environment"* —
+is right, and the last step is the cheapest and the most symbolic: **stop
+shipping NYXUS as a Hyprland configuration and start shipping it as a desktop
+environment.**
+
+Concretely that means:
+
+- **One session entry.** Drop upstream `hyprland.desktop` and
+  `hyprland-uwsm.desktop` at bake so `nyxus-hyprland.desktop` is the only
+  choice. This also removes the portal ambiguity and the "which session did it
+  start" class of bug permanently.
+- **`XDG_CURRENT_DESKTOP=NYXUS:Hyprland`**, not bare `Hyprland`. The colon form
+  is the standard way to say "I am NYXUS, and I behave like Hyprland" —
+  portals and `OnlyShowIn=` still match `Hyprland`, and NYXUS-specific rules
+  become expressible. ⚠ **Change this only *with* Wave 3's verification, not
+  before** — anything that currently keys on the exact string `Hyprland` needs
+  re-checking, and portal backend selection is exactly such a consumer.
+- **Say it in the docs.** `HANDOFF.md` §2 currently describes NYXUS as *"a
+  custom Hyprland-based Arch Linux security-lab distro"*. Calling it a desktop
+  environment is what makes the completeness criterion legible to the next
+  agent — and this study's whole finding is that the gap between the two is
+  smaller than anyone assumed.
+
+### 2.5 What is deliberately NOT on the path
+
+| Not doing | Why |
+|---|---|
+| Migrating to `hyprland.lua` | hyprlang is removed in Hyprland **0.57**; the owner's 2026-07-28 decision is **do not migrate yet** — pin the version, stabilise, migrate on a branch after 0.57 ships **[DOC]**. Gate `13x` hard-fails a bake if the repos offer ≥0.57. See §4.4 |
+| Consolidating the three power surfaces | Cosmetic; the eye-candy spec owns look decisions |
+| Redesigning the greeter | Net-new work, not a bug hunt — searched exhaustively, there are four `regreet.css` blobs in all of history and `main` has the best one **[DOC]** |
+| Adding a dock, a systray daemon, or a second file manager | NYXUS already has more shell surfaces than it needs; adding more is the opposite of feeling finished |
+
+---
+
+## 3. TWO-EDITION ARCHITECTURE
+
+### 3.1 Feasibility and mechanism — recommendation
+
+**Feasible, and the mechanism already exists in a stronger form than the brief
+assumed.** `build-iso.sh` does not only have `NYX_WITH_KAGE_RYU`; it already has
+an **edition-like tier flag** at line 136 **[REPO]**:
+
+```bash
+NYX_ISO_TIER="${NYX_ISO_TIER:-full}"
+if [[ "${NYX_ISO_TIER}" == "lean" && -f "${PROFILE_DIR}/packages.x86_64.lean" ]]; then
+  cp "${PROFILE_DIR}/packages.x86_64" "${PROFILE_DIR}/packages.x86_64.bake.bak"
+  cp "${PROFILE_DIR}/packages.x86_64.lean" "${PROFILE_DIR}/packages.x86_64"
+```
+
+`packages.x86_64.lean` exists (311 entries vs 408) and drops 97 packages: the
+BlackArch curated set, metasploit, ghidra, ollama, suricata, tor, the whole
+recon/exploit/crack/forensics block **[REPO]**.
+
+**And it is already broken in exactly the way HANDOFF warns about.** This is the
+most important evidence in this entire section, so it is worth being precise:
+
+| Fact | Consequence |
+|---|---|
+| `packages.x86_64.lean` is dated **2026-07-22**; `packages.x86_64` is dated **2026-07-30** **[REPO]** | 8 days of divergence, unreviewed |
+| `btop` was **added to the full list on 2026-07-30** specifically to fix dead station launches (three stations and four launch chains fall back to it) **[DOC]**. It is **not in the lean list** **[REPO]** | A `NYX_ISO_TIER=lean` bake **today** reintroduces the exact station-launch bug that was diagnosed and fixed the day before yesterday |
+| `gnome-text-editor` is in full, not in lean **[REPO]** | The lean tier has no GUI text editor |
+| `calamares` is dropped by lean **[REPO]** | **The lean tier has no installer.** It can be booted but never installed |
+| `chromium` is dropped by lean **[REPO]**, and chromium is what pulls `xdg-utils` **[PKG]** | **The lean tier has no `xdg-open` and no `xdg-mime` at all.** Nothing opens anything by association |
+| `verify-profile.sh` contains **zero references to `NYX_ISO_TIER`** **[REPO]** | 42 gates validate the full profile. **None of them has ever run against the lean one.** |
+
+That is four independent silent regressions in one unmaintained duplicate
+surface, discovered in a single afternoon of reading — the same count HANDOFF
+records for 2026-07-30 across the entire project. **`packages.x86_64.lean` is
+not a precedent to follow. It is the strongest possible argument for how the
+second edition must NOT be built.**
+
+#### The four candidate mechanisms
+
+| Mechanism | Maintenance cost | Drift risk | Verdict |
+|---|---|---|---|
+| **A. Separate branch or repo** | Highest. Every fix must be landed twice, forever | Certain. Violates the one-canonical-repo rule (§0 rule 1) outright | **Reject.** This is the failure mode the whole project was reorganised to escape |
+| **B. Separate archiso profile** (`nyx-profile-daily/`) | Very high. Duplicates skel, airootfs, `profiledef.sh`, `customize_airootfs.sh` — thousands of files | Certain, and *invisible*: the bake already reads from three trees, and a fourth is how `nyxus-hyprland-layerblur.conf` and `nyxus-stations.conf` ended up as copies nothing reads (gate `13ak`) **[DOC]** | **Reject** |
+| **C. Duplicate data files** (`packages.x86_64.lean` pattern) | High, and deceptively so — it *looks* cheap | **Proven, measured, four instances above** | **Reject, and fix or retire the existing one** |
+| **D. Edition flag + subtractive manifest** | Lowest. One shared profile; the edition is expressed as a *list of exclusions* applied at bake | Low — a subtractive list cannot go stale in the dangerous direction | **RECOMMEND** |
+
+#### Recommendation: `NYX_EDITION=lab|daily`, subtractive, one profile
+
+```bash
+NYX_EDITION="${NYX_EDITION:-lab}"    # lab = today's build, unchanged, the default
+```
+
+The design rule that makes this safe, and the reason it beats the existing
+`lean` tier:
+
+> **The daily edition is defined as a set of REMOVALS from the full build. It
+> never has its own copy of anything.**
+
+Concretely:
+
+- **Packages**: ship `iso-builder/editions/daily.exclude` — a list of package
+  *names to remove* from `packages.x86_64` at bake, not a second full list. A
+  name that no longer exists in the full list is a no-op or a warning; a name
+  newly *added* to the full list is automatically inherited by the daily
+  edition. **`btop` could not have been lost this way.** The failure mode
+  inverts from "silently ships stale content" to "harmlessly lists something
+  that is gone" — which is the entire point.
+- **Payloads**: guard the existing `build-iso.sh` staging steps with
+  `[[ "${NYX_EDITION}" == "lab" ]]`. The honeypot, Arsenal, Bifrost, jeTT and
+  Meli staging steps are already discrete, individually-guarded blocks
+  **[REPO]** — this is a one-line condition on each, not a restructure.
+- **Services**: the `for svc in … systemctl enable` loop in
+  `customize_airootfs.sh` **[REPO]** becomes edition-aware for the five security
+  units. Everything else stays identical.
+- **Stations**: see §3.3 — this is the only part that needs real design.
+- **Everything visual**: untouched. Same skel, same eww, same palette, same
+  greeter, same lock, same saver. **Zero duplicated surfaces.**
+- **Build stamp**: `/etc/nyxus-build` must record the edition. Without it, "is
+  this stick daily or lab?" becomes unanswerable, and the project has already
+  lost days to unanswerable "which build is this" questions **[DOC]**.
+
+**And retire `NYX_ISO_TIER`.** Two overlapping edition mechanisms is worse than
+either alone — someone will eventually bake `NYX_ISO_TIER=lean NYX_EDITION=daily`
+and get a result nobody designed. Either fold `lean` into the new flag as a
+third edition with its own exclude list, or delete it and `packages.x86_64.lean`
+outright. It is currently a loaded footgun: documented, reachable, and known
+broken.
+
+### 3.2 The stripping manifest
+
+What the daily edition excludes. Everything here is verified present in the full
+build today.
+
+#### 3.2.1 Package exclusions
+
+| Group | Packages | Installed size |
+|---|---|---|
+| Exploitation | `metasploit`, `exploitdb`, `routersploit`, `sqlmap`, `commix`, `xsser`, `dalfox`, `impacket`, `crackmapexec`, `responder` | **~700 MiB** |
+| RE / forensics | `ghidra`, `radare2`, `foremost`, `bulk-extractor`, `stegseek`, `mat2`, `secure-delete`, `perl-image-exiftool` | **~790 MiB** |
+| Web / scanning | `zaproxy`, `nuclei`, `nikto`, `wpscan`, `gobuster`, `ffuf`, `feroxbuster`, `dirb`, `wfuzz`, `whatweb`, `naabu`, `rustscan`, `masscan` | **~460 MiB** |
+| Recon / OSINT | `amass`, `subfinder`, `assetfinder`, `theharvester`, `recon-ng`, `dnsrecon`, `dnsenum`, `fierce`, `sublist3r`, `enum4linux` | **~110 MiB** |
+| Wireless | `aircrack-ng`, `wifite`, `reaver`, `bully`, `bettercap`, `kismet`, `hcxtools`, `hcxdumptool`, `mdk4`, `pixiewps` | **~95 MiB** |
+| Cracking | `hashcat`, `john`, `hydra`, `medusa`, `ncrack`, `crunch`, `cewl`, `hashid`, `patator` | **~135 MiB** |
+| Sniffing / MITM | `ettercap`, `dsniff`, `mitmproxy`, `proxychains-ng` | **~22 MiB** |
+| Anonymity | `tor`, `torsocks` | **~28 MiB** |
+| AI / IDS | `ollama`, `suricata` | **~70 MiB** |
+| Container runtime (honeypot only) | `docker`, `docker-compose` | **~142 MiB** |
+| BlackArch plumbing | `blackarch-keyring`, `blackarch-mirrorlist` | trivial — but see the warning below |
+
+**Measured total: ≈ 2.6 GiB of installed size** (summed from `pacman -Si`
+Installed Size across the packages above) **[PKG]**.
+
+> ⚠ **Dropping the BlackArch repo is not just two packages.** `packages.x86_64`
+> pulls a curated ~67-tool set *from* `[blackarch]`, and — per HANDOFF — so does
+> **`calamares`**, which *"is a binary in [blackarch] and is now pacstrapped
+> directly"*; four ISOs failed on this before it was understood **[DOC]**.
+> **The daily edition must keep the BlackArch repo wired even though it installs
+> almost nothing from it, or it loses its installer.** This is exactly the trap
+> `packages.x86_64.lean` fell into by dropping calamares.
+
+#### 3.2.2 Payload and service exclusions
+
+| Excluded | Where it comes from | Size |
+|---|---|---|
+| **Honeypot Docker images** — cowrie, heralding, conpot, dionaea, endlessh, http-honeypot, grafana, loki, prometheus, promtail | `build-iso.sh` `docker save` → `/opt/honeypot/images/*.tar` | **~1 GB** of tarballs **[REPO][DOC]** |
+| **Honeypot stack config** | `/opt/honeypot` (compose, service configs, `.env` template) | small |
+| **`nyxus-honeypot-firewall.service`** + `nyxus-honeypot-firewall` | `usr/lib/systemd/system/` + `/usr/local/bin` **[REPO]** | trivial — but it is a `multi-user.target` unit that once put ~60 s in front of the greeter **[DOC]** |
+| **Firstboot fragment `06-honeypot-stack.sh`** | `/etc/nyxus-firstboot.d/` | trivial; removes the 900 s `TimeoutStartSec` justification |
+| **Arsenal** — `/opt/arsenal/tools/{CIPHER,Forge,RedForge,GSL,AI-Cyber-Defense-Trainer,axiom,c2}`, `arsenal` TUI, `/etc/arsenal/registry.toml`, `etc/skel/Arsenal/` | `NYX_STAGE_ARSENAL_APPS` staging **[REPO]** | **34 MB** in-repo |
+| **Bifrost EDR** — guardian binary, Tauri shell, `bifrost.desktop`, station 9 pin | `NYX_BIFROST_BIN`/`NYX_BIFROST_REPO` **[REPO]** | ~21 MB PyInstaller ELF **[DOC]** |
+| **jeTT EDR** — daemon, `/etc/jett/`, `jett-daemon.service` | `NYX_JETT_BIN`/`NYX_JETT_REPO` **[REPO]** | the live binary is **680 MB** **[DOC]** |
+| **Meli** — `/opt/meli`, ingest units, `nyxus-launch-meli` | `NYX_MELI_REPO`/`NYX_MELI_VENV` **[REPO]** | 2.4 MB |
+| **GodsApp** (30 modules) and **NYXUS Intel** (OSINT suite) | `nyxus_godsapp_install.sh`, `nyxus_intel_install.sh` **[DOC]** | ~380 KB in-repo; larger installed |
+| **Security daemons enabled at bake** — `jett-daemon.service`, `ollama.service`, `docker.service`, `nyxus-honeypot-firewall.service`, `usbguard.service`, `auditd.service` | the `for svc in …` loop in `customize_airootfs.sh` **[REPO]** | — |
+| **Security desktop entries** — `arsenal`, `bifrost`, `meli`, `nyxus-godsapp`, `io.nyxus.intel`, `nyxus-{cipher,forge,redforge,gsl,trainer,axiom,c2}`, `gowskinet-*` **[DOC]** | wave-4 `.desktop` glob | — |
+
+**Keep in daily** (general-purpose, not lab tooling): `ufw`/`firewalld`,
+`nyxus-security` (Security Center), `nyxus-panic`, `nyxus-vpn`, `nyxus-doh`,
+`nyxus-mac-randomize`, `nyxus-secboot`, `nyxus-passwords`, `wireshark`, `nmap`.
+A normal desktop still wants a firewall and a password manager. **Ghost Mode**
+(Tor + nft kill-switch) dies only if `tor` dies — flag for the owner, since a
+privacy mode is arguably a daily-driver feature rather than lab tooling.
+
+#### 3.2.3 Estimated size saving — and the honest caveat
+
+| Component | Installed / raw | Est. on-ISO after zstd |
+|---|---|---|
+| Security packages (§3.2.1) | ~2.6 GiB | **~1.1–1.4 GB** |
+| Honeypot Docker image tarballs | ~1.0 GB | **~0.8–0.9 GB** (container layers are already compressed; squashfs gains little) |
+| jeTT daemon binary | 680 MB | **~0.2–0.25 GB** |
+| Arsenal + Bifrost + Meli + GodsApp + Intel | ~60 MB | **~0.03 GB** |
+| **Total** | | **≈ 2.1 – 2.6 GB** |
+
+Against the **8.49 GB** `nyxus-2026.07.31` ISO **[REPO]**, that gives a daily
+edition of roughly **5.9 – 6.4 GB** — a **~25–30% reduction**.
+
+> **Two honest caveats.** First, these are *estimates* from `pacman -Si`
+> installed sizes plus a compression assumption; **only a bake settles it**, and
+> this project's own history says measure rather than reason. Second, **~6 GB is
+> still not a small ISO.** If the goal is "fits on any stick and downloads in a
+> reasonable time," the daily edition needs a second pass at the
+> *general-purpose* bulk too — the `steam`/`gamescope`/`mangohud` block,
+> `libvirt`+`qemu-desktop`+`virt-manager`, `podman`+`distrobox`+`buildah`+`skopeo`,
+> `code`, `neovim`+`helix`+`micro`. The existing `lean` list drops all of those
+> **[REPO]**. **That is a separate decision from "no security tooling," and
+> conflating the two is how the lean tier ended up with no installer and no
+> `xdg-open`.** Keep the axes separate: `NYX_EDITION` decides *lab vs daily*; a
+> size tier, if wanted, should be its own orthogonal flag with its own exclude
+> list.
+
+---
