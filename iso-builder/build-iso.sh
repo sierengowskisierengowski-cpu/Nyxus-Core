@@ -1111,6 +1111,22 @@ for entry in "${APPS_LIST[@]}"; do
 exec python3 /opt/nyxus/nyxus_${mod}.py "\$@"
 LAUNCHER
   chmod 0755 "${LBIN}/${bin_name}"
+
+  # Only write a generated .desktop when nyxus-scripts/desktop-entries has no
+  # curated one for this app. It used to write one unconditionally, so twelve
+  # apps — Settings, Terminal, Notepad, Store, Stickies, Notes, Control,
+  # Doctor, Launcher, Powermenu, Screenshot, SysMon — appeared TWICE in every
+  # application menu. The curated entry is also the better of the two: a real
+  # icon and real categories, against this template's generic
+  # `preferences-system` / `System;Utility;`. The launcher binary above is
+  # still generated either way; only the menu entry is skipped.
+  # Two names to check: the launcher's own (nyxus-settings) and the module's
+  # dashed form (nyxus-sysmon-gtk), because bin_name special-cases sysmon_gtk
+  # to nyxus-sysmon while the curated entry keeps the module name.
+  if [[ -f "${NS}/desktop-entries/${bin_name}.desktop" \
+     || -f "${NS}/desktop-entries/nyxus-${mod//_/-}.desktop" ]]; then
+    continue
+  fi
   cat > "${APPS}/io.nyxus.${mod}.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application

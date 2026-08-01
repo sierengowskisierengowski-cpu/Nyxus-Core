@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=NYXUS Screenshot
-Comment=Region & full-screen capture
-Exec=/usr/local/bin/nyxus-screenshot
-Icon=preferences-system
-Categories=System;Utility;
-Terminal=false
-StartupNotify=true

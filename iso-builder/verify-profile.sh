@@ -2478,6 +2478,59 @@ done
 (( _pb_fail == 0 )) \
   && ok "both savers can reach fullscreen (no pin conflict) and the payload re-asserts it after map"
 
+# ── 13ph. no app appears twice in the application menu ───────────────────────
+# build-iso.sh generates an io.nyxus.<mod>.desktop for every entry in its
+# APPS_LIST, and nyxus-scripts/desktop-entries also ships a curated
+# nyxus-<app>.desktop for most of the same apps. Nothing checked, so twelve
+# apps — Settings, Terminal, Notepad, Store, Stickies, Notes, Control, Doctor,
+# Launcher, Powermenu, Screenshot, SysMon — were listed TWICE in the menu, once
+# with a real icon and once with a generic placeholder. The generator skips a
+# duplicate now; this catches the next one.
+hd "13ph. no duplicate application-menu entries"
+if ! command -v python3 >/dev/null 2>&1; then
+  warn "13ph: python3 not available — duplicate check skipped"
+else
+  _ph_out="$(python3 - "${AIROOT}/usr/share/applications" <<'PYEOF'
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+d = Path(sys.argv[1])
+if not d.is_dir():
+    raise SystemExit(0)
+
+def field(path, key):
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        if line.startswith(key + "="):
+            return line[len(key) + 1:].strip()
+    return None
+
+by_name = defaultdict(list)
+for f in sorted(d.glob("*.desktop")):
+    if (field(f, "NoDisplay") or "").lower() == "true":
+        continue
+    if (field(f, "Hidden") or "").lower() == "true":
+        continue
+    if field(f, "DesktopNames"):     # session entry, not an app
+        continue
+    name = field(f, "Name")
+    if name:
+        by_name[name].append(f.name)
+
+for name, files in sorted(by_name.items()):
+    if len(files) > 1:
+        print(f"DUP {name!r} is provided by {' and '.join(files)}")
+PYEOF
+)"
+  if [[ -z "${_ph_out}" ]]; then
+    ok "13ph: every visible application-menu entry is unique"
+  else
+    while IFS= read -r _ph_line; do
+      [[ -n "${_ph_line}" ]] && fail "13ph: ${_ph_line#DUP }"
+    done <<<"${_ph_out}"
+  fi
+fi
+
 # ── 13pg. the two installer allowlists agree, and every name resolves ────────
 # install.sh (dev/repo deploy) and nyxus_install.sh (offline/ISO deploy) each
 # carry an explicit LAUNCHERS array. They are supposed to be the same list.

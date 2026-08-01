@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=NYXUS Notepad
-Comment=NYXUS markdown notepad
-Exec=/usr/local/bin/nyxus-notepad
-Icon=preferences-system
-Categories=System;Utility;
-Terminal=false
-StartupNotify=true

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=NYXUS Control
-Comment=Quick toggles & launchers
-Exec=/usr/local/bin/nyxus-control
-Icon=preferences-system
-Categories=System;Utility;
-Terminal=false
-StartupNotify=true

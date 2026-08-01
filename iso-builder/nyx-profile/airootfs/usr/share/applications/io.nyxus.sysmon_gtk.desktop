@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=NYXUS System Monitor
-Comment=Real-time system metrics
-Exec=/usr/local/bin/nyxus-sysmon
-Icon=preferences-system
-Categories=System;Utility;
-Terminal=false
-StartupNotify=true

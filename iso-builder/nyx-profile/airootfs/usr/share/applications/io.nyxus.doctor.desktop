@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=NYXUS Doctor
-Comment=NYXUS health audit
-Exec=/usr/local/bin/nyxus-doctor
-Icon=preferences-system
-Categories=System;Utility;
-Terminal=false
-StartupNotify=true

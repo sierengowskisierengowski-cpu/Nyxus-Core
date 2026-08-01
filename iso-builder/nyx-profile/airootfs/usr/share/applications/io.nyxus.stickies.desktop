@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=NYXUS Stickies
-Comment=Sticky notes pinned to your desktop
-Exec=/usr/local/bin/nyxus-stickies
-Icon=preferences-system
-Categories=System;Utility;
-Terminal=false
-StartupNotify=true

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=NYXUS Launcher
-Comment=Application launcher
-Exec=/usr/local/bin/nyxus-launcher
-Icon=preferences-system
-Categories=System;Utility;
-Terminal=false
-StartupNotify=true
