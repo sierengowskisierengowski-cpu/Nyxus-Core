@@ -638,6 +638,20 @@ systemctl disable systemd-timesyncd.service 2>/dev/null || true
 # display-manager.service at boot.
 systemctl disable sddm.service 2>/dev/null || true
 
+# ── Only NYXUS (Hyprland) is an offered session ────────────────────────
+# Belt and braces for the NoExtract lines in both pacman.confs: if hyprland
+# was ever extracted before those landed, or arrives through some other path,
+# sweep the upstream entries now. Without this the greeter lists `Hyprland`
+# and `Hyprland (uwsm-managed)` alongside ours and preselects one of them
+# (G-08/G-09), which drops a first-time user into a bare upstream compositor.
+rm -f /usr/share/wayland-sessions/hyprland.desktop \
+      /usr/share/wayland-sessions/hyprland-uwsm.desktop
+if [ ! -e /usr/share/wayland-sessions/nyxus-hyprland.desktop ]; then
+  echo "FATAL: no NYXUS session entry in /usr/share/wayland-sessions — the greeter would offer nothing to log into" >&2
+  exit 1
+fi
+echo "  [sessions] offering: $(ls /usr/share/wayland-sessions/ | tr '\n' ' ')"
+
 # Suppress nm-applet xdg autostart — its "Wired connection" / Ethernet toasts
 # clutter Hypr sessions. EWW owns network chrome; package stays for Settings.
 if [[ -f /etc/xdg/autostart/nm-applet.desktop ]]; then
@@ -893,3 +907,22 @@ else
   echo "calamares failed to build at bake time; this image is live-only" \
     > /etc/nyxus-no-installer
 fi
+
+# ── No account but `nyx` may reach the login screen ──────────────────────────
+# G-06/G-07: the greeter preselected `nyxbuild`, the AUR build account, and
+# rejected the nyx password — the very first thing the owner saw on the first
+# USB boot. _aur_teardown removes that user, but it runs after builds that can
+# leave a stray process behind, and `userdel` refuses while one is alive. This
+# is the assertion that makes that class of leak impossible to ship: regreet
+# enumerates every account inside the login.defs UID range, so any of them
+# other than `nyx` is a bug, and a bake that produced one must not finish.
+_nyx_stray_users="$(awk -F: '$3 >= 1000 && $3 < 65534 && $1 != "nyx" { print $1 }' /etc/passwd | tr '\n' ' ')"
+if [ -n "${_nyx_stray_users// /}" ]; then
+  echo "[customize_airootfs] ############################################################"
+  echo "[customize_airootfs] ## FATAL: login-capable account(s) other than nyx survived ##"
+  echo "[customize_airootfs] ##   ${_nyx_stray_users}"
+  echo "[customize_airootfs] ##   The greeter enumerates these and may preselect one.   ##"
+  echo "[customize_airootfs] ############################################################"
+  exit 1
+fi
+echo "[customize_airootfs] ✅ LOGIN OK — nyx is the only account the greeter can enumerate"

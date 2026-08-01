@@ -1,8 +1,9 @@
 /* ============================================================
  * NYXUS - ReGreet stylesheet - "Void Sign-In" (Wayland greeter)
  * (c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
- * rev 2026-07-14 - ALIEN NEON tokens (docs/THEME.md section 8):
- *   accent primary  #7d3dff (purple)   secondary #ff2d55 (magenta)
+ * rev 2026-08-01 - ALIEN NEON tokens (docs/THEME.md section 8):
+ *   accent primary  #7d3dff (violet)   secondary #ff2dad (magenta)
+ *   danger          #ff2d55 (red)      - errors ONLY, never focus
  *   text #eef2fa / #c8ccd6 / #6a6e78    frosted ink rgba(5,2,11,.78)
  * Frosted smoked-glass login card, pushed right of centre so the
  * alien art on the left stays visible. ASCII-only.
@@ -104,13 +105,16 @@ button {
     letter-spacing: 0.12em;
     padding: 8px 16px;
 }
+/* G-14: these used to fill with #ff2d55, the same red as .error below, so a
+ * normal keyboard-focused field looked exactly like a rejected password. The
+ * canon secondary accent is magenta #ff2dad; red is reserved for failure. */
 button:hover, button:focus {
-    background-color: rgba(255, 45, 85, 0.22);
-    border-color: #ff2d55;
-    box-shadow: 0 0 14px rgba(255, 45, 85, 0.45);
+    background-color: rgba(255, 45, 173, 0.22);
+    border-color: #ff2dad;
+    box-shadow: 0 0 14px rgba(255, 45, 173, 0.45);
 }
 button:active {
-    background-color: rgba(255, 45, 85, 0.36);
+    background-color: rgba(255, 45, 173, 0.36);
 }
 
 /* session / user dropdowns */
@@ -124,14 +128,33 @@ combobox button:hover, dropdown button:hover {
     box-shadow: 0 0 12px rgba(125, 61, 255, 0.40);
 }
 
-popover, popover.background {
+/* G-15: the dropdown popovers rendered as default Adwaita grey. GTK4 paints a
+ * GtkDropDown's list inside `popover > contents`, with a `listview` of `row`s
+ * -- styling the bare `popover` node leaves all of that untouched, so the list
+ * that fell out of the frosted card did not look like it belonged to it. */
+popover, popover.background, popover.menu,
+popover > contents, popover.menu > contents {
     background-color: rgba(5, 2, 11, 0.97);
     border: 1px solid rgba(125, 61, 255, 0.34);
     border-radius: 12px;
     color: #eef2fa;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.65);
 }
-popover modelbutton:hover, popover row:hover {
+popover > arrow {
+    background-color: rgba(5, 2, 11, 0.97);
+    border: 1px solid rgba(125, 61, 255, 0.34);
+}
+popover listview, popover listview > row, popover scrolledwindow {
+    background-color: transparent;
+    color: #c8ccd6;
+}
+popover modelbutton:hover, popover row:hover, popover listview > row:hover {
     background-color: rgba(125, 61, 255, 0.18);
+    color: #eef2fa;
+}
+popover listview > row:selected {
+    background-color: rgba(125, 61, 255, 0.30);
+    color: #eef2fa;
 }
 
 .error, infobar.error, label.error {
