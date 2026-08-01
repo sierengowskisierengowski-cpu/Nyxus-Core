@@ -18,7 +18,40 @@ import Mirror from "./pages/Mirror";
 import BuildManifest from "./pages/BuildManifest";
 
 const BASE = "/api/download/nyxus";
-const ISO_NAME = "nyx-2026.05.02-x86_64.iso";
+
+// The ISO name used to be a hardcoded constant, which meant the download
+// button pointed at a May build under /api/download/nyxus/ — a path that only
+// ever serves the script allowlist, so the button 404'd for everyone. Ask the
+// server what it actually has instead.
+type IsoRelease =
+  | { available: true; name: string; size_bytes: number | null; sha256: string | null; url: string }
+  | { available: false; reason: string };
+
+function useIsoRelease(): IsoRelease | null {
+  const [iso, setIso] = useState<IsoRelease | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/download/iso")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d: IsoRelease) => live && setIso(d))
+      .catch(() =>
+        live &&
+        setIso({
+          available: false,
+          reason: "Could not reach the release endpoint. Build the image locally instead.",
+        }),
+      );
+    return () => {
+      live = false;
+    };
+  }, []);
+  return iso;
+}
+
+function humanSize(bytes: number | null): string {
+  if (!bytes) return "";
+  return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+}
 
 // ── ALIEN NEON · TRIPLE-BLACK palette (matches replit.md rev r14) ──
 const NYX = {
@@ -207,6 +240,114 @@ function NavPill({ href, label }: { href: string; label: string }) {
   );
 }
 
+// ── ISO release ────────────────────────────────────────────────────────
+function BuildLine() {
+  const iso = useIsoRelease();
+  const value = iso === null ? "…" : iso.available ? iso.name : "unpublished";
+  return (
+    <div>
+      BUILD <span style={{ color: NYX.text2 }}>{value}</span>
+    </div>
+  );
+}
+
+function IsoPebble() {
+  const iso = useIsoRelease();
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+
+  return (
+    <Pebble>
+      <SectionLabel>GET THE ISO</SectionLabel>
+
+      {iso === null && (
+        <div style={{ fontSize: "0.72rem", color: NYX.dim, fontFamily: FONT_MONO }}>
+          Checking for a published image…
+        </div>
+      )}
+
+      {iso !== null && !iso.available && (
+        <>
+          <div style={{ fontSize: "0.78rem", color: NYX.text2, lineHeight: 1.7 }}>
+            No image is published on this server yet. NYXUS is baked from source on an Arch
+            host — the build is reproducible and takes 5–15 minutes.
+          </div>
+          <div style={{ fontSize: "0.68rem", color: NYX.dim, marginTop: "0.5rem" }}>
+            {iso.reason}
+          </div>
+          <div style={{ marginTop: "1.25rem" }}>
+            <CopyBlock
+              lines={[
+                "git clone <repo> nyxus && cd nyxus/iso-builder",
+                "sudo ./build-iso.sh",
+                "# → out/nyxus-<today>-x86_64.iso",
+              ]}
+            />
+          </div>
+        </>
+      )}
+
+      {iso !== null && iso.available && (
+        <>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
+            <a
+              href={iso.url}
+              download={iso.name}
+              style={{
+                background: NYX.text,
+                color: "#000",
+                padding: "0.85rem 1.6rem",
+                fontFamily: FONT_MONO,
+                fontWeight: 700,
+                fontSize: "0.78rem",
+                letterSpacing: "0.18em",
+                textDecoration: "none",
+                borderRadius: 3,
+                border: `1px solid ${NYX.text}`,
+                boxShadow: `0 0 24px ${NYX.glowSoft}`,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 0 32px ${NYX.glowBright}`)}
+              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = `0 0 24px ${NYX.glowSoft}`)}
+            >
+              ▼&nbsp;&nbsp;DOWNLOAD&nbsp;&nbsp;{iso.name}
+            </a>
+            <span style={{ fontSize: "0.7rem", color: NYX.dim, fontFamily: FONT_MONO }}>
+              {humanSize(iso.size_bytes)} · x86_64 · BIOS + UEFI bootable · Ventoy compatible
+            </span>
+          </div>
+
+          {iso.sha256 && (
+            <div
+              style={{
+                fontSize: "0.62rem",
+                color: NYX.dim,
+                fontFamily: FONT_MONO,
+                marginTop: "0.75rem",
+                wordBreak: "break-all",
+              }}
+            >
+              sha256 {iso.sha256}
+            </div>
+          )}
+
+          <div style={{ marginTop: "1.25rem" }}>
+            <div style={{ fontSize: "0.7rem", color: NYX.dim, marginBottom: "0.5rem" }}>
+              Or pull it from the command line:
+            </div>
+            <CopyBlock
+              lines={[
+                `curl -fL -o ${iso.name} \\`,
+                `  "${origin}${iso.url}"`,
+                `sha256sum ${iso.name}`,
+              ]}
+            />
+          </div>
+        </>
+      )}
+    </Pebble>
+  );
+}
+
 // ── ROOT LANDING ───────────────────────────────────────────────────────
 const BG_URL = `${import.meta.env.BASE_URL}nyxus-bg.png`;
 
@@ -317,9 +458,7 @@ function Landing() {
               }}
             >
               <div>{time} UTC</div>
-              <div>
-                BUILD <span style={{ color: NYX.text2 }}>{ISO_NAME}</span>
-              </div>
+              <BuildLine />
               <div>
                 STATUS <span style={{ color: NYX.text }}>OPERATIONAL</span>
               </div>
@@ -365,7 +504,7 @@ function Landing() {
               <SpecRow k="Kernel" v="linux (latest)" />
               <SpecRow k="Init" v="systemd" />
               <SpecRow k="Compositor" v="Hyprland" />
-              <SpecRow k="Login" v="SDDM" />
+              <SpecRow k="Login" v="greetd · regreet" />
               <SpecRow k="Audio" v="PipeWire" />
             </Pebble>
 
@@ -393,49 +532,7 @@ function Landing() {
 
           {/* ── Get the ISO ─────────────────────────────────────────── */}
           <div style={{ marginTop: "2rem" }}>
-            <Pebble>
-              <SectionLabel>GET THE ISO</SectionLabel>
-              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
-                <a
-                  href={`${BASE}/${ISO_NAME}`}
-                  download={ISO_NAME}
-                  style={{
-                    background: NYX.text,
-                    color: "#000",
-                    padding: "0.85rem 1.6rem",
-                    fontFamily: FONT_MONO,
-                    fontWeight: 700,
-                    fontSize: "0.78rem",
-                    letterSpacing: "0.18em",
-                    textDecoration: "none",
-                    borderRadius: 3,
-                    border: `1px solid ${NYX.text}`,
-                    boxShadow: `0 0 24px ${NYX.glowSoft}`,
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `0 0 32px ${NYX.glowBright}`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.boxShadow = `0 0 24px ${NYX.glowSoft}`)}
-                >
-                  ▼  DOWNLOAD  {ISO_NAME}
-                </a>
-                <span style={{ fontSize: "0.7rem", color: NYX.dim, fontFamily: FONT_MONO }}>
-                  ~2.5 GB · x86_64 · BIOS + UEFI bootable · Ventoy compatible
-                </span>
-              </div>
-
-              <div style={{ marginTop: "1.25rem" }}>
-                <div style={{ fontSize: "0.7rem", color: NYX.dim, marginBottom: "0.5rem" }}>
-                  Or pull it from the command line:
-                </div>
-                <CopyBlock
-                  lines={[
-                    `curl -fL -o ${ISO_NAME} \\`,
-                    `  "${typeof window !== "undefined" ? window.location.origin : ""}${BASE}/${ISO_NAME}"`,
-                    `sha256sum ${ISO_NAME}`,
-                  ]}
-                />
-              </div>
-            </Pebble>
+            <IsoPebble />
           </div>
 
           {/* ── Install flow ────────────────────────────────────────── */}
@@ -452,7 +549,7 @@ function Landing() {
                   {
                     n: "02",
                     h: "Boot the live session",
-                    b: "Pick the NYX entry from your boot menu. Live login is `nyx` / `nyx`. Pick Hyprland in SDDM.",
+                    b: "Pick the NYXUS entry from your boot menu. Live login is `nyx` / `nyx`, session `NYXUS (Hyprland)`.",
                   },
                   {
                     n: "03",
@@ -547,7 +644,7 @@ function Landing() {
                   regenerates initramfs.
                 </li>
                 <li>
-                  Enables: <Code>NetworkManager</Code>, <Code>SDDM</Code>, <Code>bluetooth</Code>,{" "}
+                  Enables: <Code>NetworkManager</Code>, <Code>greetd</Code>, <Code>bluetooth</Code>,{" "}
                   <Code>thermald</Code>, <Code>power-profiles-daemon</Code>, <Code>cups</Code>,{" "}
                   <Code>acpid</Code>, <Code>fstrim.timer</Code>, and the NVIDIA{" "}
                   <Code>suspend</Code>/<Code>resume</Code>/<Code>hibernate</Code> hooks.
@@ -631,7 +728,7 @@ function Landing() {
               <SectionLabel>LIVE ISO CREDENTIALS</SectionLabel>
               <SpecRow k="user" v="nyx · nyx" />
               <SpecRow k="root" v="root · nyx" />
-              <SpecRow k="session" v="Hyprland (SDDM)" />
+              <SpecRow k="session" v="NYXUS (Hyprland) · greetd" />
               <SpecRow k="install cmd" v="sudo nyxus-install" />
             </Pebble>
 
@@ -643,7 +740,7 @@ function Landing() {
                   "pnpm install",
                   "pnpm --filter @workspace/api-server run build",
                   "cd iso-builder && sudo ./build-iso.sh",
-                  `# → out/${ISO_NAME}`,
+                  "# → out/nyxus-<today>-x86_64.iso",
                 ]}
               />
             </Pebble>

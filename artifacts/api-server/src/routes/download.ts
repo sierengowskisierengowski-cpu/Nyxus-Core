@@ -470,4 +470,79 @@ router.get("/download/nyxus", (_req, res) => {
   res.json({ scripts: available });
 });
 
+// ── ISO release ──────────────────────────────────────────────────────────
+// The download page used to hardcode an ISO filename and link it under
+// /api/download/nyxus/, which serves only the allowlist above — so the big
+// DOWNLOAD button was a guaranteed 404 for every visitor. The page now asks
+// this endpoint what actually exists and renders the build-it-yourself path
+// when nothing is published, instead of offering a link that cannot work.
+//
+// Bakes land in iso-builder/out/. Point NYXUS_ISO_DIR at that directory (or
+// anywhere else) when the API server does not run from a repo checkout.
+const ISO_NAME_RE = /^nyxus-\d{4}\.\d{2}\.\d{2}-x86_64\.iso$/;
+
+function _isoDir(): string {
+  if (process.env.NYXUS_ISO_DIR) return path.resolve(process.env.NYXUS_ISO_DIR);
+  return path.resolve(__dirname, "..", "..", "..", "iso-builder", "out");
+}
+
+function _latestIso(): { name: string; path: string } | null {
+  const dir = _isoDir();
+  let names: string[];
+  try {
+    names = fs.readdirSync(dir).filter((n) => ISO_NAME_RE.test(n));
+  } catch {
+    return null;
+  }
+  if (names.length === 0) return null;
+  // Filenames are date-stamped, so a lexical sort is a chronological sort.
+  const name = names.sort().at(-1) as string;
+  return { name, path: path.join(dir, name) };
+}
+
+router.get("/download/iso", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const iso = _latestIso();
+  if (!iso) {
+    res.json({
+      available: false,
+      reason:
+        "No baked image is published on this server. Build one with " +
+        "`cd iso-builder && sudo ./build-iso.sh`.",
+    });
+    return;
+  }
+  // Hashing a multi-GB ISO is expensive, so it is cached on mtime like every
+  // other served file — the first request after a bake pays, the rest do not.
+  const entry = _hashOrCached(`iso:${iso.name}`, iso.path);
+  res.json({
+    available: true,
+    name: iso.name,
+    size_bytes: entry?.size ?? null,
+    sha256: entry?.sha256 ?? null,
+    url: `/api/download/iso/${iso.name}`,
+  });
+});
+
+router.get("/download/iso/:name", (req, res) => {
+  const { name } = req.params;
+  if (!ISO_NAME_RE.test(name)) {
+    res.status(404).json({ error: "Not a NYXUS image name" });
+    return;
+  }
+  const filePath = path.join(_isoDir(), name);
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ error: "Image not found on this server" });
+    return;
+  }
+  const entry = _hashOrCached(`iso:${name}`, filePath);
+  if (entry) {
+    res.setHeader("X-File-SHA256", entry.sha256);
+    res.setHeader("X-File-Size", String(entry.size));
+  }
+  res.setHeader("Content-Type", "application/x-iso9660-image");
+  res.setHeader("Content-Disposition", `attachment; filename="${name}"`);
+  res.sendFile(filePath);
+});
+
 export default router;

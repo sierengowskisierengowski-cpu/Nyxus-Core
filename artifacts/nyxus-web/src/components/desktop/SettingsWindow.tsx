@@ -312,7 +312,7 @@ export function SettingsWindow({ open, onClose }: { open: boolean; onClose: () =
             <TextInput label="Username" value={s.username} onChange={v => set("username", v)} />
             <TextInput label="Hostname" value={s.hostname} onChange={v => set("hostname", v)} />
             <ReadOnlyRow label="OS" value="NYXUS · Arch + Hyprland" />
-            <ReadOnlyRow label="ISO" value="nyx-2026.05.02-x86_64.iso" />
+            <ReadOnlyRow label="ISO" value="nyxus-<bake date>-x86_64.iso" />
             <ReadOnlyRow label="License" value="NYX-J5W-2026-SIERENGOWSKI-LOCKED" />
           </Stack>
         );
