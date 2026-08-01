@@ -5,7 +5,7 @@ NYXUS has **two** install paths. Pick the one that matches your situation.
 | Path | Use when | Entry point |
 |------|----------|-------------|
 | **Bootstrap (rice)** | You already run Arch and want the NYXUS desktop on it | `install.sh` |
-| **NYX ISO (bare metal)** | Fresh install on a new/wiped machine | `iso-builder/build-iso.sh` → flash → install |
+| **NYXUS ISO (bare metal)** | Fresh install on a new/wiped machine | `iso-builder/build-iso.sh` → flash → install |
 
 ---
 
@@ -51,7 +51,7 @@ cd Nyxus-Core
 
 ---
 
-## 2. NYX ISO (bare-metal install)
+## 2. NYXUS ISO (bare-metal install)
 
 For a fresh machine. Built with `mkarchiso` on an Arch host:
 

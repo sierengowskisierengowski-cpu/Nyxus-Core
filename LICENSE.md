@@ -13,8 +13,22 @@ This software and all associated files — source code, configuration files, scr
 
 **Naming contract:**
 
-- NYX = bootable ISO image artifact.
-- NYXUS = operating system, platform, and application ecosystem.
+- NYXUS = everything: the operating system, the platform, the application
+  ecosystem, and the bootable image that delivers them.
+
+An earlier revision of this contract split the names — NYX for the ISO
+artifact, NYXUS for the OS. The build never followed it: every image is named
+`nyxus-<date>-x86_64.iso`, carries the label `NYXUS_2026_07`, stamps
+`/etc/nyxus-build`, and says NYXUS in both boot menus. Nothing has ever
+produced an artifact called NYX. The split is retired so the documentation
+matches the product.
+
+`NYX` survives in exactly two places, and neither is a product name:
+
+- the licence identity mark below, `NYX-J5W-2026-SIERENGOWSKI-LOCKED`, which
+  is a fixed serial and **must not be renamed** — altering identity markers is
+  prohibited by the terms on this page;
+- the `nyx` login account on the live image.
 
 **You may not:**
 

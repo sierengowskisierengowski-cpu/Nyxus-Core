@@ -38,7 +38,7 @@ Loop: kage-ryu eBPF sensor → jeTT (AI verdict + PID quarantine) → Bifrost (d
 - **MQTT** (mosquitto), sshd, prometheus-node-exporter — all enabled.
 - Hyprland/NYXUS Wayland desktop + custom daemons.
 
-## Lean-and-mean kernel targets (for kage-ryu / NYX ISO)
+## Lean-and-mean kernel targets (for kage-ryu / NYXUS ISO)
 **MUST KEEP:** full eBPF + BTF + BPF_LSM, kprobes/uprobes/tracepoints/perf, `DEBUG_INFO_BTF`(+BTF_MODULES), Docker trinity (cgroups/namespaces/bridge/veth/overlayfs), netfilter+nftables+conntrack, AUDIT, WireGuard, NTFS3, `DRM_I915`/`xe` + NVIDIA (modules), HZ=1000 + preempt, IO_uring, MODULE support, KVM (as modules).
 
 **SAFE TO STRIP for this user:** ham radio, ISDN, ATM, PCMCIA, FireWire, NFC, InfiniBand (already done in kage-ryu); AMD GPU stack + nouveau; exotic/legacy DRM panels; most non-x86 QEMU firmware (ISO bloat); IPVS scheduler suite; excess netfilter xt modules; CAN/WWAN/most staging; unused built-in LSMs (SELinux/SMACK/TOMOYO — active LSM is bpf/landlock/yama). Bluetooth: **keep** (BT service is active).

@@ -34,16 +34,16 @@ Web packages (`nyxus-web`, demo artifacts, and sandbox surfaces) provide downloa
 ## Release Artifact Expectations
 
 Minimum expected release outputs:
-- NYX ISO artifact from `iso-builder/out/`
+- NYXUS ISO artifact from `iso-builder/out/`
 - API server build output from `artifacts/api-server/dist/`
 - Web build outputs for deployment-targeted web surfaces
 
 ## Operational Prerequisites
 
 - Environment variables required by Vite packages must be provided by deployment environment.
-- Deployment environment should preserve naming contract:
-  - NYX = ISO
-  - NYXUS = platform/system/apps
+- Deployment environment should preserve the naming contract:
+  - NYXUS = platform, system, apps, and the ISO. `NYX` is not a product name
+    (see `LICENSE.md`).
 
 
 ---

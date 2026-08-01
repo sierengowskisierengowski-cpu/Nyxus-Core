@@ -32,7 +32,7 @@
 >    Both closed at the source, and the bake now *fails* if a second
 >    login-capable account survives.
 >
-> **Seven new verify-profile gates** (13pc–13pg + a widened 13ak) so these
+> **Eight new verify-profile gates** (13pc–13ph + a widened 13ak) so these
 > classes cannot come back quietly. `verify-profile.sh` went from 18 WARN to
 > 2, and both survivors are about this machine (no Arch repos, no
 > `mksquashfs`), not the profile. `iso-build-verify.sh` 194/194. Typecheck,

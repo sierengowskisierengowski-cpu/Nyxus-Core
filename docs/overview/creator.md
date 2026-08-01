@@ -3,7 +3,7 @@
 Nyxus-Core and the broader NYXUS system were created by **Joseph A. Sierengowski**.
 
 Joseph is the sole creator, system designer, and platform architect of:
-- the NYX ISO delivery model,
+- the NYXUS ISO delivery model,
 - the NYXUS operating/platform composition,
 - and the supporting application/distribution pipeline represented in this repository.
 

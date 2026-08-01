@@ -7,7 +7,7 @@
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
 #
-# build-iso.sh — bakes the NYX ISO from this archiso profile.
+# build-iso.sh — bakes the NYXUS ISO from this archiso profile.
 # Must run as root on an Arch Linux host with archiso installed.
 #
 # Usage:

@@ -79,7 +79,7 @@ function rng(seed: number) {
 // the dashboard background in a riot of neon Caveat handwriting + a few
 // paint drips. Deterministic positions so the collage is stable per session.
 const GRAFFITI_WORDS = [
-  "NYXUS", "NYX", "ARCH", "LINUX", "HYPRLAND", "WAYBAR", "KITTY", "FOOT",
+  "NYXUS", "KAGE-RYU", "ARCH", "LINUX", "HYPRLAND", "WAYBAR", "KITTY", "FOOT",
   "ROFI", "DUNST", "NEOVIM", "ZSH", "TMUX", "BTRFS", "WAYLAND", "PIPEWIRE",
   "NETWORKD", "SYSTEMD", "PACMAN", "AUR", "MAKEPKG", "CACHYOS", "REISERFS",
   "INTEL", "PHANTOM", "SHIELD", "GODSAPP", "SAGE", "PANEL", "STUDIO",

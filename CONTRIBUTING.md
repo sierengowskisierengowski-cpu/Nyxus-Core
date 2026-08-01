@@ -29,8 +29,12 @@ Thanks for contributing to Nyxus-Core.
 
 ## Scope and terminology
 
-- **NYX** = bootable ISO artifact
-- **NYXUS** = OS/runtime/application ecosystem delivered by NYX
+- **NYXUS** = everything: OS, runtime, application ecosystem, and the bootable
+  ISO that delivers them.
+- **NYX** is not a product name. It survives only in the licence identity mark
+  `NYX-J5W-2026-SIERENGOWSKI-LOCKED` (a fixed serial — do not rename it) and
+  the `nyx` login account. The old NYX-means-the-ISO split is retired; see
+  `LICENSE.md`.
 
 Please keep this naming consistent in code, docs, and PRs.
 

@@ -5,7 +5,7 @@
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
 #
-# Pacman packages baked into the NYX live ISO.
+# Pacman packages baked into the NYXUS live ISO.
 # Comments + blank lines are ignored by mkarchiso.
 
 # ── base system ────────────────────────────────────────────────────

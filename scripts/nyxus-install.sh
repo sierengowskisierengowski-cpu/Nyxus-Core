@@ -5,7 +5,7 @@
 #
 # Installs the NYXUS Hyprland desktop onto an EXISTING Arch Linux system
 # (dotfiles/rice style). This is the terminal install path — distinct from the
-# NYX ISO (bare-metal) path in iso-builder/.
+# NYXUS ISO (bare-metal) path in iso-builder/.
 #
 #   git clone https://github.com/sierengowskisierengowski-cpu/Nyxus-Core
 #   cd Nyxus-Core && ./scripts/nyxus-install.sh              # base desktop + login/session setup

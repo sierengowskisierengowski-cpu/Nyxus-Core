@@ -2,7 +2,7 @@
 # ============================================================================
 #  iso-builder/verify-profile.sh                          rev 2026-05-13 r1
 #
-#  Pre-flight linter for the NYX archiso profile. Runs locally (no root,
+#  Pre-flight linter for the NYXUS archiso profile. Runs locally (no root,
 #  no mkarchiso, no chroot) so contributors and CI can sanity-check the
 #  profile before kicking off a 15-minute bake.
 #

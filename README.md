@@ -7,11 +7,17 @@
 > features), the current state + post-mortems, and the canonical
 > **bake → flash → boot** procedure. Do not start work — or a bake — without it.
 
-Canonical source repository for the NYXUS platform and NYX image pipeline.
+Canonical source repository for the NYXUS platform and its image pipeline.
 
 **Terminology standard**
-- **NYX**: the bootable ISO image artifact only.
-- **NYXUS**: the operating system, platform services, and application ecosystem delivered by NYX.
+- **NYXUS**: everything — the operating system, platform services, the
+  application ecosystem, and the bootable ISO that delivers them.
+- **NYX** is *not* a product name. It appears only in the licence identity
+  mark `NYX-J5W-2026-SIERENGOWSKI-LOCKED` (a fixed serial that must not be
+  renamed) and as the `nyx` login account on the live image. An earlier
+  contract used NYX for the ISO artifact; the build never followed it — every
+  image is `nyxus-<date>-x86_64.iso`, labelled `NYXUS_2026_07` — so the split
+  is retired. See `LICENSE.md`.
 
 ---
 
@@ -85,7 +91,7 @@ creates no new backup directory. Flags: `--check` (preview), `--user-only`
 ## System Overview
 
 Nyxus-Core contains the end-to-end platform implementation:
-- Arch-based image construction for **NYX**
+- Arch-based image construction for **NYXUS**
 - Core runtime payloads and desktop assets for **NYXUS**
 - API and web distribution surfaces
 - Shared TypeScript packages and automation scripts
@@ -105,7 +111,7 @@ NYXUS is delivered through three coordinated layers:
    - API and web surfaces distribute installers, tarballs, and related assets
    - ISO staging mirrors runtime payloads into the archiso profile
 3. **Runtime**
-   - NYX boots into NYXUS runtime components: Hyprland + EWW bars + full GTK4 app suite + NYXUS Phantom
+   - NYXUS boots into its runtime components: Hyprland + EWW bars + full GTK4 app suite + NYXUS Phantom
 
 See `/docs/architecture/architecture-overview.md` for component relationships and responsibility boundaries.
 
@@ -123,7 +129,7 @@ See `/docs/architecture/architecture-overview.md` for component relationships an
 │   ├── nyxus-sysmon/           # Web demo app
 │   ├── nyxus-widgets/          # Web demo app
 │   └── mockup-sandbox/         # Preview and mockup environment
-├── iso-builder/                # Archiso profile and NYX ISO build pipeline
+├── iso-builder/                # Archiso profile and NYXUS ISO build pipeline
 ├── lib/                        # Shared TypeScript packages (API spec/client/zod/db/i18n)
 ├── scripts/                    # Workspace automation scripts
 ├── docs/                       # Structured project documentation
@@ -146,7 +152,7 @@ See `/docs/architecture/architecture-overview.md` for component relationships an
 - API server build produces distribution outputs under `artifacts/api-server/dist/`
 - Vite-based web artifacts use environment-based ports/base paths (see deployment docs)
 
-### NYX ISO flow
+### NYXUS ISO flow
 - Build host requirement: Arch Linux + root + `mkarchiso`
 - Entry point: `iso-builder/build-iso.sh`
 - Output artifact: `iso-builder/out/nyxus-<YYYY.MM.DD>-x86_64.iso` (~9.5–10 GB, gitignored)
@@ -258,6 +264,6 @@ Other reference:
 
 ## Created by Joseph A. Sierengowski
 
-Nyxus-Core, NYX, and NYXUS were created, architected, and built by **Joseph A. Sierengowski**.
+Nyxus-Core and NYXUS were created, architected, and built by **Joseph A. Sierengowski**.
 
 Joseph serves as the original system designer and primary platform architect, defining the repository's direction across ISO engineering, runtime composition, application integration, and delivery workflow.

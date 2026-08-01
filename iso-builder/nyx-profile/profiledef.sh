@@ -7,7 +7,7 @@
 # NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
 #
-# archiso profile definition for the NYX ISO.
+# archiso profile definition for the NYXUS ISO.
 # See: https://wiki.archlinux.org/title/Archiso
 
 iso_name="nyxus"

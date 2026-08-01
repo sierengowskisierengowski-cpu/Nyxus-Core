@@ -38,8 +38,11 @@ For canonical project state and architecture documentation, use:
 
 ## Naming Contract
 
-- **NYX** = ISO image only
-- **NYXUS** = operating system/platform/application ecosystem
+- **NYXUS** = everything: operating system, platform, application ecosystem,
+  and the bootable ISO image
+- **NYX** = not a product name. Only the licence identity mark
+  `NYX-J5W-2026-SIERENGOWSKI-LOCKED` and the `nyx` login account (see
+  `LICENSE.md`)
 
 ## User preferences
 

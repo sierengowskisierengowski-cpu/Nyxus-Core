@@ -12,7 +12,7 @@ This allows versioned, repository-wide builds and typechecking from root scripts
 ## Top-Level Directory Roles
 
 ### `iso-builder/`
-Archiso profile and orchestration scripts for building NYX ISO.
+Archiso profile and orchestration scripts for building NYXUS ISO.
 
 ### `artifacts/`
 Deployable application/service units and payload sources.

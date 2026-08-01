@@ -2,10 +2,11 @@
 
 ## Identity
 
-Nyxus-Core is the platform repository for NYXUS and its NYX delivery image.
+Nyxus-Core is the platform repository for NYXUS and its delivery image.
 
-- **NYX**: the bootable ISO artifact.
-- **NYXUS**: the operating system/platform and its application ecosystem delivered by NYX.
+- **NYXUS**: the operating system/platform, its application ecosystem, and the
+  bootable ISO that delivers them. `NYX` is not a product name — see
+  `LICENSE.md`.
 
 ## What the System Contains
 
@@ -56,7 +57,7 @@ Nyxus-Core is a monorepo that centralizes:
 1. Workspace packages are validated and built.
 2. API/web distribution components are produced from `artifacts/`.
 3. ISO staging mirrors required runtime payloads into the archiso profile.
-4. NYX ISO is baked and released as the canonical distribution image.
+4. NYXUS ISO is baked and released as the canonical distribution image.
 
 The live ISO boots into NYXUS with a full chrome layer — Hyprland, four EWW bars,
 Dunst notifications, the **greetd → regreet (under cage)** login screen, the

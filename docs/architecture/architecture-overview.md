@@ -9,7 +9,7 @@ Nyxus-Core integrates platform engineering across build, distribution, and runti
 The system is composed of four primary layers:
 
 1. **Image construction layer** (`iso-builder/`)
-   - Builds NYX ISO via archiso tooling.
+   - Builds NYXUS ISO via archiso tooling.
    - Stages NYXUS runtime content into the image profile.
 
 2. **Distribution/application layer** (`artifacts/`)
@@ -36,7 +36,7 @@ The system is composed of four primary layers:
 - API/web asset bundling.
 
 ### Runtime
-- OS/runtime components, app payloads, launchers, and desktop integration delivered by NYXUS.
+- OS/runtime components, app payloads, launchers, and desktop integration delivered by NYXUSUS.
 
 ### Distribution-time
 - API and web channels exposing installation and release payloads.

@@ -444,7 +444,7 @@ export default function Weather() {
         </div>
       </div>
 
-      {/* NYX stamp */}
+      {/* NYXUS stamp */}
       <div style={{
         position: 'absolute', bottom: 6, right: 10,
         fontFamily: "'JetBrains Mono', monospace",

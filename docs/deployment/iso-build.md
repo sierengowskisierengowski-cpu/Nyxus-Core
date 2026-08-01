@@ -1,4 +1,4 @@
-# NYX ISO Build Pipeline
+# NYXUS ISO Build Pipeline
 
 > ⚠ **SUPERSEDED — read [`../../iso-builder/README.md`](../../iso-builder/README.md)
 > instead.** That file was re-derived from `build-iso.sh` on 2026-07-30 and is the
@@ -15,7 +15,7 @@
 
 ## Definition
 
-The NYX ISO pipeline is implemented in `iso-builder/` and produces the NYX distribution image containing NYXUS runtime payloads.
+The NYXUS ISO pipeline is implemented in `iso-builder/` and produces the NYXUS distribution image containing NYXUS runtime payloads.
 
 ## Prerequisites
 

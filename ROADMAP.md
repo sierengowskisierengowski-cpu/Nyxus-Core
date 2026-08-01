@@ -3,7 +3,7 @@
 > **Status:** living document · **corrected 2026-07-30**
 >
 > This roadmap describes the intended direction for NYXUS (delivered via the
-> NYX ISO). It is written to reflect the *current* repository reality as a
+> NYXUS ISO). It is written to reflect the *current* repository reality as a
 > starting point and to be honest about what is aspirational.
 >
 > ⚠ **Everything here is a GOAL, not a description of the build.** For what is
@@ -34,7 +34,7 @@ to a commercial product than a hobbyist rice. The platform combines:
 - An opinionated ISO build pipeline with automated verification
   (`verify-profile.sh`, whose gates are regression tests for bugs that shipped)
 
-The v2 vision is to ship a bootable NYX ISO that a new user can flash to a USB,
+The v2 vision is to ship a bootable NYXUS ISO that a new user can flash to a USB,
 boot from bare metal, and have a fully working desktop environment within
 60 seconds — no manual configuration required.
 
@@ -124,7 +124,7 @@ boot from bare metal, and have a fully working desktop environment within
 
 ## Packaging / Update Goals
 
-- Signed NYX ISO released via GitHub Actions; SHA-256 published in the
+- Signed NYXUS ISO released via GitHub Actions; SHA-256 published in the
   release notes and the download API.
 - Automated ISO CI job on Arch Linux runner: builds ISO, runs
   `iso-build-verify.sh`, uploads artifact.
@@ -184,7 +184,7 @@ boot from bare metal, and have a fully working desktop environment within
 - All config files in the archiso profile use correct syntax
 
 ### Phase B — Verified live boot 🟡
-- Build NYX ISO on Arch Linux host using `build-iso.sh`
+- Build NYXUS ISO on Arch Linux host using `build-iso.sh`
 - Boot to **greetd → regreet (under cage)**, log in as `nyx` — tuigreet is the
   text fallback, not the primary greeter
 - Kage-Ryu boots as entry #0 and mounts the live media (`iso9660`/`squashfs`/loop)

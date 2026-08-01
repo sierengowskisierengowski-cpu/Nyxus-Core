@@ -1,4 +1,4 @@
-# NYX ISO builder
+# NYXUS ISO builder
 ### `iso-builder/` — bakes `out/nyxus-<YYYY.MM.DD>-x86_64.iso`
 
 > **Rewritten 2026-07-30.** The previous revision described the May-2026 build
@@ -21,7 +21,7 @@
 > `NYX_ISO_DATE=2026.07.31 sudo ./build-iso.sh` for a deterministic re-bake.
 
 This directory contains the `archiso` profile and a one-command wrapper that
-produces the NYX ISO.
+produces the NYXUS ISO.
 
 ## Requirements
 

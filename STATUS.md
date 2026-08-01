@@ -131,7 +131,7 @@
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Public release of a signed, downloadable NYX ISO | ⬜ | Build requires Arch Linux host; no automated CI ISO artifact yet |
+| Public release of a signed, downloadable NYXUS ISO | ⬜ | Build requires Arch Linux host; no automated CI ISO artifact yet |
 | Automated ISO CI build + artifact upload | ⬜ | `build-iso.yml` workflow exists but requires privileged Arch runner |
 | NYXUS Account service (backend) | ⬜ | UI scaffolded; backend service not shipped |
 | NYXUS Drop (file sharing) | ⬜ | UI scaffolded; backend service not shipped |
