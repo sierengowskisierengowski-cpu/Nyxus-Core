@@ -56,7 +56,7 @@ const getDayName = (dateStr: string) =>
   new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
 
 const conditionColor: Record<string, string> = {
-  SUNNY:         '#ffd700',
+  SUNNY:         '#ffe600',
   CLEAR_NIGHT:   '#2bd2ff',
   PARTLY_CLOUDY: '#7d3dff',
   CLOUDY:        '#aaaacc',

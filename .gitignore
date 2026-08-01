@@ -94,3 +94,8 @@ lab-credentials.env
 # companion-3d is its OWN git repo (github.com/.../Nyxus-Companion-3D) —
 # tracked separately, never part of Nyxus-Core. Ignore it here.
 companion-3d/
+
+# Per-machine accent cache. nyxus-apply-accent regenerates it on first
+# apply and sync-live-config.sh already excludes it; a committed copy is a
+# stale snapshot of someone else's /home with banned-palette hexes in it.
+artifacts/nyxus-config/accent-baseline/

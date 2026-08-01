@@ -23,7 +23,7 @@ CUR_DIR = THEME / "hyprcursors"
 PURPLE = "#7d3dff"
 CYAN = "#2bd2ff"
 INK = "#0a0d14"
-BONE = "#e8edf5"
+BONE = "#eef2fa"
 GLOW = "#2bd2ff"
 
 CANVAS = 64  # all SVGs use 64x64 viewBox; hotspots are normalized 0..1

@@ -2478,6 +2478,94 @@ done
 (( _pb_fail == 0 )) \
   && ok "both savers can reach fullscreen (no pin conflict) and the payload re-asserts it after map"
 
+# ── 13pf. no FORBIDDEN palette hex in a shipped NYXUS surface ────────────────
+# nyxus_palette.FORBIDDEN is the banned list, and assert_no_forbidden() exists
+# so an app can check its own CSS — but nothing checked the tree, so banned
+# colours lived on for months in places nobody re-read: the icon and cursor
+# generators (which bake into the shipped icon theme), the wallpaper and GRUB
+# theme generators, and all six Vite web apps.
+#
+# Scope is NYXUS chrome only. Arsenal / Bifrost / Meli / GodsApp / the Forge
+# tools carry their own palettes and are explicitly out of scope per
+# docs/DESIGN_CONTRACT.md, and the FORBIDDEN tuple itself obviously contains
+# the strings it bans.
+hd "13pf. no forbidden palette colours in shipped surfaces"
+if ! command -v python3 >/dev/null 2>&1; then
+  warn "13pf: python3 not available — palette scan skipped"
+else
+  _pf_out="$(python3 - "${HERE}/.." <<'PYEOF'
+import re, sys
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+palette = root / "artifacts/api-server/nyxus-scripts/nyxus_palette.py"
+src = palette.read_text(encoding="utf-8")
+block = re.search(r"FORBIDDEN\s*=\s*\((.*?)\n\)", src, re.S)
+if not block:
+    print("SKIP could not parse FORBIDDEN from nyxus_palette.py")
+    raise SystemExit(0)
+banned = {h.lower() for h in re.findall(r'"(#[0-9a-fA-F]{6})"', block.group(1))}
+
+SKIP_DIRS = {
+    "node_modules", ".git", "dist", "build", "__pycache__", ".venv", "venv",
+    "opt/arsenal", "opt/meli", "opt/honeypot", "usr/lib/bifrost",
+    "opt/nyxus-intel", "opt/nyxus-intel-bundle", "attached_assets",
+    "docs",                     # documents the banned palettes on purpose
+    "accent-baseline",          # per-machine cache, gitignored
+}
+EXTS = {".css", ".scss", ".py", ".ts", ".tsx", ".conf", ".rasi", ".toml",
+        ".yuck", ".txt", ".json", ".theme", ".qml", ".sh"}
+
+hits = []
+for p in root.rglob("*"):
+    if not p.is_file() or p.suffix.lower() not in EXTS:
+        continue
+    rel = p.relative_to(root).as_posix()
+    if any(s in rel for s in SKIP_DIRS):
+        continue
+    if p.name == "nyxus_palette.py":
+        continue            # defines the list
+    try:
+        lines = p.read_text(encoding="utf-8", errors="ignore").lower().splitlines()
+    except OSError:
+        continue
+    # Prose is allowed to name a banned colour — most of the notes explaining
+    # WHY something is banned have to quote it. Only flag a hex that survives
+    # into the code part of its line.
+    for line in lines:
+        if not any(h in line for h in banned):
+            continue
+        code = line
+        for marker in ("#", "//", "/*", "*", "--"):
+            idx = code.find(marker)
+            # A CSS/py hex literal starts with '#', so only treat '#' as a
+            # comment marker when what follows it is not a hex colour.
+            if marker == "#":
+                while idx != -1 and re.match(r"#[0-9a-f]{3,8}\b", code[idx:]):
+                    idx = code.find("#", idx + 1)
+            if idx != -1:
+                code = code[:idx]
+        for h in banned:
+            if h in code:
+                hits.append((rel, h))
+
+for rel, h in sorted(set(hits)):
+    print(f"HIT {h} {rel}")
+PYEOF
+)"
+  if grep -q '^SKIP' <<<"${_pf_out}"; then
+    warn "13pf: $(sed -n 's/^SKIP //p' <<<"${_pf_out}")"
+  elif [[ -z "${_pf_out}" ]]; then
+    ok "13pf: no forbidden palette colour in any shipped NYXUS surface"
+  else
+    while IFS= read -r _pf_line; do
+      [[ -n "${_pf_line}" ]] || continue
+      set -- ${_pf_line}
+      fail "13pf: forbidden colour $2 in $3 — use a nyxus_palette constant"
+    done <<<"${_pf_out}"
+  fi
+fi
+
 # ── 13pc. every executable in airootfs is in file_permissions ────────────────
 # archiso copies airootfs with --no-preserve=mode, so an executable missing
 # from profiledef.sh's file_permissions ships 644 and silently cannot run. The

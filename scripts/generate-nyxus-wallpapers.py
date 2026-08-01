@@ -79,7 +79,7 @@ def w_aurora_drift() -> str:
         '<stop offset="100%" stop-color="#000000" stop-opacity="0"/>'
         '</radialGradient>'
         '<radialGradient id="c" cx="50%" cy="50%" r="70%">'
-        '<stop offset="0%" stop-color="#82ffd2" stop-opacity="0.18"/>'
+        '<stop offset="0%" stop-color="#39ff14" stop-opacity="0.18"/>'
         '<stop offset="100%" stop-color="#000000" stop-opacity="0"/>'
         '</radialGradient>'
     )
@@ -136,7 +136,7 @@ def w_deep_static() -> str:
         op = random.uniform(0.05, 0.35)
         r = random.uniform(0.4, 1.6)
         dots.append(
-            f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{r:.1f}" fill="#e8edf5" fill-opacity="{op:.2f}"/>'
+            f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{r:.1f}" fill="#eef2fa" fill-opacity="{op:.2f}"/>'
         )
     body = f'<rect width="{W}" height="{H}" fill="#02030a"/>' + "".join(dots)
     return shell(body)
@@ -207,9 +207,9 @@ def w_nyxus_sigil() -> str:
         f'<rect width="{W}" height="{H}" fill="#02030a"/>{rays}'
         f'<circle cx="{cx}" cy="{cy}" r="320" fill="none" stroke="#7d3dff" stroke-opacity="0.45" stroke-width="3"/>'
         f'<circle cx="{cx}" cy="{cy}" r="180" fill="none" stroke="#2bd2ff" stroke-opacity="0.55" stroke-width="2"/>'
-        f'<circle cx="{cx}" cy="{cy}" r="60"  fill="#0a0d14" stroke="#e8edf5" stroke-opacity="0.65" stroke-width="2"/>'
+        f'<circle cx="{cx}" cy="{cy}" r="60"  fill="#0a0d14" stroke="#eef2fa" stroke-opacity="0.65" stroke-width="2"/>'
         f'<text x="{cx}" y="{cy+18}" text-anchor="middle" font-family="Inter, sans-serif" '
-        f'font-size="48" font-weight="700" fill="#e8edf5" letter-spacing="8">NYXUS</text>'
+        f'font-size="48" font-weight="700" fill="#eef2fa" letter-spacing="8">NYXUS</text>'
     )
     return shell(body)
 

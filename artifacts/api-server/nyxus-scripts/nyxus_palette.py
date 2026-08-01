@@ -455,6 +455,22 @@ FORBIDDEN = (
     "#cc00ff", "#ff3344", "#ff4d6d", "#ffd700", "#6fffb0", "#00aaff",
     "#bf5cff", "#f5f3ef", "#fbfaf6",
     "#d4b87a", "#f4ead5", "#a06bff",
+    # Added 2026-08-01. docs/DESIGN_CONTRACT.md §4 has banned these since the
+    # July relock, but they were never in this tuple, so assert_no_forbidden()
+    # could not catch them — and they were still live in the icon and cursor
+    # generators (which bake straight into the shipped icon theme), the
+    # wallpaper generator, and the GRUB theme generator.
+    "#e8edf5",   # DARK MIRROR off-white   -> WHITE_OFF   #eef2fa
+    "#82ffd2",   # off-brand mint          -> ACCENT_OK   #39ff14
+    "#ffb45e",   # off-brand amber         -> ACCENT_WARN #ff8a1e
+    "#3ad8ff",   # old cyan                -> CYAN_FIXED  #2bd2ff
+    "#4d9fff",   # drift cyan              -> CYAN_FIXED  #2bd2ff
+    "#ff7849", "#ff4d6b", "#6dffcf",       # off-brand neons
+    "#0a0a14", "#050308",                  # cream-era voids
+    "#1caef2", "#6526ff", "#7949f2",       # wallpaper-drift set
+    "#ff2667", "#ffb026", "#26ffb7",
+    "#ebe8e2", "#ddd9d3",                  # cream paper surfaces
+    "#1a1816", "#58524c", "#9e948a",       # cream paper ink
 )
 
 def assert_no_forbidden(text: str, source: str = "<inline>") -> None:

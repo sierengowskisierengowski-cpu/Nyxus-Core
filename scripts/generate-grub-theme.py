@@ -15,8 +15,8 @@ frame with no error anywhere. The live-ISO theme shipped only c/e/w and pointed
 nothing recognisable. Both sets are emitted here in full, every time.
 
 Colours are ALIEN NEON canon (see docs/THEME.md). The previous revision of this
-script emitted #a06bff / #3ad8ff, both of which are on the FORBIDDEN list in
-artifacts/api-server/nyxus-scripts/nyxus_palette.py.
+script emitted an old violet and an old cyan, both of which are on the
+FORBIDDEN list in artifacts/api-server/nyxus-scripts/nyxus_palette.py.
 
 PIL is optional: the flat slices are written by a small built-in PNG encoder so
 any host can regenerate them. The 1920x1080 background needs PIL; without it the
