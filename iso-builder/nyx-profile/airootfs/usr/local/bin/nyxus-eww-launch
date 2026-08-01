@@ -28,6 +28,19 @@ LOG="${LOG_DIR}/launch.log"
 ts() { date '+%F %T'; }
 log() { printf '[%s] %s\n' "$(ts)" "$*" >> "$LOG"; }
 
+# BR-07: the VM audit found TWO nyxus-bar-right layer surfaces mapped at
+# identical geometry while `eww active-windows` listed one — an orphaned
+# surface from an open that raced a close-all. nyxus-eww-launch-safe has taken
+# this lock since it was written; this script, which is the fallback path in
+# nyxus-persist-login and sync-eww.sh, never did, so two launchers could
+# interleave close-all and open. Same lock file, so the two serialise against
+# each other and not just against themselves. Bounded: a stuck lock must never
+# be the reason the bars do not come up.
+_ewwlock="${XDG_RUNTIME_DIR:-/tmp}/nyxus-eww-launch.lock"
+if exec 9>"${_ewwlock}" 2>/dev/null; then
+  flock -w 20 9 || log "WARN — launch lock busy after 20s, continuing anyway"
+fi
+
 log "launch start — bars=[${BARS}] timeout=${TIMEOUT_SECS}s"
 
 COMPILE="${HOME}/.config/eww/scripts/compile-eww-css.sh"

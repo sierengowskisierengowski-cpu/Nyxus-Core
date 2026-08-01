@@ -29,7 +29,15 @@ set -uo pipefail
 # ── Version stamp: BUMP ON EVERY RELEASE THAT TOUCHES INSTALLED FILES ───────
 # r12 (2026-07-23): offline-first — Replit dependency cut, install no longer
 # aborts on `clear`/set -e, hyprexpo build is one-shot + offline-aware.
-BOOTSTRAP_VERSION="2026.07.30-r16-localbin-path"
+BOOTSTRAP_VERSION="2026.08.01-r17-live-media-guards"
+
+# FS-03: the live stick came out of first boot with a 66 MB ~/.cache/pip — a
+# quarter of the whole 256 MB copy-on-write overlay spent on a cache nothing
+# reads again. Every pip this bootstrap can reach (directly, or through
+# nyxus_install.sh and the venv setups it calls) inherits this and writes no
+# cache at all. It is scoped to the bootstrap's own process tree, so a user
+# running pip themselves later still gets normal caching.
+export PIP_NO_CACHE_DIR=1
 
 PROD_URL="${NYXUS_BASE_URL:-https://nyxus-core.replit.app}/api/download/nyxus/nyxus_install.sh"
 OFFLINE_CACHE="${NYXUS_OFFLINE_DIR:-/opt/nyxus-cache}"
@@ -71,6 +79,25 @@ ensure_hyprland_plugins() {
     log "hyprpm not on PATH — skipping plugin sync (Hyprland too old?)"
     return 0
   }
+
+  # NEVER on live media (FS-04, 2026-07-31 VM audit). The header guard below
+  # was written for a live ISO that had no Hyprland headers, but the hyprland
+  # package ships them, so the guard never fired and the live stick did the
+  # full thing: `hyprpm update` ran `make installheaders`, then it compiled and
+  # installed borders-plus-plus.so, csgo-vulkan-fix.so, hyprbars.so and
+  # hyprfocus.so, all inside the user's first 90 seconds. Measured load average
+  # 8.72, and every byte of that build tree and every installed header landed
+  # in the 256 MB copy-on-write overlay — which is the most plausible single
+  # reason the live filesystem hit 100% full.
+  #
+  # Compiling out-of-tree compositor plugins is a reasonable thing to do on an
+  # installed system and an unreasonable thing to do on a USB stick whose
+  # writes are RAM and are discarded at shutdown anyway. Same live-media test
+  # the honeypot firstboot fragment uses.
+  if [[ -d /run/archiso ]] || grep -qa 'archisobasedir' /proc/cmdline 2>/dev/null; then
+    log "live media — skipping Hyprland plugin sync (installed systems only)"
+    return 0
+  fi
 
   # Guard: hyprpm needs Hyprland API headers to compile any plugin.
   # On the live ISO the headers package is not installed, so hyprpm prints
