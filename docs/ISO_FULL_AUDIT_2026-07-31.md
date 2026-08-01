@@ -254,7 +254,8 @@ Harness as in the header, plus the in-guest HTTP relay. Screenshots in
 | CA-12 | Five GTK apps render | **FAIL → FIXED** | See §11.2. |
 | CA-13 | Station switching | **FAIL** | See §11.3. |
 | CA-14 | Notification daemon | **FAIL** | See §11.4. |
-| CA-15 | Lock screen | **FAIL** | See §11.5. |
+| CA-15 | Lock screen renders | NOT-TESTED | hyprlock cannot render at all under this harness — see §11.5. Two real config defects were found underneath it. |
+| CA-15a | Lock screen locks and unlocks | PASS | `Super+L` locks, the desktop is genuinely covered, the password authenticates and the session returns. |
 | CA-16 | Top/bottom bars | **FAIL** | See §11.6 — and the earlier "never renders" call is corrected there. |
 | CA-17 | Live wallpaper | PASS | `mpvpaper` plays `nyxus-livewall-flagship.mp4` at layer 0. The near-black desktop reported earlier was a dark frame of that video, not a broken wallpaper. |
 | CA-18 | Executable modes on the image | PASS | Scripts arrive 755. T-04/05/06 hold. |
@@ -357,26 +358,49 @@ completeness study: a page that looks green over a backend that is not there.
 and the dunst package; if it is dunst, drop swaync and rewrite the Settings
 page against dunst.
 
-### 11.5 CA-15 — the lock screen paints black
+### 11.5 CA-15 — the lock screen cannot be judged here, but two real config defects sit under it
 
-`Super+L` locks. hyprlock starts, the desktop is genuinely covered, and typing
-the password unlocks correctly — so the lock is functionally sound. It renders
-**nothing**: no clock, no input field, no art, no audio spectrum, no feedback of
-any kind. Two faint frosted panes are the only thing on screen, which are the
-two low-alpha panes the 2026-07-31 "frosted glass" redesign added; every text
-label and the background image are missing.
+`Super+L` locks, the desktop is genuinely covered, and the password
+authenticates and returns the session, so the lock **works**. It also renders
+almost nothing: no clock, no input field, no art, no spectrum — only two faint
+frosted panes.
 
-For a daily driver this reads as a frozen machine — there is no cue that the
-screen is locked or that typing does anything.
+**That last part is the harness, not the build.** A control run of hyprlock
+against a minimal hand-written config — a solid `rgba(20,20,40,1)` background
+and one white 64 px label, nothing else — also produced a completely black
+screen. hyprlock logs `eglQueryDmaBufModifiersEXT failed, falling back to
+regular bo` and draws nothing under `virtio-vga-gl` + `egl-headless`. So
+**hyprlock's appearance cannot be assessed in this VM at all** and this audit
+makes no claim about it. It needs a bare-metal look. (Note the contrast with
+§11.2, where the same question was decidable because stock GTK4 rendered fine
+in the same session.)
 
-**Cause not yet established.** The lead: `hyprlock.conf` points its background
-at `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png`, one image widget at
-`~/.cache/nyxus/lock-art-placeholder.png`, and nearly every label is a `cmd[]`
-shell call (`nyxus-lock-cava frame`, `nyxus-lock-track`, `nyxus-weather-line`,
-`~/.config/hypr/scripts/nyxus-daily-line.sh`). Whether those assets and commands
-exist on the image was not checked before this session ended. The fonts named
-(Caveat, Orbitron ExtraBold, JetBrainsMono Nerd Font) are the other candidate,
-and would explain all-text-missing-but-panes-drawn in one stroke.
+Two defects found while chasing it are real, because they are config-level and
+independent of the renderer:
+
+**LK-01 — every accent variable hyprlock reads is undefined. FIXED.**
+`hyprlock.conf` reads `$nyxus_accent_rgba`, `_glow`, `_dim`, `_faint`,
+`$nyxus_accent2_rgba` and `_glow` in sixteen places, from
+`source = ~/.config/hypr/hyprlock-accent.conf`. That shard ships **empty** — three
+comment lines — on the grounds that `nyxus-apply-accent` writes it at runtime.
+Nothing ever invokes `nyxus-apply-accent`: it appears in no `exec-once`, no
+systemd unit and no firstboot fragment, only in comments. So on every boot of a
+fresh account hyprlock emitted sixteen config errors, "proceeded ignoring faulty
+entries", and every colour and shadow that named an accent silently fell back to
+its default. Measured live: 16 errors before, **0 after** shipping the shard with
+the PRISM values it would have generated. That was also visible — the accent
+glow appeared on the panes as soon as the shard had values.
+
+**LK-02 — two labels poll every 50 ms and starve the label pipeline. NOT FIXED.**
+The two cava spectrum labels use `cmd[update:50]` and `cmd[update:55]`, each
+shelling out to `nyxus-lock-cava frame`. When a command takes longer than its
+interval hyprlock logs `Trying to update label, but a resource is still pending!
+Skipping update.` and drops it. Measured: **2969** skipped updates in ~40 s.
+Raising both to 1000 ms dropped it to 16, so the mechanism is confirmed —
+though how fast `nyxus-lock-cava frame` returns on real hardware is unknown, and
+a 50 ms budget for a shell round-trip is optimistic anywhere. Worth raising
+regardless; whether it is what starves the clock cannot be settled until CA-15
+is re-run somewhere hyprlock renders.
 
 ### 11.6 CA-16 / BR-08 — correcting the "bars never render" call
 
@@ -398,5 +422,12 @@ all seven occurrences.
 
 App launches from the launcher and double-click-to-open, the screensaver, the
 Start panel and the notification flyout as UI, and anything MIME-related (which
-needs the `c3fa6251` bake first). CA-13, CA-14 and CA-15 are open defects with
-no fix yet.
+needs the `c3fa6251` bake first). CA-13, CA-14 and LK-02 are open defects with
+no fix yet. CA-15 needs a machine where hyprlock renders.
+
+**A note on method, because it caught a false defect here.** "Surface X draws
+nothing" is not a finding on its own under `virtio-vga-gl` — it has to be paired
+with a control that proves the toolkit can draw in the same session. GTK4 had one
+(`gnome-text-editor`) and Settings was therefore a genuine defect; hyprlock's
+control failed and the identical-looking symptom was the harness. Run the control
+first next time.
