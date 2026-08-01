@@ -2,9 +2,17 @@
 
 
 
-> **★★★★ WHERE WE STAND — 2026-07-31 ~16:50 EDT · BAKE READY ★★★★**  
-> **Status: BAKE READY.** Repo is clean idle `main`, profile verified, disk
-> and Kage-Ryu pkgs confirmed. Owner runs the bake (agent cannot sudo).
+> **★★★★ WHERE WE STAND — 2026-07-31 ~22:10 EDT · ISO VM AUDIT IN PROGRESS ★★★★**  
+> **Next agent (Opus 5): finish the full ISO click-audit — do NOT start new
+> features.** Claude hit a session limit mid–QEMU audit of
+> `nyxus-2026.07.31-x86_64.iso` (stamp `0f77d1c2`); findings were not pushed.
+> Primary pickup: [`docs/ISO_VM_AUDIT_PICKUP_BRIEF_2026-07-31.md`](./docs/ISO_VM_AUDIT_PICKUP_BRIEF_2026-07-31.md)
+> (copy-paste prompt at top). VM may still be on VNC `127.0.0.1:8`; leftovers in
+> `~/.claude/jobs/90f4bb96/tmp/`. Document pass/fail → fix → re-verify → update
+> this block when done.
+>
+> **Prior BAKE READY (~16:50 EDT):** tip was idle `main`; owner baked that ISO
+> from stamp `0f77d1c2`. Profile verified; Kage-Ryu pkgs present. Agent cannot sudo.
 >
 > | | |
 > |---|---|
