@@ -26,8 +26,12 @@ of scope for dev/testing in this environment.
   installed via nvm but is not what `node`/`pnpm` actually use. Node 22 runs the
   full stack fine (install, typecheck, build, dev servers). Don't fight the PATH;
   if you truly need Node 24, prepend `~/.nvm/versions/node/v24.*/bin` to PATH.
-- pnpm is provided via corepack (pinned to pnpm 9, matching CI). npm/yarn are
-  blocked by the root `preinstall` guard.
+- pnpm is provided via corepack. Use **pnpm 11**, which is what CI pins
+ (`.github/workflows/ci.yml`). Under pnpm 9 `pnpm install --frozen-lockfile`
+ fails with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`, because the lockfile records
+ the `overrides` block from `pnpm-workspace.yaml` and pnpm 9 only reads
+ overrides from `package.json`. npm/yarn are blocked by the root `preinstall`
+ guard.
 - `.npmrc` enforces `minimumReleaseAge: 1440` (packages must be ≥1 day old).
   Frozen-lockfile installs are unaffected; only adding brand-new deps can trip it.
 
@@ -36,6 +40,14 @@ of scope for dev/testing in this environment.
 - Web dev servers: `pnpm --filter @workspace/<app> run dev` (see each app's
   `vite.config.ts` for default port/base — e.g. `nyxus-web` = `18304`).
 - API codegen: `pnpm --filter @workspace/api-spec run codegen`.
+- **ISO profile linters — run these after touching anything under
+ `iso-builder/` or `artifacts/api-server/nyxus-scripts/`. They need no root,
+ no chroot and no bake, and they carry most of this project's hard-won
+ knowledge as gates:** `bash iso-builder/verify-profile.sh` (must stay at 0
+ FAIL) and `bash scripts/iso-build-verify.sh`.
+- If verify-profile reports gate **13pc**, run
+ `python3 iso-builder/regen-file-permissions.py` and commit the result —
+ `file_permissions` is derived from the airootfs, not hand-maintained.
 - More in `replit.md` and `CONTRIBUTING.md`.
 
 ### Running the API server + database (non-obvious)

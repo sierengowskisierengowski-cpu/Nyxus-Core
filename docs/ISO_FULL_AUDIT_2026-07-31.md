@@ -141,5 +141,76 @@ populated on the build box and (was) empty on the image.
 
 ---
 
-*Sections 8+ (Hub, NYXUS Power, stations, Settings, apps, keybinds, lock,
-screensaver, notifications, power actions) follow in the next pass.*
+## 8. Disposition of §§1–7 — 2026-08-01 source audit
+
+Every FAIL above has been taken to a fix, a correction, or a documented
+non-fix. Nothing is left as "noted". This pass was **source-level, not
+VM-level**: the defects were already measured in the guest on 2026-07-31, so
+the work here was finding and fixing the cause in the repo. Each line below
+says which. **None of it is in a baked ISO yet — a rebake is required to
+re-test any of it in the guest.**
+
+| # | Was | Now | Where |
+| --- | --- | --- | --- |
+| B-02 | BIOS menu never drew | **FIXED** — `syslinux.cfg` had `MENU LABEL` entries and no `UI` directive; syslinux ignores every MENU line without one. Now `UI vesamenu.c32` (mkarchiso always installs it) with ALIEN NEON colours, plus a copy-to-RAM entry. Gate 13pd. | `nyx-profile/syslinux/syslinux.cfg`, `build-iso.sh` |
+| B-03 | UEFI menu widget never drew | **FIXED** — GRUB boxes are nine-slice; the theme shipped `select_c/_e/_w` only and pointed `terminal-box` at that same incomplete prefix. Both theme trees now get all nine slices for every prefix they name, the installed-system theme stops naming Unifont sizes GRUB never loads, and `grub.cfg` only sets `theme=` when the file exists. Gate 13pe. | `grub/themes/nyxus/`, `scripts/generate-grub-theme.py` |
+| B-06 / FS-01 | No boot path set `cow_spacesize`; overlay 100% full ~4 min in | **FIXED** — every entry now passes `cow_spacesize=50%`. Overridable at bake with `NYX_COW_SPACESIZE`. Gate 13pd. | both menus, `build-iso.sh` |
+| FS-03 | 66 MB `~/.cache/pip` | **FIXED** — bootstrap exports `PIP_NO_CACHE_DIR=1` for its whole process tree. | `nyxus-bootstrap` |
+| FS-04 | hyprpm compiled 4 plugins on live media | **FIXED, and this is the likely dominant overlay filler.** The existing guard tested for `/usr/include/hyprland`, which the `hyprland` package ships — so it never fired. Replaced with the live-media test the honeypot fragment uses. | `nyxus-bootstrap` |
+| G-06 / G-07 | Greeter preselected `nyxbuild` | **FIXED in PR #84 + hardened** — `customize_airootfs.sh` now asserts at the end of the bake that `nyx` is the only account in the login.defs UID range regreet enumerates, and fails if not. | `customize_airootfs.sh` |
+| G-08 / G-09 | Three sessions offered, upstream preselected | **FIXED** — the two upstream entries ship inside the `hyprland` package, so `NoExtract` in *both* pacman configs (build-time keeps them off the image, installed-system keeps them off after `pacman -Syu`), plus a sweep and a hard check that the NYXUS session entry exists. | `pacman.conf` ×2, `customize_airootfs.sh` |
+| G-14 | Focus ring used the error red | **FIXED** — focus is magenta `#ff2dad`; `#ff2d55` is danger only. The file header had been mislabelling `#ff2d55` as "magenta", which is how they got conflated. | `greetd/regreet.css` |
+| G-15 | Dropdown popovers were Adwaita grey | **FIXED** — GTK4 paints a `GtkDropDown` list in `popover > contents` as a `listview` of rows; only the bare `popover` node was styled. | `greetd/regreet.css` |
+| SS-04 | `.conf` deprecation banner | **NOT FIXABLE — see §9.** No opt-out exists. | — |
+| SS-07 | Riddle had no visible exit | **FIXED** — the escape is in the banner before the prompt, and every wrong guess repeats it with a remaining-attempts count. | `nyxus_welcome_note.py` |
+| SS-08 | Floating windows behind the bottom bar | **FIXED** — `center` centres in the monitor, not the usable area, so anything taller than 764 is partly swallowed at 1080p. Welcome note 920→760; sysmon/control/stickies/terminal/Settings 800→760. Arithmetic recorded beside the rules. | `nyxus-hyprland-rules.conf` |
+| SS-09 | Welcome wizard blank at 480x320 | **FIXED, and it was our own chrome.** The wizard calls `fullscreen()`, then `install_chrome()` ran `unfullscreen()` + `set_default_size(480,320)`. The same policy was also discarding the chosen size of ~two dozen other apps. It is a default now, not an override, and a window can opt out with `_nyxus_own_geometry`. | `nyxus_chrome.py`, `nyxus_welcome.py` |
+| SS-10 | "Stray" Alacritty at first login | **NOT A DEFECT** — station 1 (OPS) carries `on-created-empty:alacritty`. That is the window. Working as designed. | — |
+| BR-07 | Two `nyxus-bar-right` surfaces | **LIKELY FIXED, needs re-test** — `nyxus-eww-launch-safe` has taken a single-flight lock since it was written; plain `nyxus-eww-launch` (the fallback path in `nyxus-persist-login` and `sync-eww.sh`) never did, so two launchers could interleave `close-all` and `open`. Same lock file now. | `nyxus-eww-launch` |
+| BR-08 | Bars mapped but unpainted for ~4 min | **LIKELY FIXED via FS-04** — they wait on `nyxus-wait-bootstrap`, and bootstrap was busy compiling plugins. Re-measure after a rebake. | `nyxus-bootstrap` |
+| SD-01 / SD-02 | 2min 14s userspace, `systemd-networkd-wait-online` failing | **FIXED** — masked, not disabled: `disable` only removes symlinks and any `Wants=network-online.target` pulls it back. | `customize_airootfs.sh` |
+| SD-03 | Four failed units | **FIXED — four unrelated causes.** `earlyoom`: `-N` takes an argument, so `-N --avoid <re>` fed earlyoom "--avoid" as its post-kill script and it refused the command line (the regexes were also literally single-quoted, which systemd does not strip). `audit-rules`: the FIM ruleset watched the honeypot's *build-machine* path, and one bad `-w` fails `augenrules --load`, which took the whole FIM feed down — that is why Bifrost's FIM panel was blank. `usbguard`: used `AuditBackend=LinuxAudit`, inheriting auditd's failure — and it is no longer enabled by default at all, because its shipped policy is empty by design and lockdown is opt-in from Settings. `jett-daemon`: the unit ships unconditionally, the binary only when the build host has one; an `ExecCondition` marks it skipped rather than failed. | `etc/default/earlyoom`, `nyxus-fim.rules`, `usbguard-daemon.conf`, `jett-daemon.service`, `customize_airootfs.sh` |
+| T-04 / T-05 / T-06 | 12 executables at mode 644 | **FIXED, and it was 116.** `file_permissions` was a hand-maintained mirror of a directory tree. It is derived now, at bake time, from the staged airootfs. Gate 13pc. | `regen-file-permissions.py`, `build-iso.sh` |
+
+### Corrections to §§1–7
+
+- **FS-01's breakdown is misleading.** It attributes the full overlay to
+  `/home/nyx` being 254 MB. `/home/nyx` is populated in the chroot at bake
+  time, so it lives in the read-only squashfs lower layer, and `du` on an
+  overlayfs reports the merged view. Copying it consumes no overlay space. The
+  writes that do — the pip cache and the hyprpm plugin build — are FS-03 and
+  FS-04.
+- **B-06 partly cited a file that does not ship.** `efiboot/loader/entries/01-nyx.conf`
+  is only read by mkarchiso's `uefi.systemd-boot` boot modes, and this profile
+  uses `bios.syslinux` + `uefi.grub`. The whole `efiboot/` tree has been
+  deleted rather than kept in sync.
+- **SS-10 is not a defect** (see the table).
+
+## 9. SS-04 — the one that cannot be fixed, and the deadline behind it
+
+The yellow banner reading *"You are using the .conf config format, support for
+which will be removed in Hyprland 0.57"* was added in
+[hyprwm/Hyprland#15538](https://github.com/hyprwm/Hyprland/pull/15538) and
+shipped in 0.56.1. **There is no setting to suppress it.** The only way to
+clear it is to migrate off `.conf`.
+
+That is not a cosmetic issue, it is a countdown. **Hyprland 0.57 removes
+`.conf` support entirely.** NYXUS currently has 157 registered binds across a
+dozen sourced shards, all in `.conf`, plus every `windowrule`, `layerrule`,
+`workspace` and `env` line the desktop depends on. When 0.57 lands in `extra`,
+a bake that picks it up produces an image whose entire configuration layer is
+ignored.
+
+This is the largest forward risk in the build. It is scoped work, not
+open-ended — `hyprland.conf` plus `conf.d/*.conf`, mechanically translatable,
+and `hyprmorph` exists as a starting point — but it has to happen before 0.57
+reaches the ISO, and it wants a live session to verify against, so it is not
+something to start blind.
+
+## 10. Sections still genuinely untested
+
+Hub, NYXUS Power, station switching, Settings pages, app launches, keybinds,
+lock and screensaver were never exercised in the guest and are **not** covered
+above. The source-level defects found near them are fixed, but the click-audit
+itself is still owed. Do that against a **fresh bake**, not the `0f77d1c2`
+image — the fixes above are not in it.

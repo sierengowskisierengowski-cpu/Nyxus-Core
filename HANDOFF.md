@@ -2,7 +2,62 @@
 
 
 
-> **★★★★ WHERE WE STAND — 2026-08-01 ~03:40 EDT · SESSION RECOVERY ★★★★**  
+> **★★★★ WHERE WE STAND — 2026-08-01 ~08:30 UTC · FULL SOURCE AUDIT ★★★★**
+>
+> A start-to-finish audit of the whole build landed on `main` in nine commits.
+> **Every FAIL in the 2026-07-31 VM audit is now closed** — fixed, corrected,
+> or documented as not-fixable with the reason. Ledger:
+> [`docs/AUDIT_2026-07-31.md`](./docs/AUDIT_2026-07-31.md); per-defect
+> disposition: [`docs/ISO_FULL_AUDIT_2026-07-31.md`](./docs/ISO_FULL_AUDIT_2026-07-31.md) §8.
+>
+> **⛔ REBAKE REQUIRED. None of this is in `nyxus-2026.07.31-x86_64.iso`
+> (stamp `0f77d1c2`).** Do not judge any of it against that stick.
+>
+> **The five that mattered most:**
+> 1. **No boot path set `cow_spacesize`** — the live overlay used archiso's
+>    256 MB default and hit 100% full about four minutes into first boot, so
+>    everything after that ran against a full disk. Every entry sets 50% now.
+> 2. **116 executables shipped mode 644**, not the 12 the VM audit found —
+>    including `nyxus-consoles` (ARSENAL's launcher), `sharknoc` (MESH's),
+>    `nyxus-home-deck`, and *every* script under `~/.config/eww/scripts` and
+>    `~/.config/hypr/scripts`. `file_permissions` was a hand-maintained mirror
+>    of a directory tree; it is derived at bake time now.
+> 3. **The live stick compiled four Hyprland plugins into its own overlay**
+>    during the user's first 90 seconds. The guard meant to prevent this
+>    tested for headers the `hyprland` package ships, so it never fired.
+> 4. **The BIOS menu drew nothing** (labels but no `UI` directive) and **the
+>    UEFI menu widget drew nothing** (GRUB boxes are nine-slice; three slices
+>    shipped, and `terminal-box` pointed at the selection-bar prefix).
+> 5. **The greeter offered `nyxbuild` and two upstream Hyprland sessions.**
+>    Both closed at the source, and the bake now *fails* if a second
+>    login-capable account survives.
+>
+> **Seven new verify-profile gates** (13pc–13pg + a widened 13ak) so these
+> classes cannot come back quietly. `verify-profile.sh` went from 18 WARN to
+> 2, and both survivors are about this machine (no Arch repos, no
+> `mksquashfs`), not the profile. `iso-build-verify.sh` 194/194. Typecheck,
+> build, api-spec codegen, shell `bash -n`, `py_compile` ×140, YAML ×27: all
+> clean.
+>
+> **⛔ READ THIS BEFORE PLANNING ANYTHING NEW —
+> [`docs/AUDIT_2026-07-31.md`](./docs/AUDIT_2026-07-31.md) §6.** Hyprland
+> **0.57 removes `.conf` support entirely**, the 0.56.1 deprecation banner has
+> no opt-out by design, and NYXUS has 157 binds plus every windowrule,
+> layerrule, workspace and env line riding on `.conf`. A bake that picks up
+> 0.57 ships an image whose whole configuration layer is ignored. No gate can
+> catch this — it is a future package version. Plan it.
+>
+> **Still owed:** the click-audit the VM pass never reached (Hub, Power,
+> stations, Settings, apps, keybinds, lock, screensaver) — do it against a
+> fresh bake, not `0f77d1c2`. Plus `postgresql.service`'s polkit prompt, the
+> Hyprland 0.55.4-vs-0.56 host skew, and the owner preview of the frosted lock.
+>
+> **Note on `pnpm`:** CI uses **pnpm 11** (`.github/workflows/ci.yml`), and
+> `pnpm install --frozen-lockfile` fails under pnpm 9 because the lockfile
+> carries `overrides` from `pnpm-workspace.yaml`. AGENTS.md said 9; it is
+> wrong. Use 11.
+
+> **★★★★ PRIOR — 2026-08-01 ~03:40 EDT · SESSION RECOVERY ★★★★**  
 > Cursor/Claude session limits stopped mid-flight agents. **Nothing left only in
 > the working tree.** Salvage + push recorded in
 > [`docs/SESSION_RECOVERY_BRIEF_2026-08-01.md`](./docs/SESSION_RECOVERY_BRIEF_2026-08-01.md)
