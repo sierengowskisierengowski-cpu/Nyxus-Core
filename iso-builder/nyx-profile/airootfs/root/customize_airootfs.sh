@@ -704,9 +704,25 @@ _aur_teardown() {
     fi
     echo "[customize_airootfs] AUR: temporary build mirrorlist reverted"
   fi
-  userdel -r "${_NYX_BUILDUSER}" 2>/dev/null || true
+  # ★ BULLETPROOF REMOVAL. A failed AUR build (ananicy-cpp / appimagelauncher)
+  # can leave a stray process owned by the build user, and `userdel` REFUSES
+  # to remove a user that still owns a running process — with `|| true` that
+  # refusal was silent, so `nyxbuild` survived into the shipped image and the
+  # greeter defaulted its username to it (owner hit exactly this: first live
+  # boot's login prefilled "nyxbuild", rejected the nyx password). Kill any
+  # leftover processes first, force the delete, then scrub the account files
+  # directly so the build user can NEVER reach the login screen.
+  pkill -u "${_NYX_BUILDUSER}" 2>/dev/null || true
+  sleep 1
+  pkill -9 -u "${_NYX_BUILDUSER}" 2>/dev/null || true
+  userdel -rf "${_NYX_BUILDUSER}" 2>/dev/null || true
+  sed -i "/^${_NYX_BUILDUSER}:/d" /etc/passwd /etc/shadow /etc/group /etc/gshadow 2>/dev/null || true
   rm -rf "/var/tmp/${_NYX_BUILDUSER}"
-  echo "[customize_airootfs] AUR: build user removed, CheckSpace restored"
+  if id -u "${_NYX_BUILDUSER}" >/dev/null 2>&1; then
+    echo "[customize_airootfs] AUR: ## WARNING build user ${_NYX_BUILDUSER} STILL PRESENT after removal ##"
+  else
+    echo "[customize_airootfs] AUR: build user removed (verified absent), CheckSpace restored"
+  fi
 }
 
 _aur_build() {

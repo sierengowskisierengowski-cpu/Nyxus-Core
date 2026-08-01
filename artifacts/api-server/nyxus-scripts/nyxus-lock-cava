@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# NYXUS · lock-screen audio spectrum.  rev 2026-07-31
+#
+# The one-of-a-kind eye-candy on the frosted-glass lock: a live audio
+# spectrum that dances to whatever is playing and settles to a calm flat
+# glow line when it's quiet. Mirrors the eww bar's cava feed.
+#
+# Two roles in one file so hyprlock only has to know one command:
+#   nyxus-lock-cava frame   → what the hyprlock label runs (cmd[update:*]);
+#                             ensures the daemon is up, prints the frame.
+#   nyxus-lock-cava daemon  → the background writer: runs cava and writes
+#                             the current glyph frame to a runtime file.
+#
+# SAFE BY CONSTRUCTION: if cava is missing, audio is off, or anything
+# fails, the frame file is empty and the label simply shows nothing — the
+# lock never breaks. The daemon is single-instance and exits on its own
+# when hyprlock is gone, so it can never linger.
+set -u
+export PATH="${HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+
+RT="${XDG_RUNTIME_DIR:-/tmp}"
+FRAME="${RT}/nyxus-lock-cava.frame"
+LOCK="${RT}/nyxus-lock-cava.lock"
+CONF="${HOME}/.config/hypr/nyxus-lock-cava.conf"
+
+case "${1:-frame}" in
+  frame)
+    # Ensure the writer is up (cheap check; its own cmdline is "… daemon",
+    # never "… frame", so this can't match self).
+    if ! pgrep -f 'nyxus-lock-cava daemon' >/dev/null 2>&1; then
+      setsid "$0" daemon >/dev/null 2>&1 &
+    fi
+    cat "$FRAME" 2>/dev/null || true
+    ;;
+
+  daemon)
+    command -v cava >/dev/null 2>&1 || { : > "$FRAME"; exit 0; }
+    # Single instance.
+    exec 9>"$LOCK"
+    flock -n 9 || exit 0
+
+    GLYPHS=(▁ ▂ ▃ ▄ ▅ ▆ ▇ █)
+    : > "$FRAME"
+
+    # Restart cava if the audio server bounces, but stop entirely once the
+    # lock is gone so we never run on the live desktop.
+    while pgrep -x hyprlock >/dev/null 2>&1; do
+      cava -p "$CONF" 2>/dev/null | while IFS= read -r line; do
+        pgrep -x hyprlock >/dev/null 2>&1 || break
+        out=""
+        IFS=';' read -ra vals <<< "$line"
+        for v in "${vals[@]}"; do
+          [[ "$v" =~ ^[0-7]$ ]] && out+="${GLYPHS[$v]}"
+        done
+        printf '%s' "$out" > "$FRAME"
+      done
+      sleep 0.3
+    done
+    : > "$FRAME"
+    ;;
+esac
