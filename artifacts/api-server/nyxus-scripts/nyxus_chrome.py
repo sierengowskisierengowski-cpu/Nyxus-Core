@@ -1137,6 +1137,16 @@ def install_chrome(window: Gtk.Window, *, page_key: str = "_home",
         if page_key in APP_SCENES and cur is not None:
             overlay = Gtk.Overlay()
             overlay.set_child(CosmicSceneArea(scene_for(page_key)))
+            # `cur` is still parented to the window at this point. GTK4
+            # refuses to reparent a widget that already has a parent — it
+            # only logs `Can't set new parent GtkOverlay on widget GtkBox`
+            # and leaves the overlay empty, and then set_child(overlay)
+            # below drops `cur` on the floor. The window ends up showing
+            # nothing but the cosmic backdrop. Detach first.
+            if _is_adw_app_window(window):
+                window.set_content(None)
+            else:
+                window.set_child(None)
             overlay.add_overlay(cur)
             if _is_adw_app_window(window):
                 window.set_content(overlay)
