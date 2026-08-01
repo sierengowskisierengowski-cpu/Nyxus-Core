@@ -2630,6 +2630,8 @@ SKIP_DIRS = {
     "opt/nyxus-intel", "opt/nyxus-intel-bundle", "attached_assets",
     "docs",                     # documents the banned palettes on purpose
     "accent-baseline",          # per-machine cache, gitignored
+    ".claude",                  # agent worktrees / job junk — not shipped
+    ".cursor",                  # editor agent trees — not shipped
 }
 EXTS = {".css", ".scss", ".py", ".ts", ".tsx", ".conf", ".rasi", ".toml",
         ".yuck", ".txt", ".json", ".theme", ".qml", ".sh"}

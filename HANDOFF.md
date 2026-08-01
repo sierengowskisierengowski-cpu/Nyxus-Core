@@ -10,8 +10,26 @@
 > [`docs/AUDIT_2026-07-31.md`](./docs/AUDIT_2026-07-31.md); per-defect
 > disposition: [`docs/ISO_FULL_AUDIT_2026-07-31.md`](./docs/ISO_FULL_AUDIT_2026-07-31.md) §8.
 >
-> **⛔ REBAKE REQUIRED. None of this is in `nyxus-2026.07.31-x86_64.iso`
-> (stamp `0f77d1c2`).** Do not judge any of it against that stick.
+> **✅ BAKED — `nyxus-2026.08.01-x86_64.iso` from tip `80ca821b`** (2026-08-01
+> 14:58 EDT; `main` == `origin/main`; `verify-profile.sh` PASS, sole WARN is the
+> host Hyprland 0.55.4 vs ISO 0.56.0 skew). **Judge the build against this
+> stick, never `0f77d1c2`** — none of the audit-close fixes are in that one.
+>
+> **⛔ WHAT IS OWED NEXT: the click-audit.**
+> [`docs/ISO_FULL_AUDIT_2026-07-31.md`](./docs/ISO_FULL_AUDIT_2026-07-31.md) §10
+> — Hub, NYXUS Power, station switching, Settings pages, app launches, keybinds,
+> lock and screensaver have **never been exercised**, in a VM or on hardware.
+> The source-level defects near them are fixed; the clicking is not done.
+> Do it against this bake and append the results as §11.
+>
+> **Daily-driver product plan (docs only — do not implement before the audit):**
+> [`docs/DAILY_DRIVER_PRODUCT_BRIEF_2026-08-01.md`](./docs/DAILY_DRIVER_PRODUCT_BRIEF_2026-08-01.md)
+> — Windows-shaped shell (bottom taskbar, Start, notification flyout), chill
+> matte + plum/teal direction, built as `NYX_EDITION=daily` **in this repo**,
+> not a second one. Lab stays this build. Its prerequisite study
+> [`docs/DE_COMPLETENESS_AND_EDITIONS_2026-07-31.md`](./docs/DE_COMPLETENESS_AND_EDITIONS_2026-07-31.md)
+> **stops mid-document at §3.2** — the §3.3 stations design it forward-references
+> was never written (agent session limit). Finish that before Daily shell work.
 >
 > **The five that mattered most:**
 > 1. **No boot path set `cow_spacesize`** — the live overlay used archiso's
