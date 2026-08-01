@@ -282,6 +282,14 @@ def transmit() -> int:
         f"{BOLD}{RED}[WARNING]{RESET}{FG}  HUMANITY COMPROMISED. "
         f"ENTER CREATION HASH TO ENGAGE SUB-SHELL.{RESET}"
     )
+    # SS-07: the way out has to be visible BEFORE the prompt, not after the
+    # user submits an empty line. As shipped, a first-timer who typed a wrong
+    # guess never saw it at all — this screen trapped an agent during the VM
+    # audit, and it is the very first thing a new user meets.
+    line(
+        f"{DIM}(this is a riddle, not a login — type {FG}skip{DIM} "
+        f"or press Ctrl+C to close it){RESET}"
+    )
     rule(RED)
     print()
 
@@ -338,6 +346,7 @@ def transmit() -> int:
             "isolation incomplete. think softer.",
         ]
         line(f"{RED}{miss[attempts % len(miss)]}{RESET}")
+        line(f"{DIM}({5 - attempts - 1} left — or type {FG}skip{DIM}){RESET}")
         attempts += 1
     else:
         line(f"{DIM}transmission timed out. tiles close — for now.{RESET}")

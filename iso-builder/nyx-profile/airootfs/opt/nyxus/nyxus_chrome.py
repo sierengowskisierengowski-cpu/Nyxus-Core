@@ -1015,7 +1015,29 @@ def _apply_size_policy(window: Gtk.Window) -> None:
     shrink further. resizable=True + setting size_request to the small
     minimum (not the default) means content can request more space and
     the window will naturally expand to fit it. Universal NYXUS rule:
-    every app + every flyout opens compact, then grows to its content."""
+    every app + every flyout opens compact, then grows to its content.
+
+    r6 (2026-08-01, SS-09): that rule was being applied as an OVERRIDE, not a
+    default, and it broke the apps that had already made a decision.
+
+    The Welcome wizard calls self.fullscreen() in __init__ and then
+    install_chrome() at the end of it. This function ran unfullscreen()
+    followed by set_default_size(480, 320), so the wizard mapped at 480x320
+    with its content — a 720px-minimum column inside a ScrolledWindow whose
+    own minimum height is near zero — collapsed to nothing. That is the blank
+    `dev.nyxus.welcome` window the VM audit found, and it is the first thing a
+    new user is supposed to see.
+
+    Same shape of problem, quieter: roughly two dozen NYXUS apps call
+    set_default_size() themselves and then install_chrome(), and every one of
+    those sizes was being thrown away here.
+
+    So: apps that manage their own geometry set `_nyxus_own_geometry = True`
+    and are left alone entirely; apps that chose a default size keep it; the
+    compact policy still applies to everything that expressed no preference,
+    which is what it was written for."""
+    if getattr(window, "_nyxus_own_geometry", False):
+        return
     try:
         window.unmaximize()
     except Exception: pass
@@ -1025,15 +1047,29 @@ def _apply_size_policy(window: Gtk.Window) -> None:
     try:
         window.set_resizable(True)
     except Exception: pass
+
+    chosen_w = chosen_h = -1
     try:
-        window.set_default_size(480, 320)
-    except Exception as e:
-        log.debug("set_default_size: %s", e)
+        chosen_w, chosen_h = window.get_default_size()
+    except Exception:
+        pass
+    if chosen_w <= 0 or chosen_h <= 0:
+        try:
+            window.set_default_size(480, 320)
+        except Exception as e:
+            log.debug("set_default_size: %s", e)
+
+    req_w = req_h = -1
     try:
-        # Min size only — natural request from content drives the actual size.
-        window.set_size_request(320, 240)
-    except Exception as e:
-        log.debug("set_size_request: %s", e)
+        req_w, req_h = window.get_size_request()
+    except Exception:
+        pass
+    if req_w <= 0 and req_h <= 0:
+        try:
+            # Min size only — natural request from content drives the actual size.
+            window.set_size_request(320, 240)
+        except Exception as e:
+            log.debug("set_size_request: %s", e)
 
 
 def install_chrome(window: Gtk.Window, *, page_key: str = "_home",

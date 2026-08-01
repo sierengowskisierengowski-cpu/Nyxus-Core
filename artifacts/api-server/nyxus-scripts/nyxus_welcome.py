@@ -1164,7 +1164,16 @@ class WelcomeWizard(Adw.ApplicationWindow):
         super().__init__(application=app)
         self.set_title("NYXUS Welcome")
         self.add_css_class("welcome")
+        # SS-09: tell nyxus_chrome to keep its hands off this window's
+        # geometry. install_chrome()'s compact-window policy used to
+        # unfullscreen() this wizard and shrink it to 480x320, which collapsed
+        # the 720px-minimum column inside a ScrolledWindow and mapped the
+        # first-run wizard as a small blank rectangle.
+        self._nyxus_own_geometry = True
         self.fullscreen()
+        # A size to fall back to if the compositor refuses fullscreen, so the
+        # wizard is never laid out smaller than its content needs.
+        self.set_default_size(1100, 760)
         self.cfg: dict = load_cfg()
         skip = load_skip_pages()
 
