@@ -3061,6 +3061,103 @@ else
   ok "13pk: no firstboot fragment writes MIME defaults as root"
 fi
 
+# ── 13pl. eww: every key read exists in :initial, every transition is real ───
+# Two ways a yuck file compiles fine and renders an EMPTY bar for the whole
+# session, both measured live on the 2026-08-01 ISO:
+#
+#   1. A key that is missing from a variable's :initial evaluates to JSON null
+#      until the first poll lands. `null` cannot be coerced by `? :`, so eww
+#      throws "Failed to turn `null` into a value of type bool" while building
+#      the widget tree and the whole window comes up blank. GLITCH.alien was
+#      missing for the first 7s of every session even though random-glow.sh
+#      emits it.
+#   2. `:transition` only accepts the seven values below. Anything else fails
+#      to parse every time the widget is evaluated. bar_hub_trigger asked for
+#      "rotate-left-right" — a GTK name eww does not take — under a comment
+#      claiming it had been "verified live". It never had: the builder box runs
+#      eww 0.5.0 and the ISO ships v0.6.0, and nothing gated the difference.
+#
+# Neither shows up as a bake error, a config error, or anything visible short
+# of reading the eww daemon log inside a booted session. Hence this gate.
+hd "13pl. eww variable keys and stack transitions"
+if ! command -v python3 >/dev/null 2>&1; then
+  warn "13pl: python3 not available — cannot verify eww variables"
+else
+  _pl_files=()
+  while IFS= read -r _pl_f; do
+    [[ -n "${_pl_f}" ]] && _pl_files+=("${_pl_f}")
+  done < <(find "${NS}/eww" "${AIROOT}/etc/skel/.config/eww" \
+                "${AIROOT}/usr/share/nyxus/plugins" \
+                -name '*.yuck' 2>/dev/null | sort)
+  if (( ${#_pl_files[@]} == 0 )); then
+    fail "13pl: no .yuck files found — the eww trees are missing"
+  else
+    _pl_out="$(python3 - "${_pl_files[@]}" <<'PY'
+import json, re, sys
+from pathlib import Path
+
+TRANSITIONS = {"slideright", "slideleft", "slideup", "slidedown",
+               "fade", "crossfade", "none"}
+DEF_RE   = re.compile(r"\((defpoll|deflisten|defvar)\s+([A-Za-z_][A-Za-z0-9_]*)", re.M)
+NEXT_RE  = re.compile(r"\n\((defpoll|deflisten|defvar|defwidget|defwindow)")
+INIT_RE  = re.compile(r":initial\s+'(.*?)'", re.S)
+TRANS_RE = re.compile(r':transition\s+"([^"]*)"')
+
+for path in sys.argv[1:]:
+    src = Path(path).read_text()
+    initials = {}
+    for m in DEF_RE.finditer(src):
+        kind, name = m.group(1), m.group(2)
+        tail = src[m.end():m.end() + 4000]
+        nxt = NEXT_RE.search(tail)
+        if nxt:
+            tail = tail[:nxt.start()]
+        raw = None
+        im = INIT_RE.search(tail)
+        if im:
+            raw = im.group(1)
+        elif kind == "defvar":
+            lm = re.match(r"\s+'(.*?)'", tail, re.S)
+            if lm:
+                raw = lm.group(1)
+        if raw is None:
+            continue
+        try:
+            val = json.loads(raw)
+        except Exception:
+            continue
+        if isinstance(val, dict):
+            initials[name] = set(val.keys())
+
+    for name, keys in sorted(initials.items()):
+        pat = re.compile(r"\b%s\.([A-Za-z_][A-Za-z0-9_]*)" % re.escape(name))
+        for ref in pat.finditer(src):
+            if ref.group(1) not in keys:
+                print("%s:%d: %s.%s is read but %s's :initial has no \"%s\" "
+                      "key, so it is null until the first poll and eww throws "
+                      "while building the widget tree (initial has: %s)"
+                      % (path, src[:ref.start()].count("\n") + 1, name,
+                         ref.group(1), name, ref.group(1), ", ".join(sorted(keys))))
+
+    for m in TRANS_RE.finditer(src):
+        if m.group(1) not in TRANSITIONS:
+            print("%s:%d: :transition \"%s\" is not an eww transition — only %s"
+                  % (path, src[:m.start()].count("\n") + 1, m.group(1),
+                     " ".join(sorted(TRANSITIONS))))
+PY
+)"
+    if [[ -z "${_pl_out}" ]]; then
+      ok "13pl: every key read off an eww variable is in its :initial, and every :transition is one of the seven eww accepts (${#_pl_files[@]} file(s))"
+    else
+      _pl_root="$(cd "${HERE}/.." && pwd)"
+      while IFS= read -r _pl_line; do
+        _pl_line="${_pl_line#${HERE}/../}"
+        [[ -n "${_pl_line}" ]] && fail "13pl: ${_pl_line#${_pl_root}/}"
+      done <<< "${_pl_out}"
+    fi
+  fi
+fi
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

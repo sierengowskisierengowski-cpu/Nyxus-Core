@@ -4,4 +4,7 @@
 (defwidget plugin_quote []
   (box :class "plugin-quote" :orientation "h" :space-evenly false :spacing 6
     (label :class "plugin-quote-glyph" :text "✶")
-    (label :class "plugin-quote-text"  :text plugin_quote_text :limit-width 64 :truncate true)))
+    ;; :limit-width is the whole truncation mechanism — eww sets both
+    ;; max-width-chars and pango ellipsize=END from it. There is no
+    ;; :truncate attribute; eww warns and ignores it.
+    (label :class "plugin-quote-text"  :text plugin_quote_text :limit-width 64)))

@@ -18,7 +18,7 @@
 ;; ─────────────────────────────────────────────────────────────────────
 
 ;; ── poll variables ────────────────────────────────────────────────────
-(defpoll TIME       :interval "1s"   :initial '{"hms":"--:--:--","hm":"--:--","sec":"--","date":"...","long":"..."}'
+(defpoll TIME       :interval "1s"   :initial '{"hms":"--:--:--","hm":"--:--","sec":"--","ampm":"--","date":"...","long":"..."}'
                                      "~/.config/eww/scripts/time.sh")
 ;; ticker.sh runs at 10 fps to scroll one column per tick (true marquee).
 (defpoll TICKER     :interval "0.1s" :initial '{"text":"▌ NYXUS · ALIEN NEON · LIVE                                                  ","tooltip":"NYXUS"}'
@@ -87,7 +87,14 @@
                                      "~/.config/eww/scripts/notifications.sh")
 (defpoll SECSTATE   :interval "2s"   :initial '{"hacker":"off","ghost":"off","panic":"idle"}'
                                      "~/.config/eww/scripts/security-state.sh")
-(defpoll GLITCH     :interval "7s"   :initial '{"brand":false,"stamp":false,"clock":false,"ticker":false,"search":false}'
+;; EVERY key any widget reads off GLITCH has to be in :initial. Until the
+;; first poll lands (7s) the variable IS the :initial value, and a key that
+;; is missing evaluates to JSON null — which `? :` cannot coerce, so eww
+;; throws `Failed to turn 'null' into a value of type bool` and the prop that
+;; needed it never applies. "alien" was missing for exactly that window even
+;; though random-glow.sh emits it. Gate 13pl in verify-profile.sh now checks
+;; this for every defpoll/defvar/deflisten in the tree.
+(defpoll GLITCH     :interval "7s"   :initial '{"brand":false,"stamp":false,"clock":false,"ticker":false,"search":false,"alien":false}'
                                      "~/.config/eww/scripts/random-glow.sh")
 
 ;; ── Sprint 1 flyouts ─────────────────────────────────────────────────
@@ -117,7 +124,7 @@
 ;; status.py / settings.py rather than reimplementing app discovery.
 ;; The app catalogue is CACHED (see start-feed.py) - re-scanning ~400
 ;; desktop entries on demand is what made the first build feel frozen.
-(defpoll STARTMETA :interval "30s" :initial '{"user":{"name":"operator","subtitle":"","initial":"N"},"pins":[],"pin_rows":[],"app_rows":[],"app_total":0,"pin_count":0,"scratch":[],"scratch_empty":true,"scratch_path":""}'
+(defpoll STARTMETA :interval "30s" :initial '{"user":{"name":"operator","subtitle":"","initial":"N"},"pins":[],"pin_rows":[],"app_rows":[],"cat_sections":[],"app_total":0,"pin_count":0,"scratch":[],"scratch_empty":true,"scratch_path":""}'
                                    "python3 ~/.config/eww/scripts/start-feed.py meta")
 (defvar STARTQ "")
 (defvar STARTFOUND '{"rows":[],"n":0}')
@@ -134,7 +141,7 @@
                                 "~/.config/eww/scripts/mesh-feed.sh")
 (defpoll GHOST_ :interval "15s" :initial '{"state":{"hacker":false,"ghost":false,"panic":"idle","label":"...","tone":"cool"},"defense":[],"pots":[],"pots_up":0,"pots_total":0,"attacks":{"total":0,"recent":[],"quiet":true},"exposure":{"count":0,"ports":[],"ports_str":""},"auth":{"failed":0},"firewall":{"ufw":false,"bridges":0},"conns":{"count":0,"foreign":0,"top":""},"sessions":{"count":0,"who":""},"scanners":{"rk":false,"rk_run":false,"cl":false,"cl_db":false,"stale":false},"units":{"count":0,"rows":[],"clean":true},"events":{"count":0,"recent":[],"quiet":true},"arsenal":{"groups":[],"live":0,"total":0},"hive":{"up":false,"total":0,"ips":0,"pots":0,"h1":0,"countries":0,"rows":[],"quiet":true}}'
                                 "python3 ~/.config/eww/scripts/ghost-feed.py")
-(defpoll STARTLIVE :interval "4s" :initial '{"running":[],"run_count":0,"recent":[],"places":[]}'
+(defpoll STARTLIVE :interval "4s" :initial '{"running":[],"run_count":0,"recent":[],"places":[],"place_rows":[]}'
                                    "python3 ~/.config/eww/scripts/start-feed.py live")
 
 (defvar WIFI_VIEW "nearby")
@@ -574,8 +581,7 @@
   (label :class "bar-strip ${class ?: ''}"
          :text "${text}"
          :tooltip "${tip ?: text}"
-         :limit-width 52
-         :truncate "end"))
+         :limit-width 52))
 
 ;; ── Phase 6 monitoring cell: ghost-HUD glyph + live sparkline + value ─
 ;; No chrome at all - a neon glyph, a glowing block-char sparkline trace
@@ -728,12 +734,16 @@
     (box :class "saucer-screen saucer-screen-music boombox-frame" :halign "center" :valign "center"
          :style "margin-bottom: 6px; box-shadow: 0 0 ${8 + CAVA_BASS / 7}px rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '125, 255, 94'}, ${0.30 + CAVA_BASS / 320}), 0 0 ${16 + CAVA_BASS / 4}px rgba(${SECSTATE.hacker == 'on' ? '255, 255, 255' : '255, 45, 173'}, ${0.14 + CAVA_BASS / 520}), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 18px rgba(0, 0, 0, 0.85);"
       (box :orientation "v" :space-evenly false :spacing 1 :halign "center" :valign "center"
+        ;; No :truncate here — eww has no such attribute (it warns `Unknown
+        ;; attribute truncate` and drops it). :limit-width is the whole
+        ;; mechanism: eww sets max-width-chars AND pango ellipsize=END from it,
+        ;; so these two already ellipsize at 24/26 chars on their own.
         (box :class "boombox-display" :orientation "v" :space-evenly false :spacing 0 :halign "center" :valign "center"
-          (label :class "bar-hub-music-title" :limit-width 24 :truncate "end"
+          (label :class "bar-hub-music-title" :limit-width 24
                  :halign "center"
                  :text "${PLAYER.title}"
                  :tooltip "${PLAYER.tooltip}")
-          (label :class "bar-hub-music-artist" :limit-width 26 :truncate "end"
+          (label :class "bar-hub-music-artist" :limit-width 26
                  :halign "center"
                  :visible {PLAYER.artist != ""}
                  :text "${PLAYER.artist}")
@@ -749,17 +759,33 @@
           (button :class "saucer-btn saucer-btn-main" :onclick "playerctl play-pause &" :tooltip "Play / pause" "${PLAYER.icon}")
           (button :class "saucer-btn" :onclick "playerctl next &" :tooltip "Next" "󰒭"))))))
 
-;; The idle<->music "flip". rotate-left-right is GTK's real card-flip
-;; transition (rotates the outgoing face away and the incoming one in
-;; around a vertical axis) — a genuine flip, not a fade standing in for
-;; one. Verified live (rev 2026-07-25): reads as a real flip at the
-;; default ~200ms GTK stack duration, no extra tuning needed.
+;; The idle<->music face swap. THERE IS NO CARD-FLIP TRANSITION IN EWW.
+;; eww's `stack` accepts exactly seven values — slideright slideleft slideup
+;; slidedown fade crossfade none — and rejects everything else. This widget
+;; asked for "rotate-left-right", which is not one of them, and a comment
+;; here claimed that flip had been "verified live". It never had: eww threw
+;; `Couldn't parse transition: 'rotate-left-right'` every time this widget
+;; was evaluated and the stack silently kept GTK's no-transition default.
+;; crossfade is the honest substitute — the outgoing face fades out while
+;; the incoming one fades in. It is a dissolve, NOT a flip. A real flip
+;; would have to be built out of CSS transforms; do not put a flip back in
+;; this attribute.
+;;
+;; :selected is an INTEGER INDEX, not a child name: eww adds stack children
+;; in order and names them "0", "1", … itself, so 0 is the idle face and 1
+;; the music face. eww applies a stack's props BEFORE it adds the children
+;; (build_gtk_stack, eww v0.6.0), so set_visible_child_name runs against a
+;; still-empty stack and GTK logs `Child name '0' not found in GtkStack`
+;; once per open. That line is upstream build-order noise, not a config
+;; error — GtkStack falls back to the first child added, and the next PLAYER
+;; poll (1s) re-runs this prop with the correct index.
+;;
 ;; Only the IDLE (clock) face is wrapped in the hub-open button. The music
 ;; face is transport-only — nesting its prev/play/next buttons inside an
 ;; outer GtkButton made every tap fire the outer onclick (nyxus-hub-open)
-;; instead of the transport control. Flip back to the clock with Super+R.
+;; instead of the transport control. Swap back to the clock with Super+R.
 (defwidget bar_hub_trigger []
-  (stack :class "saucer-stack" :transition "rotate-left-right" :same-size true
+  (stack :class "saucer-stack" :transition "crossfade" :same-size true
          :selected {(PLAYER.status == "Stopped") == SAUCER_FORCE ? 1 : 0}
     (button :class "bar-hub-trigger"
             :onclick "nyxus-hub-open &"
@@ -873,9 +899,9 @@
     (box :orientation "h" :space-evenly false :spacing 10 :valign "center"
       (label :class "hub-media-glyph" :text "${PLAYER.icon}")
       (box :orientation "v" :space-evenly false :spacing 1 :hexpand true :halign "start"
-        (label :class "hub-media-title" :halign "start" :limit-width 26 :truncate "end"
+        (label :class "hub-media-title" :halign "start" :limit-width 26
                :text {PLAYER.status == "Stopped" ? "Nothing playing" : PLAYER.title})
-        (label :class "hub-media-artist" :halign "start" :limit-width 30 :truncate "end"
+        (label :class "hub-media-artist" :halign "start" :limit-width 30
                :visible {PLAYER.artist != ""} :text "${PLAYER.artist}")))
     (box :class "hub-media-prog-row" :orientation "h" :space-evenly false :spacing 8 :valign "center"
       (label :class "hub-media-time" :text "${PLAYER.pos}")
@@ -1053,7 +1079,9 @@
   (button :class "dash-toggle dash-toggle-${hue ?: 'green'}" :onclick "(${cmd}) &"
     (box :orientation "v" :space-evenly false :spacing 6 :halign "center"
       (label :class "dash-toggle-glyph" :text "${glyph}")
-      (label :class "dash-toggle-label" :truncate false :text "${label}"))))
+      ;; no :limit-width, so nothing truncates — the `:truncate false` that
+      ;; used to sit here was an attribute eww does not have and ignored.
+      (label :class "dash-toggle-label" :text "${label}"))))
 
 ;; per-core bar — height is driven via inline GTK CSS (`min-height`)
 ;; because yuck `box` does not accept a raw numeric :height attribute.
@@ -1190,7 +1218,7 @@
           :onclick "(nyxus-hub-close; ${cmd}) &"
     (box :orientation "v" :space-evenly false :spacing 8 :halign "center"
       (label :class "power-glyph" :text "${glyph}")
-      (label :class "power-label" :truncate false :text "${label}"))))
+      (label :class "power-label" :text "${label}"))))
 
 (defwidget powermenu_layout []
   (box :class "powermenu-root" :orientation "v" :halign "center" :valign "center"
