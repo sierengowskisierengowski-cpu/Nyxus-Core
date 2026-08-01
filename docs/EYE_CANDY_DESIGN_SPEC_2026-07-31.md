@@ -1547,3 +1547,336 @@ thing Windows also does — a taskbar, a right-click menu, a keyboard shortcut
 list, drag to move, one desktop — done with a coherent material, a coherent
 motion, and a reactive layer that no mainstream OS has. **Familiar shape,
 better execution.** That is the whole design.
+
+---
+
+## 11. RANKED ROADMAP
+
+Effort is one engineer. **XS** ≈ minutes · **S** ≈ an hour or two ·
+**M** ≈ a day · **L** ≈ multiple days · **XL** ≈ a project.
+
+**Nothing in this roadmap should start before the ISO VM audit currently in
+flight is finished and its findings are landed.** Every item below touches
+files that audit is validating.
+
+### TIER 0 — Connect what exists (highest value per hour in the whole document)
+
+All of these are wiring. No new machinery, no new art, no new surfaces.
+
+| # | Item | Effort | Risk | Notes |
+|---|---|---|---|---|
+| 0.1 | **Saucer stack transition → `slideleft`** (§2.2) | **XS** | **Very low** | One word. Turns a hard cut into a real animation. Confirm the parse error is gone from the eww log afterwards. |
+| 0.2 | **`gesture = 4, swipe, move` / `4, pinch, resize`** (§9.2) | **XS** | Very low | Native 0.56.1. Directly answers "grab it and move it". Nothing else uses 4-finger. |
+| 0.3 | **Bind `movetoworkspacesilent`** to `Super+Ctrl+1…0` (§9.1) | **XS** | Very low | The genuinely missing half of "carry work". |
+| 0.4 | **Start `nyxus-tintd` at login** (§4.3) | **XS** | **Low-Medium** | Two lines. **Declare the border precedence (§6.2) in the same commit** — three daemons write that property. |
+| 0.5 | **`decoration:glow` + `glowangle`** (§2.4) | **S** | Low | Native neon halo, ALIEN NEON gradient. Big visual return, `hyprctl keyword`-testable, instantly revertible. |
+| 0.6 | **Layer in/out animations** — `layersIn`/`layersOut`/`fadeLayersIn`/`fadeLayersOut` (§3.1) | **S** | Low | Every flyout, OSD and deck stops popping and starts arriving. One config block, benefits ~20 surfaces. |
+| 0.7 | **`sense-poll.sh` → a `defpoll`** (§4.1a) | **S** | Low | Unlocks `threat` + `energy` desktop-wide. Written and dead today. |
+| 0.8 | **Raise `vibrancy_darkness` 0.30 → 0.40** (§8.2) | **XS** | Very low | One number; A/B it live. Decides whether neon survives behind glass on a near-black desktop. |
+| 0.9 | **Delete `quicksettings-daemon`** (§4.8) | **XS** | Very low | Near-duplicate of a live window; exactly the shape of bug gate `13ak` guards. |
+
+> **Tier 0 is roughly one focused day and it is where I would spend the next
+> session.** Items 0.1, 0.2, 0.4 and 0.5 alone will read as a visibly different
+> desktop.
+
+### TIER 1 — The signature language (the identity work)
+
+| # | Item | Effort | Risk | Notes |
+|---|---|---|---|---|
+| 1.1 | **The one motion system** (§6.4) applied everywhere | **S-M** | Low | Mostly deletions and unifications. Do it *before* 1.2 so the VEIL inherits it. |
+| 1.2 | **VEIL on the dock** (§4.2, §7.5) — wire `dock` + `dock-reveal`, add `:onhoverlost`, add the dwell script, fix `:stacking` | **M** | **Medium** | The reference implementation. Verify with `hyprctl layers -j`. Biggest single win for the "like Windows" goal. |
+| 1.3 | **VEIL on scrollbars** (§7.4) — CSS-only | **S** | Low | Opacity only; the row inset stays permanent so nothing reflows. He named this one specifically. |
+| 1.4 | **VEIL on deck cards + bar pills** — CSS-only, via `.nyx-surface` | **M** | Low-Medium | Add the rules to `.nyx-surface` once and 12 decks inherit. **Must not touch `box-shadow`** (§3.3). |
+| 1.5 | **`SENSE` beyond three labels** (§4.1) — mood hue on rims desktop-wide | **M** | Low | The spine of Signature 2. |
+| 1.6 | **Three-depth audit** (§8.1) — remove material exceptions | **M** | Low | Unglamorous; it is what makes the whole thing read as one product. |
+| 1.7 | **Keybind viewer** in the dormant `cheatsheet` window (§9.1) | **M** | Low | Generate from `hyprctl binds -j`, never hand-maintain. |
+| 1.8 | **Right-click desktop menu** via rofi-at-cursor (§9.3) | **M** | **Low** *if* built as specified — **High** if built as a full-screen catcher | Read §9.3's safety constraint before writing a line. |
+
+### TIER 2 — Larger, genuinely valuable
+
+| # | Item | Effort | Risk | Notes |
+|---|---|---|---|---|
+| 2.1 | **State-reactive screen grade** (§8.3) — five static shaders + switcher + bake staging | **M-L** | **Medium** | The rarest thing in the document. `MATRIX` alone justifies it. **Must ship with a staging gate** or it repeats §2.1. |
+| 2.2 | **SOLO desktop mode** (§9.4) | **M** | **Medium-High** | Only after 1.2. Follow the five rules; do not write `stations.json`. |
+| 2.3 | **Boombox v2 wiring, option (a)** (§4.7) | **M** | Medium | Owner decision first. Place the overlay from the recorded fractions; never eyeball. |
+| 2.4 | **3D pre-rendered controls** — toggle/switch sprite sheets (§5.2) | **L** | Low technically, **art-blocked** | The only route to "real looking toggles". Commissioning decision. |
+
+### TIER 3 — Large projects, defer
+
+| # | Item | Effort | Risk | Notes |
+|---|---|---|---|---|
+| 3.1 | **Left/right 3D dock rails** (§4.6) | **XL** | Medium | Never started; the 937×1678-art-for-a-56×756-rail aspect trap killed the last attempt. Needs new art authored to the rail's aspect. |
+| 3.2 | **24 replacement station/app murals** | **XL** | — | Already documented as an owner commissioning decision; one carries a **VectorStock watermark**, which is a licensing problem on the ISO. The cheap alternative — repointing at the 28 on-spec rotation images — is a config change, not art. |
+| 3.3 | **Anything requiring eww ≥ 0.6.0+ / GTK4** | **XL** | High | Would lift the §5 ceiling. Not worth it now. |
+
+### ⛔ Explicitly NOT on the roadmap
+
+- Re-landing `ecdcc952` / `c73caae0` / `0bf2d06c` — reverted, owner-confirmed.
+- Hyprland plugins (§5.8).
+- Animated screen shaders (§12.1).
+- Bar height changes at runtime (§4.7b).
+- Deleting the ~31 unused pill widgets (§4.8) — removal risk exceeds carrying cost.
+- Recompiling `eww.css` wholesale (§12.3).
+
+---
+
+## 12. RISKS
+
+### 12.1 🔴 Animated screen shaders are not affordable — this is the biggest "no"
+
+Hyprland 0.56.1 will feed a screen shader `time` and the `pointer_*` family —
+**and it explicitly refuses to do so quietly.** From
+`src/render/OpenGL.cpp:951-975`, on shader load:
+
+```cpp
+// The screen shader uses the uniform
+// Since the screen shader could change every frame, damage tracking *needs* to be disabled
+ErrorOverlay::overlay()->queueError(
+  "Screen shader: Screen shader uses uniform '{}', which requires debug:damage_tracking to be switched off.\n"
+  "WARNING:(Disabling damage tracking will *massively* increase GPU utilization!");
+```
+
+The check fires for `time`, `pointer_position`, `pointer_pressed_positions`,
+`pointer_pressed_times`, `pointer_pressed_killed`, `pointer_pressed_touched`,
+`pointer_last_active`, `pointer_hidden`, `pointer_killing`, `pointer_shape`,
+`pointer_shape_previous`.
+
+**What this means in practice.** With damage tracking on (the default),
+Hyprland only redraws changed regions — so a `time`-driven shader animates only
+where something else already moved, which looks broken. To make it animate you
+must set `debug:damage_tracking = 0`, which forces a **full-screen redraw every
+frame, forever**, on a hybrid-GPU laptop that also runs blur at `size 14,
+passes 4`. That is a battery and thermal decision, not a visual one, and it
+would be felt on every single frame of every session.
+
+**Mitigation, and it is a good one:** §8.3 is specified with **no `time` and no
+`pointer_*` uniforms** precisely so damage tracking stays on. Static grades,
+swapped edge-triggered. The effect the owner wants — the screen having a mood —
+survives; the per-frame cost does not.
+
+**The one thing to verify on the stick:** whether swapping `screen_shader` on a
+static screen repaints immediately. `REFRESH_SCREEN_SHADER` should handle it;
+upstream discussion suggests a forced damage was needed historically. Unproven
+on 0.56.1.
+
+### 12.2 🟠 Blur + effects on every surface — the real performance budget
+
+Blur is already `size 14, passes 4` on **every** `nyxus-*` layer, via a
+catch-all. That is the single largest existing GPU cost in the desktop and it
+is already being paid.
+
+| Addition | Marginal cost | Verdict |
+|---|---|---|
+| CSS opacity/colour transitions (§7 Mech A) | negligible — GTK compositing already happening | **Safe at any scale** |
+| `decoration:glow` | one extra pass per window edge, similar to shadow | Safe |
+| `glowangle` loop | continuous animation → continuous damage on window borders | **Watch it.** Same class of always-on cost as `borderangle`, which is already running at 240 s. Keep the period long. |
+| `layersIn/Out` animations | transient only | Safe |
+| Static screen shader | one extra full-screen pass, always | Acceptable; measure. **Make `PROWL` set `[[EMPTY]]`** so the common case pays nothing (§8.3). |
+| `dim_around` | full-screen dim pass while the surface is mapped | Transient; see §12.4 |
+| More `eww` polls | **the real risk** — see below | **Budget carefully** |
+
+⚠ **The cheapest-looking additions are the ones to watch.** Each new `defpoll`
+is a subprocess on a timer, forever. The build has already had to fix this
+once: eight unused producers were removed in PR #77, including one polling
+every 0.5 s, and the START app catalogue went from 30 s to 0.10 s only after
+caching. **Prefer CSS (zero cost) over `:onhover` (a subprocess per hover) over
+a new poll (a subprocess forever).** That ordering is why §7 makes Mechanism A
+the default.
+
+### 12.3 🟠 The eww toolchain traps still apply to every line of this
+
+Unchanged, and they will bite the implementer if not re-read:
+
+- **`sass` is not installed on the builder box.** `compile-eww-css.sh` silently
+  `exit 0`s. Editing `eww.scss.source` alone changes **nothing** on screen.
+- **`eww.css` has drifted ~3500 lines from `eww.scss.source`**, including
+  resolved colour values. **Never wholesale-recompile — it shifts the palette.**
+  Patch `eww.css` surgically and mirror into `eww.scss.source`, or use an
+  append-only override block at the end of both (GTK resolves equal specificity
+  by document order). All the 2026-07-26 bar work lives in such blocks and
+  reverts by deleting them. **The VEIL should be built the same way** — one
+  clearly-delimited block, so the entire language can be reverted in one edit
+  if the owner does not like it.
+- **SCSS must be pure ASCII** — any non-ASCII emits `@charset "UTF-8"`, which
+  eww's GTK CSS parser rejects, dropping the whole theme to grey.
+- **The compile step strips `background-size`**, `width`, `height`,
+  `text-align`, `display:flex` and friends. Pre-scale PNGs.
+- **Three surfaces must stay in sync** for every change: live `~/.config/eww/`,
+  `artifacts/api-server/nyxus-scripts/eww/` (NS = source of truth), and
+  `iso-builder/.../skel/.config/eww/`. Gate `13pa` asserts NS↔skel identity.
+- **Writing `~/.config/eww/eww.yuck` IS an `eww reload`** — never edit the live
+  config while deck windows are up. Use a throwaway
+  `eww --config /tmp/<dir> daemon`, and **kill the `eww … open` client by PID**
+  afterwards; one left mapped for ten minutes swallowed every pointer event on
+  the desktop and had to be diagnosed from scratch (gate `13ai`).
+
+### 12.4 🟠 `dim_around` and the overlay rules
+
+`layerrule = dim_around` is attractive for focusing the Hub or a deck, but it
+interacts with two things already fought over: the `:stacking` /
+`nyxus-overlay-open` strategy table (get it backwards and the 40 px gap returns
+at the other edge), and `overlay-shield.sh`'s bar hide/restore, which has
+already raced its own opener once and needed a 3 s grace period.
+
+**Recommendation: do not add `dim_around` in the same change as anything else.**
+It is one line and instantly revertible via `hyprctl keyword`, so test it alone.
+
+### 12.5 🔴 hyprlang is removed in Hyprland 0.57 — plan config investment accordingly
+
+**This is closer than it looks.** Hyprland 0.56.1 already ships **both** config
+implementations side by side — `src/config/legacy/` (hyprlang) and a complete
+`src/config/lua/` with 40+ files including `LuaBindings*`, `LuaLayerRule`,
+`LuaWindowRule`, `LuaKeybind` and a Lua layout provider. And the selector
+already **prefers Lua**:
+
+```cpp
+// src/config/supplementary/jeremy/Jeremy.cpp:35-41
+const auto LUA_PATHS  = Hyprutils::Path::findConfig(…, "lua");
+const auto CONF_PATHS = Hyprutils::Path::findConfig(…, "conf");
+if (LUA_PATHS.first.has_value())        return … LUA_PATHS …;   // hyprland.lua WINS
+else if (CONF_PATHS.first.has_value())  return … CONF_PATHS …;  // hyprland.conf fallback
+```
+
+NYXUS ships only `hyprland.conf`, so 0.56.1 uses the legacy path and everything
+works. **But 0.56 is the transition release, and the migration is not
+hypothetical — it is already in the binary.**
+
+NYXUS has **26 hypr config files** including 18 `conf.d/` shards, several
+**generated at runtime** (`nyxus-stations.conf`, `nyxus-freeform.conf`,
+`nyxus-monitors.conf`, `hyprlock-accent.conf`). A hyprlang→Lua migration
+therefore rewrites not just static config but **the generators that write it**,
+plus `nyxus-apply-accent`, plus several verify-profile gates that grep `.conf`
+syntax.
+
+**What this means for the roadmap:**
+
+| Kind of work | Shelf life | Guidance |
+|---|---|---|
+| A handful of `decoration:` / `animation` / `layerrule` lines (Tier 0) | Short as *syntax*, permanent as *decisions* | **Proceed.** The values transfer; only the syntax changes. |
+| eww CSS / yuck (most of Tiers 1–2) | **Unaffected** | **Proceed.** eww does not care what language Hyprland is configured in. |
+| Shell tooling that runs `hyprctl keyword …` (§8.3, `cava.sh`, `nyxus-shader`) | **Unaffected** | **Proceed.** `hyprctl` is an IPC surface, not config syntax. **This is a strong argument for keeping the reactive layer in scripts driving `hyprctl`, exactly as it is today.** |
+| A large new **static** `.conf` investment | **Short** | **Avoid.** Do not build a big new config-side subsystem in hyprlang now. |
+| A `.conf`-parsing tool (e.g. a hand-rolled keybind viewer) | **Short** | Use `hyprctl binds -j` instead (§9.1). |
+
+**Bluntly: the design in this document is deliberately weighted away from
+hyprlang.** The three signatures live in eww CSS, in shell scripts talking to
+`hyprctl`, and in ~20 lines of compositor config. That is a survivable
+distribution.
+
+### 12.6 🟠 Concurrency and process discipline
+
+- **Another agent owns the tree right now** (ISO VM audit). Nothing here was
+  implemented; the only write was this document.
+- **Do not start Tier 0 until that audit lands.** Two agents in `eww.yuck` is
+  how `station_pill` got deleted once.
+- **`git pull --rebase` was attempted and refused** while writing this, because
+  the working tree carries another agent's unstaged `alacritty.toml` edits.
+  Those were deliberately left alone. Rebase before pushing.
+
+### 12.7 🟡 Verification discipline — the rules that keep being re-learned
+
+- **Verify layout with `hyprctl layers -j`, never by eye.** Non-negotiable for
+  anything in §7 Mechanism B.
+- **Measure art apertures; never eyeball a margin.** Drifted wrong twice
+  already; §4.7 exists because of it.
+- **The builder box is not the stick.** Hyprland 0.55.4 vs 0.56.1, eww 0.5.0 vs
+  v0.6.0 (§1.1), and `~/.local/bin` populated here and **empty** there. Live
+  confirmation here is strong evidence for CSS/widget questions and **no
+  evidence at all** for path resolution or version-specific behaviour.
+- **Never invoke a shipped tool through `~/.local/bin/`** in any config
+  (gate `13z`). Any new script in §7/§9 must also be added to **both** installer
+  allowlists — `install.sh` and `nyxus_install.sh` deploy an explicit list, so a
+  new script silently never reaches an installed system.
+- **New assets must be staged by the bake.** §2.1 is the live example: the
+  shader launcher ships and its payload directory does not exist. Gate `13uc`
+  covers wallpapers; **shaders and any new sprite sheets need equivalent
+  coverage** or they will ship as a launcher with no payload, exactly like
+  `nyxus-shader`.
+
+---
+
+## 13. OPEN QUESTIONS — DECISIONS ONLY THE OWNER CAN MAKE
+
+Ordered so the earlier answers unblock the later work.
+
+### Identity
+
+1. **Is the state-reactive screen grade (§8.3) the thing to stake NYXUS's
+   identity on?** It is the rarest idea available and the `MATRIX` grade alone
+   does something the current approach cannot. It is also Tier 2 and the
+   shaders must be written from nothing. **Yes / no / show me `MATRIX` first.**
+2. **How strongly should the desktop react?** Signature 2 has a dial. Options:
+   *barely* (mood only shifts rim hue, most people would not notice), *clearly*
+   (rims, glow and the screen grade all move together), or *dramatically*.
+   **My recommendation is "clearly", and it is easy to turn down later and hard
+   to walk back once he has seen it loud.**
+
+### The VEIL
+
+3. **Does the VEIL apply to the bars, or only to decks and the dock?** Hiding
+   bar-pill detail readouts until hover is the strongest version of his idea
+   and makes the desktop dramatically quieter — but the bars are where he
+   currently reads everything at a glance. **Recommend: decks + dock +
+   scrollbars first, bars only after he has lived with it.**
+4. **Reveal/conceal timings — 180 ms / 420 ms as a starting point?** These need
+   to be felt, not argued. Worth tuning live on the dock and then freezing.
+5. **Is opacity-based reveal good enough, given a blur transition is
+   impossible (§7.6)?** He asked for frost dissolving. He would get "surfaces
+   out of the frost". Needs his eyes on it before it is applied to 12 decks.
+
+### Windows-familiarity
+
+6. **Should the dock be on by default in normal (station) mode, or only in
+   SOLO?** Recommend **auto-hide, on by default, in both.**
+7. **SOLO mode — how far does it go?** Rail hidden entirely, or one HOME pill?
+   Decks fully off, or HOME still available? (§9.4)
+8. **Right-click menu contents** (§9.3) — is the proposed list right, and does
+   he want it on right-click only, or also a corner hot-zone?
+
+### Art and geometry
+
+9. **Boombox v2 — option (a), (b) or (c)?** (§4.7) Recommend **(a)**;
+   advise against (b). This blocks a finished asset from shipping.
+10. **Are pre-rendered 3D control sprites (§5.2) worth commissioning?** This is
+    the only route to "real looking toggles". It is art budget, not
+    engineering, and it is what would most distinguish NYXUS visually.
+11. **Repoint the 5 graffiti stations and `nyxus_chrome._IMAGE_POOL` at the 28
+    on-spec rotation images?** A config change, not new art, and it would make
+    the desktop coherent immediately. Already flagged; still unanswered. Note
+    one of the current 24 carries a **VectorStock watermark** — a licensing
+    problem on a shipped ISO, independent of taste.
+
+### Housekeeping
+
+12. **`hotkey-recorder` — wire or delete?** (§4.8) Only worth wiring if the
+    keybind viewer gains "rebind this".
+13. **Should `nyxus-beatd` stay retired?** §6.2 recommends yes — `CAVA_BASS`
+    already owns audio→border and two writers on one property buys nothing.
+
+---
+
+## 14. WHAT I WOULD STAKE THE BUILD ON
+
+If only three things happen:
+
+1. **THE VEIL, proven on the dock** (§7.5, §4.2). It is the owner's own
+   clearest idea, it is the most Windows-familiar surface in the build, the
+   scaffolding is already written, and it is the one behaviour a user meets
+   thousands of times a day. Get this right and the desktop feels expensive
+   everywhere.
+2. **ONE REACTIVE SPINE** (§6.2). Not a new feature — a decision. Five
+   uncoordinated reactive systems become one, with a declared precedence. This
+   is what turns "a desktop with effects on it" into "a desktop that is alive",
+   and it is almost entirely wiring work he has already paid for.
+3. **THE STATE-REACTIVE SCREEN GRADE** (§8.3). The only genuinely
+   first-or-near-first idea here. The ecosystem schedules shaders by clock;
+   nobody drives a full-screen post-process from live system state. NYXUS has
+   both halves already — it just never had the shaders.
+
+Tier 0 (§11) is the day of work that makes the first two visible, and it is
+where I would start.
+
+---
+
+*Specification only. Nothing herein has been implemented.*
+*© 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED*
