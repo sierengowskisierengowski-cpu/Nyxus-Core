@@ -2028,6 +2028,26 @@ for doc in LICENSE.md README.md CHANGELOG.md CREDITS.md; do
 done
 ok "OS-level docs in /etc/nyxus/"
 
+# ── derive file_permissions from what was actually staged ────────────────
+# mkarchiso copies airootfs with --no-preserve=mode, so the ONLY thing that
+# restores an executable bit on the shipped image is an entry in
+# profiledef.sh's file_permissions. That array used to be hand-maintained, and
+# on the 2026-07-31 ISO 116 executables were missing from it — nyxus-consoles
+# (ARSENAL's launcher), sharknoc (MESH's), nyxus-home-deck, and every script
+# under ~/.config/eww/scripts and ~/.config/hypr/scripts all shipped 644 and
+# could not run. Nothing warned, because a 644 file is a valid file.
+#
+# This runs on the THROWAWAY copy after every staging step above, so files that
+# only exist at bake time (eww scripts, the Meli venv, Bifrost, Arsenal, jeTT)
+# are covered as well as what is committed. Hand-pinned non-755 entries
+# (/root 750, sudoers 440, ...) are preserved by the regenerator.
+step "derive file_permissions from the staged airootfs"
+if ! python3 "${SCRIPT_DIR}/regen-file-permissions.py" --profile "${PROFILE_DIR}"; then
+  fail "could not regenerate file_permissions — refusing to bake an image whose"
+  fail "  launchers would ship non-executable"
+  exit 1
+fi
+
 # ── bake the ISO ─────────────────────────────────────────────────────────
 step "running mkarchiso (this takes 5-15 minutes)"
 rm -rf "${WORK_DIR}"

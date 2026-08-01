@@ -2454,6 +2454,83 @@ done
 (( _pb_fail == 0 )) \
   && ok "both savers can reach fullscreen (no pin conflict) and the payload re-asserts it after map"
 
+# ── 13pc. every executable in airootfs is in file_permissions ────────────────
+# archiso copies airootfs with --no-preserve=mode, so an executable missing
+# from profiledef.sh's file_permissions ships 644 and silently cannot run. The
+# 2026-07-31 ISO shipped 116 of them that way, including the ARSENAL and MESH
+# station launchers and every eww/hypr script. The array is derived now, not
+# hand-maintained — this gate is what catches a stale checkout.
+hd "13pc. file_permissions covers every executable"
+if ! command -v python3 >/dev/null 2>&1; then
+  warn "13pc: python3 not available — cannot verify file_permissions"
+elif python3 "${HERE}/regen-file-permissions.py" --profile "${PROFILE}" --check >/tmp/nyx-fileperm.out 2>&1; then
+  ok "13pc: file_permissions matches the airootfs ($(grep -c '\]="0:0:755"' "${PROFILE}/profiledef.sh") executables)"
+else
+  while IFS= read -r _fp_line; do
+    [[ -n "${_fp_line}" ]] && fail "13pc: ${_fp_line#\[FAIL\] }"
+  done < <(grep '^\[FAIL\]' /tmp/nyx-fileperm.out)
+  fail "13pc: run iso-builder/regen-file-permissions.py and commit the result"
+fi
+
+# ── 13pd. every boot path the profile ships sets cow_spacesize ───────────────
+# FS-01: without it archiso uses a 256M overlay, /etc/skel alone is ~162 MB,
+# and the live session hits a full disk minutes after first login. Only the
+# configs consumed by this profile's bootmodes are checked — nyx-profile has no
+# efiboot/ on purpose, because mkarchiso reads that only for systemd-boot.
+hd "13pd. cow_spacesize on every boot path"
+_cow_fail=0
+_cow_seen=0
+for _cow_f in "${PROFILE}/syslinux/syslinux.cfg" "${PROFILE}/grub/grub.cfg"; do
+  [[ -f "${_cow_f}" ]] || continue
+  while IFS= read -r _cow_line; do
+    _cow_seen=$((_cow_seen+1))
+    if [[ "${_cow_line}" != *cow_spacesize=* ]]; then
+      fail "13pd: ${_cow_f#${HERE}/} boots without cow_spacesize: ${_cow_line# }"
+      _cow_fail=$((_cow_fail+1))
+    fi
+  done < <(grep -E '^\s*(APPEND|linux)\s' "${_cow_f}" | grep 'archisobasedir=')
+done
+if (( _cow_seen == 0 )); then
+  fail "13pd: found no bootable entries in syslinux.cfg / grub.cfg to check"
+elif (( _cow_fail == 0 )); then
+  ok "13pd: all ${_cow_seen} boot entries set cow_spacesize"
+fi
+
+# BIOS needs a UI directive or syslinux ignores every MENU line and draws
+# nothing — B-02, which made the safe/no-KMS and rescue kernels unreachable.
+if [[ -f "${PROFILE}/syslinux/syslinux.cfg" ]]; then
+  if grep -Eq '^\s*UI\s+(vesa)?menu\.c32' "${PROFILE}/syslinux/syslinux.cfg"; then
+    ok "13pd: syslinux.cfg declares a UI module (the BIOS menu will draw)"
+  else
+    fail "13pd: syslinux.cfg has no 'UI menu.c32' / 'UI vesamenu.c32' — syslinux ignores every MENU directive without one and renders no menu at all"
+  fi
+fi
+
+# ── 13pe. GRUB theme boxes have all nine slices ──────────────────────────────
+# B-03: a `foo_*.png` box makes GRUB look for nine slices and silently skip the
+# missing ones. Shipping only select_c/_e/_w — and pointing terminal-box at
+# that same prefix — is why the UEFI menu drew a background and nothing else.
+hd "13pe. GRUB theme nine-slice completeness"
+_slice_fail=0
+_slice_themes=0
+while IFS= read -r _theme; do
+  _slice_themes=$((_slice_themes+1))
+  _tdir="$(dirname "${_theme}")"
+  while IFS= read -r _prefix; do
+    for _s in c n s e w nw ne sw se; do
+      if [[ ! -f "${_tdir}/${_prefix}_${_s}.png" ]]; then
+        fail "13pe: ${_theme#${HERE}/} references ${_prefix}_*.png but ${_prefix}_${_s}.png is missing"
+        _slice_fail=$((_slice_fail+1))
+      fi
+    done
+  done < <(grep -oE '"[a-z_]+_\*\.png"' "${_theme}" | tr -d '"' | sed 's/_\*\.png$//' | sort -u)
+done < <(find "${PROFILE}" -path '*/themes/nyxus/theme.txt' 2>/dev/null)
+if (( _slice_themes == 0 )); then
+  warn "13pe: no GRUB theme.txt found under the profile"
+elif (( _slice_fail == 0 )); then
+  ok "13pe: ${_slice_themes} GRUB theme(s) — every referenced box has all nine slices"
+fi
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \
