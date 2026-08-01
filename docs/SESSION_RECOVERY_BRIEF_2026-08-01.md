@@ -179,11 +179,12 @@ Tasks:
 
 ---
 
-## 7. Sync checklist (fill after push)
+## 7. Sync checklist (filled after push)
 
-| Check | Expected after recovery |
+| Check | Result |
 |---|---|
-| `main` == `origin/main` | Yes |
-| Open PRs with unique work | #84 merged (or closed after merge) |
+| `main` == `origin/main` | **Yes** @ `dd168f5c` (0 ahead / 0 behind) |
+| Open PRs with unique work | **#84 merged** (merge commit `dd168f5c`); **no open PRs** |
 | Dirty tree | Only `?? .claude/` |
 | WIP branch needed? | No — nothing too broken for main; all salvage was docs + already-CI-green #84 |
+| Pushed | DE docs (`820c842e`, `038c4237`), this brief + HANDOFF (`9ea17760`), then #84 merge |
