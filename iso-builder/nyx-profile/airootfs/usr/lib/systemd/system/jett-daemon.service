@@ -4,6 +4,12 @@ After=network.target
 
 [Service]
 Type=simple
+# The unit ships unconditionally but the binary does not — build-iso.sh only
+# stages jett-daemon when it finds one on the build host, so most images have
+# the unit and no executable. That combination used to show up as a failed unit
+# on every boot (SD-03). ExecCondition exiting non-zero marks the unit skipped
+# rather than failed, so an image without jeTT is quiet instead of broken.
+ExecCondition=/bin/sh -c '[ -x /usr/local/bin/jett-daemon ] || [ -x /usr/bin/jett-daemon ]'
 EnvironmentFile=-/etc/default/jett
 Environment=JETT_ALLOWLIST=/etc/jett/allowlist.conf
 Environment=JETT_MODEL_PIN=/etc/jett/model.sha256

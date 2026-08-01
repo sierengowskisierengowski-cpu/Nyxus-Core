@@ -30,5 +30,14 @@
 -w /home/nyx/.nyxus -p wa -k nyxus_dotdir
 
 ## -- Honeypot evidence (tamper detection on captured logs/samples) ------
--w /home/nyx/Projects/honeypot/logs -p wa -k nyxus_hp_logs
--w /home/nyx/Projects/honeypot/data -p wa -k nyxus_hp_data
+## SD-03: these used to point at /home/nyx/Projects/honeypot/{logs,data}, which
+## is where the honeypot lived on the BUILD MACHINE. build-iso.sh stages it to
+## /opt/honeypot and rewrites every other reference; these two watches were
+## missed. auditctl errors on a watch whose path does not exist, one error
+## fails `augenrules --load`, and that failed audit-rules.service on every
+## first boot — taking the whole FIM feed down with it, so Bifrost's FIM panel
+## was blank for a reason nothing reported.
+## customize_airootfs.sh creates both directories so the watches always resolve
+## even on a bake where no honeypot source was available to stage.
+-w /opt/honeypot/logs -p wa -k nyxus_hp_logs
+-w /opt/honeypot/data -p wa -k nyxus_hp_data

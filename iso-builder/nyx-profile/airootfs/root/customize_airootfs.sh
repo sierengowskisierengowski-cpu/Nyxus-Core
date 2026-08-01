@@ -12,6 +12,48 @@
 # Reference: https://wiki.archlinux.org/title/Archiso#Adding_users
 set -e -u
 
+# ── enable-if-present ───────────────────────────────────────────────────
+# Every `systemctl enable X 2>/dev/null || true` in this file swallowed its
+# own failure, so a unit that was never staged looked identical in the build
+# log to one that enabled fine. That is how jett-daemon.service came to be
+# enabled on an image with no jett-daemon binary, and how six honeypot bridge
+# units were "enabled" without ever shipping. This says out loud which units
+# are present and which are being skipped, so a bake on a host that lacks an
+# optional component produces a readable log instead of a silent lie.
+_nyx_have_unit() {
+  local u="$1" d
+  for d in /usr/lib/systemd/system /etc/systemd/system /usr/lib/systemd/user /etc/systemd/user; do
+    [ -e "${d}/${u}" ] && return 0
+  done
+  return 1
+}
+_nyx_enable() {
+  local u
+  for u in "$@"; do
+    if _nyx_have_unit "${u}"; then
+      if systemctl enable "${u}" >/dev/null 2>&1; then
+        echo "  [enable] ${u}"
+      else
+        echo "  [enable FAILED] ${u}"
+      fi
+    else
+      echo "  [skip — not installed] ${u}"
+    fi
+  done
+}
+_nyx_enable_global() {
+  local u
+  for u in "$@"; do
+    if _nyx_have_unit "${u}"; then
+      systemctl --global enable "${u}" >/dev/null 2>&1 \
+        && echo "  [enable --global] ${u}" \
+        || echo "  [enable --global FAILED] ${u}"
+    else
+      echo "  [skip — not installed] ${u}"
+    fi
+  done
+}
+
 # ── Package-rename compat shims (rev 2026-07-16) ────────────────────────
 # Arch `extra` dropped `swww` in favor of `awww` ("An Answer to your
 # Wayland Wallpaper Woes", a maintained fork — its own package metadata
@@ -426,6 +468,18 @@ mkdir -p /var/log/nyxus
 chown root:root /var/log/nyxus
 chmod 700 /var/log/nyxus
 
+# ── Paths that audit watches and daemons expect to already exist ───────
+# auditctl refuses a `-w` on a path that does not exist, and ONE refusal makes
+# `augenrules --load` fail, which fails audit-rules.service and takes the whole
+# FIM feed down (SD-03). /etc/audit/rules.d/nyxus-fim.rules watches the
+# honeypot evidence directories, and build-iso.sh only creates those when it
+# found a honeypot checkout on the build host — so on most bakes they were
+# absent and auditd was dead on arrival. Create them unconditionally.
+mkdir -p /opt/honeypot/logs /opt/honeypot/data
+# usbguard's FileAudit backend does not create its own log directory.
+mkdir -p /var/log/usbguard
+chmod 700 /var/log/usbguard
+
 # ── Enable display + network + hardware services on the LIVE ISO ───────
 # These are also re-enabled by nyxus-postinstall on the installed system,
 # but enabling them in the live image means hardware works for live demos.
@@ -447,8 +501,14 @@ chmod 700 /var/log/nyxus
 mkdir -p /var/lib/greetd /var/cache/regreet
 chown greeter:greeter /var/lib/greetd /var/cache/regreet 2>/dev/null || true
 chmod 0755 /var/lib/greetd /var/cache/regreet
-systemctl enable greetd.service              2>/dev/null || true
-systemctl enable NetworkManager.service      2>/dev/null || true
+# greetd is not optional: without it the image boots to a console and the
+# owner has no login screen. Fail the bake rather than ship that.
+if ! systemctl enable greetd.service >/dev/null 2>&1; then
+  echo "FATAL: could not enable greetd.service — the image would have no login screen" >&2
+  exit 1
+fi
+echo "  [enable] greetd.service"
+_nyx_enable NetworkManager.service
 # ...but NOT NetworkManager-wait-online, which `systemctl enable NetworkManager`
 # drags in via Also=/preset (verified: the 2026.07.29 ISO ships the symlink at
 # etc/systemd/system/network-online.target.wants/). It runs `nm-online -s -q`
@@ -461,17 +521,35 @@ systemctl enable NetworkManager.service      2>/dev/null || true
 # configured network that is up to 60 idle seconds in front of the login
 # screen, for a target nothing on this image actually needs.
 systemctl disable NetworkManager-wait-online.service 2>/dev/null || true
-systemctl enable systemd-timesyncd.service   2>/dev/null || true
-systemctl enable bluetooth.service           2>/dev/null || true
-systemctl enable thermald.service            2>/dev/null || true
-systemctl enable power-profiles-daemon.service 2>/dev/null || true
-systemctl enable acpid.service               2>/dev/null || true
-systemctl enable cups.service                2>/dev/null || true
-systemctl enable fstrim.timer                2>/dev/null || true
+# SD-01/SD-02 (2026-07-31 VM audit): the SAME trap, one layer down.
+# `systemd-analyze` on the shipped image read
+#   Startup finished in 1.915s (kernel) + 2min 14.095s (userspace)
+# and the whole userspace figure was systemd-networkd-wait-online.service
+# timing out. NetworkManager is the network stack on this image;
+# systemd-networkd is not in use, so that unit can only ever wait out its
+# full timeout and then fail — in front of network-online.target, which
+# multi-user.target orders itself after, which graphical.target requires,
+# which greetd sits behind. Two minutes of nothing between the splash and
+# the login screen, for a target nothing here needs.
+#
+# Masked, not disabled: `disable` only removes the symlinks, and any unit
+# with Wants=network-online.target can drag a merely-disabled wait-online
+# straight back in. Masking is the only version of this that stays fixed.
+systemctl mask systemd-networkd-wait-online.service 2>/dev/null || true
+systemctl mask systemd-networkd.service             2>/dev/null || true
+_nyx_enable \
+  systemd-timesyncd.service \
+  bluetooth.service \
+  thermald.service \
+  power-profiles-daemon.service \
+  acpid.service \
+  cups.service \
+  fstrim.timer
 # NVIDIA suspend/resume hooks ship with nvidia-utils ≥435
-systemctl enable nvidia-suspend.service      2>/dev/null || true
-systemctl enable nvidia-resume.service       2>/dev/null || true
-systemctl enable nvidia-hibernate.service    2>/dev/null || true
+_nyx_enable \
+  nvidia-suspend.service \
+  nvidia-resume.service \
+  nvidia-hibernate.service
 
 # ─────────────────────────────────────────────────────────────────────
 # COMPLETION WAVE 1+3 — enable the new stability/security/UI services
@@ -479,16 +557,14 @@ systemctl enable nvidia-hibernate.service    2>/dev/null || true
 # Services that don't exist on the live image are silently skipped so
 # this section is idempotent across upstream package updates.
 # ─────────────────────────────────────────────────────────────────────
-for svc in \
+_nyx_enable \
   earlyoom.service \
   irqbalance.service \
   systemd-zram-setup@zram0.service \
-  systemd-oomd.service \
   avahi-daemon.service \
   chronyd.service \
   firewalld.service \
   apparmor.service \
-  usbguard.service \
   auditd.service \
   systemd-resolved.service \
   paccache.timer \
@@ -499,9 +575,20 @@ for svc in \
   jett-daemon.service \
   ollama.service \
   docker.service \
-  nyxus-honeypot-firewall.service ; do
-  systemctl enable "${svc}" 2>/dev/null || true
-done
+  nyxus-honeypot-firewall.service
+
+# systemd-oomd is deliberately NOT in that list. earlyoom is the configured
+# OOM killer on this image (/etc/default/earlyoom), and running both means two
+# daemons racing to pick a victim from different signals — the kernel PSI view
+# vs. free-memory thresholds. Pick one; this build picks earlyoom.
+systemctl disable systemd-oomd.service 2>/dev/null || true
+
+# usbguard is deliberately NOT enabled either. Its shipped policy is empty on
+# purpose (see /etc/usbguard/rules.conf) and lockdown is opt-in from Settings →
+# USB, which calls `nyxus-usbguard-helper --enable`. Enabling a USB device
+# firewall by default on install media is how you meet a user whose keyboard
+# stopped working. SD-03 reported usbguard.service failing on first boot; the
+# fix is to not start it until someone asks for it.
 # jett-daemon.service: jeTT AI Security Daemon (rev 2026-07-16). Safe to
 # enable by default because the shipped override.conf pins it to
 # JETT_MODE=learn + JETT_ENFORCE_DRY_RUN=1 — it observes and logs would-be
@@ -526,7 +613,12 @@ done
 # enables these for any user account created at install time (no
 # per-user ~/.config/systemd/user copy needed, and no user session has
 # to exist yet at build time for this to take effect).
-systemctl --global enable \
+#
+# The six bridge units only exist when build-iso.sh found a honeypot checkout
+# on the build host, so on most bakes they are absent. The old blind
+# `systemctl --global enable ... 2>/dev/null || true` made that invisible;
+# _nyx_enable_global says which ones actually shipped.
+_nyx_enable_global \
   meli.service \
   meli-ingest.service \
   meli-labyrinth-digest.timer \
@@ -535,8 +627,7 @@ systemctl --global enable \
   dionaea-bridge.service \
   endlessh-bridge.service \
   heralding-bridge.service \
-  http-bridge.service \
-  2>/dev/null || true
+  http-bridge.service
 # scx.service: sched_ext userspace scheduler (scx_lavd, /etc/default/scx).
 # Runtime-swappable; `systemctl stop scx` reverts to kernel EEVDF instantly.
 
@@ -767,7 +858,7 @@ _aur_build snapper-rollback
 
 # Auto-nice for desktop responsiveness.
 _aur_build ananicy-cpp
-systemctl enable ananicy-cpp.service 2>/dev/null || true
+_nyx_enable ananicy-cpp.service
 
 # Distrobox — run other-distro apps in containers.
 _aur_build distrobox

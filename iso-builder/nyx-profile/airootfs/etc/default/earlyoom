@@ -1,3 +1,24 @@
-# NYXUS · earlyoom defaults · rev 2026-05-13 r1
-# Notify (-N) at 20% RAM/swap free, kill (-M) at 5% RAM / 10% swap free.
-EARLYOOM_ARGS="-r 60 -n -N --avoid '(^|/)(systemd|init|sshd|Xorg|Hyprland|sddm)$' --prefer '(^|/)(chromium|firefox|electron|node|java)$' -m 5,10 -s 5,10"
+# NYXUS · earlyoom defaults · rev 2026-08-01
+#
+# Kill at 5% free RAM / 10% free swap, poll every 60s, notify on kill.
+#
+# SD-03: earlyoom.service failed on every first boot of the 2026-07-31 image.
+# The old value was:
+#   EARLYOOM_ARGS="-r 60 -n -N --avoid '(...)' --prefer '(...)' -m 5,10 -s 5,10"
+# and it was wrong twice.
+#
+#  1. `-N` takes an argument — it is the script earlyoom runs after a kill. So
+#     `-N --avoid` handed earlyoom "--avoid" as the notify script, and the
+#     regex that followed became a stray positional argument. earlyoom rejects
+#     the command line and exits, which is the whole failure. `-n` alone is
+#     what enables notifications.
+#
+#  2. The single quotes were literal. systemd splits an unquoted $VAR on
+#     whitespace without shell-style quote removal, so earlyoom received
+#     --avoid with a pattern that had `'` characters baked into it and could
+#     never match a real process name. The regexes contain no spaces, so they
+#     do not need quoting at all.
+#
+# The avoid list also still named sddm, which this image has not used since
+# the greeter moved to greetd + regreet.
+EARLYOOM_ARGS=-r 60 -n --avoid ^(systemd|init|sshd|Hyprland|greetd|regreet|hyprlock)$ --prefer ^(chromium|firefox|electron|node|java|code)$ -m 5,10 -s 5,10
