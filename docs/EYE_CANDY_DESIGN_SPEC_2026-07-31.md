@@ -647,3 +647,528 @@ bump, and take the compositor down with them when they fault. `nyxus-shader`'s
 own header states the build's philosophy: *"Pure compositor: no daemon, no
 plugin, nothing to break on update."* **Follow it.** Every effect proposed in
 this document is plugin-free.
+
+---
+
+## 6. THE DESIGN LANGUAGE
+
+### 6.0 North star: *"like Windows, but fucking better"*
+
+The owner's overarching goal reframes everything above. He does not want an
+art project. He wants a system that is **as comfortable and predictable as a
+mainstream OS**, and then unmistakably better and unmistakably NYXUS.
+
+That has a concrete design consequence, and it is the most important sentence
+in this document:
+
+> **Familiarity is a feature, and eye candy must never cost it.**
+> Every effect specified below is applied to a control that already behaves
+> the way a Windows or macOS user expects. Nothing here changes *what*
+> anything does. It changes how it arrives, how it responds, and how it
+> recedes.
+
+Three practical rules follow, and they resolve most future arguments:
+
+1. **Nothing hides that a new user needs to find.** Progressive disclosure
+   applies to *secondary* affordances — scrollbars, transport controls,
+   per-card actions, the dock. Never to primary navigation. The station rail
+   and the clock stay lit.
+2. **Every disclosed thing has a non-hover route.** A keybind, or a click
+   target that is visible without hovering. Hover is an accelerator, never the
+   only door. (This is also an accessibility requirement — `DESIGN_CONTRACT.md`
+   §11: *"every action reachable with Tab + Enter"*.)
+3. **Motion is the same everywhere or it is noise.** One in-curve, one
+   out-curve, three durations, applied globally. Detailed in §6.4.
+
+### 6.1 The argument for restraint — why "few effects everywhere" beats "many effects scattered"
+
+The owner said *"clean, super clean only — not half ass. 100%."* Those two
+sentences are in tension unless you resolve them deliberately, because the
+intuitive way to get "rich" is to add effects, and adding effects is exactly
+what makes a desktop read as amateur.
+
+The reason is not taste, it is information theory. **A visual effect carries
+meaning only if its presence is informative.** If hover-glow means "this is
+interactive" on the bars, and elsewhere means "this is a heading", and
+elsewhere is decorative, then the glow tells the eye nothing and the user stops
+reading it. It becomes texture. Texture that moves is noise. Noise reads as
+cheap — and *that* is the actual difference between a rice that looks like a
+product and one that looks like a config dump.
+
+**This build has already paid for this lesson twice**, and both receipts are in
+the tree:
+
+- The **EWW chrome night** (`ecdcc952` → `0bf2d06c`) added a marquee clock,
+  lowrider ellipse math, and Meshy wraps on the docks and ticker — several
+  unrelated ideas at once. It was reverted in full, and
+  `EWW_CHROME_REVERT_BRIEF_2026-07-26.md` §3 records the verdict: *"looked
+  wrong."*
+- The **`.float-island` incident** was the inverse and is more instructive: a
+  rail wrapper painted *its own* faint rim and stripped the pills' real
+  `obsidian-vessel` glass, glow and accent top-rule. **The rich design was
+  already there and a competing effect was suppressing it.** Removing the
+  extra effect is what fixed the look (`BARS_AND_LOGIN_BRIEF_2026-07-26.md` §5).
+
+So the recommendation is not "be minimal." It is: **pick a very small number of
+behaviours, and apply them with total consistency to every surface.** Coherence
+is what makes a small number of effects read as *designed*, and it is the only
+version of "rich" that survives contact with 4 bars, 12 decks, ~14 flyouts and
+a dock.
+
+### 6.2 The three signature behaviours
+
+Everything visual in NYXUS should be one of these three, or none of them.
+Anything that is not one of these three needs an argument.
+
+---
+
+#### ★ SIGNATURE 1 — **THE VEIL** (progressive disclosure)
+
+*Surfaces and controls are present but withdrawn until attended to, then
+return to the substrate when released.*
+
+This is the owner's clearest single idea and it becomes the desktop's primary
+interaction texture. Full spec in §7. It is the behaviour a user will
+experience thousands of times a day, so it gets the most design attention and
+the tightest timing budget.
+
+**Applies to:** the dock (§4.2), scrollbars, card action rows, transport
+controls, bar-pill secondary readouts, deck card chrome. **Never** to the
+station rail, the clock, or anything in the top bar's left cluster.
+
+---
+
+#### ★ SIGNATURE 2 — **THE PULSE** (one reactive spine)
+
+*The whole desktop shares one slow, system-derived colour/intensity state, and
+one fast audio-derived one. Nothing has a private animation.*
+
+Today the desktop has **five uncoordinated reactive systems**: `SENSE` mood on
+three labels, `CAVA_BASS` on speaker rings and card rims, `borderangle` tiers,
+`random-glow` glitches, and `pulsed`'s event flashes. They do not know about
+each other. That is precisely the "many effects scattered" failure — it is just
+currently invisible because four of the five barely surface.
+
+**The proposal is to make them one system with a strict hierarchy:**
+
+| Tier | Source | Rate | Owns | Rationale |
+|---|---|---|---|---|
+| **Slow — "the room"** | `sense.json` `mood` + `energy` | mood: ~6 s hysteresis; energy: 4 Hz EMA | The **hue and intensity** of every accent rim, glow and hairline, desktop-wide | This is the "how is the machine feeling" layer. It must be slow enough to never distract. `nyxus-sense` already guarantees this — it will not flap. |
+| **Fast — "the beat"** | `CAVA_BASS` | per frame | **Amplitude only** — glow radius / opacity, never hue | Audio should modulate what is already there, not introduce new colour. Keeps music reaction from fighting the mood hue. |
+| **Event — "the strike"** | `pulsed`, `random-glow`, `threat` transitions | rare, discrete | One-shot flashes, ≤ 400 ms, on a single surface | Rare by construction. `random-glow` is already tuned this way (6% alien). |
+
+**Precedence for the border ring must be declared, because three daemons write
+it (§4.3):**
+
+```
+threat: alert/breach   >   pulsed event flash   >   tintd per-app hue   >   mood hue
+   (rare, must win)        (transient, ~400ms)      (per focus change)     (ambient floor)
+```
+
+`beatd` should stay **off** — `CAVA_BASS`'s `borderangle` tier retune already
+owns audio→border, and running both puts two writers on the same property for
+no visual gain. This is a decision, not an oversight; record it.
+
+**What this buys:** the desktop stops looking like several widgets that each
+happen to animate, and starts looking like one organism. It is also almost
+entirely a *wiring* job (§4.9), not new machinery.
+
+---
+
+#### ★ SIGNATURE 3 — **THE SUBSTRATE** (everything emerges from one material)
+
+*Every surface is the same smoked glass over the same starfield, at one of
+three depths. Nothing has its own material.*
+
+NYXUS already has this and mostly follows it: `obsidian-vessel`,
+`flyout-glass`, `.nyx-surface`, the triple-black elevation stack, the
+`starfield-veil` motif. The work is not inventing a material — it is
+**eliminating the exceptions** and making depth mean one thing. Spec in §8.
+
+**Applies to:** all 4 bars, all 12 decks, all flyouts, the Hub, the dock,
+hyprlock, the greeter.
+
+---
+
+### 6.3 What is deliberately excluded
+
+Saying no is the substance of a design language. These are all technically
+possible and are **not** recommended:
+
+| Excluded | Why |
+|---|---|
+| Per-widget bespoke animations | Signature 2 exists so nothing needs one. Any widget that "needs" its own animation is a request to change the language, not an exception to it. |
+| A second randomiser | `random-glow.sh` exists, is tuned, and is consumed. Add channels to it; do not add a rival. |
+| A second audio path | `CAVA_BASS` exists and `push_bass` is the best reactive code in the build. |
+| Animated screen shaders | Not affordable — §12.1. |
+| Hyprland plugins | §5.8 — settled, crash risk, ABI-locked. |
+| New accent colours | Palette LOCKED. Every effect below uses only the nine ALIEN NEON hues. |
+| Bar height changes at runtime | §4.7(b) — three separate bugs came from the reserved-zone arithmetic. |
+
+### 6.4 The one motion system
+
+Every animation, GTK-side and compositor-side, uses this table. There are no
+other values. This is the smallest possible change that makes the desktop feel
+like one product.
+
+| Token | Value | Use |
+|---|---|---|
+| `t-reveal` | **180 ms** | anything appearing on hover/focus |
+| `t-conceal` | **420 ms** | anything withdrawing (deliberately ~2.3× the reveal) |
+| `t-state` | **280 ms** | colour / glow / opacity state changes |
+| `ease-in` | `cubic-bezier(0.16, 1, 0.2, 1)` — the existing `$ease-glass` / `nyx-glass` | everything arriving |
+| `ease-out` | `cubic-bezier(0.4, 0, 1, 1)` — the existing `nyx-out` | everything leaving |
+
+**These are the values already in the tree**, deliberately: `$ease-glass` is in
+`eww.scss.source`, and `nyx-glass` / `nyx-out` are already declared in
+`hyprland.conf:296,299`. Nothing new is introduced; they are simply applied
+everywhere instead of in three places.
+
+**Why conceal is slower than reveal.** This is the owner's own instinct —
+*"then when you're not hovering it slowly goes back into hiding and you can see
+it slowly start disappearing into the system itself."* It is also correct UI
+practice: a fast reveal feels responsive, and a fast conceal feels like the
+interface is snatching things away and punishes an imprecise mouse. The
+asymmetry is the effect.
+
+**No spring, no bounce, no overshoot on disclosure.** `DESIGN_CONTRACT.md` §6
+already bans *"bouncing, spring overshoot, carnival animations."* Note the
+tree currently contradicts itself: `nyx-spring` (0.34, 1.36, …) and `overshoot`
+(…, 1.18) *are* declared and used on `windowsIn` and `workspaces`. Those are
+window-manager motions and are fine. **The disclosure language must not use
+them** — an overshooting scrollbar is exactly the "half ass" the owner is
+trying to avoid.
+
+---
+
+## 7. SIGNATURE 1 IN FULL — "THE VEIL"
+
+> The owner: *"an effect so you just see the names of things until you hover
+> over them, then it appears and shows where you'd click, or a scrollbar then
+> appears... frost it out or blur and then it reveals itself, then when you're
+> not hovering it slowly goes back into hiding and you can see it slowly start
+> disappearing into the system itself."*
+
+This section makes that implementable.
+
+### 7.1 The four states
+
+Every VEIL-participating element is in exactly one of four states. The
+*identity* of the element (its name/label) is visible in all four — only its
+**affordances** (buttons, handles, scrollbars, values) change.
+
+| State | Trigger | Label | Affordances | Surface |
+|---|---|---|---|---|
+| **DORMANT** | default | 100% | `opacity: 0`, no border | fill at rest alpha |
+| **WAKING** | pointer enters the group | 100% | 0 → 1 over `t-reveal` | rim lifts to accent |
+| **AWAKE** | pointer inside ≥ `t-reveal` | 100% | 100%, accent rim, cursor changes | full accent rim |
+| **FADING** | pointer left, within `t-conceal` | 100% | 1 → 0 over `t-conceal` | rim settles back |
+
+**The label never fades.** That is what makes this legible rather than a
+guessing game, and it is exactly what the owner described — *"you just see the
+names of things until you hover."*
+
+### 7.2 The hover group — the single most important decision here
+
+**Hover is detected on the CARD, and reveals everything inside it.** Not
+per-button.
+
+This is not a stylistic choice; per-element hover produces a strobing card as
+the pointer crosses six children, each with its own 180/420 ms cycle. One
+eventbox wrapping the card, revealing all of its affordances together, is the
+difference between "designed" and "twitchy".
+
+```
+(eventbox :onhover "..." :onhoverlost "..."      <- ONE per card
+  (box :class "nyx-surface deck-card ..."
+    (label ...)          ; identity - always visible
+    (revealer ... )))    ; affordances - all revealed together
+```
+
+### 7.3 Two mechanisms, and when to use which
+
+There are two ways to build this in eww v0.6.0 and they are **not**
+interchangeable. Choosing wrong is the main implementation risk.
+
+#### Mechanism A — **CSS-only** (preferred; use for ~90% of cases)
+
+Pure GTK3 CSS `:hover` + `transition`. **No eww events, no state variables, no
+shell commands, no `:timeout` exposure.**
+
+```css
+/* affordances start withdrawn */
+.veil-affordance {
+  opacity: 0;
+  transition: opacity 420ms cubic-bezier(0.4, 0, 1, 1);   /* t-conceal / ease-out */
+}
+/* ...and arrive when the CARD is hovered */
+.veil-group:hover .veil-affordance {
+  opacity: 1;
+  transition: opacity 180ms cubic-bezier(0.16, 1, 0.2, 1); /* t-reveal / ease-in */
+}
+```
+
+Note the transition is declared **twice, asymmetrically** — the base rule owns
+the conceal and the `:hover` rule owns the reveal. That is the standard CSS
+idiom for different in/out timings and it is what produces the owner's slow
+fade-back.
+
+**Why this is strongly preferred:**
+
+- **Zero runtime cost.** No poll, no subprocess, no `eww update` round-trip.
+- **It cannot hit the 200 ms handler kill.** eww SIGKILLs `:onhover` commands
+  at `:timeout` like any other handler (HANDOFF gate `13ah`) — CSS never
+  invokes one.
+- **It cannot desync.** An `:onhover`/`:onhoverlost` pair that misses its
+  `hoverlost` (pointer leaves via a screen edge, window unmaps, handler killed)
+  leaves the element stuck AWAKE forever. CSS `:hover` is owned by GTK and
+  cannot get stuck.
+
+⚠ **The blocker for Mechanism A, and it is real:** an inline `:style` beats
+every stylesheet rule (§3.3). `deck_card`, `start_panel` and `ghost_card`
+already set `box-shadow` inline from `CAVA_BASS`. **Therefore the VEIL must
+animate `opacity` and `border-color`, and must not touch `box-shadow` on those
+widgets.** Signature 2 keeps `box-shadow` as the bass channel. These two
+signatures were designed to not collide; keep it that way.
+
+#### Mechanism B — **`:onhover` + `revealer`** (use only when geometry must change)
+
+```
+(eventbox :onhover     "eww update VEIL_<id>=true"
+          :onhoverlost "eww update VEIL_<id>=false"
+          :timeout "1s"
+  (box ...
+    (revealer :transition "slideup" :duration "180ms" :reveal VEIL_<id>
+      (affordance_row))))
+```
+
+Use this **only** when the revealed content must take space it did not
+previously occupy — i.e. the card grows. CSS `opacity` reserves layout space;
+`revealer` does not.
+
+**Four hard constraints on Mechanism B:**
+
+1. **Set `:timeout` explicitly** (e.g. `"1s"`). The default is 200 ms and an
+   `eww update` round-trip on a loaded desktop can exceed it. A killed
+   `onhoverlost` is a permanently-open card.
+2. **The command must be `eww update` and nothing else.** Never a NYXUS script
+   — `nyxus-hub-close` alone measured 231 ms–3.7 s (HANDOFF).
+3. **`revealer` has one `:duration`**, so it cannot express the 180/420
+   asymmetry. Either accept symmetric timing here, or pipe the duration from
+   the same var: `:duration {VEIL_x ? "180ms" : "420ms"}`. **Verify the latter
+   on the stick** — it depends on eww re-evaluating `:duration` on the same
+   update that flips `:reveal`, and prop listeners are independent (§2.2), so
+   ordering is not guaranteed. Fall back to symmetric 280 ms if it flickers.
+4. **⚠ Anything that grows re-opens the layout trap.** A card that gets taller
+   can push a deck past the 882 px free area, at which point Hyprland centres
+   the oversized surface and parks it at negative y — the `y=-59` bug, three
+   times over. **Every Mechanism-B card must be verified with
+   `hyprctl layers -j`, in the revealed state, before it ships.** This is the
+   single largest risk in the VEIL and it is why Mechanism A is the default.
+
+### 7.4 What reveals, and what never does
+
+| Element | VEIL? | State DORMANT | State AWAKE | Mech |
+|---|---|---|---|---|
+| **Station rail pills** | **NO** | — | — | primary nav — always lit |
+| **Clock / date** | **NO** | — | — | always lit |
+| Top-bar ticker | **NO** | — | — | it is the content |
+| **Scrollbars** | **YES** | `opacity 0` | `opacity 1`, accent thumb | A |
+| **Deck card action rows** | **YES** | `opacity 0` | full | A |
+| Deck card secondary values | **YES** | `opacity 0.35` | `opacity 1` | A |
+| **Bar-pill detail readouts** | **YES** | `opacity 0` | full | A |
+| **Transport controls** (saucer/boombox) | **YES** | `opacity 0` | full | A |
+| **The dock** (§4.2) | **YES** | not mapped | mapped, magnifying | **window** |
+| Quick-settings tile sublabels | **YES** | `opacity 0` | full | A |
+| Close buttons on overlays | **NO** | — | — | escape routes stay visible (HANDOFF) |
+| Anything in an error state | **NO** | — | — | never hide a problem |
+
+**The scrollbar case is worth calling out** because the owner named it
+specifically and because there is a documented trap: *"GTK3 overlay scrollbars
+draw on top of content and cannot be disabled from CSS. Inset the rows
+(`margin-right`), not the scroller"*
+(`HOME_AND_START_STATIONS_BRIEF_2026-07-27.md` trap #10). The VEIL treatment
+for scrollbars is therefore **opacity only** — the row inset stays permanent so
+nothing reflows when the bar appears. A scrollbar that shifts text when it
+fades in is worse than one that is always visible.
+
+### 7.5 The dock is the reference implementation
+
+Build the VEIL on the dock first (§4.2), for three reasons: the scaffolding
+already exists, it is a *window*-level reveal so it exercises the compositor
+half (`layersIn`/`fadeLayersIn`, §3.1) as well as the CSS half, and it is the
+single most Windows-familiar element in the build — which makes it the best
+possible proof of the north star.
+
+**Window-level VEIL differs from widget-level in one way:** the conceal is a
+real unmap, so it needs a **dwell timer**, not just `onhoverlost`. Leaving the
+dock the instant the pointer exits makes it feel skittish and makes it
+impossible to reach an icon near the edge.
+
+```
+reveal:   pointer enters the 4px strip  ->  eww open dock
+                                            layerrule = animation slide  (layersIn)
+conceal:  pointer leaves the dock       ->  start 600ms dwell timer
+          pointer re-enters             ->  cancel timer
+          timer expires                 ->  eww close dock
+```
+
+600 ms is a starting value, not a measured one — it should be tuned live and
+the final number recorded.
+
+⚠ **The dwell timer must live in a script file, not an inline handler.** Two
+reasons, both already paid for: eww kills a handler at `:timeout`, so a
+600 ms sleep inside `:onhoverlost` is killed at 200 ms by default; and
+`pkill -f <pattern>` from an inline `bash -c` kills its own shell because the
+caller's `/proc/self/cmdline` contains the pattern (`HOME_AND_START_STATIONS`
+trap #4). A tiny `nyxus-dock-veil` script with a PID/flock guard is the correct
+shape.
+
+### 7.6 Honest limits of the VEIL
+
+- **No blur transition.** The owner asked to *"frost it out or blur and then it
+  reveal itself."* GTK3 cannot animate blur, and Hyprland's layer blur is
+  per-surface and binary. **A widget cannot fade from blurred to sharp.** The
+  achievable substitute is opacity + rim, which reads as the same thing when
+  the element sits on already-blurred glass — the affordance appears to
+  *surface out of* the frost. This is a genuine downgrade from what he
+  described, and it is worth him knowing that the "frost dissolving" version
+  would require the element to be its own layer surface (§5.4), which is far
+  too expensive to spend per-card.
+- **No hover on layer surfaces without pointer focus.** A layer surface with
+  no keyboard focus still receives pointer events, so hover works — but a
+  surface under another surface does not. Stacking order matters; check
+  `hyprctl layers -j`.
+- **Touch/keyboard parity is mandatory, not optional.** Rule 2 of §6.0.
+
+---
+
+## 8. SIGNATURE 3 IN FULL — "BLEND INTO THE SYSTEM"
+
+> *"blend in, almost as if it's not even there until you're really looking at
+> it."*
+
+### 8.1 The rule: three depths, and nothing else
+
+Every surface in NYXUS sits at exactly one of three depths. The depth
+determines fill alpha, rim alpha, and whether it blurs. These are the values
+already in `THEME.md` §2 — the proposal is to **use only these three and audit
+out the exceptions.**
+
+| Depth | Token | Fill | Rim | Blur | Used by |
+|---|---|---|---|---|---|
+| **SUBSTRATE** | `nyx_black_smoke` | `rgba(14,14,22,0.55)` | `rgba(255,255,255,0.10)` | yes | bars, rails, dock, deck backgrounds |
+| **RAISED** | `nyx_black_ink` | `rgba(8,8,14,0.78)` | `rgba(125,61,255,0.18)` | inherited | cards, pills, buttons, inputs |
+| **MODAL** | `nyx_black_void` | `rgba(0,0,0,0.92)` | `rgba(125,61,255,0.32)` | yes | popovers, tooltips, the Hub, powermenu |
+
+**Do not add a fourth.** The `.deck-near`/`-mid`/`-far` tiers are a *within-a-
+surface* refinement of RAISED and stay as they are — they modulate size and rim
+strength, not the material.
+
+### 8.2 Concrete blur / alpha values, and how they interact with what ships
+
+The layer-blur configuration currently in the tree is **correct and must not be
+casually changed.** Recording why, because it has been re-litigated twice:
+
+```
+layerrule = blur on,          match:namespace ^(nyxus.*)$   # catch-all: FLOOR, stays at TOP of file
+layerrule = ignore_alpha 0.2, match:namespace ^(nyxus.*)$
+decoration:blur { size 14 · passes 4 · brightness 0.92 · contrast 1.05
+                  vibrancy 0.18 · vibrancy_darkness 0.30 · noise 0.06 }
+```
+
+| Value | Keep / change | Reason |
+|---|---|---|
+| `ignore_alpha 0.2` | **KEEP — do not touch** | A/B'd live with screenshots at 0.0 / 0.2 / 0.45 / 0.6. At 0.0 the blur bleeds into the near-zero-alpha halo around each pill and paints the frosted "shadow box"; at 0.6+ the pills lose their own frost. Any value strictly between 0 and 0.55 works and 0.2/0.45/0.6 are visually indistinguishable. Gate `13aj` pins all four bars into that window. **If the boxes reappear, the rule is not reaching the compositor — check that, not the number.** |
+| catch-all at **top** of file | **KEEP** | Last-match-wins. Gate `13ae`. |
+| `size 14 / passes 4` | **KEEP** | Note this is a *wide* blur — it travels far past content edges, which is exactly why `ignore_alpha` matters. Raising it raises the halo problem. |
+| `vibrancy_darkness 0.30` | **candidate to raise → 0.40** | On a near-black desktop (reference art mean luma 0.086) this is the control that decides whether the neon behind glass survives. Cheap, reversible, `hyprctl keyword`-testable. |
+| `noise 0.06` | **KEEP** | This is the "etched glass" grain and it is a large part of why NYXUS glass looks like a material rather than a rectangle of transparency. |
+
+**The "not even there" treatment, concretely.** For a surface to disappear into
+the wallpaper and still be findable, three things must be true at once:
+
+1. **Fill at or just above the clip.** SUBSTRATE at `0.55` is well above
+   `ignore_alpha 0.2`, so it blurs. Do **not** chase invisibility by dropping
+   fill below `0.2` — the surface stops blurring entirely and you get a sharp
+   ghost instead of frost. **`0.2` is a floor, not a target.**
+2. **Rim carries the edge, not the fill.** At rest the rim is
+   `rgba(255,255,255,0.10)` — a hairline that reads as a seam in the glass, not
+   a border. On hover it becomes the accent at `0.32`. **The rim doing the work
+   is what lets the fill go quiet.**
+3. **No shadow at rest.** The ink drop-shadow (`0 6px 18px rgba(0,0,0,0.62)`)
+   was removed from `obsidian-vessel` for exactly this reason — on a 38 px pill
+   a shadow with no falloff room reads as a rectangular block. Do not
+   reintroduce it. Glow, not shadow.
+
+### 8.3 The state-reactive grade — the one genuinely rare idea
+
+This is where NYXUS can legitimately be first, and §2.1 changed what it costs.
+
+**The idea:** the *entire screen* is graded by a full-screen GLSL post-process
+whose look is derived from `sense.json`. Not a filter the user picks — a grade
+the machine chooses, continuously, from what it is actually doing.
+
+**Why it is rare.** The Hyprland ecosystem's standard tool, `hyprshade`, is a
+**scheduler** — it switches shaders by time of day. `hyprglaze` is closer but
+it is a *wallpaper daemon* rendering to the background layer, so it grades the
+wallpaper, not the composited desktop. **A full-screen post-process driven by
+live system state is not something the ecosystem ships.** NYXUS is unusually
+well placed for it because it already has both halves: a shader switcher and a
+smoothed, hysteresis-guarded state bus. It just has no shaders (§2.1).
+
+**How it must be built — file swap, not uniforms.** There is no way to pass a
+value into the shader (§5.6). So:
+
+```
+nyxus-sense  ->  sense.json  ->  nyxus-mood  ->  (on mood CHANGE only)
+     render ~/.config/hypr/shaders/nyxus-<mood>.glsl   (5 pre-written files)
+     hyprctl keyword decoration:screen_shader <path>
+```
+
+Five static shaders, one per mood, swapped on transition. **Edge-triggered,
+exactly like the `CAVA_BASS` `borderangle` tier retune** — that is the proven
+pattern in this build and it must be copied rather than reinvented.
+
+**The grades, all inside ALIEN NEON:**
+
+| Mood | Grade | Intent |
+|---|---|---|
+| `GHOST` | −8% luma, −15% saturation, slight violet lift in shadows | idle at night; the desktop settles |
+| `DRIFT` | +6% saturation, gentle magenta→violet split-tone | music playing; warmer |
+| `PROWL` | neutral — **an empty pass-through** | the default; must be indistinguishable from no shader |
+| `OVERCLOCK` | +10% contrast, +8% saturation, faint cyan rim-lift | machine working hard |
+| `MATRIX` | desaturate to luma, hold `#ff2d55` only | hacker mode; matches the existing black/white/red treatment exactly |
+
+`MATRIX` is the strongest argument for the whole idea: **hacker mode currently
+achieves black/white/red by pre-rendering `-mono.png` art variants and hand-
+editing CSS.** A shader does it to the *entire composited screen* — every app,
+every window, art nobody pre-rendered — in one pass, for free. That is a
+capability the current approach cannot reach at any price.
+
+**Hard requirements, all source-verified:**
+
+- **`PROWL` must be a genuine no-op** and, better, should `hyprctl keyword
+  decoration:screen_shader "[[EMPTY]]"` rather than load a pass-through — one
+  less full-screen pass in the common case. `nyxus-shader` already does exactly
+  this for `off` (`nyxus-shader:37`).
+- **No `time` uniform. No `pointer_*` uniforms.** The moment a shader declares
+  one, Hyprland demands `debug:damage_tracking = 0` (§12.1) and the cost stops
+  being acceptable. These are **static grades**.
+- **`#version 320 es` is supported** in 0.56.1 — `applyScreenShader` selects
+  `TEXVERTSRC320` when the source starts with that directive
+  (`src/render/OpenGL.cpp:938`), otherwise the default vertex source. Historic
+  advice to use `#version 300 es` came from the 0.48-era parser error and no
+  longer constrains this build. Pick one and use it in all five files.
+- **Swapping may need a damage nudge.** A known upstream behaviour is that
+  changing `screen_shader` does not repaint a static screen until something
+  else damages it. `decoration:screen_shader` is flagged
+  `REFRESH_SCREEN_SHADER` in 0.56.1, which *should* handle it — but this is
+  **unverified on 0.56.1** and must be checked on the stick. If it is a problem
+  the workaround is a forced damage right after the swap.
+
+**Effort: Medium.** Five short fragment shaders written from scratch (~40 lines
+each), a small renderer/switcher in `nyxus-mood`, and staging so
+`~/.config/hypr/shaders/` actually ships — the staging gap in §2.1 is a bake
+issue and will bite exactly the way the wallpaper-staging glob did unless a
+gate covers it.
