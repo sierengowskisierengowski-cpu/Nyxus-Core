@@ -1,22 +1,60 @@
 #!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  NYXUS — Mission Control toggle (Super+F3, Super+Alt+A, 4-finger up) ║
+# ║  Lives at: /usr/local/bin/nyxus-mission-control-toggle               ║
+# ║  © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED    ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+#
+# Two implementations of Mission Control exist in this build and the keybind
+# only ever knew about one of them.
+#
+#   hyprexpo   — the upstream Hyprland plugin. Nicer (live thumbnails), but it
+#                is an out-of-tree plugin that has to be COMPILED by hyprpm,
+#                and plugin autoload is disabled in nyxus-signature.conf. It is
+#                never present on live media at all (nyxus-bootstrap skips
+#                plugin builds there — see FS-04), and on an installed system
+#                it only appears after a successful online build.
+#   nyxus-mission — our own: nyxus_missiond.py plus the eww `mission` window.
+#                Autostarted by hyprland.conf, always present, no compile.
+#
+# This script used to dispatch hyprexpo:expo and exit non-zero when it was not
+# loaded — which is most of the time — so Super+F3 did nothing, silently, with
+# the reason buried in a log nobody reads. A key that does nothing is worse
+# than a key that does something simpler.
+#
+# Order is deliberate: prefer hyprexpo when it is actually loaded, fall back to
+# the native overview, and only if BOTH are unavailable say so on screen.
 set -u
 
 LOG_DIR="${HOME}/.cache/nyxus"
 LOG_FILE="${LOG_DIR}/mission-control.log"
 mkdir -p "${LOG_DIR}"
+log() { printf '[%s] %s\n' "$(date '+%F %T')" "$*" >>"${LOG_FILE}"; }
 
-# `hyprexpo:expo` is the official Hyprland plugin dispatcher that
-# implements Mission Control-style workspace overview toggling.
 if ! command -v hyprctl >/dev/null 2>&1; then
-  printf '[%s] toggle mission control skipped: hyprctl not found\n' \
-    "$(date '+%F %T')" >>"${LOG_FILE}"
+  log "skipped: hyprctl not found"
   exit 0
 fi
 
-hyprctl dispatch hyprexpo:expo toggle >>"${LOG_FILE}" 2>&1
-status=$?
-if [ "${status}" -ne 0 ]; then
-  printf '[%s] toggle mission control failed: hyprctl dispatch hyprexpo:expo toggle (exit=%s)\n' \
-    "$(date '+%F %T')" "${status}" >>"${LOG_FILE}"
-  exit "${status}"
+# `hyprctl plugin list` names every loaded plugin. Asking is cheaper and more
+# honest than dispatching and reading the failure.
+if hyprctl plugin list 2>/dev/null | grep -qi 'hyprexpo'; then
+  if hyprctl dispatch hyprexpo:expo toggle >>"${LOG_FILE}" 2>&1; then
+    exit 0
+  fi
+  log "hyprexpo is loaded but the dispatch failed — falling back"
 fi
+
+if command -v nyxus-mission >/dev/null 2>&1; then
+  if nyxus-mission toggle >>"${LOG_FILE}" 2>&1; then
+    exit 0
+  fi
+  log "nyxus-mission toggle failed (is nyxus-missiond running?)"
+fi
+
+# Both paths are gone. Tell the user, rather than leaving a dead key.
+log "no Mission Control backend available (hyprexpo not loaded, nyxus-mission unavailable)"
+hyprctl notify 0 4000 "rgb(ff8a1e)" \
+  "  NYXUS · Mission Control unavailable — run 'nyxus-mission state' to check the daemon" \
+  >/dev/null 2>&1 || true
+exit 0
