@@ -72,7 +72,7 @@ draw_bold_text_with_bright_colors = true
 [colors.primary]
 background     = "#05060a"
 foreground     = "#eef2fa"
-dim_foreground = "0x8CEEF2FA"
+dim_foreground = "0x9AA0AD"
 
 [colors.cursor]
 text   = "#05060a"
@@ -96,7 +96,7 @@ background = "#ff8a1e"
 
 [colors.footer_bar]
 background = "#05060a"
-foreground = "0x8CEEF2FA"
+foreground = "0xEEF2FA"
 
 [colors.hints.start]
 foreground = "#05060a"
