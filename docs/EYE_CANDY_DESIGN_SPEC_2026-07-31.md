@@ -164,7 +164,7 @@ is why the face changes at all and why this reads as "working".
 - **Impact on this plan:** the owner explicitly wants *"things that flip up or
   over"*. He currently has exactly one flip in the build and it is inert. This
   is the cheapest possible visible win in the entire document — a one-word
-  change — and §9 ranks it first.
+  change — and §11 ranks it first.
 - **Honest limit:** GTK3's `GtkStack` has **no rotation/flip transition at
   all**, at any value. `slideleft`/`slideright` with `:same-size true` is the
   closest thing to a card turn that this toolkit can produce. See §5 for what a
@@ -173,12 +173,16 @@ is why the face changes at all and why this reads as "working".
   `grep -i "couldn't parse transition" ~/.local/share/eww/eww.log` (or
   `journalctl --user -t eww`). The line should be present on every daemon start.
 
-### 2.3 🟡 `:onhover` / `:onhoverlost` exist and are used **zero** times
+### 2.3 🟡 `:onhover` / `:onhoverlost` exist and are used **once, in a window nothing opens**
 
 ```
-$ grep -c 'onhover' eww.yuck
-0
+$ grep -c 'onhover' eww.yuck        ->  0        (the bars and all 12 decks)
+$ grep -n  'onhover' dock.yuck      ->  1        (defwindow dock-reveal, §4.2)
 ```
+
+The one use is the dormant dock auto-hide strip — see §4.2, which is the most
+important entry in the whole wiring audit. **Across every surface the owner
+actually sees today, hover-reveal is used exactly zero times.**
 
 The props are real in the shipped eww and take a command plus the pointer x/y:
 
@@ -234,15 +238,15 @@ days recovering. "Where" names the surfaces it would apply to.
 | Squircle corners | **Already shipped** | `decoration:rounding_power = 3.0` (2 = circle) | — / — | every toplevel |
 | Layer surfaces animate in/out | **YES — unused** | `layersIn` / `layersOut` / `fadeLayersIn` / `fadeLayersOut` nodes (`AnimationTree.cpp:31-48`) | S / Low | every eww window |
 | Per-surface animation override | **YES — unused** | `layerrule = animation <name>, match:namespace …` (`LayerRuleEffectContainer.cpp`) | S / Low | per eww namespace |
-| Dim the desktop around a panel | **YES — unused** | `layerrule = dim_around on` + `decoration:dim_around` (default 0.4) | S / **Medium** — see §10.4 | Hub, powermenu, decks |
+| Dim the desktop around a panel | **YES — unused** | `layerrule = dim_around on` + `decoration:dim_around` (default 0.4) | S / **Medium** — see §12.4 | Hub, powermenu, decks |
 | Panel sees wallpaper only, not windows | **YES — unused** | `layerrule = xray on` | S / Low | bars, decks |
 | Panel above the lock screen | **YES — unused** | `layerrule = above_lock on` | S / **High** — security | *not recommended* |
 | Panel excluded from screen share | **YES — unused** | `layerrule = no_screen_share on` | S / Low | GHOST/ARSENAL decks |
 | Layer stacking order within a layer | **YES — unused** | `layerrule = order <int>` | S / Low | bars vs decks |
 | Custom easing curves | **Already shipped** | 8 `bezier =` curves in `hyprland.conf:294-303` | — / — | all animations |
 | Full-screen GLSL post-process | **YES — mechanism only** | `decoration:screen_shader`, hot-swappable (`REFRESH_SCREEN_SHADER`) | **M** (shaders must be written from scratch — §2.1) / Medium | whole screen |
-| Shader reacts to **time** | **YES, but see cost** | `uniform float time` (`Shader.cpp:204`) | S / **HIGH — see §10.1** | whole screen |
-| Shader reacts to **cursor** | **YES, but see cost** | `pointer_position`, `pointer_last_active`, `pointer_pressed_{positions,times}`, `pointer_hidden`, `pointer_shape` … (`Shader.cpp:213-225`) | S / **HIGH — see §10.1** | whole screen |
+| Shader reacts to **time** | **YES, but see cost** | `uniform float time` (`Shader.cpp:204`) | S / **HIGH — see §12.1** | whole screen |
+| Shader reacts to **cursor** | **YES, but see cost** | `pointer_position`, `pointer_last_active`, `pointer_pressed_{positions,times}`, `pointer_hidden`, `pointer_shape` … (`Shader.cpp:213-225`) | S / **HIGH — see §12.1** | whole screen |
 | Shader reacts to **system state** | **YES — by file swap only** | no custom uniforms exist; bake constants into a generated `.glsl` and `hyprctl keyword decoration:screen_shader <path>` | **M** / **Low** | whole screen |
 | Per-window opacity by state | **Already shipped** | `decoration:{active,inactive}_opacity`, `dim_inactive`/`dim_strength 0.12` | — / — | every toplevel |
 | Special-workspace overlay (drawer) | **YES — partly used** | `specialWorkspace` animation, `decoration:dim_special 0.35` | S / Low | scratchpads |
@@ -305,30 +309,251 @@ eye-candy language is specified for eww + Hyprland; GTK4 apps adopt only the
 palette, radii and motion timings, and get no bespoke effects.**
 
 ---
+## 4. THE WIRING AUDIT — WHAT IS BUILT BUT NOT CONNECTED
 
-## 4. WHAT ALREADY EXISTS AND IS UNDER-USED — THE CHEAP WINS
+> The owner's read is correct: **a previous agent left real machinery
+> half-wired.** This section is the audit. Every row was verified in the tree,
+> not taken from the docs — and in three cases the docs were wrong.
+>
+> Legend: **WIRED** = runs and is consumed · **PARTLY** = runs but almost
+> nothing consumes it, or exists but is only reachable by hand ·
+> **DORMANT** = built, shipped, and started by nothing.
 
-The brief's instinct is right: a large share of the "one of a kind" goal is
-reachable by connecting things already in the tree.
+### 4.1 The reactive chain — `sense` → `mood` → `threatd`
 
-| Asset | What it is | State today | What it could drive |
+| Link | State | Evidence |
+|---|---|---|
+| `nyxus-sense` (4 Hz bus → `sense.json`) | **WIRED** | `nyxus-reactive.conf:24` — `exec-once … sleep 3; nyxus-sense start` |
+| `nyxus-mood` | **WIRED** | `nyxus-reactive.conf:25` — `sleep 5; nyxus-mood start` |
+| `nyxus-threatd` | **WIRED** | `nyxus-reactive.conf:29` — `sleep 12; nyxus-threatd start` |
+| `mood` → eww `SENSE` var | **WIRED** | `eww.yuck:57-60` — `nyxus-mood` pushes `eww update SENSE=…` on every mood change |
+| **eww actually *using* `SENSE`** | 🔴 **PARTLY — 3 call sites** | `eww.yuck:227`, `:237`, `:310` |
+
+**So the chain runs end to end. The problem is the last inch.** After all that
+plumbing — a 4 Hz sampler, EMA smoothing, 6-second hysteresis, a 5-state mood,
+a threat feed with an explicit blind/quiet distinction — the mood signal
+reaches the interface and paints **three labels**: the two `NYXUS` wordmarks
+and the clock date, via a `mood-${SENSE.mood}` CSS class.
+
+Nothing else on the desktop knows what mood the machine is in. Not the bars,
+not one of the twelve station decks, not a single pill, not the borders, not
+the wallpaper, not the blur. **This is the single largest gap between what
+NYXUS has built and what NYXUS shows**, and closing it is the spine of the
+design in §6.
+
+#### 4.1a 🔴 `sense-poll.sh` is an orphan — and it is the one carrying the threat signal
+
+`eww/scripts/sense-poll.sh` is a careful 30-line bridge that emits
+`{mood, energy, hacker, threat, threat_blind, threat_reason}`. Its comments
+show real thought — including a `jq` footgun writeup explaining why
+`threat_blind` cannot use `//` because `false // true` is `true`, and an
+explicit note that *"quiet and blind must never render the same"*, citing the
+Bifrost guardian incident.
+
+**Nothing polls it.** There is no `defpoll` or `deflisten` referencing
+`sense-poll.sh` anywhere in any `.yuck`. The `SENSE` defvar's default is
+`{"mood","energy","hacker"}` — it has no `threat` field at all, because it is
+fed by `nyxus-mood`'s `eww update`, not by this script.
+
+Net effect: **the desktop cannot show threat state**, and the script written to
+let it do so is dead code. Cheap to connect (one `defpoll`), and it is the
+honest-by-construction data source GHOST already proved the value of.
+
+### 4.2 🔴 The dock — an entire Windows-class taskbar, fully built, launched by nothing
+
+This is the biggest dormant asset in the build and the most relevant one to the
+owner's *"like Windows but better"* north star.
+
+`eww/dock.yuck` (180 lines) implements a **macOS-style magnifying dock**:
+
+```
+deflisten DOCK_STATE   <- nyxus-dockd -> unix socket -> dock-state.sh
+defvar    DOCK_HOVER
+defwidget dock-icon [entry index size hover-index mag-max falloff show-ind show-badge]
+defwidget dock-divider / dock-stack / dock-trash / dock-row
+defwindow dock          94% x 84px, bottom centre
+defwindow dock-reveal   100% x 4px, bottom edge, :onhover "eww open dock"
+```
+
+Supporting cast, all present: `nyxus_dockd.py`, and eight helper scripts —
+`dock-state.sh`, `dock-action.sh`, `dock-menu.sh`, `dock-preview.sh`,
+`dock-stack.sh`, `dock-drop.sh`, `dock-enrich-icons.py`, plus `taskbar.sh`.
+It even has **layer rules already written**:
+
+```
+layerrule = no_anim on,          match:namespace nyxus-dock-reveal
+layerrule = ignore_alpha 0.05,   match:namespace nyxus-dock-reveal
+```
+
+That `0.05` clip is the tell — somebody deliberately tuned the threshold down
+from the standard `0.2` so a *nearly invisible* strip would still register.
+This is hover-reveal, already thought through.
+
+**Why it never appears:** `nyxus-eww-launch-safe:21` reads
+`BARS_WANTED=(bar-bottom bar-top bar-left bar-right)`. `dock` and `dock-reveal`
+are not in the list, and nothing else opens them.
+
+**Two real defects to fix before wiring it, not after:**
+
+1. **There is no `:onhoverlost`.** `dock-reveal` opens the dock and nothing
+   ever closes it. Wired as-is, the dock appears on first mouse-to-bottom-edge
+   and stays forever. The reveal is half-written.
+2. **`dock` and `dock-reveal` are both `:stacking "overlay"`.** `dock-reveal`
+   is a 100%-wide overlay strip. It is only 4px tall so it is not the
+   full-screen trap of HANDOFF §7, but it is an overlay-layer input surface
+   spanning the whole screen width along the bottom edge, which will sit above
+   `bar-bottom` and can eat clicks aimed at the bar's bottom 4px.
+   **Recommend `:stacking "top"` for `dock` and `"bottom"` for the strip**, and
+   verify with `hyprctl layers -j` before and after.
+
+**Where it counts most:** this is the answer to "like Windows." A taskbar that
+is not there until you reach for it, then rises out of the wallpaper, is
+simultaneously the most familiar and the most NYXUS thing in this document. It
+is also the reference implementation for §7 — build the disclosure language
+here first, then apply it everywhere.
+
+### 4.3 The reflex layer — `living` / `tintd` / `beatd` / `pulsed` / `wall-fx`
+
+| Daemon | What it does | State | Evidence |
 |---|---|---|---|
-| **`nyxus-sense`** | 4 Hz JSON state bus → `~/.config/nyxus/sense.json`: `mood` (GHOST/DRIFT/PROWL/OVERCLOCK/MATRIX), `energy` 0-1 (EMA-smoothed, 6 s hysteresis), `cpu`, `phase` (dawn/day/dusk/night), `audio.playing`, `window.app`, `threat.level` | **Running** (fixed in PR #80 — it was never launched before). Consumers: mood engine, whispers, DROP, graffiti wall | The master input for **every** state-reactive effect in this document. Its hysteresis is the reason effects driven from it will not flicker. |
-| **`CAVA_BASS`** | 0-100 audio scalar, pushed to eww every frame by `cava.sh:21-28` | **Live**, drives boombox cones + deck card rims inline | Already the right shape. Do **not** add a second audio path. |
-| **CAVA→`borderangle` tiers** | `cava.sh:35-48` retunes `borderangle` duration 240/180/110/60 s on tier change only (never per frame) | **Live** | The template for every future state→compositor binding: **tiered, edge-triggered, never per-frame**. Copy this pattern exactly. |
-| **`nyxus-shader`** | `decoration:screen_shader` switcher | **Launcher only — no shaders exist (§2.1)** | The delivery vehicle for the state-reactive grade in §8.3. |
-| **`random-glow.sh`** | 7 s poll → JSON of booleans, 35% each for brand/stamp/clock/ticker/search, **6% for `alien`** (deliberately rare easter egg) | **Live** | An existing, tuned "rare event" channel. Reuse it rather than inventing a second randomiser. |
-| **Layer blur + `ignore_alpha 0.2`** | Per-namespace, catch-all pinned to top of file | **Live**, gate `13ae`/`13aj` | The substrate for §8. The 0.2 clip is correct and must not be changed (proven by A/B, `HANDOFF.md`). |
-| **`.nyx-surface`** | Shared CSS class: background, gradient, rim, radius for every station surface; deliberately omits `box-shadow` | **Live**, GHOST proved a whole station costs ~45 lines on top of it | The single insertion point for a desktop-wide hover language. Add the disclosure rules **here** and all 12 decks inherit them at once. |
-| **`starlight-anim.sh`** + 16-frame twinkle PNGs | Pre-rendered frame swap under a translucent veil | **Live** | The proven pattern for "animate something GTK3 cannot animate": pre-render frames, swap the image. |
-| **Meshy→Blender pre-rendered 3D art** | Offline 3D render pipeline | Available | The **only** viable route to a "3D look" (§5.2). |
+| `nyxus-living` | supervisor | **WIRED** | `nyxus-signature.conf:106` — `exec-once = sleep 2 && nyxus-living on quiet` |
+| `nyxus-pulsed` | event pulses on the border ring | **WIRED** | `nyxus-living:27` — `nohup nyxus-pulsed &` |
+| **`nyxus-tintd`** | **per-app border neon — borders follow the focused app** | 🔴 **DORMANT** | see below |
+| `nyxus-beatd` | border angle from audio | **DORMANT (manual)** | `nyxus-living:14` — *"manual plumbing … `nyxus-beat` (Super+Alt+B)"* |
+| `nyxus-wall-fx` | cava → mpv wallpaper reaction | **DORMANT (manual)** | same line — *"wall-fx (Super+Shift+P)"* |
+| `nyxus-soundd` | UI sound design | **WIRED** | `nyxus-signature.conf:121` |
 
-**The most under-used asset is `nyxus-sense`.** It publishes a smoothed,
-hysteresis-guarded mood at 4 Hz and almost nothing consumes it visually. Every
-signature idea in §6 is a consumer of that one file.
+**`nyxus-tintd` is the standout.** `nyxus-living`'s own header block advertises
+it as part of the living layer:
 
----
+```
+#   nyxus-tintd    per-app border neon (colors follow the app you're
+```
 
+…but `start()` (`nyxus-living:24-30`) launches **only** `nyxus-pulsed`. Every
+reference to `nyxus-tintd` in the tree is either a comment, an installer
+allowlist, a Settings row, or `nyxus-tint` — the manual front door bound to
+`Super+T`. **Nothing starts it at login.** The launcher's own documentation
+describes behaviour the launcher does not produce.
+
+This is a two-line fix with a large payoff: window borders that take the hue of
+whatever app you are in is exactly the *"rich, cohesive, reactive"* quality the
+owner is asking for, and it is already written and tested.
+
+⚠ **Coordination hazard, already documented, do not rediscover:** `tintd`,
+`beatd` and `pulsed` all write the same border colours.
+`nyxus-beatd:14` says it *"coexists with nyxus-tintd"*, `nyxus-apply-accent:268`
+notes all three *"snapshot the border"*, and `nyxus-hacker-mode:79` SIGSTOPs
+`nyxus-tintd` and `nyxus-pulsed` together because they *"re-tint the border ring
+every focus/pulse"*. Turning `tintd` on at login means **three** writers on one
+property. Decide the precedence explicitly (recommendation in §6.2) rather than
+letting last-writer-wins decide it at runtime.
+
+### 4.4 `CAVA_BASS` — wired, correct, and under-spent
+
+`cava.sh:21-48` pushes a 0-100 scalar every frame and retunes `borderangle`
+across 4 tiers. Consumers today: the two boombox speaker rings, deck-card
+inline rims, and the border angle. That is **three** consumers of a signal
+available to every widget on screen.
+
+The `push_bass` tier logic is the best-engineered reactive code in the build —
+edge-triggered, never calls `hyprctl` per frame, and `_CAVA_LAST_TIER` is
+scoped inside the cava pipe subshell so it resets cleanly on restart. **Use it
+as the template for every state→compositor binding in this document.** Do not
+add a second audio path; there is already exactly one and it is correct.
+
+### 4.5 `random-glow.sh` — wired, and the right shape already
+
+7 s poll, 35% per channel for `brand`/`stamp`/`clock`/`ticker`/`search`, and
+**6% for `alien`** — the rare saucer-alien strike, with a comment explaining
+the tuning: *"the whole point is that it catches the owner off guard, so it
+must not become wallpaper."* Consumed via `GLITCH.*` in `eww.yuck`.
+
+This is a working, tuned rare-event channel. §6.3 reuses it rather than
+inventing a second randomiser.
+
+### 4.6 Pre-rendered 3D (Meshy → Blender) — pipeline exists, two jobs never started
+
+`HANDOFF.md:1578-1580` lists as explicitly out of scope at the time:
+*"3D saucer/boombox asset rendering (needs Blender on builder box)"* and
+*"Left/right 3D dock rail integration (models in Downloads, not started)."*
+
+This is the **only** route to the owner's "3D look" (§5.1/§5.2) and it is a
+content pipeline, not a code one. Note the owner has since said **do not use
+Meshy** — design in-house (`BARS_AND_LOGIN_BRIEF_2026-07-26.md` §6) — and that
+agents have no image generator, only ImageMagick. So this is a
+**commissioning** decision, and it should be sequenced *after* the geometry
+questions in §4.7 are answered, because rail art has the same aspect-ratio trap
+that already killed the last attempt (937×1678 art for a 56×756 rail).
+
+### 4.7 Boombox v2 — art done, not wired, blocked on a geometry decision
+
+`eww/assets/nyxus-boombox-band-v2.png` (+ `-mono`) exists and is on-palette.
+**It is not wired because the geometry genuinely does not fit**, and HANDOFF
+records that this margin drifted wrong twice from eyeballing. The measurements
+(`HANDOFF.md:1728-1749`) are reproduced here so nobody re-measures:
+
+| | |
+|---|---|
+| Art (trimmed) | 1516×891 — aspect **1.70:1** |
+| Display window | 528×286, `fill=1.00` (true rectangle) at x 492..1020, y 356..642 |
+| Window as fraction of art | width **0.3483**, height **0.3210** |
+| Window centre offset | dx **−0.0013**, dy **+0.0600** of art |
+| Band slot today | 551×150 for the saucer — aspect **3.67:1** |
+
+At 150 px tall the v2 boombox is only **255 px wide** and its display shrinks to
+**89×48**, against the **146×100** the current music face was laid out for.
+Matching the saucer's width would need a **324 px** bar — 30% of a 1080p screen.
+
+**This is an owner decision, not an engineering one.** The three recorded
+options stand, and my recommendation is **(a)**:
+
+- **(a) Render at 150 px, move title/transport/CAVA *beside* the boombox** into
+  the spare band width. Best looking, most work. **Recommended** — it is the
+  only option that changes nothing about the bar's height, and bar height is
+  load-bearing (the 40/158 reserved zones are baked into nine windows' layout
+  arithmetic and two verify-profile gates).
+- **(b) Grow the music face to ~200 px only while audio plays.** **Advise
+  against.** A bar that changes height mid-session re-triggers the exclusive-zone
+  arithmetic that produced the `y=-59` bug three separate times. Do not put that
+  on a timer driven by whether music is playing.
+- **(c) Commission a wider (3:1+) boombox.** Clean, but it is new art and
+  it invalidates the measurements above.
+
+**Multiply the fractions by the chosen render size to place the overlay. Never
+eyeball it.**
+
+### 4.8 Dormant eww windows — wire, repurpose, or delete
+
+| Window | Defined in | Opened by | Verdict |
+|---|---|---|---|
+| **`dock`** / **`dock-reveal`** | `dock.yuck:161,172` | **nothing** | **WIRE** — §4.2. Highest value in this table by a wide margin. |
+| **`cheatsheet`** | `eww.yuck:2905` | **nothing** | **REPURPOSE.** Both `Super+/` binds (`hyprland.conf:444-445`) open `hotkey-cheatsheet`, a *different*, correctly-sized 720×640 window. `cheatsheet` is the orphaned full-screen version — and it is the natural home for the **keybind viewer** that §9.1 shows is the actual fix for "can I move work between stations". |
+| **`hotkey-recorder`** | `hotkey.yuck:86` | **nothing** | **WIRE or DELETE.** It has a working close button and is already in `overlay-shield.sh`'s regex, so somebody intended it to be reachable. Low value on its own; genuinely useful if the keybind viewer gains "rebind this". |
+| **`quicksettings-daemon`** | `quicksettings.yuck:27` | **nothing** | **DELETE.** `quicksettings` (the real one) is wired via `qs-toggle.sh`. This is a leftover second copy and is exactly the kind of near-duplicate that gets edited by mistake — the same failure mode as the third `hypr/conf.d/` tree that gate `13ak` now guards against. |
+| ~31 unused bar-pill widgets | `eww.yuck` | n/a — `defwidget`s, not windows | **KEEP, do not delete.** They cost nothing at runtime (an unreferenced `defwidget` is never instantiated), and the rail's companion-station widget is explicitly documented as *"left in eww.yuck for future use."* Deleting widgets from `eww.yuck` by script is how `station_pill` was destroyed once already (`HOME_AND_START_STATIONS_BRIEF` trap #6). **The risk of removal exceeds the cost of keeping them.** |
+
+⚠ **Note on the four "windows nothing opens":** three of them
+(`cheatsheet`, `hotkey-recorder`, `quicksettings`) are listed in
+`overlay-shield.sh`'s `OVERLAY_RE`, which hides the bars while an overlay is
+up. If any is wired later it must also obey the `:stacking` rule from HANDOFF —
+`"fg"` surfaces open via `nyxus-overlay-open`, `"overlay"` surfaces keep
+`:y "-40"`. Getting that backwards moves the gap to the other edge. That table
+is in HANDOFF and is not optional reading.
+
+### 4.9 Summary — the connect-first list
+
+Ranked by (visible impact ÷ effort), all of it reusing existing code:
+
+| # | Connect | Effort | Why it counts |
+|---|---|---|---|
+| 1 | Saucer stack transition → a **valid** value (§2.2) | ~1 min | Restores a visible animation that is currently a hard cut |
+| 2 | `nyxus-tintd` at login (§4.3) | ~2 lines | Borders follow the focused app — instant "alive" |
+| 3 | `sense-poll.sh` → a `defpoll` (§4.1a) | ~3 lines | Unlocks threat + energy for every widget |
+| 4 | `SENSE` beyond 3 labels (§4.1) | small | The spine of §6 |
+| 5 | `dock` + `dock-reveal` (§4.2) | small-medium | The Windows-familiar taskbar, and the §7 reference build |
+| 6 | `decoration:glow` + `glowangle` (§2.4) | ~6 lines | Native neon halo, zero dependencies |
+| 7 | Layer in/out animations (§3.1) | ~8 lines | Every panel stops popping and starts arriving |
 ## 5. WHAT IS NOT POSSIBLE — PLAINLY
 
 The owner asked to be told the real limits. These are they.
@@ -402,11 +627,11 @@ with the constants baked in and hot-swap the file. `decoration:screen_shader`
 is marked `REFRESH_SCREEN_SHADER` (`ConfigValues.cpp:231`) so
 `hyprctl keyword` re-links it live. Swapping on a 5-state mood change is a
 handful of re-links per hour — effectively free — whereas a `time`-driven
-shader is not (§10.1).
+shader is not (§12.1).
 
 ### 5.7 Animated screen shaders at acceptable cost — NO (on this hardware)
 
-See §10.1. This is the most important "no" in the document and it is quantified
+See §12.1. This is the most important "no" in the document and it is quantified
 there.
 
 ### 5.8 Hyprland plugins (hyprexpo, hyprfocus, dynamic-cursors, hyprbars) — NOT RECOMMENDED
