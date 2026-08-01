@@ -24,12 +24,27 @@
 >
 > **Daily-driver product plan (docs only — do not implement before the audit):**
 > [`docs/DAILY_DRIVER_PRODUCT_BRIEF_2026-08-01.md`](./docs/DAILY_DRIVER_PRODUCT_BRIEF_2026-08-01.md)
-> — Windows-shaped shell (bottom taskbar, Start, notification flyout), chill
-> matte + plum/teal direction, built as `NYX_EDITION=daily` **in this repo**,
-> not a second one. Lab stays this build. Its prerequisite study
+> — Windows-shaped shell (bottom taskbar, Start, notification flyout), built as
+> `NYX_EDITION=daily` **in this repo**, not a second one. Lab stays this build.
+> **Visual direction is now LOCKED (2026-08-01):** urban-neon (dark cyberpunk
+> city, teal + amber) with frosted-glass **corner-bleed** panels; the five
+> approved mockups are committed at
+> [`docs/assets/daily-driver/`](./docs/assets/daily-driver/) and the four
+> approved wallpapers ship from the profile — see brief §4. Its prerequisite study
 > [`docs/DE_COMPLETENESS_AND_EDITIONS_2026-07-31.md`](./docs/DE_COMPLETENESS_AND_EDITIONS_2026-07-31.md)
 > **stops mid-document at §3.2** — the §3.3 stations design it forward-references
 > was never written (agent session limit). Finish that before Daily shell work.
+> **Technical bring-up plan (docs + additive assets only, no bake/flip yet):**
+> [`docs/DAILY_DRIVER_BRINGUP_PLAN.md`](./docs/DAILY_DRIVER_BRINGUP_PLAN.md).
+> **Owner decision (2026-08-01): Daily Driver is a SEPARATE, ADDITIVE edition —
+> the alien-neon build (`prism` palette, `nyxus-urban-alien` default, hacker
+> shell) stays EXACTLY as-is and remains the default.** Urban-neon ships via a
+> new build-time `NYX_EDITION=alien|daily` flag (default `alien` = no-op,
+> mirroring `NYX_ISO_TIER=lean`); edition files live in
+> `artifacts/nyxus-config/editions/daily/`. The 4 urban walls are already added
+> as inert shared assets (`manifest.tsv` updated). Doc covers the edition
+> mechanism, shared-vs-edition file list, teal+amber tokens, mpvpaper live-wall
+> recommendation, and the ordered phase 0/1 steps.
 >
 > **The five that mattered most:**
 > 1. **No boot path set `cow_spacesize`** — the live overlay used archiso's

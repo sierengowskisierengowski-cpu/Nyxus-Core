@@ -44,15 +44,20 @@ Not: cyber-ops lab, workstation maze, “you must learn tiling.”
 
 ## 2. Layout — muscle memory first
 
-Windows-shaped shell (Mac users still get familiar chrome: dock-like bar, menus, settings):
+**Cross-OS familiarity is the explicit goal.** Windows users find their
+muscle-memory shell; Mac users find the material language and centered launcher
+they know. The approved mockups (see §4 → *Reference mockups*) lock the
+structure below — a Win11-shaped shell wearing macOS-grade glass.
 
 | Zone | Daily behavior |
 |---|---|
-| **Bottom taskbar** | Running apps, pinables, Start on the left, system tray + clock on the right |
-| **Start** | App grid / search — one place to launch everything |
-| **Notification flyout** | Opens from the tray (calendar / quiet hours / quick toggles) — not a mystery panel |
+| **Bottom taskbar** | Windows 11-style **centered** bar. Launcher orb sits center-left, pinned/running app icons centered next to it, right-side system tray (Wi‑Fi / volume / battery) with clock + date. Frosted glass with corner-bleed (§4). |
+| **Start / app launcher** | **Win11-Start-meets-macOS-Launchpad.** Search bar (apps, files, settings) up top, pinned app grid with an **All Apps** affordance, a **Recommended / recent files** list, and a bottom **user + power** row. Opens centered over blurred wallpaper. |
+| **Notification + quick-settings flyout** | **Win11 Action Center blended with macOS Control Center.** Right-side flyout: quick-toggle pills (Wi‑Fi, Bluetooth, Airplane, Night Light, Do Not Disturb, Dark Mode), brightness + volume sliders, month calendar, a media / now-playing card, and stacked notification cards with **Clear All**. |
+| **Login greeter** | Centered glass card over the shared urban-neon wallpaper: big clock + date, user avatar + name, password field, **Switch User**, and a bottom power row (Shut Down / Restart / Network). Same teal-amber glow as the desktop. |
+| **Lock screen (hyprlock)** | Same wallpaper + glass + teal-amber glow: large clock + date centered high, avatar + password field centered, a corner media / now-playing card, tray-style status (Wi‑Fi / battery). |
 | **Top ticker (optional)** | Keep a thin, calm status strip — weather / clock / soft status — **not** lab threat chrome. Can evolve into a space-theme accent later |
-| **Desktop** | Wallpaper + right-click menu + optional icons. Floating windows. **No tiling by default. No station maze.** |
+| **Desktop** | Urban-neon wallpaper + right-click menu + optional icons (Home / Trash). Floating windows. **No tiling by default. No station maze.** |
 | **Window controls** | Familiar minimize / maximize / close; snap assist optional later |
 
 **WM policy (Hyprland under the hood):** floating default, single desktop (or one “main” workspace only). Power users can unlock more later; first boot must feel like one calm surface.
@@ -61,12 +66,21 @@ Windows-shaped shell (Mac users still get familiar chrome: dock-like bar, menus,
 
 ---
 
-## 3. Feel — chill + eye candy
+## 3. Feel — chill + eye candy (urban neon)
 
-**Tone:** laid-back, matte, soft depth. Rich enough that people stare at it — not busy enough that they get tired of it.
+**Tone:** laid-back but *badass* — a dark cyberpunk city at night you want to
+live in, not a threat console. The approved direction is **urban neon**: wet
+reflective streets, neon signage, teal + amber glow, "NYXUS" lit in the skyline.
+Rich enough that people stare at it — never busy enough that they tire of it.
+
+**Signature material (owner-loved, must-have):** heavily frosted dark glass
+panels with a soft teal glow edge and **strong corner-bleed transparency** — the
+corners of every panel fade into the wallpaper. Every surface (taskbar,
+launcher, flyout, greeter, lock) wears this same glass so the neon city reads
+*through* the chrome.
 
 **Motion / materials (shared techniques with lab eye-candy spec, different skin):**
-- Frosted glass panels (compositor layer blur — eww/GTK limits still apply)
+- Frosted dark-glass panels with teal glow edge + corner-bleed (compositor layer blur — eww/GTK limits still apply)
 - Soft float / lift on focus
 - Hover-reveal: chrome stays quiet until the pointer arrives (taskbar chips, tray extras, Start affordances)
 - Blur behind overlays (Start, flyout, Hub-like quick settings if kept)
@@ -76,23 +90,72 @@ Windows-shaped shell (Mac users still get familiar chrome: dock-like bar, menus,
 
 ---
 
-## 4. Theme & palette — direction (decide after bake / mockups)
+## 4. Theme & palette — LOCKED (approved 2026-08-01)
 
-Working direction from the owner (not locked):
+**Decided.** The owner approved the desktop UI mockups on 2026-08-01; the
+candidate table (A/B/C plum matte) is retired. The canonical look is **urban
+neon** — a dark cyberpunk city/alley at night — with a **teal + amber** accent
+palette and a **frosted dark-glass, corner-bleed** material.
 
-| Candidate | Base | Accents | Vibe |
-|---|---|---|---|
-| **A. Matte night + plum** | Near-black / charcoal matte | Plum / soft purple | Calm, premium, night-desk |
-| **B. Matte night + plum + teal** | Same base | Plum primary, teal secondary | Slightly more “alive,” still chill |
-| **C. Light charcoal + plum + soft gold** | Dark gray (not pure black) | Plum + restrained yellow/gold highlights | Warmer; use yellow sparingly or it fights purple |
+**Canonical palette:**
 
-**Rules once locked:**
-- One named palette module (like lab’s `nyxus_palette`) — no freehand hex in apps
-- Forbidden neon / watermark-adjacent trash stays forbidden
-- Space / cosmic art direction for wallpapers & lock (not urban-alien murals)
-- Flat/matte chrome; glass only on overlays and hover states
+| Role | Direction |
+|---|---|
+| Base | Near-black / deep charcoal (wet-night city dark) |
+| Primary accent | **Teal / cyan** neon — glow edges, active states, primary highlights, "NYXUS" skyline sign |
+| Secondary accent | **Amber / warm orange** neon — signage warmth, secondary highlights, contrast against teal |
+| Surface material | Heavily frosted dark glass, soft teal glow edge, **strong corner-bleed** (panel corners fade into the wallpaper) |
 
-**Open decision for owner after seeing mockups:** A vs B (C only if gold stays a thin highlight).
+**Signature UI material — non-negotiable:** frosted dark-glass panels with a
+soft teal glow edge and **strong corner-bleed transparency**. Corner-bleed is an
+owner-loved, must-have feature — every panel (taskbar, launcher, flyout,
+greeter, lock) fades at the corners into the neon city behind it.
+
+**Wallpapers:** urban-neon "flower/city" art direction (the approved
+urban-flower set), default wallpaper carries **"NYXUS" glowing in the skyline**.
+This supersedes the earlier "space / cosmic, not urban" note.
+
+**Rules once locked (now in force):**
+- One named palette module (like lab’s `nyxus_palette`) — no freehand hex in apps; teal + amber + dark base only
+- Neon is now *intentional art direction* (urban-neon signage), not the forbidden watermark-adjacent trash — that ban still applies to cheap/garish neon UI chrome
+- Urban-neon city art direction for wallpapers, greeter & lock (this replaces the prior space/cosmic direction for Daily)
+- Frosted glass + corner-bleed is the shell material across taskbar, launcher, flyout, greeter and lock — not glass-only-on-hover
+
+### Reference mockups (approved 2026-08-01) — source of truth
+
+These are the **approved** desktop UI mockups defining the Daily look & feel.
+They are committed to the repo at **`docs/assets/daily-driver/`**. They were
+generated into the Cursor project assets directory, which is not cloned, not
+backed up and does not survive a lost session — so the repo copy is the source
+of truth and the one to reference.
+
+| File | Defines |
+|---|---|
+| `set-desktop.png` | Desktop wallpaper + centered bottom taskbar (launcher orb, pinned icons, right tray + clock/date), "NYXUS" skyline sign |
+| `set-notifications.png` | Notification + quick-settings flyout (toggle pills, brightness/volume sliders, calendar, media card, notification cards) |
+| `set-launcher.png` | Start menu / app launcher (search, pinned grid, recommended/recent files, user + power row) |
+| `set-login.png` | Login greeter (clock, avatar, password, Switch User, power row) |
+| `set-lockscreen.png` | Hyprlock lock screen (clock, avatar + password, media card, status) |
+
+The approved **wallpapers are not reference art — they ship.** Each is staged
+into the three trees the bake and `nyxus-wall-cycle` actually read
+(`artifacts/api-server/nyxus-scripts/`, skel `.config/hypr/walls/`, and
+`/usr/share/backgrounds/nyxus/`) and registered in that directory's
+`manifest.tsv`, which is what makes them selectable rather than merely present:
+
+| Wallpaper | Ships as |
+|---|---|
+| Urban flower · wall | `nyxus-urban-flower-wall.png` |
+| Urban flower · concrete | `nyxus-urban-flower-concrete.png` |
+| Urban astronaut · moonwalk | `nyxus-urban-astronaut-moonwalk.png` |
+| NYXUS cosmic hero | `nyxus-hero-cosmic.png` |
+
+They are *added*, not substituted: no existing wallpaper was replaced and the
+alien build's `nyxus-urban-alien` default is untouched, per the additive-edition
+decision.
+
+Future agents: treat these images as the canonical visual spec for Daily shell
+work; match them before writing mass CSS.
 
 ---
 
@@ -171,8 +234,8 @@ Bottom taskbar, Start, tray + notification flyout, floating single-desktop profi
 Ship as `NYX_EDITION=daily` bake. Lab unchanged.
 
 ### Phase 3 — Skin & space theme
-Lock palette (A/B), wallpapers, lock/greeter, frosted Start/flyout, hover-reveal pass.  
-Mockups before mass CSS.
+Apply the locked urban-neon teal+amber palette (§4), urban-flower wallpapers, lock/greeter, frosted corner-bleed Start/flyout, hover-reveal pass.  
+Palette + mockups are approved (§4 *Reference mockups*) — match them before mass CSS.
 
 ### Phase 4 — Polish & “love to look at”
 Motion coherence, Settings completeness pass, default-app polish, install UX,  
@@ -197,11 +260,12 @@ Someone from Windows or Mac can:
 
 ## 10. Owner decisions still open
 
-1. **Palette lock:** A (plum) vs B (plum + teal) vs C ( + soft gold)?
-2. **Top ticker:** keep thin / redesign space-theme / remove for v1?
-3. **App set:** browser choice (Firefox vs Chromium family), office lite or not?
-4. **Name:** “NYXUS Daily” vs a distinct product name (same family, clearer marketing)?
-5. **When:** after this bake’s click-audit — confirm Phase 1 before shell MVP?
+1. ~~**Palette lock:** A (plum) vs B (plum + teal) vs C ( + soft gold)?~~ **DECIDED 2026-08-01** — none of the above. Locked to **urban-neon teal + amber** on a dark base with frosted-glass corner-bleed material (see §4).
+2. ~~**Wallpaper / art direction:** space/cosmic vs other?~~ **DECIDED 2026-08-01** — **urban-neon city** art direction (urban-flower set), default carries "NYXUS" in the skyline (see §4). Supersedes the old space/cosmic note.
+3. **Top ticker:** keep thin / redesign space-theme / remove for v1?
+4. **App set:** browser choice (Firefox vs Chromium family), office lite or not?
+5. **Name:** “NYXUS Daily” vs a distinct product name (same family, clearer marketing)?
+6. **When:** after this bake’s click-audit — confirm Phase 1 before shell MVP?
 
 ---
 
