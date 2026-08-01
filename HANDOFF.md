@@ -2,14 +2,23 @@
 
 
 
-> **★★★★ WHERE WE STAND — 2026-07-31 ~22:10 EDT · ISO VM AUDIT IN PROGRESS ★★★★**  
-> **Next agent (Opus 5): finish the full ISO click-audit — do NOT start new
-> features.** Claude hit a session limit mid–QEMU audit of
-> `nyxus-2026.07.31-x86_64.iso` (stamp `0f77d1c2`); findings were not pushed.
-> Primary pickup: [`docs/ISO_VM_AUDIT_PICKUP_BRIEF_2026-07-31.md`](./docs/ISO_VM_AUDIT_PICKUP_BRIEF_2026-07-31.md)
-> (copy-paste prompt at top). VM may still be on VNC `127.0.0.1:8`; leftovers in
-> `~/.claude/jobs/90f4bb96/tmp/`. Document pass/fail → fix → re-verify → update
-> this block when done.
+> **★★★★ WHERE WE STAND — 2026-08-01 ~03:40 EDT · SESSION RECOVERY ★★★★**  
+> Cursor/Claude session limits stopped mid-flight agents. **Nothing left only in
+> the working tree.** Salvage + push recorded in
+> [`docs/SESSION_RECOVERY_BRIEF_2026-08-01.md`](./docs/SESSION_RECOVERY_BRIEF_2026-08-01.md)
+> (copy-paste ISO-audit continuation prompt in §6).  
+>
+> **Still unfinished (do NOT start new features first):** ISO VM audit
+> `docs/ISO_FULL_AUDIT_2026-07-31.md` has §§1–7 only — §§8+ (Hub/Power/stations/
+> Settings/apps/keybinds/lock/saver) never written. DE study
+> `docs/DE_COMPLETENESS_AND_EDITIONS_2026-07-31.md` stops before §3.3. Eye-candy
+> spec is complete (docs only). PR #84 (frosted lock + `nyxbuild` teardown) landed
+> on `main` — **not** in baked ISO stamp `0f77d1c2`. Evidence:
+> `/home/cosmic/nyxus-vmaudit/`, `~/.claude/jobs/90f4bb96/tmp/`.  
+>
+> **Prior note (2026-07-31 ~22:10):** Claude mid–QEMU audit; older pickup
+> [`docs/ISO_VM_AUDIT_PICKUP_BRIEF_2026-07-31.md`](./docs/ISO_VM_AUDIT_PICKUP_BRIEF_2026-07-31.md)
+> still useful for checklist order.
 >
 > **Prior BAKE READY (~16:50 EDT):** tip was idle `main`; owner baked that ISO
 > from stamp `0f77d1c2`. Profile verified; Kage-Ryu pkgs present. Agent cannot sudo.
@@ -22,7 +31,7 @@
 > | **verify-profile.sh** | **PASS** (exit 0). WARNs only: customize not +x (mkarchiso chmods); Hyprland host 0.55.4 vs ISO 0.56.0 skew; optional station apps (`cursor`/`strawberry`/`audacious`/`thunar`) absent; some eww namespaces on catch-all layer-blur floor |
 > | **Disk** | `/` has **~203G free** (well above the ~40G bake headroom). `iso-builder/out/` holds ~30G of older ISOs (07.26–07.29) — optional cleanup, not blocking |
 > | **Kage-Ryu** | Findable at `~/Projects/arch-custom-kernel/linux-kage-ryu/` — `linux-kage-ryu-7.0.12-1` + headers (2026-07-24). Bake defaults `NYX_WITH_KAGE_RYU=1`. Opt out: `NYX_WITH_KAGE_RYU=0` |
-> | **PR #83** | Squash-merged as `6e378926`. Feat-branch tip content matches `main` (docs-only delta). **No open PRs.** |
+> | **PR #83 / #84** | #83 squash-merged as `6e378926`. #84 (frosted lock + `nyxbuild` fix + audit ledger) merged onto `main` in this recovery — **rebake required** for ISO. |
 > | **Left behind (do not merge)** | `local-stash-work` (junk). Stale locals: `cursor/*`, `feat/kage-ryu-autoactivate-wiring`, `fix/overlay-gap-and-login-pickup`, `feat/settings-increment-2-no-terminal` (already squash-landed), `merge-pr-76` — all superseded or already on `main` |
 >
 > **Sync live session ≠ ISO boot.** Copying repo configs into `~/.config` only
