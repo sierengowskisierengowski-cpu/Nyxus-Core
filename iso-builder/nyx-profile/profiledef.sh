@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================
-# NYXUS — nyx-2026.05.11-x86_64.iso
+# NYXUS
 # Copyright © 2026 Joseph A. Sierengowski
 # All Rights Reserved
 # Unauthorized use or distribution prohibited

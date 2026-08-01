@@ -1,9 +1,18 @@
 # ─────────────────────────────────────────────────────────────────────────────
-#  NYXUS · GRUB Theme · Kage Ryu Dragon · ALIEN NEON
+#  NYXUS · GRUB Theme · Kage Ryu Dragon · ALIEN NEON        (live ISO menu)
 #  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 #  Palette-locked: void #05060a · text #eef2fa · violet #7d3dff · magenta #ff2dad
-#  Fonts are DejaVu (the .pf2 set loaded by grub.cfg) — do not switch to a
-#  font family the bootloader does not load, or the menu renders as blanks.
+#
+#  Fonts MUST be one of the .pf2 files grub.cfg loads (mono9/10/11/12,
+#  bold14/16). Naming a family GRUB has not loaded renders the component blank.
+#
+#  Boxes (`*_pixmap_style`, `terminal-box`) are NINE-SLICE: GRUB looks for
+#  _c/_n/_s/_e/_w/_nw/_ne/_sw/_se and silently skips whichever slices are
+#  absent. This theme previously shipped only select_c/_e/_w AND pointed
+#  terminal-box at that same incomplete selection-bar prefix, so the UEFI menu
+#  drew a background with nothing legible on it. Every prefix used here is
+#  emitted in full by scripts/generate-grub-theme.py — run that after any
+#  change, it fails if a referenced prefix is incomplete.
 # ─────────────────────────────────────────────────────────────────────────────
 
 desktop-image: "background.png"
@@ -13,7 +22,7 @@ title-text:        ""
 message-color:     "#eef2fa"
 message-bg-color:  "#05060a"
 terminal-font:     "DejaVu Sans Mono Regular 12"
-terminal-box:      "select_*.png"
+terminal-box:      "terminal_box_*.png"
 terminal-left:     "10%"
 terminal-top:      "10%"
 terminal-width:    "80%"
@@ -42,6 +51,8 @@ terminal-border:   "1"
 }
 
 # ── Boot menu ────────────────────────────────────────────────────────────────
+# item_height must match SELECT_H in scripts/generate-grub-theme.py, or the
+# selection pixmap stretches out of register with the row it highlights.
 + boot_menu {
     left  = 25%
     top   = 38%
@@ -50,21 +61,24 @@ terminal-border:   "1"
 
     item_font  = "DejaVu Sans Bold 16"
     item_color = "#eef2fa"
-    selected_item_color = "#eef2fa"
+    selected_item_font  = "DejaVu Sans Bold 16"
+    selected_item_color = "#ffffff"
     selected_item_pixmap_style = "select_*.png"
 
     item_height  = 44
     item_padding = 6
     item_spacing = 6
+    item_icon_space = 0
     icon_width   = 0
     icon_height  = 0
-    item_icon_space = 0
+
+    scrollbar = false
 }
 
 # ── Footer ───────────────────────────────────────────────────────────────────
 + label {
     text  = "Press ENTER to boot · ↑↓ to select · E to edit · C for command-line"
-    color = "#8a90a0"
+    color = "#9aa0ad"
     font  = "DejaVu Sans Mono Regular 10"
     top   = 100%-60
     left  = 0
@@ -74,7 +88,7 @@ terminal-border:   "1"
 
 + label {
     text  = "NYXUS  ·  BUILT BY HAND"
-    color = "#8a90a0"
+    color = "#9aa0ad"
     font  = "DejaVu Sans Mono Regular 9"
     top   = 100%-32
     left  = 0
@@ -88,9 +102,9 @@ terminal-border:   "1"
     left  = 30%
     top   = 100%-90
     width = 40%
-    height = 4
-    bar_style       = "select_*.png"
-    highlight_style = "select_*.png"
+    height = 6
+    bar_style       = "progress_trough_*.png"
+    highlight_style = "progress_fill_*.png"
     text = "@TIMEOUT_NOTIFICATION_LONG@"
     text_color = "#eef2fa"
     font  = "DejaVu Sans Mono Regular 10"

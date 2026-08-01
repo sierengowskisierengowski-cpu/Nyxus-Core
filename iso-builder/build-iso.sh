@@ -237,19 +237,35 @@ PACMANLOCAL
   _iso_label="$(grep -oP '^[[:space:]]*iso_label="?\K[^"[:space:]]+' "${PROFILE_DIR}/profiledef.sh" | head -1)"
   _iso_label="${_iso_label:-NYXUS_2026_07}"
 
+  # cow_spacesize — B-06 / FS-01 in docs/ISO_FULL_AUDIT_2026-07-31.md. archiso
+  # defaults the live overlay tmpfs to 256M; /etc/skel alone is ~162 MB and
+  # lands in /home/nyx at first login, so the 2026.07.31 stick was at 100% full
+  # four minutes into the first session and everything after that ran against a
+  # full disk. A percentage scales with the machine and tmpfs allocates lazily,
+  # so nothing is reserved up front. Every boot path below carries it; keep the
+  # static menus in the repo profile in sync.
+  NYX_COW_SPACESIZE="${NYX_COW_SPACESIZE:-50%}"
+
   # GRUB (UEFI dragon menu) — quoted heredoc so grub's ${prefix} is preserved;
-  # @@ISO_LABEL@@ placeholder is substituted afterward.
+  # @@ISO_LABEL@@ / @@COW@@ placeholders are substituted afterward.
   cat > "${PROFILE_DIR}/grub/grub.cfg" <<'GRUBCFG'
 # ============================================
-# NYXUS — live boot menu · Kage Ryu dragon theme (rev 2026-07-23)
+# NYXUS — live boot menu · Kage Ryu dragon theme (rev 2026-08-01)
 # Kage Ryu kernel = DEFAULT (entry 0) · stock linux = RESCUE
 # © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
 set default="0"
 set timeout=8
+set timeout_style=menu
+
+# Colours for the plain-text fallback terminal (GRUB's stock is white-on-blue).
+set menu_color_normal=white/black
+set menu_color_highlight=black/magenta
 
 # gfxterm is entered ONLY if a font actually loads, else we stay in the plain
-# text terminal (never the broken "?"-glyph render).
+# text terminal (never the broken "?"-glyph render). The theme is applied only
+# when its file exists — a `set theme=` pointing at a missing file leaves GRUB
+# drawing a background with no menu widget, which looks like a hung bootloader.
 if loadfont "${prefix}/fonts/mono12.pf2" ; then
     loadfont "${prefix}/fonts/mono9.pf2"
     loadfont "${prefix}/fonts/mono10.pf2"
@@ -261,90 +277,121 @@ if loadfont "${prefix}/fonts/mono12.pf2" ; then
     insmod png
     set gfxmode=auto
     terminal_output gfxterm
-    set theme="${prefix}/themes/nyxus/theme.txt"
+    if [ -f "${prefix}/themes/nyxus/theme.txt" ]; then
+        set theme="${prefix}/themes/nyxus/theme.txt"
+    fi
 fi
 
 menuentry "Boot NYXUS · Kage Ryu kernel" --class nyxus --class arch {
     set gfxpayload=keep
-    linux  /arch/boot/x86_64/vmlinuz-linux-kage-ryu  archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+    linux  /arch/boot/x86_64/vmlinuz-linux-kage-ryu  archisobasedir=arch archisolabel=@@ISO_LABEL@@ cow_spacesize=@@COW@@ quiet splash
     initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux-kage-ryu.img
 }
 
 menuentry "Boot NYXUS · Kage Ryu (safe / no KMS)" --class nyxus --class arch {
     set gfxpayload=keep
-    linux  /arch/boot/x86_64/vmlinuz-linux-kage-ryu  archisobasedir=arch archisolabel=@@ISO_LABEL@@ nomodeset
+    linux  /arch/boot/x86_64/vmlinuz-linux-kage-ryu  archisobasedir=arch archisolabel=@@ISO_LABEL@@ cow_spacesize=@@COW@@ nomodeset
+    initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux-kage-ryu.img
+}
+
+menuentry "Boot NYXUS · Kage Ryu (copy to RAM)" --class nyxus --class arch {
+    set gfxpayload=keep
+    linux  /arch/boot/x86_64/vmlinuz-linux-kage-ryu  archisobasedir=arch archisolabel=@@ISO_LABEL@@ cow_spacesize=@@COW@@ copytoram quiet splash
     initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux-kage-ryu.img
 }
 
 menuentry "Boot NYXUS · stock linux (rescue)" --class nyxus --class arch {
     set gfxpayload=keep
-    linux  /arch/boot/x86_64/vmlinuz-linux  archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+    linux  /arch/boot/x86_64/vmlinuz-linux  archisobasedir=arch archisolabel=@@ISO_LABEL@@ cow_spacesize=@@COW@@ quiet splash
     initrd /arch/boot/intel-ucode.img /arch/boot/amd-ucode.img /arch/boot/x86_64/initramfs-linux.img
 }
 
 menuentry "UEFI Shell"             { chainloader /shellx64.efi }
+menuentry "UEFI Firmware Settings" { fwsetup }
 menuentry "Reboot"                 { reboot }
 menuentry "Power off"              { halt }
 GRUBCFG
 
-  # systemd-boot / efiboot loader entries (01 = Kage-Ryu default, 02 = rescue).
-  cat > "${PROFILE_DIR}/efiboot/loader/entries/01-nyx.conf" <<'EFIKAGE'
-# NYXUS — Kage Ryu (default)
-title    NYXUS — The Night Has Eyes (Kage Ryu)
-sort-key 01
-linux    /arch/boot/x86_64/vmlinuz-linux-kage-ryu
-initrd   /arch/boot/intel-ucode.img
-initrd   /arch/boot/amd-ucode.img
-initrd   /arch/boot/x86_64/initramfs-linux-kage-ryu.img
-options  archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
-EFIKAGE
-  cat > "${PROFILE_DIR}/efiboot/loader/entries/02-nyx-stock.conf" <<'EFISTOCK'
-# NYXUS — stock linux (rescue)
-title    NYXUS — stock linux (rescue)
-sort-key 02
-linux    /arch/boot/x86_64/vmlinuz-linux
-initrd   /arch/boot/intel-ucode.img
-initrd   /arch/boot/amd-ucode.img
-initrd   /arch/boot/x86_64/initramfs-linux.img
-options  archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
-EFISTOCK
+  # No systemd-boot entries are written here. mkarchiso only reads
+  # ${profile}/efiboot/ for the `uefi.systemd-boot.*` boot modes, and this
+  # profile's bootmodes are bios.syslinux + uefi.grub — so the loader entries
+  # this script used to generate never reached an ISO. They cost the
+  # 2026-07-31 VM audit real time (B-06 looked for cow_spacesize in
+  # efiboot/loader/entries/01-nyx.conf, a file that does not ship), so the
+  # whole tree is gone. UEFI boots through grub.cfg above.
 
-  # syslinux (BIOS/Legacy text menu).
+  # syslinux (BIOS/Legacy menu). `UI` is mandatory: without it syslinux ignores
+  # every MENU directive and draws nothing, which is how the 2026.07.31 ISO
+  # shipped three labelled entries a BIOS user could never see or select.
+  # mkarchiso installs all of /usr/lib/syslinux/bios/*.c32, so vesamenu.c32 and
+  # its libcom32/libutil dependencies are always present.
   cat > "${PROFILE_DIR}/syslinux/syslinux.cfg" <<'SYSLINUX'
 # ============================================
 # NYXUS — Live ISO (BIOS) · Kage Ryu default + stock rescue
 # © 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
 # ============================================
+UI vesamenu.c32
 DEFAULT nyx
-PROMPT 0
-TIMEOUT 30
+TIMEOUT 100
+TOTALTIMEOUT 0
+
+MENU TITLE NYXUS  ·  ALIEN NEON  ·  KAGE RYU
+MENU MARGIN 8
+MENU ROWS 6
+MENU TABMSGROW 14
+MENU HELPMSGROW 16
+MENU TIMEOUTROW 18
+MENU VSHIFT 6
+
+MENU COLOR title        1;36;44  #ff7d3dff  #00000000  none
+MENU COLOR sel          7;37;40  #ff05060a  #ff7d3dff  none
+MENU COLOR unsel        37;44    #ffeef2fa  #00000000  none
+MENU COLOR border       30;44    #ff7d3dff  #00000000  none
+MENU COLOR help         37;40    #ff9aa0ad  #00000000  none
+MENU COLOR timeout_msg  37;40    #ff9aa0ad  #00000000  none
+MENU COLOR timeout      1;37;40  #ffff2dad  #00000000  none
+MENU COLOR msg07        37;40    #ffeef2fa  #00000000  none
+MENU COLOR tabmsg       31;40    #ff9aa0ad  #00000000  none
 
 LABEL nyx
-    MENU LABEL Boot NYXUS · Kage Ryu kernel
+    MENU LABEL Boot NYXUS · ^Kage Ryu kernel
+    MENU DEFAULT
     LINUX /arch/boot/x86_64/vmlinuz-linux-kage-ryu
     INITRD /arch/boot/intel-ucode.img,/arch/boot/amd-ucode.img,/arch/boot/x86_64/initramfs-linux-kage-ryu.img
-    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ cow_spacesize=@@COW@@ quiet splash
 
 LABEL nyx_kage_safe
-    MENU LABEL Boot NYXUS · Kage Ryu (safe / no KMS)
+    MENU LABEL Boot NYXUS · Kage Ryu (^safe / no KMS)
     LINUX /arch/boot/x86_64/vmlinuz-linux-kage-ryu
     INITRD /arch/boot/intel-ucode.img,/arch/boot/amd-ucode.img,/arch/boot/x86_64/initramfs-linux-kage-ryu.img
-    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ nomodeset
+    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ cow_spacesize=@@COW@@ nomodeset
+
+LABEL nyx_kage_ram
+    MENU LABEL Boot NYXUS · Kage Ryu (copy to ^RAM)
+    LINUX /arch/boot/x86_64/vmlinuz-linux-kage-ryu
+    INITRD /arch/boot/intel-ucode.img,/arch/boot/amd-ucode.img,/arch/boot/x86_64/initramfs-linux-kage-ryu.img
+    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ cow_spacesize=@@COW@@ copytoram quiet splash
 
 LABEL nyx_stock
-    MENU LABEL Boot NYXUS · stock linux (rescue)
+    MENU LABEL Boot NYXUS · stock linux (^rescue)
     LINUX /arch/boot/x86_64/vmlinuz-linux
     INITRD /arch/boot/intel-ucode.img,/arch/boot/amd-ucode.img,/arch/boot/x86_64/initramfs-linux.img
-    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ quiet splash
+    APPEND archisobasedir=arch archisolabel=@@ISO_LABEL@@ cow_spacesize=@@COW@@ quiet splash
+
+LABEL reboot
+    MENU LABEL ^Reboot
+    COM32 reboot.c32
+
+LABEL poweroff
+    MENU LABEL ^Power off
+    COM32 poweroff.c32
 SYSLINUX
 
-  # Substitute the real ISO label into all three menus.
-  sed -i "s/@@ISO_LABEL@@/${_iso_label}/g" \
+  # Substitute the real ISO label + overlay size into both menus.
+  sed -i "s/@@ISO_LABEL@@/${_iso_label}/g; s/@@COW@@/${NYX_COW_SPACESIZE}/g" \
     "${PROFILE_DIR}/grub/grub.cfg" \
-    "${PROFILE_DIR}/efiboot/loader/entries/01-nyx.conf" \
-    "${PROFILE_DIR}/efiboot/loader/entries/02-nyx-stock.conf" \
     "${PROFILE_DIR}/syslinux/syslinux.cfg"
-  ok "boot menus rewritten: Kage-Ryu primary + stock rescue (archisolabel=${_iso_label})"
+  ok "boot menus rewritten: Kage-Ryu primary + stock rescue (archisolabel=${_iso_label}, cow_spacesize=${NYX_COW_SPACESIZE})"
 fi
 
 # ── stamp version into profiledef.sh + os-release ────────────────────────

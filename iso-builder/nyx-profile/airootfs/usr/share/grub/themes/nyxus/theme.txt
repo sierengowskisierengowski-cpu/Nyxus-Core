@@ -1,9 +1,24 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  NYXUS · GRUB Theme · ALIEN NEON                    (installed-system menu)
+#  © 2026 Joseph A. Sierengowski · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+#  Palette-locked: void #05060a · text #eef2fa · violet #7d3dff · magenta #ff2dad
+#
+#  Every font here is "Unifont Regular 16" on purpose. An installed system's
+#  GRUB only has whatever grub-mkconfig loaded, which is unicode.pf2 — naming
+#  "Unifont Regular 14" or "12" (as this file used to) silently falls back and
+#  makes the sizes meaningless. The live-ISO twin at nyx-profile/grub/themes/
+#  can use the DejaVu .pf2 set because its grub.cfg loads it explicitly.
+#
+#  Boxes are NINE-SLICE — see the note in the live-ISO twin. Regenerate with
+#  scripts/generate-grub-theme.py, which writes both trees and verifies that
+#  every prefix a theme references has all nine slices.
+# ─────────────────────────────────────────────────────────────────────────────
 
 title-text: ""
 title-color: "#eef2fa"
 title-font:  "Unifont Regular 16"
 message-color: "#eef2fa"
-message-font:  "Unifont Regular 14"
+message-font:  "Unifont Regular 16"
 
 desktop-image: "background.png"
 desktop-color: "#05060a"
@@ -13,9 +28,9 @@ terminal-box:  "terminal_box_*.png"
 
 + label {
     text     = "NYXUS · ALIEN NEON · KAGE RYU"
-    left     = 50%-220
+    left     = 0
     top      = 18%
-    width    = 440
+    width    = 100%
     height   = 24
     align    = "center"
     color    = "#7d3dff"
@@ -29,38 +44,43 @@ terminal-box:  "terminal_box_*.png"
     width    = 100%
     height   = 20
     align    = "center"
-    color    = "#eef2fa"
-    font     = "Unifont Regular 14"
+    color    = "#9aa0ad"
+    font     = "Unifont Regular 16"
 }
 
+# item_height must match SELECT_H in scripts/generate-grub-theme.py.
 + boot_menu {
     left   = 15%
     top    = 25%
     width  = 70%
     height = 50%
 
-    item_font          = "Unifont Regular 16"
-    item_color         = "#eef2fa"
-    selected_item_color = "#05060a"
+    item_font           = "Unifont Regular 16"
+    item_color          = "#eef2fa"
+    selected_item_font  = "Unifont Regular 16"
+    selected_item_color = "#ffffff"
     selected_item_pixmap_style = "select_*.png"
-    item_height  = 36
+
+    item_height  = 44
     item_padding = 8
     item_spacing = 4
+    item_icon_space = 0
     icon_width   = 0
     icon_height  = 0
-    menu_pixmap_style = ""
+
+    scrollbar = false
 }
 
 + progress_bar {
-    id           = "__timeout__"
-    left         = 25%
-    top          = 85%
-    width        = 50%
-    height       = 12
-    fg_color     = "#eef2fa"
-    bg_color     = "#1a1a28"
-    border_color = "#eef2fa"
-    text         = "@TIMEOUT_NOTIFICATION_LONG@"
-    text_color   = "#eef2fa"
-    font         = "Unifont Regular 12"
+    id              = "__timeout__"
+    left            = 25%
+    top             = 85%
+    width           = 50%
+    height          = 6
+    bar_style       = "progress_trough_*.png"
+    highlight_style = "progress_fill_*.png"
+    text            = "@TIMEOUT_NOTIFICATION_LONG@"
+    text_color      = "#eef2fa"
+    font            = "Unifont Regular 16"
+    show_text       = "false"
 }

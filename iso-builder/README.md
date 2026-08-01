@@ -135,9 +135,13 @@ nyx-profile/
 ├── packages.x86_64               # 408 packages (+ heavy inline rationale comments)
 ├── packages.x86_64.lean          # reduced list, not the default
 ├── pacman.conf                   # build-time pacman (wires [blackarch])
-├── syslinux/syslinux.cfg         # BIOS boot menu (plain text — see below)
-├── efiboot/loader/…              # UEFI boot loader entries
-├── grub/                         # 🐉 dragon GRUB theme for the LIVE USB
+├── syslinux/syslinux.cfg         # BIOS boot menu (vesamenu — see below)
+├── grub/                         # 🐉 dragon GRUB theme for the LIVE USB — the
+│                                 # ONLY UEFI path. There is deliberately no
+│                                 # efiboot/: mkarchiso reads it only for the
+│                                 # uefi.systemd-boot bootmodes, which this
+│                                 # profile does not use, so entries there
+│                                 # never shipped and only misled auditors.
 │   ├── grub.cfg, fonts/ (.pf2), themes/nyxus/
 └── airootfs/                     # overlay copied onto the live system
     ├── etc/
