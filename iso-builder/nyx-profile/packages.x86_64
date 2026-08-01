@@ -146,6 +146,14 @@ alsa-utils
 # and the signature-bar spectrum. Was referenced everywhere but never
 # listed here, so the music-reactive features were dead on a real install.
 cava
+# audacious — the WAVE station's music player. stations.json has always tried
+# `strawberry` then `audacious` first, and neither was ever on the image, so
+# the audio station fell through to a cava terminal: a music station with no
+# way to play music. audacious is the lighter of the two and is in [extra].
+# Dropping it means putting the dead branch back; see the note in
+# stations.json.
+audacious
+audacious-plugins
 
 # ── GTK4 + Python (for NYXUS apps) ────────────────────────────────
 gtk4

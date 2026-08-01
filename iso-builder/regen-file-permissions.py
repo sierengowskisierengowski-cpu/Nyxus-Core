@@ -83,9 +83,18 @@ def build_block(airootfs: Path, existing: dict[str, str]) -> tuple[str, list[str
         if not target.exists():
             warnings.append(f"dropping {path}: pinned in profiledef.sh but not in airootfs")
             continue
-        # 0:0:755 on a regular file is exactly what the generator produces, so
-        # let it be regenerated. Everything else is a deliberate choice.
-        if mode == "0:0:755" and target.is_file() and not target.is_symlink():
+        # 0:0:755 on a regular file that IS executable on disk is exactly what
+        # the generator produces, so let it be regenerated. A 755 entry on a
+        # file that is NOT executable in the repo is a deliberate promotion —
+        # /root/customize_airootfs.sh is the load-bearing example, since git
+        # checkouts lose modes and mkarchiso must still be able to run it — so
+        # keep it pinned. Dropping those would silently un-promote them.
+        if (
+            mode == "0:0:755"
+            and target.is_file()
+            and not target.is_symlink()
+            and target.stat().st_mode & 0o111
+        ):
             continue
         pinned[path] = mode
 

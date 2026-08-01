@@ -2347,8 +2347,32 @@ if [[ -d "${_ak_dir}" ]]; then
     _ak_fail=$((_ak_fail + 1))
   done < <(find "${_ak_dir}" -maxdepth 1 -name '*.conf' 2>/dev/null | sort)
 fi
+# Same trap, wider net (2026-08-01): artifacts/nyxus-home/config/hyprland.conf
+# was a whole second hyprland.conf that nothing staged — a snapshot left behind
+# by nyxus-backport-live.sh. It had drifted badly (still opened the orphaned
+# `cheatsheet` window, still dispatched `name:0`, still launched nyxus-start)
+# and it is the first hit for anyone grepping the repo for a bind. Only two
+# copies of hyprland.conf may exist: the source the bake reads, and the skel
+# copy it installs to.
+_ak_repo="$(cd "${HERE}/.." && pwd)"
+_ak_ok_src="$(cd "${NS}" && pwd)/hyprland.conf"
+_ak_ok_skel="$(cd "${AIROOT}" && pwd)/etc/skel/.config/hypr/hyprland.conf"
+_ak_hypr=()
+while IFS= read -r _h; do _ak_hypr+=("${_h}"); done < <(
+  find "${_ak_repo}" -name 'hyprland.conf' -not -path '*/node_modules/*' \
+       -not -path '*/.git/*' 2>/dev/null | sort)
+for _h in "${_ak_hypr[@]}"; do
+  case "${_h}" in
+    "${_ak_ok_src}"|"${_ak_ok_skel}") ;;
+    *)
+      fail "${_h#${_ak_repo}/} is a third copy of hyprland.conf that nothing stages. The bake installs artifacts/api-server/nyxus-scripts/hyprland.conf into etc/skel; any other copy is a decoy that will collect edits and ship nothing"
+      _ak_fail=$((_ak_fail + 1))
+      ;;
+  esac
+done
+
 (( _ak_fail == 0 )) \
-  && ok "no decoy Hyprland shards under nyxus-scripts/hypr/conf.d"
+  && ok "no decoy Hyprland shards or stray hyprland.conf copies (${#_ak_hypr[@]} found, both expected)"
 
 # ── 13pa. fullscreen eww overlays must be TOP-anchored, not centred ──────────
 # An eww window is non-exclusive (exclusive_zone 0), so wlr-layer-shell lays it

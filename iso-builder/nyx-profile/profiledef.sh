@@ -187,6 +187,7 @@ file_permissions=(
   ["/opt/nyxus/nyxus_screensaver.py"]="0:0:755"
   ["/opt/nyxus/nyxus_settings.py"]="0:0:755"
   ["/opt/nyxus/nyxus_welcome_note.py"]="0:0:755"
+  ["/root/customize_airootfs.sh"]="0:0:755"
   ["/usr/bin/bifrost"]="0:0:755"
   ["/usr/bin/bifrost-guardian"]="0:0:755"
   ["/usr/local/bin/arsenal"]="0:0:755"

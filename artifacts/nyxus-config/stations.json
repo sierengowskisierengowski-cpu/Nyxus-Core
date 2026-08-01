@@ -36,7 +36,7 @@
       "hue": "purple",
       "tagline": "Build · Code · Ship",
       "wallpaper": "nyxus-login-wall.png",
-      "launch": "sh -c 'command -v cursor >/dev/null && exec cursor; command -v code >/dev/null && exec code; exec alacritty'",
+      "launch": "sh -c 'command -v code >/dev/null && exec code; exec alacritty'",
       "half": { "name": "ANVIL", "code": "AN", "hue": "purple", "tagline": "Anvil · Repos · Build" }
     },
     {
@@ -66,7 +66,7 @@
       "hue": "orange",
       "tagline": "Media · Sound · Stream",
       "wallpaper": "nyxus-rot-alien-block-party.png",
-      "launch": "sh -c 'command -v strawberry >/dev/null && exec strawberry; command -v audacious >/dev/null && exec audacious; command -v cava >/dev/null && exec alacritty --title \"NYXUS WAVE\" -e cava; command -v pavucontrol >/dev/null && exec pavucontrol; exec alacritty'",
+      "launch": "sh -c 'command -v audacious >/dev/null && exec audacious; command -v cava >/dev/null && exec alacritty --title \"NYXUS WAVE\" -e cava; command -v pavucontrol >/dev/null && exec pavucontrol; exec alacritty'",
       "half": { "name": "MIXER", "code": "MX", "hue": "orange", "tagline": "Mixer · Levels · Routing" }
     },
     {
@@ -76,7 +76,7 @@
       "hue": "blue",
       "tagline": "Files · Data · Vault",
       "wallpaper": "nyxus-rot-warehouse-portal.png",
-      "launch": "sh -c 'command -v thunar >/dev/null && exec thunar; command -v nautilus >/dev/null && exec nautilus; command -v nyxus-files >/dev/null && exec nyxus-files; exec alacritty'",
+      "launch": "sh -c 'command -v nautilus >/dev/null && exec nautilus; command -v nyxus-files >/dev/null && exec nyxus-files; exec alacritty'",
       "half": { "name": "VAULT", "code": "VT", "hue": "blue", "tagline": "Vault · Keys · Archive" }
     },
     {
