@@ -214,3 +214,189 @@ lock and screensaver were never exercised in the guest and are **not** covered
 above. The source-level defects found near them are fixed, but the click-audit
 itself is still owed. Do that against a **fresh bake**, not the `0f77d1c2`
 image — the fixes above are not in it.
+
+## 11. The click-audit — 2026-08-01, against the 08.01 bake
+
+This is the pass §10 asked for. It ran across two sessions on the same image;
+the first ended when the build box rebooted mid-audit and is folded in here.
+
+**ISO under test:** `iso-builder/out/nyxus-2026.08.01-x86_64.iso`, stamp read
+inside the guest:
+
+```
+iso            : nyxus-2026.08.01-x86_64.iso
+built          : 2026-08-01 14:28:35 EDT
+source commit  : 80ca821b-dirty  (branch: main)
+```
+
+So `34f9c9b4`, `7ecb51f0` (desktop wiring) and `c3fa6251` (MIME) are **not** in
+this image. Nothing below should be read as a test of those, and MIME/default-app
+behaviour was deliberately not exercised for that reason.
+
+Harness as in the header, plus the in-guest HTTP relay. Screenshots in
+`/home/cosmic/nyxus-vmaudit/shots-0801/` and `shots-0802/` on the build box.
+
+### 11.1 What was exercised
+
+| # | Surface | Result | Evidence |
+| --- | --- | --- | --- |
+| CA-01 | Greeter → login | PASS | Greeter drawn ~53 s after power-on, preselecting `nyx` + NYXUS (Hyprland). Password stage accepts and enters the session. G-06/G-07/G-08 hold on real behaviour. |
+| CA-02 | Riddle escape hatch | PASS | Typing `skip` dissolves it. SS-07 confirmed live. |
+| CA-03 | First-login window set | **FAIL** | Four windows open stacked on first login: the fullscreen Welcome wizard, Meli's Hive Command Center, Meli Setup, and the riddle terminal. Correct for the lab build's intent, wrong as a first impression, and disqualifying for Daily. |
+| CA-04 | `Super+Return` terminal | PASS | Opens a real terminal with a working shell. |
+| CA-05 | Quick Settings (`Super+A`) | PASS | Twelve toggles, three sliders, working close hint. |
+| CA-06 | NYXUS Power (`Super+Escape`) | PASS | Full-bleed art, five actions, **no 40 px top gap** — 13pa holds live. |
+| CA-07 | Overlay open/close does not trap the desktop | PASS | Opening an overlay unmaps all four bars, closing it restores all four. The old trap does not reproduce. |
+| CA-08 | Hub renders | PASS | Stats, toggles, sliders, stations, apps and power all draw, on the `top` layer — the OVERLAY→TOP fix holds. |
+| CA-09 | Hub clicks act | PASS | Hub ▸ Settings launched Settings. The 200 ms dead-click is gone. |
+| CA-10 | Hub reachable at all | **FAIL** | No keybind opens the Hub (`hyprctl binds` has no Hub entry among 157). Its only trigger is a button in the bottom bar, so while BR-09 blanks that bar the Hub is unreachable by any normal means. |
+| CA-11 | NYXUS Settings renders | **FAIL → FIXED** | See CA-12. |
+| CA-12 | Five GTK apps render | **FAIL → FIXED** | See §11.2. |
+| CA-13 | Station switching | **FAIL** | See §11.3. |
+| CA-14 | Notification daemon | **FAIL** | See §11.4. |
+| CA-15 | Lock screen | **FAIL** | See §11.5. |
+| CA-16 | Top/bottom bars | **FAIL** | See §11.6 — and the earlier "never renders" call is corrected there. |
+| CA-17 | Live wallpaper | PASS | `mpvpaper` plays `nyxus-livewall-flagship.mp4` at layer 0. The near-black desktop reported earlier was a dark frame of that video, not a broken wallpaper. |
+| CA-18 | Executable modes on the image | PASS | Scripts arrive 755. T-04/05/06 hold. |
+
+### 11.2 CA-11 / CA-12 — five apps shipped windows that painted nothing
+
+`nyxus-settings` opened a window that was present, focused, correctly sized at
+1280x760 and **completely empty** — the video wallpaper showed through it. It
+logged nothing at all, which is itself unusual, since every other GTK4 app in
+that session prints Mesa and Vulkan warnings.
+
+Ruled out first: stock GTK4 renders fine in the same session (`gnome-text-editor`
+as a control drew correctly), there is no opacity window rule for the app, and
+the panel payload is fully present (45 KB `settings.py`, 38 KB `main.py`).
+
+Dumping the widget tree inside the session was decisive:
+
+```
+SettingsWindow > Overlay > CosmicSceneArea          # and nothing else
+```
+
+with one warning at construction — `Can't set new parent GtkOverlay on widget
+GtkBox, which already has parent settings+SettingsWindow`. `install_chrome()`
+builds a `Gtk.Overlay`, puts the cosmic backdrop in it, then calls
+`add_overlay(cur)` while `cur` is still parented to the window. GTK4 refuses to
+reparent, so the overlay stays empty, and the `set_child(overlay)` on the next
+line discards the real content.
+
+Sweeping every NYXUS GTK app for that warning, as shipped, found it is not one
+app but **five**: Settings, Control, Notepad, Stickies, Store. Sysmon, Launcher,
+Welcome and netusage never emit it. With the content detached before the
+reparent, all five stop emitting it and Settings renders in full (sidebar, page
+stack, footer, Save/Cancel), verified by screenshot in the live session.
+
+**`nyxus-home` already had this diagnosed.** Its `main.py` carries a comment
+describing the exact failure and works around it by pre-arming
+`_nyxus_chrome_installed` so `install_chrome` returns before the wrap. The
+shared function was never fixed, so every other app kept shipping blank.
+
+Fixed in `87900dd7`.
+
+### 11.3 CA-13 — station decks leak, and it is orphan eww daemons
+
+Clicking stations in the left rail works — GHOST, FORGE, PULSE and CORE each
+draw a full deck. But `hyprctl layers` shows the previous deck still mapped:
+
+```
+namespace: nyxus-ghost-deck   pid 64811
+namespace: nyxus-forge-deck   pid 139166      # both mapped at once
+```
+
+GHOST is never closed by any subsequent switch, and clicking GHOST a second
+time maps a **second** `nyxus-ghost-deck` surface. Each one is another process
+holding a layer surface, so this accumulates for as long as the session runs.
+
+The cause is not the close-loop in `nyxus-home-deck`, which is correct and
+already loops over the whole map rather than branching. There is one eww socket
+(`/run/user/1000/eww-server_69eff…`), but three live eww processes:
+
+```
+18917  eww daemon          # owns all four bars + nyxus-notif
+64811  eww open notif-popup  # owns a ghost-deck surface
+139166 eww open ghost-deck   # owns another ghost-deck surface
+```
+
+Those `eww open` invocations became their own daemons — eww self-daemonises
+when it cannot reach a server, which is exactly what happens during the login
+race. `eww close ghost-deck` connects to the socket, reaches daemon 18917,
+which does not own that window, and does nothing. The script's own verify step
+reads `eww active-windows` from the same daemon, so it cannot see the orphans
+either and reports success. This is the "recurring two decks at once" bug the
+script's comments have been chasing since 2026-07-27; the band-aids were all
+applied to the wrong layer.
+
+**Not yet fixed.** The fix belongs at the launch path (single-flight the daemon
+and refuse to let `eww open` self-daemonise), not in the switcher.
+
+### 11.4 CA-14 — two notification daemons ship and race; swaync loses
+
+`systemctl --user --failed` reports `swaync.service` failed on every boot:
+
+```
+Could not acquire notification name. Please close any other
+notification daemon like mako or dunst
+… Start request repeated too quickly … start-limit-hit
+```
+
+`busctl --user` confirms `org.freedesktop.Notifications` is owned by **dunst**.
+Both ship: `dunst` and `swaync` are each in `packages.x86_64`, skel carries
+configs for both, and `hyprland.conf:98` starts dunst with `exec-once`. Dunst
+wins the name; swaync retries five times and dies.
+
+Two consequences beyond the failed unit. The swaync notification centre — the
+calendar/do-not-disturb flyout the Daily brief is built around — never runs at
+all. And Settings ships a notifications page (`nyxus_settings_notifications.py`)
+that configures swaync, which is another instance of the §1.4 class in the
+completeness study: a page that looks green over a backend that is not there.
+
+**Not yet fixed.** Pick one daemon. If it is swaync, drop the dunst `exec-once`
+and the dunst package; if it is dunst, drop swaync and rewrite the Settings
+page against dunst.
+
+### 11.5 CA-15 — the lock screen paints black
+
+`Super+L` locks. hyprlock starts, the desktop is genuinely covered, and typing
+the password unlocks correctly — so the lock is functionally sound. It renders
+**nothing**: no clock, no input field, no art, no audio spectrum, no feedback of
+any kind. Two faint frosted panes are the only thing on screen, which are the
+two low-alpha panes the 2026-07-31 "frosted glass" redesign added; every text
+label and the background image are missing.
+
+For a daily driver this reads as a frozen machine — there is no cue that the
+screen is locked or that typing does anything.
+
+**Cause not yet established.** The lead: `hyprlock.conf` points its background
+at `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png`, one image widget at
+`~/.cache/nyxus/lock-art-placeholder.png`, and nearly every label is a `cmd[]`
+shell call (`nyxus-lock-cava frame`, `nyxus-lock-track`, `nyxus-weather-line`,
+`~/.config/hypr/scripts/nyxus-daily-line.sh`). Whether those assets and commands
+exist on the image was not checked before this session ended. The fonts named
+(Caveat, Orbitron ExtraBold, JetBrainsMono Nerd Font) are the other candidate,
+and would explain all-text-missing-but-panes-drawn in one stroke.
+
+### 11.6 CA-16 / BR-08 — correcting the "bars never render" call
+
+The first session measured both bars mapped with correct geometry and alpha 1
+while drawing zero content for its whole run, and concluded they never render.
+**That call is too strong.** In the second boot the same two errors appear in
+the eww daemon log exactly once each — the `null`-to-bool throw and
+`Couldn't parse transition: 'rotate-left-right'` — and the bars came up
+populated a few minutes in. So this is a slow, racy start, not a permanent
+blank, and the owner's "eww takes a few minutes to load" was literal.
+
+Both underlying defects were real and are fixed in `bd86b52b`, along with gate
+13pl, which asserts across all 19 shipped `.yuck` files that every key read off
+a variable exists in that variable's `:initial` and that every `:transition` is
+one of the seven eww accepts. The gate was confirmed to fail the pre-fix tree on
+all seven occurrences.
+
+### 11.7 Still not exercised
+
+App launches from the launcher and double-click-to-open, the screensaver, the
+Start panel and the notification flyout as UI, and anything MIME-related (which
+needs the `c3fa6251` bake first). CA-13, CA-14 and CA-15 are open defects with
+no fix yet.
