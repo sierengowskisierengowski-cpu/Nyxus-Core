@@ -13,11 +13,11 @@ const PANEL    = '#0f0f0f';
 const BORDER   = 'rgba(255,255,255,0.08)';
 const RULED    = 'rgba(255,255,255,0.11)';
 const MARGIN   = 'rgba(255,60,80,0.22)';
-const PINK     = '#ff00ff';
-const PURPLE   = '#cc00ff';
-const BLUE     = '#0088ff';
+const PINK     = '#ff2dad';
+const PURPLE   = '#7d3dff';
+const BLUE     = '#2bd2ff';
 const GREEN    = '#39ff14';
-const ORANGE   = '#ff5500';
+const ORANGE   = '#ff8a1e';
 const DIM      = 'rgba(255,255,255,0.35)';
 const TEXT     = 'rgba(255,255,255,0.88)';
 const FONT     = "'Caveat', 'Patrick Hand', cursive";
@@ -213,7 +213,7 @@ export default function Notepad() {
       .replace(/\*\*(.*?)\*\*/gim, `<strong style="color:${TEXT}">$1</strong>`)
       .replace(/\*(.*?)\*/gim,     `<em>$1</em>`)
       .replace(/```([\s\S]*?)```/gim, `<pre style="background:#0d0020;border:1px solid ${PURPLE}44;padding:12px;margin:10px 0;border-radius:4px;overflow-x:auto"><code style="font-family:monospace;font-size:14px;color:${GREEN}">$1</code></pre>`)
-      .replace(/`(.*?)`/gim, `<code style="background:rgba(204,0,255,0.15);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:14px;color:${PURPLE}">$1</code>`)
+      .replace(/`(.*?)`/gim, `<code style="background:rgba(125,61,255,0.15);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:14px;color:${PURPLE}">$1</code>`)
       .replace(/^\- (.*)$/gim, `<li style="margin-left:16px;list-style:disc;color:${TEXT}">$1</li>`)
       .replace(/^\> (.*)$/gim, `<blockquote style="border-left:3px solid ${PINK};padding-left:12px;color:${DIM};font-style:italic;margin:8px 0">$1</blockquote>`)
       .replace(/\n/g, '<br/>');

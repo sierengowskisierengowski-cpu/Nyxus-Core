@@ -2,6 +2,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
+@import "../../../lib/web-preset/src/alien-neon.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -44,16 +45,6 @@
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
 
-  --color-nyxus-pink:   #ff00ff;
-  --color-nyxus-purple: #cc00ff;
-  --color-nyxus-blue:   #0088ff;
-  --color-nyxus-green:  #39ff14;
-  --color-nyxus-yellow: #ffff00;
-  --color-nyxus-orange: #ff5500;
-  --color-nyxus-bg:     #06040c;
-  --color-nyxus-panel:  #0d0d1a;
-  --color-nyxus-text:   #e8e0f5;
-  --color-nyxus-dim:    #7060a0;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -63,35 +54,14 @@
 
 :root {
   /* NYXUS BRAND PALETTE */
-  --background: 260 50% 2%; /* #030206 */
-  --foreground: 263 44% 92%; /* #e8e0f5 */
   
-  --primary: 300 100% 50%; /* #ff00ff */
-  --primary-foreground: 260 50% 2%;
   
-  --secondary: 208 100% 50%; /* #0088ff */
-  --secondary-foreground: 260 50% 2%;
   
-  --accent: 288 100% 50%; /* #cc00ff */
-  --accent-foreground: 260 50% 2%;
   
-  --destructive: 20 100% 50%; /* #ff5500 */
-  --destructive-foreground: 260 50% 2%;
   
-  --muted: 260 20% 15%;
-  --muted-foreground: 263 20% 65%;
   
-  --card: 260 50% 4%;
-  --card-foreground: 263 44% 92%;
-  --card-border: 300 100% 50%;
   
-  --popover: 260 50% 4%;
-  --popover-foreground: 263 44% 92%;
-  --popover-border: 300 100% 50%;
   
-  --border: 288 100% 50%;
-  --input: 260 20% 25%;
-  --ring: 300 100% 50%;
 
   --app-font-sans: 'Caveat', 'Patrick Hand', cursive;
   --app-font-serif: 'Caveat', cursive;
@@ -101,35 +71,14 @@
 }
 
 .dark {
-  --background: 260 50% 2%; /* #030206 */
-  --foreground: 263 44% 92%; /* #e8e0f5 */
   
-  --primary: 300 100% 50%; /* #ff00ff */
-  --primary-foreground: 260 50% 2%;
   
-  --secondary: 208 100% 50%; /* #0088ff */
-  --secondary-foreground: 260 50% 2%;
   
-  --accent: 288 100% 50%; /* #cc00ff */
-  --accent-foreground: 260 50% 2%;
   
-  --destructive: 20 100% 50%; /* #ff5500 */
-  --destructive-foreground: 260 50% 2%;
   
-  --muted: 260 20% 15%;
-  --muted-foreground: 263 20% 65%;
   
-  --card: 260 50% 4%;
-  --card-foreground: 263 44% 92%;
-  --card-border: 300 100% 50%;
   
-  --popover: 260 50% 4%;
-  --popover-foreground: 263 44% 92%;
-  --popover-border: 300 100% 50%;
   
-  --border: 288 100% 50%;
-  --input: 260 20% 25%;
-  --ring: 300 100% 50%;
 }
 
 @layer base {
@@ -144,7 +93,7 @@
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: #06040c; }
   ::-webkit-scrollbar-thumb { background: #2a1a3a; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #ff00ff; }
+  ::-webkit-scrollbar-thumb:hover { background: #ff2dad; }
 }
 
 .nyx-glass {
@@ -160,7 +109,7 @@
   border-radius: 50%;
   animation: twinkle var(--duration, 2s) infinite ease-in-out alternate;
   animation-delay: var(--delay, 0s);
-  box-shadow: 0 0 4px #0088ff, 0 0 8px #0088ff;
+  box-shadow: 0 0 4px #2bd2ff, 0 0 8px #2bd2ff;
 }
 
 @keyframes twinkle {
@@ -170,7 +119,7 @@
 
 .rain-streak {
   position: absolute;
-  background: linear-gradient(to bottom, rgba(0, 136, 255, 0), rgba(0, 136, 255, 0.8));
+  background: linear-gradient(to bottom, rgba(43, 210, 255, 0), rgba(43, 210, 255, 0.8));
   width: 2px;
   height: var(--length, 40px);
   animation: fall var(--speed, 0.6s) linear infinite;
@@ -230,7 +179,7 @@
 @keyframes flash {
   0%, 94%, 98%, 100% { opacity: 0; background: white; }
   95% { opacity: 0.8; background: white; }
-  96% { opacity: 0.2; background: #ffff00; }
+  96% { opacity: 0.2; background: #ffe600; }
   97% { opacity: 0.9; background: white; }
 }
 
@@ -262,13 +211,13 @@
 }
 
 .neon-text-primary {
-  text-shadow: 0 0 12px rgba(255, 0, 255, 0.6);
+  text-shadow: 0 0 12px rgba(255, 45, 173, 0.6);
 }
 .neon-text-secondary {
-  text-shadow: 0 0 12px rgba(0, 136, 255, 0.6);
+  text-shadow: 0 0 12px rgba(43, 210, 255, 0.6);
 }
 .neon-text-accent {
-  text-shadow: 0 0 12px rgba(204, 0, 255, 0.6);
+  text-shadow: 0 0 12px rgba(125, 61, 255, 0.6);
 }
 .neon-text-green {
   text-shadow: 0 0 12px rgba(57, 255, 20, 0.6);
@@ -277,15 +226,15 @@
   text-shadow: 0 0 12px rgba(255, 255, 0, 0.6);
 }
 .neon-text-orange {
-  text-shadow: 0 0 12px rgba(255, 85, 0, 0.6);
+  text-shadow: 0 0 12px rgba(255, 138, 30, 0.6);
 }
 
 .neon-box-primary {
-  box-shadow: 0 0 12px rgba(255, 0, 255, 0.6);
-  border: 1px solid rgba(255, 0, 255, 0.4);
+  box-shadow: 0 0 12px rgba(255, 45, 173, 0.6);
+  border: 1px solid rgba(255, 45, 173, 0.4);
 }
 
 .neon-box-secondary {
-  box-shadow: 0 0 12px rgba(0, 136, 255, 0.6);
-  border: 1px solid rgba(0, 136, 255, 0.4);
+  box-shadow: 0 0 12px rgba(43, 210, 255, 0.6);
+  border: 1px solid rgba(43, 210, 255, 0.4);
 }

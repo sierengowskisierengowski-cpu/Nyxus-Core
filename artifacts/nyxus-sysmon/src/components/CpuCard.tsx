@@ -30,7 +30,7 @@ export function CpuCard({ data }: { data: SysmonData | null }) {
             style={{
               strokeDasharray: circumference,
               strokeDashoffset: strokeDashoffset,
-              filter: 'drop-shadow(0 0 6px rgba(255,0,255,0.6))'
+              filter: 'drop-shadow(0 0 6px rgba(255,45,173,0.6))'
             }}
           />
         </svg>

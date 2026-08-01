@@ -22,8 +22,8 @@ const LINE_COLOR: Record<string, string> = {
 };
 
 // Neon glow colors for the app chrome
-const NEON_PINK  = '#ff00ff';
-const NEON_BLUE  = '#0088ff';
+const NEON_PINK  = '#ff2dad';
+const NEON_BLUE  = '#2bd2ff';
 const NEON_GREEN = '#39ff14';
 
 function StickyNote({ note, updateNote, deleteNote, togglePin }:
@@ -209,7 +209,7 @@ export default function Stickies() {
         background: 'rgba(6,4,12,0.65)',
         backdropFilter: 'blur(14px) saturate(1.6)',
         WebkitBackdropFilter: 'blur(14px) saturate(1.6)',
-        boxShadow: `0 0 24px rgba(255,0,255,0.08)`,
+        boxShadow: `0 0 24px rgba(255,45,173,0.08)`,
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 4 }}>

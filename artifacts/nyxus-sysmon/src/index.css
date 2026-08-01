@@ -3,6 +3,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
+@import "../../../lib/web-preset/src/alien-neon.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -30,37 +31,9 @@
   --font-mono: 'JetBrains Mono', monospace;
   --font-serif: 'Caveat', cursive;
 
-  --color-nyxus-pink:   #ff00ff;
-  --color-nyxus-purple: #cc00ff;
-  --color-nyxus-blue:   #0088ff;
-  --color-nyxus-green:  #39ff14;
-  --color-nyxus-yellow: #ffff00;
-  --color-nyxus-orange: #ff5500;
-  --color-nyxus-bg:     #08080e;
-  --color-nyxus-panel:  #0d0d1a;
-  --color-nyxus-text:   #e8e0f5;
-  --color-nyxus-dim:    #7060a0;
 }
 
 :root {
-  --background: 260 50% 2%;
-  --foreground: 262 50% 92%;
-  --border: 260 50% 20%;
-  --card: 260 66% 4%;
-  --card-foreground: 262 50% 92%;
-  --card-border: 260 50% 30%;
-  --primary: 300 100% 50%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 211 100% 50%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 260 30% 15%;
-  --muted-foreground: 255 25% 50%;
-  --accent: 285 100% 50%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 20 100% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --input: 260 50% 20%;
-  --ring: 300 100% 50%;
   --radius: 0.25rem;
 }
 
@@ -73,7 +46,7 @@
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: #08080e; }
   ::-webkit-scrollbar-thumb { background: #2a1a3a; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #ff00ff; }
+  ::-webkit-scrollbar-thumb:hover { background: #ff2dad; }
 }
 
 .panel {
@@ -95,8 +68,8 @@
 }
 
 @keyframes pulse-border {
-  0%,100% { border-color: rgba(255,0,255,0.2); box-shadow: 0 0 5px rgba(255,0,255,0.1); }
-  50%      { border-color: rgba(255,0,255,0.5); box-shadow: 0 0 14px rgba(255,0,255,0.3); }
+  0%,100% { border-color: rgba(255,45,173,0.2); box-shadow: 0 0 5px rgba(255,45,173,0.1); }
+  50%      { border-color: rgba(255,45,173,0.5); box-shadow: 0 0 14px rgba(255,45,173,0.3); }
 }
 @keyframes pulse-border-red {
   0%,100% { border-color: rgba(255,0,0,0.4); box-shadow: 0 0 10px rgba(255,0,0,0.2); }
@@ -106,11 +79,11 @@
 .neon-border { animation: pulse-border 4s infinite ease-in-out; }
 .offline-border { animation: pulse-border-red 2s infinite ease-in-out; }
 
-.glow-text-pink   { text-shadow: 0 0 10px rgba(255,0,255,0.7); }
+.glow-text-pink   { text-shadow: 0 0 10px rgba(255,45,173,0.7); }
 .glow-text-green  { text-shadow: 0 0 10px rgba(57,255,20,0.7); }
-.glow-text-blue   { text-shadow: 0 0 10px rgba(0,136,255,0.7); }
+.glow-text-blue   { text-shadow: 0 0 10px rgba(43,210,255,0.7); }
 .glow-text-yellow { text-shadow: 0 0 10px rgba(255,255,0,0.7); }
-.glow-text-orange { text-shadow: 0 0 10px rgba(255,85,0,0.7); }
+.glow-text-orange { text-shadow: 0 0 10px rgba(255,138,30,0.7); }
 .glow-text-red    { text-shadow: 0 0 14px rgba(255,0,0,0.9); }
 
 /* ── NYXUS stamp ───────────────────────────────────────────────────── */
@@ -122,7 +95,7 @@ body::after {
   font-family: 'JetBrains Mono', monospace;
   font-size: 7px;
   letter-spacing: 0.18em;
-  color: rgba(255, 0, 255, 0.18);
+  color: rgba(255, 45, 173, 0.18);
   pointer-events: none;
   z-index: 9999;
   white-space: nowrap;

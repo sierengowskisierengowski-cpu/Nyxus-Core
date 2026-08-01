@@ -17,7 +17,7 @@ export default function SysMon() {
       {isDemoMode && (
         <div style={{
           position: 'fixed', top: 8, right: 12, zIndex: 9999,
-          background: 'rgba(255,85,0,0.18)', border: '1.5px solid #ff5500',
+          background: 'rgba(255,138,30,0.18)', border: '1.5px solid #ff8a1e',
           borderRadius: 5, padding: '2px 12px',
           fontFamily: "'Caveat', cursive", fontSize: 14, color: '#ff8844',
           letterSpacing: '0.08em',

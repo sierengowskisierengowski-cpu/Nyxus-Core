@@ -1,12 +1,12 @@
 import "@fontsource/caveat/700.css";
 
 const blobs = [
-  { label: "1", color: "#ff00ff", borderRadius: "62% 38% 46% 54%", shadow: "rgba(255,0,255,0.85)" },
-  { label: "2", color: "#ff5500", borderRadius: "38% 62% 54% 46%", shadow: "rgba(255,85,0,0.85)" },
+  { label: "1", color: "#ff2dad", borderRadius: "62% 38% 46% 54%", shadow: "rgba(255,45,173,0.85)" },
+  { label: "2", color: "#ff8a1e", borderRadius: "38% 62% 54% 46%", shadow: "rgba(255,138,30,0.85)" },
   { label: "3", color: "#e6b800", borderRadius: "70% 30% 38% 62%", shadow: "rgba(230,184,0,0.85)" },
   { label: "4", color: "#39ff14", borderRadius: "30% 70% 62% 38%", shadow: "rgba(57,255,20,0.85)" },
-  { label: "5", color: "#0088ff", borderRadius: "54% 46% 30% 70%", shadow: "rgba(0,136,255,0.85)" },
-  { label: "6", color: "#cc00ff", borderRadius: "46% 54% 70% 30%", shadow: "rgba(204,0,255,0.85)" },
+  { label: "5", color: "#2bd2ff", borderRadius: "54% 46% 30% 70%", shadow: "rgba(43,210,255,0.85)" },
+  { label: "6", color: "#7d3dff", borderRadius: "46% 54% 70% 30%", shadow: "rgba(125,61,255,0.85)" },
 ];
 
 export default function WorkspaceButtons() {

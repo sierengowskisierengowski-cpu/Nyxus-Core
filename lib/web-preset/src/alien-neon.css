@@ -1,0 +1,86 @@
+/* ============================================================================
+ * NYXUS — ALIEN NEON tokens for the Vite web surfaces
+ * (c) 2026 JOSEPH A. SIERENGOWSKI · NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ *
+ * ONE definition of the palette for nyxus-web, nyxus-notepad, nyxus-stickies,
+ * nyxus-sysmon, nyxus-widgets and mockup-sandbox. Before this file each of
+ * them carried a private copy, and all six copies were the same OFF-BRAND
+ * set — #ff00ff / #cc00ff / #0088ff / #ff5500 / #e8e0f5 — none of which is in
+ * the palette, and #e8e0f5 is on the FORBIDDEN list in nyxus_palette.py as the
+ * DARK MIRROR off-white the shell was purged of in July.
+ *
+ * Canon lives in artifacts/api-server/nyxus-scripts/nyxus_palette.py and
+ * nyxus-palette.css; the hex values below must match it exactly. HSL triples
+ * are the same colours in the space shadcn's tokens use — a comment on every
+ * line gives the hex so a mismatch is visible without a converter.
+ *
+ * Import this AFTER "tailwindcss" and BEFORE the app's own :root, so an app
+ * can still override an individual token deliberately.
+ * ========================================================================= */
+
+@theme {
+  /* Accents */
+  --color-nyxus-violet:  #7d3dff;  /* ACCENT_PRIMARY   */
+  --color-nyxus-magenta: #ff2dad;  /* ACCENT_SECONDARY */
+  --color-nyxus-green:   #39ff14;  /* ACCENT_OK        */
+  --color-nyxus-orange:  #ff8a1e;  /* ACCENT_WARN      */
+  --color-nyxus-cyan:    #2bd2ff;  /* CYAN_FIXED       */
+  --color-nyxus-red:     #ff2d55;  /* RED_FIXED        */
+  --color-nyxus-yellow:  #ffe600;  /* YELLOW_FIXED     */
+  --color-nyxus-orchid:  #e367ff;  /* ORCHID           */
+
+  /* Surfaces */
+  --color-nyxus-void:    #05060a;  /* VOID             */
+  --color-nyxus-panel:   #0a0d14;  /* panel elevation  */
+  --color-nyxus-raised:  #11151f;  /* raised elevation */
+
+  /* Text */
+  --color-nyxus-text:    #eef2fa;  /* WHITE_OFF        */
+  --color-nyxus-text2:   #c8ccd6;  /* GREY_LIGHT       */
+  --color-nyxus-dim:     #9aa0ad;  /* GREY_MID         */
+  --color-nyxus-ghost:   #6a6e78;  /* GREY_TERTIARY    */
+
+  /* Kept as aliases so existing markup does not break. They now resolve to
+   * canon rather than to the off-brand hexes they used to name. */
+  --color-nyxus-pink:    var(--color-nyxus-magenta);
+  --color-nyxus-purple:  var(--color-nyxus-violet);
+  --color-nyxus-blue:    var(--color-nyxus-cyan);
+  --color-nyxus-bg:      var(--color-nyxus-void);
+}
+
+:root {
+  --background: 228 33% 3%;          /* #05060a */
+  --foreground: 220 55% 96%;         /* #eef2fa */
+  --border: 260 100% 62%;            /* #7d3dff */
+
+  --card: 222 33% 6%;                /* #0a0d14 */
+  --card-foreground: 220 55% 96%;    /* #eef2fa */
+  --card-border: 260 100% 62%;       /* #7d3dff */
+
+  --popover: 223 29% 9%;             /* #11151f */
+  --popover-foreground: 220 55% 96%; /* #eef2fa */
+  --popover-border: 260 100% 62%;    /* #7d3dff */
+
+  --primary: 260 100% 62%;           /* #7d3dff violet  */
+  --primary-foreground: 228 33% 3%;  /* #05060a */
+  --secondary: 323 100% 59%;         /* #ff2dad magenta */
+  --secondary-foreground: 220 55% 96%;
+  --accent: 193 100% 58%;            /* #2bd2ff cyan    */
+  --accent-foreground: 228 33% 3%;
+  --destructive: 349 100% 59%;       /* #ff2d55 red     */
+  --destructive-foreground: 220 55% 96%;
+
+  --muted: 223 29% 9%;               /* #11151f */
+  --muted-foreground: 221 10% 64%;   /* #9aa0ad */
+  --input: 223 29% 9%;               /* #11151f */
+  --ring: 260 100% 62%;              /* #7d3dff */
+
+  --sidebar: 222 33% 6%;
+  --sidebar-foreground: 220 55% 96%;
+  --sidebar-border: 260 100% 62%;
+  --sidebar-primary: 260 100% 62%;
+  --sidebar-primary-foreground: 228 33% 3%;
+  --sidebar-accent: 323 100% 59%;
+  --sidebar-accent-foreground: 220 55% 96%;
+  --sidebar-ring: 260 100% 62%;
+}
