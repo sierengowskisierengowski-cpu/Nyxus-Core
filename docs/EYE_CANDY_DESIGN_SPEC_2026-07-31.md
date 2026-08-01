@@ -1172,3 +1172,378 @@ each), a small renderer/switcher in `nyxus-mood`, and staging so
 `~/.config/hypr/shaders/` actually ships — the staging gap in §2.1 is a bake
 issue and will bite exactly the way the wallpaper-staging glob did unless a
 gate covers it.
+
+---
+
+## 9. THE FOUR INTERACTION FEATURES
+
+These are the owner's four new asks. **One of them he already has**, two are
+straightforward, and one needs care because of a documented trap.
+
+### 9.1 Carrying work between stations — ✅ **HE ALREADY HAS THIS**
+
+> *"Can I move what I'm working on from station 1 to station 5?"*
+
+**Yes, and it has been bound the whole time.** This is a discoverability
+failure, not a missing feature. Verified in `hyprland.conf`:
+
+| Bind | Dispatcher | What it does |
+|---|---|---|
+| `Super+Shift+1…9,0` | `movetoworkspace, 1…10` | Send the focused window to station N **and follow it** (`hyprland.conf:503-512`) |
+| `Super+Alt+Shift+1…0` | `movetoworkspace, name:RELAY…RANGE` | Same, for the ten named companion stations (`:536-545`) |
+| `Super+Shift+S` | `movetoworkspace, special:magic` | **The "take this with me" pin he described** — the scratchpad (`:552`) |
+
+There are **163 active binds** in the shipped config. He is discovering them by
+asking, which means the real problem is that the keybind surface is not
+reachable when he needs it.
+
+**What is genuinely missing — two things, both small:**
+
+1. **`movetoworkspacesilent` is not bound anywhere.** The difference matters in
+   daily use and is exactly the "carry work" nuance:
+   - `movetoworkspace` = **take it there** (window moves, you follow)
+   - `movetoworkspacesilent` = **send it away** (window moves, you stay)
+
+   The second is the one you want when you are triaging — push a finished
+   window to CORE and keep working. **Recommend binding it to
+   `Super+Ctrl+1…0`.** Cheap, no conflict, immediately useful.
+2. **No way to move a whole group.** `Super+U` toggles a group
+   (`nyxus-hyprland-flair.conf`), and `movetoworkspace` on a grouped window
+   moves the whole group already — so this works, and is also just
+   undiscovered.
+
+**The actual fix is the keybind viewer, and it should be the dormant
+`cheatsheet` window (§4.8).** Requirements:
+
+- Reachable from the **right-click desktop menu** (§9.3) and from the Hub, not
+  only from `Super+/` — because if he cannot remember `Super+Shift+5`, he
+  cannot remember `Super+/` either.
+- **Generated from the config, never hand-maintained.** The current cheatsheet
+  has already drifted once — it claimed HOME was `Super+0`, which is workspace
+  10 (`HOME_AND_START_STATIONS_BRIEF` §1). Parse `bind*=` lines out of the
+  shipped `conf.d/` at build time, or read `hyprctl binds -j` live. A
+  hand-written list of 163 binds will be wrong within a week.
+- **Searchable**, grouped by task ("move a window", "switch station",
+  "windows", "media"), not by modifier.
+
+⚠ `hyprctl binds -j` is the robust source because it survives the hyprlang→Lua
+migration (§12.5); a parser for `.conf` syntax does not.
+
+### 9.2 Mouse move/resize without a modifier — **possible, but do not do it the obvious way**
+
+> *"press down on whatever I'm on and move or resize it"*
+
+**What exists today** (`hyprland.conf:555-556`):
+
+```
+bindm = $mod, mouse:272, movewindow     # Super + left-drag
+bindm = $mod, mouse:273, resizewindow   # Super + right-drag
+```
+
+**Why removing the modifier is a bad idea, plainly.** `bindm` with no modifier
+binds the *bare* mouse button globally. Every plain left-click-drag anywhere on
+screen becomes "move the window":
+
+- You cannot select text in a terminal or browser.
+- You cannot drag a file, a tab, a slider, or a selection box.
+- You cannot drag-resize a column in any app.
+- Clicking a NYXUS bar pill and twitching 2 px moves the window instead.
+
+That is not a tuning problem, it is what the binding means. **It would make the
+desktop less like Windows, not more** — which fails the north star directly.
+
+**Four viable options, in the order I would try them:**
+
+#### Option A — Touchpad gestures ★ RECOMMENDED
+
+Hyprland 0.56.1 has **native trackpad move and resize gestures**, verified in
+source — `CMoveTrackpadGesture` and `CResizeTrackpadGesture`
+(`src/config/legacy/ConfigManager.cpp:1985-1991`). Syntax:
+
+```
+gesture = <fingers>, <direction>, [mod:MOD], [scale:F], <action> [args]
+```
+
+Actions available: `dispatcher`, `workspace`, `resize`, `move`, `special`,
+`close`, `float`, `fullscreen`, `cursorZoom`, `scrollMove`, `unset`.
+Directions: `swipe`, `left/right/up/down`, `horizontal`, `vertical`, `pinch`,
+`pinchin`, `pinchout` (`src/managers/input/trackpad/TrackpadGestures.cpp:13-38`).
+
+Proposed:
+
+```
+gesture = 4, swipe, move       # 4-finger drag  -> move the focused window
+gesture = 4, pinch, resize     # 4-finger pinch -> resize it
+```
+
+**This is exactly what he asked for — grab it and move it, no modifier, no
+keyboard — with zero cost to text selection**, because a 4-finger gesture
+cannot be confused with a click-drag. It is also the most "better than Windows"
+answer available: Windows has no equivalent.
+
+⚠ **Correction to an assumption in the brief:** the config contains exactly
+**one** gesture — `gesture = 3, horizontal, workspace` (`hyprland.conf:219`).
+There is **no 4-finger gesture bound to mission control**; mission control is
+`Super+F3` and `Super+Alt+A` (`nyxus-hyprland-mission.conf:64`,
+`nyxus-signature.conf:83`). So 4-finger is **free**, and this proposal
+conflicts with nothing.
+
+#### Option B — A more comfortable modifier
+
+`bindm = ALT, mouse:272, movewindow`. Alt-drag is the long-standing X11/Linux
+convention and many apps expect it. Cheap, familiar, safe.
+**Downside:** conflicts with Alt-drag inside some apps (GIMP, Blender).
+
+#### Option C — Edge/corner drag zones
+
+Hyprland already ships `general:resize_on_border = true` — **this build already
+has it enabled** (`nyxus-hyprland-general.conf`). Dragging a window border
+resizes it with no modifier at all, exactly like Windows. There is no
+equivalent for *moving*, because there is no titlebar (`hyprbars` would add one
+and is excluded, §5.8).
+
+**Worth telling him: border-resize already works today.** Another
+discoverability item.
+
+#### Option D — A toggleable "arrange mode"
+
+A keybind flips a submap where bare mouse buttons move/resize, with a clear
+on-screen indicator, and Escape exits. Hyprland `submap` supports this cleanly.
+
+**Pro:** gives him literally what he asked for, safely, because it is scoped.
+**Con:** it is a mode, and modes need an unmistakable indicator or they trap
+people — this build has already been trapped twice by surfaces it could not
+escape. If built: the indicator must be a compositor-level change (e.g. a
+border colour flip via `hyprctl`) so it is visible even if eww is wedged, and
+Escape must be bound *outside* the submap's own logic.
+
+**Recommendation: A + B together, and tell him C already works.** D only if he
+still wants it after trying the gestures.
+
+### 9.3 Right-click desktop context menu — **possible; the safe design is not the obvious one**
+
+> *"right-click anywhere on the desktop and a small sleek menu pops up at the
+> cursor — not a whole window."*
+
+#### The real constraint
+
+**There is no desktop in Hyprland.** The wallpaper is a layer-shell surface
+(`swww`/`mpvpaper`) on the background layer, and it does not accept input.
+There is nothing to right-click *on*. So the menu needs (a) something to
+receive the click, and (b) something to draw the menu at the cursor.
+
+#### ⚠ The safety constraint, which decides the design
+
+HANDOFF §7 is unambiguous, and it was bought with hard resets:
+
+> *"Full-screen GTK/eww overlays MUST be bottom-layer + empty input region
+> re-applied per-frame, or they TRAP the desktop (the 'whispers' incident
+> forced multiple hard resets). Never OVERLAY-layer a full-screen input
+> surface."*
+
+And it happened again during a later session: a leftover full-screen overlay
+probe *"swallowed every pointer event on the desktop"* until it was killed
+(gate `13ai`).
+
+**A full-screen click-catcher is therefore the one implementation that must not
+be built.** It is also unnecessary.
+
+#### ★ Recommended: no catcher surface at all — bind the button
+
+Hyprland can bind a mouse button globally, the same way `bindm` already does:
+
+```
+bind = , mouse:273, exec, nyxus-desktop-menu
+```
+
+…with the critical refinement that it must **not** fire inside applications. Two
+ways to achieve that, and the second is better:
+
+1. `bind` with a `windowrule`-style guard — fragile.
+2. **`nyxus-desktop-menu` decides for itself.** It runs
+   `hyprctl activewindow -j` and **exits immediately** unless the result is
+   empty (no focused window = the pointer is over bare desktop). One `hyprctl`
+   call, ~5 ms, no surface, nothing to trap. If a window is focused, the
+   right-click is simply not consumed and the app sees it normally.
+
+This is the correct shape: **the menu costs nothing when it is not wanted, and
+there is no persistent input surface anywhere in the design.**
+
+#### Renderer: rofi, not eww ★
+
+He already has rofi themed to ALIEN NEON — five `.rasi` themes ship
+(`rofi-nyxus`, `rofi-launcher`, `rofi-power`, `rofi-config`, `rofi-startmenu`)
+plus `rofi-scripts/`.
+
+| | rofi at cursor | bespoke eww popup |
+|---|---|---|
+| Cursor anchoring | **native** — `-theme-str 'window {location: north west; x-offset: Npx; y-offset: Npx;}'` fed from `hyprctl cursorpos` | eww `:geometry` is monitor-anchored; you must compute offsets and it is still a layer surface |
+| Traps the desktop? | **No** — normal window, its own keyboard grab, dies on Escape/focus loss | **Yes, potentially** — this is exactly the `start-search` exception HANDOFF already flags as breaking two rules at once |
+| Keyboard nav | free | must be built; **eww has no `:onkeydown`** (HANDOFF), so Escape must be a compositor bind |
+| Theming | already ALIEN NEON | would need new CSS |
+| Effort | **hours** | days |
+
+**Recommend rofi.** The one thing to verify is the blur — rofi is an
+`xdg-toplevel`, not a layer surface, so it is covered by
+`decoration:blur`/window rules, not by the `nyxus-*` layerrules. A
+`windowrule = opacity …, match:class ^(Rofi)$` may be needed to match the
+glass. Small, and it keeps the menu out of the layer-shell trap space entirely.
+
+#### Proposed contents
+
+Keep it to one screen, no submenus (he said *small and sleek*):
+
+```
+  New terminal here
+  Open file manager
+  ─────────────
+  Change wallpaper          -> nyxus-wall-next
+  Display settings          -> nyxus-settings (Displays)
+  ─────────────
+  Keybinds  (Super+/)       -> the §9.1 viewer
+  Stations                  -> station switcher
+  ─────────────
+  NYXUS Settings
+  Lock / Power              -> nyxus-powermenu
+```
+
+**Every entry must show its keybind** where one exists. A context menu that
+teaches its own shortcuts is the direct fix for §9.1's discoverability problem
+— which is the coherence point in §10.
+
+### 9.4 Single-station / "normal desktop" mode — **possible; the highest-risk item here**
+
+> *"an option to run as one ordinary desktop with no stations, switchable back"*
+
+#### Precedent exists and is good
+
+`nyxus-hacker-mode` already performs a full mode flip and the mechanism is
+sound (`nyxus-hacker-mode:34-44, 165-208`):
+
+```
+stations.json          <- the ACTIVE matrix
+stations-hacker.json   <- the alternate matrix
+stations-normal.bak.json           <- backup of the active one, taken on flip
+nyxus-stations.conf                <- GENERATED from the active matrix
+nyxus-stations.conf.normal.bak     <- backup of the generated shard
+gen_stations_conf()    <- regenerates the shard from scratch, every flip
+```
+
+So a third matrix — `stations-solo.json` — is the natural implementation, and
+it is mostly **data**, not code.
+
+#### ⚠ But this is the most fragile subsystem in the build
+
+The receipts, all in HANDOFF:
+
+- **`nyxus-stations.conf` is regenerated from scratch on every flip**, and
+  hand-appended content in it was destroyed until the named stations were moved
+  to the separate `nyxus-stations-named.conf`. Note `gen_stations_conf()`'s own
+  banner: *"Do not hand-edit — edit the matrix JSON."*
+- **Gate `13w`** exists specifically because station identity must stay
+  identical across `stations.json` and `stations-hacker.json`.
+- **Gate `13ab`** exists because the generated shard **drifts** from
+  `stations.json`, and *"the first hacker-mode flip silently rewrites what the
+  stations do."*
+- Pills dispatch **by number**; the deck watcher maps **by name**. They line up
+  only because the shard carries `defaultName:OPS`. Drop or fail to source that
+  shard and *"every numbered station reports `.name` as `"1"`, no map entry
+  matches, and `_sync` closes every deck and opens none"* — i.e. clicking a
+  station does nothing.
+- A numeric `name:0` resolves into Hyprland's **hidden SPECIAL range**; gate
+  `13ag` scans 1059 files for it.
+
+#### The design that cannot damage station identity
+
+Five rules. Together they mean SOLO mode is a *view*, not a rewrite.
+
+1. **SOLO must not write `stations.json`.** Hacker mode swaps the active matrix
+   file; SOLO must not. Instead add a top-level `"mode"` key read by consumers,
+   or keep `stations-solo.json` strictly as a *presentation* overlay. **The
+   station identity table stays exactly one thing, always.** This alone removes
+   most of the risk, because every gate above is about identity drift.
+2. **SOLO changes what is *shown*, not what *exists*.** Concretely: the rail
+   renders one pill instead of twelve; `nyxus-home-deck` opens no deck. The ten
+   workspaces still exist and every `movetoworkspace` bind still works — so
+   nothing can strand a window on a station he can no longer reach. **This is
+   also the recovery path if SOLO misbehaves.**
+3. **Never regenerate `nyxus-stations.conf` for SOLO.** The workspace rules are
+   harmless when unused. Regenerating it is what destroys things.
+4. **Named stations stay in `nyxus-stations-named.conf`, untouched.** That file
+   exists precisely because generated content ate hand-written content once.
+5. **Extend gate `13w` to a third file** *before* shipping a third matrix, if
+   one is used at all. A new matrix that no gate compares is exactly how the
+   drift in `13ab` happened.
+
+#### What SOLO should actually look like
+
+Not an empty desktop — a **familiar** one, per the north star:
+
+| Element | Stations mode | SOLO mode |
+|---|---|---|
+| Left rail | 12 station pills | **hidden** (or one HOME pill) |
+| Decks | per-station | **none** |
+| Dock (§4.2) | optional | **on by default** — this is the Windows-familiar surface |
+| Top bar | unchanged | unchanged |
+| Bottom bar | unchanged | unchanged |
+| Alt-Tab / taskbar | window list | **window list becomes primary** (`taskbar.sh` already exists, §4.2) |
+| `Super+1…0` | switch station | still work — undiscoverable but not broken |
+
+**SOLO mode is where the dock stops being optional.** With no station rail,
+the dock is how you move between windows — and it makes SOLO genuinely the
+"normal Windows-like desktop" he described rather than a stripped one. The two
+features are the same project, which is the strongest argument for doing §4.2
+first.
+
+**Effort: Medium**, and mostly in `nyxus-home-deck` and `workspaces.sh`, not in
+the matrix. **Risk: Medium-High** if it touches `stations.json`; **Low** if it
+follows rule 1.
+
+---
+
+## 10. HOW IT FLOWS TOGETHER
+
+> *"blend it all together so it just flows like a river going downstream."*
+
+The four features in §9 are not bolt-ons. Each one is either a consumer of
+machinery that already exists, or the delivery vehicle for one of the three
+signatures. That is what makes this a system rather than a feature list.
+
+**One input spine.** `nyxus-sense` is the only source of ambient state. Mood
+sets hue (Signature 2 slow tier); `CAVA_BASS` sets amplitude (fast tier);
+`threat` and `pulsed` own rare strikes. The **screen grade** (§8.3), the
+**border ring** (§4.3), the **card rims**, and the **glow** (§2.4) are four
+renderings of the *same* number. Nothing has a private animation, so nothing
+can disagree.
+
+**One disclosure grammar.** The dock (§4.2), scrollbars, card actions and the
+transport row all use the same four states and the same 180/420 ms pair (§7).
+Once he learns it on the dock, he already knows it everywhere. The right-click
+menu (§9.3) is the same grammar at pointer scale — appear at the cursor, do the
+job, withdraw.
+
+**One material.** Three depths, one glass, one starfield (§8.1). Rofi is the
+one deliberate exception and it is made to match by a window rule, rather than
+being allowed to look like a different product.
+
+**The features reinforce each other rather than stacking:**
+
+- The **right-click menu** (§9.3) is the fix for the **discoverability
+  failure** in §9.1 — it is where the keybind viewer lives, and every entry
+  teaches its shortcut. Two of his four asks are one solution.
+- The **keybind viewer** reuses the dormant **`cheatsheet` window** (§4.8) —
+  no new surface.
+- **SOLO mode** (§9.4) is only convincing because the **dock** (§4.2) exists —
+  and the dock is the **reference implementation of the VEIL** (§7.5). Three
+  asks, one build.
+- The **dock's reveal** exercises `layersIn`/`fadeLayersIn` (§3.1), which then
+  applies to every flyout in the build for free.
+- **`tintd`** (§4.3) makes borders follow the app; the **mood grade** (§8.3)
+  makes the screen follow the machine. Same idea at two scales, and they use
+  the precedence table in §6.2 so they never fight.
+
+**The single sentence that ties it to the north star:** every one of these is a
+thing Windows also does — a taskbar, a right-click menu, a keyboard shortcut
+list, drag to move, one desktop — done with a coherent material, a coherent
+motion, and a reactive layer that no mainstream OS has. **Familiar shape,
+better execution.** That is the whole design.
