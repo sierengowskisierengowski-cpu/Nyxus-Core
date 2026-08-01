@@ -118,6 +118,67 @@ fi
 ok "running on Arch as root with mkarchiso available"
 ok "iso version: ${ISO_DATE} → ${ISO_NAME}"
 
+# ── memory preflight: a bake must not be able to freeze the build box ────
+# 2026-08-01. The owner hard-froze this machine twice during bakes. The bake is
+# the heaviest thing that ever runs here — mksquashfs with zstd -19 over a
+# ~7 GB airootfs, taking every core it can find — and the safety net that was
+# supposed to catch memory exhaustion was not running: /etc/default/earlyoom
+# passed "-N --avoid <regex>", but -N takes an argument, so earlyoom read
+# --avoid as its post-kill script path and refused the command line. It had
+# been dead on every boot. Meanwhile ollama, ten honeypot containers, Bifrost
+# and jeTT all sit resident on the same box.
+#
+# So: say the numbers out loud before starting, and refuse outright if there is
+# not enough headroom to finish. A bake that stops at the preflight costs
+# nothing; one that dies at 80% costs a hard reboot and an unclean tree.
+step "memory preflight"
+_mem_total_mb=$(( $(awk '/^MemTotal:/{print $2}' /proc/meminfo) / 1024 ))
+_mem_avail_mb=$(( $(awk '/^MemAvailable:/{print $2}' /proc/meminfo) / 1024 ))
+_swap_total_mb=$(( $(awk '/^SwapTotal:/{print $2}' /proc/meminfo) / 1024 ))
+printf "  ${B}memory:${R} %s MiB total · %s MiB available · %s MiB swap\n" \
+  "${_mem_total_mb}" "${_mem_avail_mb}" "${_swap_total_mb}"
+
+if systemctl is-active --quiet earlyoom 2>/dev/null; then
+  ok "earlyoom is running (a runaway bake gets killed instead of wedging the box)"
+else
+  warn "earlyoom is NOT running — nothing will stop memory exhaustion before the"
+  warn "  machine stalls. Check:  systemctl status earlyoom"
+  warn "  and compare /etc/default/earlyoom against the one in this profile."
+fi
+
+# Name the other heavy residents. Not fatal — the operator may want them up —
+# but a frozen bake is much likelier with a loaded model and ten containers.
+_heavy=()
+systemctl is-active --quiet ollama 2>/dev/null && _heavy+=("ollama")
+systemctl is-active --quiet bifrost-guardian 2>/dev/null && _heavy+=("bifrost-guardian")
+systemctl is-active --quiet jett-daemon 2>/dev/null && _heavy+=("jett-daemon")
+if command -v docker >/dev/null 2>&1; then
+  _dc="$(docker ps -q 2>/dev/null | wc -l)"
+  (( _dc > 0 )) && _heavy+=("${_dc} docker container(s)")
+fi
+if (( ${#_heavy[@]} > 0 )); then
+  warn "also resident: ${_heavy[*]}"
+  warn "  consider stopping them for the bake:  sudo systemctl stop ollama docker"
+fi
+
+# 4 GiB available is the floor. mkarchiso's pacstrap, the 7 GB airootfs copy and
+# mksquashfs's block queues all want room, and going to swap mid-squash is what
+# turns a slow bake into an unresponsive machine.
+NYX_MIN_FREE_MB="${NYX_MIN_FREE_MB:-4096}"
+if (( _mem_avail_mb < NYX_MIN_FREE_MB )); then
+  fail "only ${_mem_avail_mb} MiB available; this bake wants at least ${NYX_MIN_FREE_MB} MiB"
+  fail "  free some up (stop ollama/docker), or override with NYX_MIN_FREE_MB=<mb>"
+  fail "  Refusing to start rather than freeze the machine at 80%."
+  exit 1
+fi
+ok "enough headroom to bake (${_mem_avail_mb} MiB available)"
+
+# Cap mksquashfs so it cannot expand into whatever is left. Default: half of
+# available, floored at 1 GiB. mksquashfs otherwise sizes its queues off TOTAL
+# memory, which ignores everything else already resident on the box.
+NYX_SQUASH_MEM_MB="${NYX_SQUASH_MEM_MB:-$(( _mem_avail_mb / 2 ))}"
+(( NYX_SQUASH_MEM_MB < 1024 )) && NYX_SQUASH_MEM_MB=1024
+
 # ── clean up the throwaway profile copy on exit ──────────────────────────
 # The bake works entirely on ${PROFILE_DIR} (a /var/tmp copy of the committed
 # repo profile — see the copy step in preflight), so there is nothing in the
@@ -423,13 +484,17 @@ sed -i -E "s/^BUILD_ID=.*/BUILD_ID=${BUILD_STAMP}/" "${OSRELEASE}"
 # image size on this image's own content (see profiledef.sh for the numbers).
 # `sudo NYX_SQUASH_COMP=xz ./build-iso.sh` restores the pre-2026.07.30 xz
 # image if size ever matters more than speed.
+# `-mem` is added from the preflight above. Without it mksquashfs sizes its
+# block queues from TOTAL system memory, which ignores everything already
+# resident — and on this box that is ollama plus ten containers. That is how a
+# bake takes the whole machine down instead of just being slow.
 NYX_SQUASH_COMP="${NYX_SQUASH_COMP:-zstd}"
 case "${NYX_SQUASH_COMP}" in
   zstd)
-    sed -i -E "s|^airootfs_image_tool_options=\(.*\)|airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '19' '-b' '1M')|" "${PROFILEDEF}"
+    sed -i -E "s|^airootfs_image_tool_options=\(.*\)|airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '19' '-b' '1M' '-mem' '${NYX_SQUASH_MEM_MB}M')|" "${PROFILEDEF}"
     ;;
   xz)
-    sed -i -E "s|^airootfs_image_tool_options=\(.*\)|airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M')|" "${PROFILEDEF}"
+    sed -i -E "s|^airootfs_image_tool_options=\(.*\)|airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M' '-mem' '${NYX_SQUASH_MEM_MB}M')|" "${PROFILEDEF}"
     warn "NYX_SQUASH_COMP=xz — smaller ISO, but ~7.6x slower cold reads on the live stick"
     ;;
   *)
