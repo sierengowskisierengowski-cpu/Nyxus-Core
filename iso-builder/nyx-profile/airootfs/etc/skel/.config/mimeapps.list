@@ -1,0 +1,160 @@
+# NYXUS — default applications                                    rev 2026-08-01
+# ~/.config/mimeapps.list · XDG mime-apps spec · highest-precedence user file
+#
+# BEFORE THIS FILE EXISTED, NOTHING ON NYXUS OPENED ANYTHING BY ASSOCIATION.
+# There was no mimeapps.list anywhere in the repo, and zero MimeType= lines
+# across all 63 shipped .desktop files, so file-type resolution fell all the way
+# through to the desktop-file cache and the winner was whichever installed
+# .desktop happened to claim the type. In practice Firefox claims application/pdf,
+# most image types and http/https — so a PDF opened in a browser tab, a PNG
+# opened in a browser tab, and there was no image viewer or PDF reader on the
+# image at all. See docs/DE_COMPLETENESS_AND_EDITIONS_2026-07-31.md §1.2-B.
+#
+# It ships in SKEL rather than being generated at first boot on purpose. The old
+# /etc/nyxus-firstboot.d/03-mime-defaults.sh ran as root (the firstboot service
+# has no User=), so its three `xdg-mime default` calls wrote
+# /root/.config/mimeapps.list and the nyx user never saw any of it. A file in
+# skel has no user context to get wrong and is reviewable in git.
+#
+# ── HOW TO EDIT THIS SAFELY ─────────────────────────────────────────────────
+# Each value is a SEMICOLON-SEPARATED, ORDERED list of desktop IDs. The first
+# one that exists and can handle the type wins; entries that do not resolve are
+# skipped. That is deliberate: most upstream IDs below could not be verified on
+# the build box (`pacman -Fl` needs a synced files database, which needs root),
+# so every line ends in a fallback that is verified to ship. A wrong upstream ID
+# therefore degrades to the fallback instead of leaving a type unhandled.
+#
+# Gate 13pk asserts every ID named here either ships in
+# airootfs/usr/share/applications/ or belongs to a package in packages.x86_64.
+
+[Default Applications]
+
+# ── folders ─────────────────────────────────────────────────────────────────
+# nyxus-files is the NYXUS file manager and takes %F; nautilus is the fallback
+# (it is on the image as the gvfs/trash provider anyway).
+inode/directory=nyxus-files.desktop;org.gnome.Nautilus.desktop;
+
+# ── plain text + markdown → NYXUS Notepad ───────────────────────────────────
+text/plain=nyxus-notepad.desktop;org.gnome.TextEditor.desktop;
+text/markdown=nyxus-notepad.desktop;org.gnome.TextEditor.desktop;
+text/x-markdown=nyxus-notepad.desktop;org.gnome.TextEditor.desktop;
+text/csv=nyxus-notepad.desktop;org.gnome.TextEditor.desktop;
+text/x-log=nyxus-notepad.desktop;org.gnome.TextEditor.desktop;
+
+# ── source + config files → gnome-text-editor ───────────────────────────────
+# Not Notepad: it has no syntax highlighting. The fragment this replaces aimed
+# these at org.kde.kate.desktop, and `kate` was never in packages.x86_64.
+text/x-python=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-python3=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-csrc=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-chdr=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-c++src=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-c++hdr=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-java=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-lua=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-sql=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-go=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/rust=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-makefile=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-patch=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/x-shellscript=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+application/x-shellscript=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+application/json=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+application/toml=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+application/yaml=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+application/xml=org.gnome.TextEditor.desktop;firefox.desktop;
+text/xml=org.gnome.TextEditor.desktop;firefox.desktop;
+text/css=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+text/javascript=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+
+# ── documents ───────────────────────────────────────────────────────────────
+# zathura + zathura-pdf-mupdf are new in this wave; before them there was no
+# PDF reader on the ISO at all. Firefox stays as the fallback because it is what
+# was silently handling PDFs before.
+application/pdf=org.pwmt.zathura.desktop;firefox.desktop;
+application/postscript=org.pwmt.zathura.desktop;
+application/epub+zip=org.pwmt.zathura.desktop;firefox.desktop;
+
+# ── images → loupe ──────────────────────────────────────────────────────────
+# Also new in this wave: there was no image viewer, so every image opened in a
+# browser tab.
+image/png=org.gnome.Loupe.desktop;firefox.desktop;
+image/jpeg=org.gnome.Loupe.desktop;firefox.desktop;
+image/gif=org.gnome.Loupe.desktop;firefox.desktop;
+image/webp=org.gnome.Loupe.desktop;firefox.desktop;
+image/avif=org.gnome.Loupe.desktop;firefox.desktop;
+image/bmp=org.gnome.Loupe.desktop;firefox.desktop;
+image/tiff=org.gnome.Loupe.desktop;firefox.desktop;
+image/x-icon=org.gnome.Loupe.desktop;firefox.desktop;
+image/heif=org.gnome.Loupe.desktop;
+image/svg+xml=org.gnome.Loupe.desktop;firefox.desktop;
+
+# ── audio → audacious (the WAVE station player), mpv as fallback ────────────
+audio/mpeg=audacious.desktop;mpv.desktop;
+audio/flac=audacious.desktop;mpv.desktop;
+audio/x-flac=audacious.desktop;mpv.desktop;
+audio/x-wav=audacious.desktop;mpv.desktop;
+audio/wav=audacious.desktop;mpv.desktop;
+audio/ogg=audacious.desktop;mpv.desktop;
+audio/x-vorbis+ogg=audacious.desktop;mpv.desktop;
+audio/opus=audacious.desktop;mpv.desktop;
+audio/aac=audacious.desktop;mpv.desktop;
+audio/mp4=audacious.desktop;mpv.desktop;
+audio/x-m4a=audacious.desktop;mpv.desktop;
+
+# ── video → mpv ─────────────────────────────────────────────────────────────
+# The gst-plugins-good/bad/ugly + gst-libav set is already packaged for codec
+# coverage, and ffmpegthumbnailer (new in this wave) gives these thumbnails.
+video/mp4=mpv.desktop;
+video/x-matroska=mpv.desktop;
+video/webm=mpv.desktop;
+video/quicktime=mpv.desktop;
+video/x-msvideo=mpv.desktop;
+video/mpeg=mpv.desktop;
+video/x-flv=mpv.desktop;
+video/ogg=mpv.desktop;
+application/x-matroska=mpv.desktop;
+
+# ── archives → file-roller (7zip + unrar are the backends, already packaged) ─
+application/zip=org.gnome.FileRoller.desktop;
+application/x-tar=org.gnome.FileRoller.desktop;
+application/x-compressed-tar=org.gnome.FileRoller.desktop;
+application/gzip=org.gnome.FileRoller.desktop;
+application/x-bzip2=org.gnome.FileRoller.desktop;
+application/x-bzip-compressed-tar=org.gnome.FileRoller.desktop;
+application/x-xz=org.gnome.FileRoller.desktop;
+application/x-xz-compressed-tar=org.gnome.FileRoller.desktop;
+application/zstd=org.gnome.FileRoller.desktop;
+application/x-7z-compressed=org.gnome.FileRoller.desktop;
+application/vnd.rar=org.gnome.FileRoller.desktop;
+application/x-rar=org.gnome.FileRoller.desktop;
+
+# ── web ─────────────────────────────────────────────────────────────────────
+# xdg-open only exists on this image because chromium hard-depends on
+# xdg-utils; `xdg-utils` is listed explicitly now so that stops being an
+# accident. Firefox is the default browser; chromium is the fallback.
+text/html=firefox.desktop;chromium.desktop;
+application/xhtml+xml=firefox.desktop;chromium.desktop;
+x-scheme-handler/http=firefox.desktop;chromium.desktop;
+x-scheme-handler/https=firefox.desktop;chromium.desktop;
+x-scheme-handler/about=firefox.desktop;chromium.desktop;
+x-scheme-handler/unknown=firefox.desktop;chromium.desktop;
+
+# NO x-scheme-handler/mailto LINE, ON PURPOSE. The study asks for mailto
+# coverage, but no mail client is packaged (no thunderbird, evolution, geary or
+# claws-mail in packages.x86_64) and pointing mailto: at a browser that has no
+# webmail handler registered would open a blank tab. An unhandled scheme at
+# least produces a visible "no application" prompt. Add the line together with
+# the mail client, not before it.
+
+# ── Open With ───────────────────────────────────────────────────────────────
+# Not defaults — these just have to appear in the "Open With" list so a user is
+# never stuck with one choice.
+[Added Associations]
+inode/directory=org.gnome.Nautilus.desktop;nyxus-files.desktop;
+text/plain=org.gnome.TextEditor.desktop;nyxus-notepad.desktop;
+application/pdf=firefox.desktop;chromium.desktop;
+image/png=firefox.desktop;org.gnome.Loupe.desktop;
+image/jpeg=firefox.desktop;org.gnome.Loupe.desktop;
+audio/mpeg=mpv.desktop;audacious.desktop;
+video/mp4=firefox.desktop;mpv.desktop;

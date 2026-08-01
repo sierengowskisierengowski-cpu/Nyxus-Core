@@ -589,6 +589,17 @@ rm -rf \
   "${SKEL}/.config/alacritty" \
   "${OPT_NYXUS}" \
   "${WALLS_SYS}"
+
+# XDG user directories, created in skel so useradd -m copies them into every
+# new home. Nothing created these before: the only attempt was firstboot
+# fragment 02-xdg-user-dirs.sh, which ran as ROOT and so populated /root. The
+# directory list must stay in agreement with skel/.config/user-dirs.dirs, which
+# is where gate 13pk derives it from. Git cannot carry empty directories, which
+# is why they are made here rather than committed.
+for _xdgdir in Desktop Documents Downloads Music Pictures Videos Public Templates; do
+  mkdir -p "${SKEL}/${_xdgdir}"
+done
+
 mkdir -p \
   "${SKEL}/.config/hypr/conf.d" \
   "${SKEL}/.config/hypr/walls" \

@@ -3,11 +3,19 @@ Type=Application
 Name=NYXUS Notepad
 GenericName=Notepad
 Comment=Quick text editor with autosave
-Exec=/usr/local/bin/nyxus notepad
+Exec=/usr/local/bin/nyxus notepad %F
 TryExec=/usr/local/bin/nyxus
 Icon=accessories-text-editor
 Terminal=false
 Categories=Office;TextEditor;
+# Plain-text families only. nyxus_notepad.py reads UTF-8 text and renders a
+# markdown preview; it has no syntax highlighting, so the source-code types go
+# to gnome-text-editor in mimeapps.list instead of being claimed here. Claiming
+# a type an app cannot open is worse than not claiming it.
+# The %F above is load-bearing: this app ignored argv completely until
+# 2026-08-01 (it called run(None)), so it could not have honoured an
+# association even with this line present.
+MimeType=text/plain;text/markdown;text/x-markdown;text/csv;text/x-log;application/x-subrip;
 Keywords=NYXUS;NYX;Notepad;
 StartupNotify=true
 StartupWMClass=nyxus.notepad

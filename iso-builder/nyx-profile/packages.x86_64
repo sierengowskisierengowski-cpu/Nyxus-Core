@@ -363,6 +363,24 @@ qt6ct
 # ships here.
 ffmpegthumbnailer
 
+# ── DE completeness Wave 2 · the MIME substrate (§2.2) ────────────────────
+# Both of these were ALREADY on the ISO, and both only by accident. Listing
+# them explicitly is the whole point: the accidents are load-bearing and one of
+# them breaks the moment a lighter edition drops a browser.
+#
+# xdg-utils — xdg-open and xdg-mime themselves, i.e. the mechanism the entire
+# mimeapps.list depends on. It reached the image only because CHROMIUM
+# hard-depends on it. The daily edition planned in
+# DAILY_DRIVER_PRODUCT_BRIEF_2026-08-01.md drops chromium, and the existing
+# packages.x86_64.lean tier already does — which means that tier has no
+# xdg-open and no xdg-mime at all, and nothing opens anything by association.
+xdg-utils
+# xdg-user-dirs — ~/Documents, ~/Downloads, ~/Pictures and friends. Reached
+# only transitively via nautilus → xdg-user-dirs-gtk, and the firstboot
+# fragment that called xdg-user-dirs-update did so as root with `|| true`, so
+# a break in that chain silently left the user with a bare home directory.
+xdg-user-dirs
+
 # ── archiso runtime requirements ──────────────────────────────────
 arch-install-scripts
 archinstall

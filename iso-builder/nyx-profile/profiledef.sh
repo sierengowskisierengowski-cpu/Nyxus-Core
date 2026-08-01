@@ -66,7 +66,6 @@ file_permissions=(
   ["/etc/grub.d/41_nyxus_recovery"]="0:0:755"
   ["/etc/nyxus-firstboot.d/01-machine-id.sh"]="0:0:755"
   ["/etc/nyxus-firstboot.d/02-xdg-user-dirs.sh"]="0:0:755"
-  ["/etc/nyxus-firstboot.d/03-mime-defaults.sh"]="0:0:755"
   ["/etc/nyxus-firstboot.d/04-welcome.sh"]="0:0:755"
   ["/etc/nyxus-firstboot.d/05-icon-cache.sh"]="0:0:755"
   ["/etc/nyxus-firstboot.d/06-honeypot-stack.sh"]="0:0:755"

@@ -299,8 +299,15 @@ def save_state(state: dict) -> None:
 
 class NyxusNotepad(Adw.Application):
     def __init__(self):
+        # HANDLES_COMMAND_LINE so a path on argv is actually opened. Without it
+        # this application ignored its arguments entirely — main() called
+        # run(None) — so `nyxus notepad somefile.txt` opened an empty buffer and
+        # nyxus-notepad.desktop could not honestly claim any MIME type. It is
+        # the default handler for text/plain now, and xdg-open hands the
+        # handler a path.
         super().__init__(application_id="io.nyxus.notepad",
-                         flags=Gio.ApplicationFlags.NON_UNIQUE)
+                         flags=(Gio.ApplicationFlags.NON_UNIQUE
+                                | Gio.ApplicationFlags.HANDLES_COMMAND_LINE))
         try: Adw.init()
         except Exception: pass
         self._current_path: str | None = None
@@ -319,6 +326,20 @@ class NyxusNotepad(Adw.Application):
                     traceback.print_exc(file=f)
             except Exception: pass
             print(f"NYXUS Notepad crashed — see {log}")
+
+    def do_command_line(self, cmdline):
+        # HANDLES_COMMAND_LINE means do_activate is not called for us, so build
+        # the window first and only then load the file. A missing or unreadable
+        # argument leaves an empty buffer rather than failing to start.
+        self.activate()
+        for arg in cmdline.get_arguments()[1:]:
+            if arg.startswith("-"):
+                continue
+            path = os.path.abspath(os.path.expanduser(arg))
+            if os.path.isfile(path):
+                self._open_path(path)
+                break
+        return 0
 
     # ── UI ───────────────────────────────────────────────────────────────
     def _build_ui(self):
@@ -782,7 +803,7 @@ class NyxusNotepad(Adw.Application):
 
 if __name__ == "__main__":
     try:
-        NyxusNotepad().run(None)
+        NyxusNotepad().run(sys.argv)
     except Exception:
         log = "/tmp/nyxus-notepad.log"
         try:

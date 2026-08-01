@@ -1,0 +1,31 @@
+# NYXUS — XDG user directories                                    rev 2026-08-01
+# ~/.config/user-dirs.dirs · xdg-user-dirs spec
+#
+# WHY THIS IS SHIPPED RATHER THAN GENERATED. The only thing that created these
+# directories was /etc/nyxus-firstboot.d/02-xdg-user-dirs.sh calling
+# `xdg-user-dirs-update --force 2>/dev/null || true`, and:
+#   * nyxus-firstboot.service has no User=, so it ran as ROOT and created
+#     /root/Documents, /root/Downloads and so on. The nyx user got nothing.
+#   * `xdg-user-dirs` itself was reached only transitively, via
+#     nautilus → xdg-user-dirs-gtk. It is listed explicitly now.
+#   * every failure was swallowed by `|| true`, so a broken chain was silent.
+# A first-time user with no ~/Documents and no ~/Downloads sees every file
+# picker default to a bare home directory — one of the loudest possible signals
+# that a system is unfinished. See DE_COMPLETENESS_AND_EDITIONS §2.2.
+#
+# Shipping the file makes XDG_*_DIR resolve for every app on the very first
+# login without any command having to run in any particular user context. The
+# directories themselves are created under /etc/skel by build-iso.sh, so
+# useradd -m copies them into each new home.
+#
+# Keep this file and build-iso.sh's skel mkdir list in agreement — gate 13pk
+# derives the required directory list from THIS file and fails if the bake would
+# not create one of them.
+XDG_DESKTOP_DIR="$HOME/Desktop"
+XDG_DOCUMENTS_DIR="$HOME/Documents"
+XDG_DOWNLOAD_DIR="$HOME/Downloads"
+XDG_MUSIC_DIR="$HOME/Music"
+XDG_PICTURES_DIR="$HOME/Pictures"
+XDG_VIDEOS_DIR="$HOME/Videos"
+XDG_PUBLICSHARE_DIR="$HOME/Public"
+XDG_TEMPLATES_DIR="$HOME/Templates"

@@ -2941,6 +2941,126 @@ else
   done
 fi
 
+# ── 13pk. the MIME substrate exists and every handler it names resolves ──────
+# WHY THIS EXISTS (2026-08-01, DE study §1.2-B — the single biggest "feels
+# unfinished" gap). MIME handling failed in three independent ways at once,
+# which is why it stayed invisible:
+#   1. no mimeapps.list existed ANYWHERE in the repo;
+#   2. there were ZERO MimeType= lines across all 63 shipped .desktop files, so
+#      nothing NYXUS-branded registered as a handler and even a correct
+#      mimeapps.list would have had nothing to point at;
+#   3. the one script that set defaults, /etc/nyxus-firstboot.d/
+#      03-mime-defaults.sh, ran as ROOT (nyxus-firstboot.service has no User=)
+#      so it wrote /root/.config/mimeapps.list; covered three MIME classes; and
+#      aimed one of them at org.kde.kate.desktop, with `kate` not in
+#      packages.x86_64. Every command ended in `|| true`.
+# Resolution fell through to the desktop-file cache, so Firefox — which claims
+# application/pdf, most image types and http/https — won by default, and there
+# was no image viewer or PDF reader on the image at all.
+hd "13pk. MIME defaults + XDG user dirs are real and resolvable"
+
+_PK_MIME="${AIROOT}/etc/skel/.config/mimeapps.list"
+_PK_APPS="${AIROOT}/usr/share/applications"
+
+if [[ ! -f "${_PK_MIME}" ]]; then
+  fail "13pk: no skel .config/mimeapps.list — nothing on the ISO opens anything by association; resolution falls through to whichever .desktop happens to claim the type"
+else
+  # Provider map for the upstream desktop IDs mimeapps.list points at. These
+  # could NOT be verified against the package file lists on the build box
+  # (pacman -Fl needs a synced files DB, which needs root), so the pairing is
+  # asserted here instead: if a package is dropped from packages.x86_64 while
+  # mimeapps.list still names its .desktop, this fails.
+  _pk_provider() {
+    case "$1" in
+      org.gnome.Nautilus.desktop)   echo nautilus ;;
+      org.gnome.TextEditor.desktop) echo gnome-text-editor ;;
+      org.gnome.Loupe.desktop)      echo loupe ;;
+      org.gnome.FileRoller.desktop) echo file-roller ;;
+      org.pwmt.zathura.desktop)     echo zathura ;;
+      mpv.desktop)                  echo mpv ;;
+      audacious.desktop)            echo audacious ;;
+      firefox.desktop)              echo firefox ;;
+      chromium.desktop)             echo chromium ;;
+      *)                            echo "" ;;
+    esac
+  }
+  _pk_fail=0; _pk_ids=0
+  while read -r _pk_id; do
+    [[ -z "${_pk_id}" ]] && continue
+    _pk_ids=$((_pk_ids + 1))
+    if [[ -f "${_PK_APPS}/${_pk_id}" ]]; then
+      continue
+    fi
+    _pk_pkg="$(_pk_provider "${_pk_id}")"
+    if [[ -z "${_pk_pkg}" ]]; then
+      fail "13pk: mimeapps.list names '${_pk_id}', which neither ships in airootfs/usr/share/applications nor has a known provider package — add it to this gate's provider map or stop naming it"
+      _pk_fail=$((_pk_fail + 1))
+    elif ! grep -Eq "^${_pk_pkg}\$" "${PROFILE}/packages.x86_64"; then
+      fail "13pk: mimeapps.list names '${_pk_id}' but its package '${_pk_pkg}' is not in packages.x86_64 — that MIME type resolves to nothing"
+      _pk_fail=$((_pk_fail + 1))
+    fi
+  done < <(grep -vE '^\s*(#|\[|$)' "${_PK_MIME}" \
+             | cut -d= -f2- | tr ';' '\n' | sed 's/^[[:space:]]*//' \
+             | grep -E '\.desktop$' | sort -u)
+  (( _pk_fail == 0 )) \
+    && ok "13pk: all ${_pk_ids} handler(s) named in mimeapps.list ship or are packaged"
+
+  # A .desktop that claims a MIME type but has no field code in Exec can never
+  # be handed the file — it launches empty and looks like the app is broken.
+  _pk_fc=0
+  while IFS= read -r _pk_d; do
+    grep -q '^MimeType=' "${_pk_d}" || continue
+    if grep -m1 '^Exec=' "${_pk_d}" | grep -qE '%[fFuU]'; then
+      ok "13pk: $(basename "${_pk_d}") declares MimeType= and takes a file argument"
+    else
+      fail "13pk: $(basename "${_pk_d}") declares MimeType= but its Exec has no %f/%F/%u/%U — it can never receive the file it claims to open"
+      _pk_fc=$((_pk_fc + 1))
+    fi
+  done < <(find "${_PK_APPS}" -name '*.desktop' 2>/dev/null | sort)
+  (( _pk_fc == 0 )) || fail "13pk: ${_pk_fc} handler(s) claim a type they cannot be handed"
+
+  # xdg-open and xdg-mime are the mechanism this whole file rides on, and they
+  # reached the image only because chromium hard-depends on xdg-utils. The lean
+  # tier already drops chromium, so that tier has no xdg-open at all.
+  for _pk_p in xdg-utils xdg-user-dirs; do
+    grep -Eq "^${_pk_p}\$" "${PROFILE}/packages.x86_64" \
+      && ok "13pk: ${_pk_p} listed explicitly (not left as a transitive accident)" \
+      || fail "13pk: ${_pk_p} is not listed in packages.x86_64 — it arrives only transitively today, and an edition that drops the package pulling it loses ${_pk_p} silently"
+  done
+fi
+
+# Every XDG user directory the shipped user-dirs.dirs names must actually be
+# created under skel by the bake. Git cannot carry empty directories, so
+# build-iso.sh makes them; a name added here and not there means the file picker
+# points at a path that does not exist.
+_PK_UD="${AIROOT}/etc/skel/.config/user-dirs.dirs"
+if [[ ! -f "${_PK_UD}" ]]; then
+  fail "13pk: skel ships no .config/user-dirs.dirs — XDG_DOCUMENTS_DIR etc. are undefined and every file picker opens at a bare \$HOME"
+else
+  _pk_ud_fail=0
+  while read -r _pk_dir; do
+    [[ -z "${_pk_dir}" ]] && continue
+    if grep -qE "(^|[^A-Za-z0-9_-])${_pk_dir}([^A-Za-z0-9_-]|\$)" "${HERE}/build-iso.sh"; then
+      continue
+    fi
+    fail "13pk: user-dirs.dirs declares \$HOME/${_pk_dir} but build-iso.sh never creates it under skel — the directory will not exist in a new home"
+    _pk_ud_fail=$((_pk_ud_fail + 1))
+  done < <(grep -oE 'XDG_[A-Z]+_DIR="\$HOME/[^"]+"' "${_PK_UD}" \
+             | sed 's|.*\$HOME/||; s|"$||' | sort -u)
+  (( _pk_ud_fail == 0 )) \
+    && ok "13pk: every XDG user directory in user-dirs.dirs is created under skel at bake"
+fi
+
+# No firstboot fragment may set per-user MIME defaults. nyxus-firstboot.service
+# has no User=, so `xdg-mime default` there writes /root/.config/mimeapps.list
+# and the real user never sees it. That is exactly what 03-mime-defaults.sh did,
+# silently, on every install.
+if grep -rqs 'xdg-mime' "${AIROOT}/etc/nyxus-firstboot.d/"; then
+  fail "13pk: a firstboot fragment calls xdg-mime — that service runs as root, so it writes /root/.config/mimeapps.list and the user gets nothing. Put defaults in skel/.config/mimeapps.list instead"
+else
+  ok "13pk: no firstboot fragment writes MIME defaults as root"
+fi
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \

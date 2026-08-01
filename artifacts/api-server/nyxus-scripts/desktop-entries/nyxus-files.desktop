@@ -3,11 +3,18 @@ Type=Application
 Name=NYXUS Files
 GenericName=Files
 Comment=Browse files and folders
-Exec=/usr/local/bin/nyxus files
+Exec=/usr/local/bin/nyxus files %F
 TryExec=/usr/local/bin/nyxus
 Icon=system-file-manager
 Terminal=false
 Categories=FileManager;Utility;
+# Until 2026-08-01 there were ZERO MimeType= lines across all 63 shipped
+# .desktop files, so nothing NYXUS-branded registered as a handler for anything
+# and even a correct mimeapps.list had nothing to point at. %F is a real local
+# path list, not %U: nyxus_files.py's do_command_line() does
+# Path(os.path.expanduser(a)) and drops anything that does not exist on disk,
+# so a file:// URI would be silently discarded.
+MimeType=inode/directory;
 Keywords=NYXUS;NYX;Files;
 StartupNotify=true
 StartupWMClass=nyxus.files
