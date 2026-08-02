@@ -3158,6 +3158,114 @@ PY
   fi
 fi
 
+# ── 13pm. the alien defaults survive Daily-edition work ─────────────────────
+# WHY THIS EXISTS (2026-08-02): the Daily Driver edition is additive by owner
+# decision — the alien-neon build stays exactly as it is and stays the default,
+# and urban-neon ships only when a bake sets NYX_EDITION=daily. The mechanism
+# that guarantees it is one untaken `if` in build-iso.sh, and the four files it
+# would otherwise overwrite are ordinary committed skel files that anyone could
+# "helpfully" retune while working on Daily. Nothing would complain: the ISO
+# would still bake, still boot, and simply come up teal.
+#
+# So assert the alien defaults directly, assert the daily tree is complete
+# enough for the bake to stage it, and assert every wall it names is BOTH on
+# disk AND in manifest.tsv — a wall missing from the manifest is present but
+# not selectable, which is the failure that made the manifest a gate in the
+# first place.
+hd "13pm. Daily edition is additive — alien defaults intact, daily tree complete"
+_PM_SKEL="${AIROOT}/etc/skel/.config/nyxus"
+_PM_ED="${HERE}/../artifacts/nyxus-config/editions/daily"
+_PM_WALLS="${AIROOT}/usr/share/backgrounds/nyxus"
+_PM_MANIFEST="${_PM_WALLS}/manifest.tsv"
+_pm_fail=0
+_pmfail() { fail "$*"; _pm_fail=$((_pm_fail + 1)); }
+
+# (a) the shared accent stays PRISM. accent.json's own _comment locks it, and
+#     nyxus-apply-accent reads `active` to decide what the whole desktop wears.
+_pm_active="$(sed -n 's/^[[:space:]]*"active"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+                "${_PM_SKEL}/accent.json" 2>/dev/null | head -1)"
+if [[ "${_pm_active}" != "prism" ]]; then
+  _pmfail "13pm: shared skel accent.json has active=\"${_pm_active:-<unreadable>}\", not \"prism\". That file IS the alien palette — the bake ships it as committed. Daily's palette belongs in artifacts/nyxus-config/editions/daily/accent.json, which only a NYX_EDITION=daily bake stages"
+fi
+
+# (b) the shared default wallpaper stays the alien hero, in both the slug and
+#     the absolute path (they are read by different consumers).
+_pm_wall="$(sed -n 's/^WALLPAPER="\([^"]*\)".*/\1/p' "${_PM_SKEL}/wallpaper.conf" 2>/dev/null | head -1)"
+if [[ "${_pm_wall}" != "nyxus-urban-alien" ]]; then
+  _pmfail "13pm: shared skel wallpaper.conf defaults to '${_pm_wall:-<unreadable>}', not nyxus-urban-alien. The alien build's desktop, and every surface that follows it, would come up on Daily art"
+fi
+grep -q 'WALLPAPER_PATH="/usr/share/backgrounds/nyxus/nyxus-urban-alien.png"' \
+     "${_PM_SKEL}/wallpaper.conf" 2>/dev/null \
+  || _pmfail "13pm: shared skel wallpaper.conf's WALLPAPER_PATH no longer points at nyxus-urban-alien.png — nyxus-wallpaper-autostart reads the absolute path first and only falls back to the slug"
+
+# (c) the edition hook still defaults to alien and still gates on 'daily'. If
+#     the default flips, every plain bake becomes a Daily bake.
+_PM_BUILD="${HERE}/build-iso.sh"
+grep -q 'NYX_EDITION="${NYX_EDITION:-alien}"' "${_PM_BUILD}" \
+  || _pmfail "13pm: build-iso.sh no longer defaults NYX_EDITION to 'alien'. A plain \`sudo ./build-iso.sh\` must produce the alien build it has always produced"
+grep -qE '^if \[\[ "\$\{NYX_EDITION\}" == "daily" \]\]; then' "${_PM_BUILD}" \
+  || _pmfail "13pm: build-iso.sh's edition staging block is not guarded by \`[[ \${NYX_EDITION} == daily ]]\` — the alien no-op guarantee rests entirely on that one condition"
+
+# (d) every file the bake would install must actually be there. Read the list
+#     out of build-iso.sh rather than repeating it, so adding a file to the
+#     staging block automatically makes it required here.
+_pm_req="$(sed -n '/for _edf in /,/; do/p' "${_PM_BUILD}" 2>/dev/null \
+             | tr '\n' ' ' | sed -E 's/.*for _edf in //; s/;[[:space:]]*do.*//; s/\\/ /g')"
+if [[ -z "${_pm_req// /}" ]]; then
+  _pmfail "13pm: could not read the required-file list out of build-iso.sh's daily block — this gate cannot verify what the bake needs"
+  _pm_req="accent.json wallpaper.conf wallpaper.json wall-rotation.list regreet.css hyprlock-accent.conf"
+fi
+for _pm_f in ${_pm_req}; do
+  if [[ ! -s "${_PM_ED}/${_pm_f}" ]]; then
+    _pmfail "13pm: editions/daily/${_pm_f} is missing or empty, but build-iso.sh installs it on a NYX_EDITION=daily bake. That bake hard-fails rather than shipping half a theme — author the file or drop it from the staging block"
+    continue
+  fi
+  if [[ "${_pm_f}" == *.json ]]; then
+    if command -v python3 >/dev/null 2>&1; then
+      python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "${_PM_ED}/${_pm_f}" 2>/dev/null \
+        || _pmfail "13pm: editions/daily/${_pm_f} is not valid JSON. nyxus-apply-accent parses accent.json with jq and exits non-zero, so a stray comma leaves the Daily desktop on whatever the previous accent was"
+    fi
+  fi
+done
+
+# (e) the daily accent must actually be the daily accent. This is the mirror of
+#     (a): a copy-paste of the shared file into the edition dir would stage
+#     prism over prism and look like the edition hook simply did not run.
+if [[ -s "${_PM_ED}/accent.json" ]]; then
+  _pm_ed_active="$(sed -n 's/^[[:space:]]*"active"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+                     "${_PM_ED}/accent.json" | head -1)"
+  [[ "${_pm_ed_active}" == "urban-neon" ]] \
+    || _pmfail "13pm: editions/daily/accent.json has active=\"${_pm_ed_active:-<unreadable>}\", expected \"urban-neon\" — a daily bake would stage a palette nyxus-apply-accent does not have a preset for"
+fi
+
+# (f) every wall the daily configs name must ship AND be in the manifest.
+#     Gate 13c enforces manifest/directory parity for the shared set; the
+#     edition files are not in any of those consumer lists, so they get their
+#     own pass. On disk but unlisted = present but not selectable, which is
+#     indistinguishable from "the wallpaper picker is broken".
+if [[ ! -r "${_PM_MANIFEST}" ]]; then
+  _pmfail "13pm: ${_PM_MANIFEST#${AIROOT}/} is unreadable — nothing can be selectable without it"
+else
+  _pm_slugs="$( { sed -n 's/^WALLPAPER="\([^"]*\)".*/\1/p' "${_PM_ED}/wallpaper.conf" 2>/dev/null
+                  grep -oE 'nyxus-[a-z0-9][a-z0-9-]*\.png' "${_PM_ED}/wallpaper.json" 2>/dev/null \
+                    | sed 's/\.png$//'
+                  sed -E 's/#.*$//' "${_PM_ED}/wall-rotation.list" 2>/dev/null \
+                    | grep -oE '^[[:space:]]*nyxus-[a-z0-9-]+' | tr -d '[:blank:]'
+                } | sort -u )"
+  _pm_n=0
+  while IFS= read -r _pm_s; do
+    [[ -n "${_pm_s}" ]] || continue
+    _pm_n=$((_pm_n + 1))
+    [[ -s "${_PM_WALLS}/${_pm_s}.png" ]] \
+      || _pmfail "13pm: the daily configs name the wallpaper '${_pm_s}', which is not in ${_PM_WALLS#${AIROOT}/}. A missing wall does not error — the desktop just comes up black"
+    cut -f1 "${_PM_MANIFEST}" | grep -qxF "${_pm_s}" \
+      || _pmfail "13pm: '${_pm_s}' is not registered in backgrounds/manifest.tsv. The file can be on disk and still be unselectable — the manifest is what the wallpaper picker and the rotator enumerate"
+  done <<< "${_pm_slugs}"
+fi
+
+(( _pm_fail == 0 )) \
+  && ok "13pm: alien defaults are still prism + nyxus-urban-alien, the daily edition tree is complete, and every wall it names ships and is in the manifest (${_pm_n:-0} slug(s))"
+
 # ── 14. mksquashfs ────────────────────────────────────────────────────
 hd "14. mksquashfs"
 command -v mksquashfs >/dev/null \
