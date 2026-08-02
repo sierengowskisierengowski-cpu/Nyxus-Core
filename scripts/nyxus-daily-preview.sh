@@ -121,6 +121,37 @@ run() {
   fi
 }
 
+# Same as `run`, but silent under --dry-run. For bulk loops of a hundred
+# near-identical installs, where printing every line buries the things that
+# actually need reading. The caller prints the count instead.
+runq() {
+  (( DRY_RUN )) || "$@"
+}
+
+# Run a command AS the preview user, with HOME pointed at the preview home and
+# a PATH that finds the preview's own tool layer first. Everything the NYXUS
+# tools do is keyed off HOME, so this is how the preview account's own copies
+# get used and nothing lands root-owned.
+_as_preview() {
+  if (( DRY_RUN )); then
+    printf "  ${GOLD}dry${R} runuser -u %s -- env HOME=%s %s\n" \
+           "${PREVIEW_USER}" "${PREVIEW_HOME}" "$*"
+    return 0
+  fi
+  local env_args=(
+    "HOME=${PREVIEW_HOME}"
+    "USER=${PREVIEW_USER}"
+    "LOGNAME=${PREVIEW_USER}"
+    "PATH=${PREVIEW_HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+  )
+  if command -v runuser >/dev/null 2>&1; then
+    runuser -u "${PREVIEW_USER}" -- env "${env_args[@]}" "$@"
+  else
+    su -s /bin/bash "${PREVIEW_USER}" -c \
+       "env $(printf '%q ' "${env_args[@]}") $(printf '%q ' "$@")"
+  fi
+}
+
 # ── Repo layout ──────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -476,6 +507,271 @@ else
 fi
 
 # ════════════════════════════════════════════════════════════════════════
+#  TOOL LAYER — the preview account gets its OWN copy of the NYXUS tools
+# ════════════════════════════════════════════════════════════════════════
+# WHY THIS EXISTS (measured 2026-08-02): the first preview login came up as a
+# bare desktop — wallpaper and accent right, no NYXUS shell. The cause was not
+# the theme. On this machine the tool layer is installed into the OWNER's home:
+# 164 nyxus-* commands in /home/cosmic/.local/bin against 56 in /usr/local/bin,
+# and /home/cosmic is 0700. nyxus-session-start happens to be one of the ones
+# in /usr/local/bin, which is why the session started at all — but nearly
+# everything it launches afterwards to build the desktop lived behind a 0700
+# directory belonging to another user, so the shell never assembled. It is also
+# why the accent pass hit "Permission denied" when it ran as the preview user.
+#
+# The fix is not to relax anyone's permissions. It is to give the preview
+# account its own copy from the repo, which is what a real Daily ISO does for
+# its user anyway. Nothing here reads another user's home.
+#
+# EVERY FILE SET BELOW IS DERIVED FROM AN EXISTING DEFINITION IN THE REPO,
+# parsed at run time. A second hand-maintained list that drifts from the
+# installers is a failure mode this project has already paid for twice —
+# verify-profile gate 13pg exists because install.sh and nyxus_install.sh had
+# silently diverged in both directions. This script adds no third list.
+step "NYXUS tool layer"
+
+NS_SRC="${REPO_ROOT}/artifacts/api-server/nyxus-scripts"
+HOME_PKG_SRC="${REPO_ROOT}/artifacts/nyxus-home/src"
+BUILD_ISO="${REPO_ROOT}/iso-builder/build-iso.sh"
+PBIN="${PREVIEW_HOME}/.local/bin"
+PNYX="${PREVIEW_HOME}/.nyxus"
+PAPPS="${PREVIEW_HOME}/.local/share/applications"
+
+[[ -d "${NS_SRC}" ]] || die "missing tool source: ${NS_SRC}"
+
+# ~/.local/bin is what the desktop actually reaches for: the skel .bashrc
+# prepends it, and hyprland.conf's exec-once/bind lines export
+# PATH="$HOME/.local/bin:/usr/local/bin:$PATH" before calling these by name.
+run install -d -m 0755 "${PBIN}" "${PNYX}" "${PAPPS}"
+
+# A shebang or an ELF header means the file is meant to be executed. This
+# project once shipped 116 executables at mode 644, so the bit is decided by
+# looking at the file, never by assuming.
+_exec_payload() {
+  local magic
+  magic="$(head -c4 "$1" 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')"
+  [[ "${magic}" == 2321* || "${magic}" == 7f454c46* ]]
+}
+
+# Pull a bash array literal out of a script by name. Same idea as
+# verify-profile gate 13pg's parser, in awk so it needs nothing extra.
+_parse_array() {
+  awk -v want="$2" '
+    $0 ~ "^" want "=\\(" { f = 1; next }
+    f && /^\)/           { exit }
+    f                    { sub(/#.*/, ""); print }
+  ' "$1"
+}
+
+# ── 1. Launchers → ~/.local/bin ─────────────────────────────────────────
+# Source of truth: the LAUNCHERS array in nyxus_install.sh, which is the
+# offline/ISO deploy path — i.e. exactly the set a Daily ISO user would get.
+LAUNCHERS=()
+if [[ -r "${NS_SRC}/nyxus_install.sh" ]]; then
+  mapfile -t LAUNCHERS < <(_parse_array "${NS_SRC}/nyxus_install.sh" LAUNCHERS \
+                           | tr -s ' \t' '\n\n' | sed '/^$/d')
+fi
+if (( ${#LAUNCHERS[@]} == 0 )); then
+  die "could not parse LAUNCHERS out of ${NS_SRC}/nyxus_install.sh — refusing to guess the tool set"
+fi
+
+# install.sh (the dev-machine deploy path) carries the same array and gate
+# 13pg fails the build if they differ. If they differ HERE, the gate is red
+# and the preview would be a coin-flip between two tool sets — say so.
+if [[ -r "${REPO_ROOT}/install.sh" ]]; then
+  _drift="$(diff <(printf '%s\n' "${LAUNCHERS[@]}" | sort) \
+                 <(_parse_array "${REPO_ROOT}/install.sh" LAUNCHERS \
+                   | tr -s ' \t' '\n\n' | sed '/^$/d' | sort) || true)"
+  if [[ -n "${_drift}" ]]; then
+    warn "install.sh and nyxus_install.sh LAUNCHERS disagree — verify-profile gate 13pg is red"
+    note "using the nyxus_install.sh (ISO) set; fix the drift before trusting this preview"
+  fi
+fi
+
+# Track what has been put on the preview's PATH, so later steps never shadow
+# an earlier one and --dry-run reports the same counts a real run produces.
+declare -A INSTALLED_BIN=()
+
+_lnch_ok=0; _lnch_miss=()
+for _l in "${LAUNCHERS[@]}"; do
+  if [[ -f "${NS_SRC}/${_l}" ]]; then
+    runq install -Dm0755 "${NS_SRC}/${_l}" "${PBIN}/${_l}"
+    INSTALLED_BIN["${_l}"]=1
+    _lnch_ok=$((_lnch_ok + 1))
+  else
+    _lnch_miss+=("${_l}")
+  fi
+done
+ok "launchers: ${_lnch_ok}/${#LAUNCHERS[@]} → ~/.local/bin (mode 0755)"
+if (( ${#_lnch_miss[@]} )); then
+  warn "unresolved in nyxus-scripts: ${_lnch_miss[*]}"
+  note "these are named by the installer but not present in the repo — they will be missing in the preview"
+fi
+
+# ── 2. GTK app wrappers → ~/.local/bin ──────────────────────────────────
+# The bake generates a one-line wrapper per entry of APPS_LIST in
+# build-iso.sh (Settings, Control, Launcher, Store, Terminal, …). Those are
+# NOT in LAUNCHERS, so without this the preview has the reactive layer but
+# none of the actual apps. Parsed from build-iso.sh rather than retyped; the
+# only change is where the module is looked up, because /opt/nyxus is outside
+# the preview home and this script does not write there.
+_write_app_wrapper() {
+  local bin="$1" mod="$2"
+  if (( ! DRY_RUN )); then
+    cat > "${PBIN}/${bin}" <<WRAPPER
+#!/usr/bin/env bash
+# NYXUS ${bin} — generated by nyxus-daily-preview.sh for the preview account.
+# Resolution order mirrors nyxus-screensaver: the user's own copy first, then
+# the system one, so this works whether or not /opt/nyxus is populated.
+for _p in "\${HOME}/.nyxus/${mod}" "/opt/nyxus/${mod}"; do
+  [ -f "\${_p}" ] && exec python3 "\${_p}" "\$@"
+done
+echo "${bin}: ${mod} not found in ~/.nyxus or /opt/nyxus" >&2
+exit 1
+WRAPPER
+    chmod 0755 "${PBIN}/${bin}"
+  fi
+  INSTALLED_BIN["${bin}"]=1
+}
+
+_apps_n=0
+if [[ -r "${BUILD_ISO}" ]]; then
+  while IFS= read -r _entry; do
+    [[ -n "${_entry}" ]] || continue
+    _mod="${_entry%%:*}"
+    [[ -n "${_mod}" ]] || continue
+    if [[ "${_mod}" == "sysmon_gtk" ]]; then _bin="nyxus-sysmon"; else _bin="nyxus-${_mod//_/-}"; fi
+    [[ -n "${INSTALLED_BIN[${_bin}]:-}" ]] && continue
+    _write_app_wrapper "${_bin}" "nyxus_${_mod}.py"
+    _apps_n=$((_apps_n + 1))
+  done < <(_parse_array "${BUILD_ISO}" APPS_LIST | tr -d '"' | sed 's/^[[:space:]]*//;/^$/d')
+  ok "GTK app wrappers: ${_apps_n} written from build-iso.sh APPS_LIST"
+else
+  warn "build-iso.sh unreadable — the GTK app wrappers (Settings, Control, Store, …) are NOT installed"
+fi
+
+# ── 2c. Package apps → ~/.nyxus/<pkg> (+ their launcher) ─────────────────
+# nyxus-panel and nyxus-start ship as directories inside nyxus-scripts, each
+# carrying its own launcher; nyxus-home's canonical source is
+# artifacts/nyxus-home/src (see docs/NYXUS_BUILD.md and nyxus-backport-live.sh).
+# The launchers exec "$HOME/.nyxus/<pkg>/main.py", so the package has to be in
+# the preview's own ~/.nyxus or the window opens and paints nothing.
+_install_pkg() {
+  local name="$1" src="$2"
+  [[ -d "${src}" ]] || { warn "package ${name}: no source at ${src} — skipped"; return 0; }
+  run install -d -m 0755 "${PNYX}/${name}"
+  run cp -a "${src}/." "${PNYX}/${name}/"
+  # The in-package launcher (if any) belongs on PATH, not in the package.
+  if [[ -f "${src}/${name}" ]]; then
+    run install -Dm0755 "${src}/${name}" "${PBIN}/${name}"
+    INSTALLED_BIN["${name}"]=1
+  fi
+  ok "package ${name} → ~/.nyxus/${name}/"
+}
+_install_pkg nyxus-panel "${NS_SRC}/nyxus-panel"
+_install_pkg nyxus-start "${NS_SRC}/nyxus-start"
+_install_pkg nyxus-home  "${HOME_PKG_SRC}"
+if [[ -d "${HOME_PKG_SRC}" && ! -f "${HOME_PKG_SRC}/nyxus-home" && -f "${NS_SRC}/nyxus-home" ]]; then
+  note "nyxus-home's launcher comes from nyxus-scripts (already in LAUNCHERS)"
+fi
+
+# ── 2d. Coverage backstop — everything hyprland.conf actually calls ─────
+# The two lists above are what the installers deploy. What decides whether the
+# desktop ASSEMBLES is narrower and more specific: the set of commands
+# hyprland.conf's exec-once and bind lines invoke. Anything in there that is
+# not reachable is a feature that silently never starts, with no error
+# anywhere — the exact failure the first preview login showed. So: read the
+# shipped hyprland.conf, and for every nyxus-* command it names that is still
+# unreachable, either install it or generate its wrapper. Anything that can be
+# satisfied neither way is reported, because an unreachable name here is a
+# real hole and the owner should not have to discover it by looking at a
+# desktop that half-appeared.
+_HYPR_SRC="${NS_SRC}/hyprland.conf"
+_bs_n=0; _bs_none=()
+if [[ -r "${_HYPR_SRC}" ]]; then
+  while IFS= read -r _n; do
+    [[ -n "${_n}" ]] || continue
+    [[ -n "${INSTALLED_BIN[${_n}]:-}" ]] && continue
+    # Already reachable system-wide as a root-owned copy: leave it alone
+    # rather than putting a user-writable shadow of it earlier on PATH.
+    [[ -x "/usr/local/bin/${_n}" || -x "/usr/bin/${_n}" ]] && continue
+    if [[ -f "${NS_SRC}/${_n}" ]] && _exec_payload "${NS_SRC}/${_n}"; then
+      runq install -Dm0755 "${NS_SRC}/${_n}" "${PBIN}/${_n}"
+      INSTALLED_BIN["${_n}"]=1
+      ok "backstop: ${_n} (called by hyprland.conf, was unreachable)"
+      _bs_n=$((_bs_n + 1))
+      continue
+    fi
+    # hyprland.conf calls its own shards by absolute path out of
+    # ~/.config/hypr/scripts, which the skel copy already delivered.
+    [[ -f "${NS_SRC}/hypr/scripts/${_n}" ]] && continue
+    _mod="nyxus_${_n#nyxus-}"; _mod="${_mod//-/_}.py"
+    if [[ -f "${NS_SRC}/${_mod}" ]]; then
+      _write_app_wrapper "${_n}" "${_mod}"
+      ok "backstop: ${_n} → ${_mod} wrapper (called by hyprland.conf)"
+      _bs_n=$((_bs_n + 1))
+      continue
+    fi
+    _bs_none+=("${_n}")
+  done < <(grep -oE '\bnyxus-[a-z0-9][a-z0-9._-]*' "${_HYPR_SRC}" \
+           | sed 's/\.$//' \
+           | grep -vE '\.(conf|service|desktop|log|png|json|css|scss|list|toml)$' \
+           | sort -u)
+  ok "coverage backstop: ${_bs_n} added from hyprland.conf"
+  if (( ${#_bs_none[@]} )); then
+    note "named in hyprland.conf but not resolvable to a tool: ${_bs_none[*]}"
+    note "(eww window names such as nyxus-hub / nyxus-eww land here too — not necessarily a problem)"
+  fi
+else
+  warn "no hyprland.conf in nyxus-scripts — skipping the coverage backstop"
+fi
+
+# ── 3. Python module layer → ~/.nyxus ───────────────────────────────────
+# The bake installs NS/nyxus_*.py into /opt/nyxus and gives each user a
+# ~/.nyxus full of per-file symlinks to it. The preview cannot write /opt, so
+# it gets real copies in the same place instead — same import surface, since
+# these modules import each other as siblings (nyxus_chrome, nyxus_cosmic_bg
+# and friends) and every launcher resolves them through ~/.nyxus.
+_mods_n=0
+shopt -s nullglob
+_MODULES=("${NS_SRC}"/nyxus_*.py)
+for _extra in nyxus-security-daemon.py nyxus-crash-report.py nyxus-palette.css; do
+  [[ -f "${NS_SRC}/${_extra}" ]] && _MODULES+=("${NS_SRC}/${_extra}")
+done
+shopt -u nullglob
+for _m in "${_MODULES[@]}"; do
+  if _exec_payload "${_m}"; then _mode=0755; else _mode=0644; fi
+  runq install -Dm"${_mode}" "${_m}" "${PNYX}/$(basename "${_m}")"
+  _mods_n=$((_mods_n + 1))
+done
+if [[ -f "${NS_SRC}/desktop/nyxus_desktop.py" ]]; then
+  run install -Dm0755 "${NS_SRC}/desktop/nyxus_desktop.py" "${PNYX}/desktop/nyxus_desktop.py"
+  _mods_n=$((_mods_n + 1))
+fi
+ok "python modules: ${_mods_n} → ~/.nyxus (exec bit set by shebang/ELF, not assumed)"
+
+# ── 5. Desktop entries + app art ────────────────────────────────────────
+# 42 nyxus .desktop files are already system-wide on this machine, but the
+# curated set in the repo is larger and is what the bake ships. App windows
+# also read their splat backgrounds out of ~/.nyxus/backgrounds (nyxus_install.sh
+# "App Backgrounds"), and without them the GTK apps render on flat black.
+if [[ -d "${NS_SRC}/desktop-entries" ]]; then
+  run install -d -m 0755 "${PAPPS}"
+  run cp -a "${NS_SRC}/desktop-entries/." "${PAPPS}/"
+  ok "desktop entries → ~/.local/share/applications/"
+fi
+shopt -s nullglob
+_BGS=("${NS_SRC}"/nyxus-bg-*.png)
+shopt -u nullglob
+if (( ${#_BGS[@]} )); then
+  run install -d -m 0755 "${PNYX}/backgrounds"
+  for _bg in "${_BGS[@]}"; do
+    runq install -m0644 "${_bg}" "${PNYX}/backgrounds/$(basename "${_bg}")"
+  done
+  ok "app backgrounds: ${#_BGS[@]} → ~/.nyxus/backgrounds/"
+fi
+
+# ════════════════════════════════════════════════════════════════════════
 #  OWNERSHIP — must happen BEFORE the accent pass
 # ════════════════════════════════════════════════════════════════════════
 # `cp -a` from the repo preserves the repo's ownership, so everything staged
@@ -524,32 +820,24 @@ else
     ok "accent.json merged (prism baseline + ${DAILY_PRESET})"
   fi
 
-  ACCENT_BIN="${APPLY_ACCENT}"
-  [[ -r "${ACCENT_BIN}" ]] || ACCENT_BIN="$(command -v nyxus-apply-accent 2>/dev/null || true)"
+  # Run the preview account's OWN copy, installed by the tool-layer step and
+  # owned by it. The first version of this script ran the one in the repo,
+  # under /home/cosmic at 0700 — which is precisely the permission wall this
+  # whole change is about, and it failed there with EACCES.
+  ACCENT_BIN="${PBIN}/nyxus-apply-accent"
+  if (( ! DRY_RUN )) && [[ ! -x "${ACCENT_BIN}" ]]; then
+    warn "the preview has no nyxus-apply-accent — falling back to the repo copy"
+    ACCENT_BIN="${APPLY_ACCENT}"
+    [[ -r "${ACCENT_BIN}" ]] || ACCENT_BIN="$(command -v nyxus-apply-accent 2>/dev/null || true)"
+  fi
   if [[ -z "${ACCENT_BIN}" ]]; then
     warn "nyxus-apply-accent not found — eww/GTK/hyprlock keep the alien colours"
   elif (( ! HAVE_PY )); then
     warn "python3 missing — skipping the re-skin pass"
   else
-    # Run it AS the preview user so nothing it writes is root-owned and
-    # nothing it reads escapes that home. HOME is what the script keys off.
-    RUNAS=(runuser -u "${PREVIEW_USER}" --)
-    command -v runuser >/dev/null 2>&1 || RUNAS=(su -s /bin/bash "${PREVIEW_USER}" -c)
-    if (( DRY_RUN )); then
-      printf "  ${GOLD}dry${R}  runuser -u %s -- env HOME=%s bash %s %s\n" \
-             "${PREVIEW_USER}" "${PREVIEW_HOME}" "${ACCENT_BIN}" "${DAILY_PRESET}"
-    else
-      if [[ "${RUNAS[0]}" == "runuser" ]]; then
-        "${RUNAS[@]}" env HOME="${PREVIEW_HOME}" \
-          PATH="/usr/local/bin:/usr/bin:/bin" \
-          bash "${ACCENT_BIN}" "${DAILY_PRESET}" || \
-            warn "nyxus-apply-accent exited non-zero — check the colours in the session"
-      else
-        "${RUNAS[@]}" "HOME='${PREVIEW_HOME}' bash '${ACCENT_BIN}' '${DAILY_PRESET}'" || \
-            warn "nyxus-apply-accent exited non-zero — check the colours in the session"
-      fi
-      ok "re-skinned the preview home to '${DAILY_PRESET}'"
-    fi
+    _as_preview bash "${ACCENT_BIN}" "${DAILY_PRESET}" \
+      || warn "nyxus-apply-accent exited non-zero — check the colours in the session"
+    (( DRY_RUN )) || ok "re-skinned the preview home to '${DAILY_PRESET}'"
   fi
 fi
 
@@ -559,6 +847,29 @@ if [[ -n "${DEFERRED_ACCENT_SHARD}" ]]; then
   run install -Dm0644 "${DEFERRED_ACCENT_SHARD}" \
       "${PREVIEW_HOME}/.config/hypr/hyprlock-accent.conf"
   ok "hyprlock-accent.conf → ~/.config/hypr/ (edition copy wins)"
+fi
+
+# ════════════════════════════════════════════════════════════════════════
+#  APP ICONS
+# ════════════════════════════════════════════════════════════════════════
+# The .desktop files name io.nyxus.* icons that are painted, not shipped —
+# nyxus_install.sh runs this generator and it writes into
+# ~/.local/share/icons/hicolor. There are none system-wide on this machine, so
+# without it every NYXUS app shows a generic placeholder in the launcher.
+# Best-effort: it needs pycairo, and a missing icon is cosmetic.
+step "app icons"
+if [[ -f "${PNYX}/nyxus_gen_icons.py" ]] || (( DRY_RUN )); then
+  if _as_preview python3 "${PNYX}/nyxus_gen_icons.py" >/dev/null 2>&1; then
+    if (( DRY_RUN )); then
+      ok "would paint the io.nyxus.* icons into ~/.local/share/icons/"
+    else
+      ok "icons painted: $(find "${PREVIEW_HOME}/.local/share/icons" -name 'io.nyxus.*.png' 2>/dev/null | wc -l)"
+    fi
+  else
+    warn "icon generation failed (usually missing python-cairo) — apps will show generic icons"
+  fi
+else
+  warn "nyxus_gen_icons.py not in the preview home — apps will show generic icons"
 fi
 
 # ════════════════════════════════════════════════════════════════════════
