@@ -18,9 +18,13 @@
 > the shared/alien defaults. This plan is written so the alien build can be baked
 > byte-for-byte unchanged.
 >
-> Status: docs + additive wallpaper assets only. **No bake, no palette flip, no
-> default change to the shared build** — and the click-audit owed in HANDOFF must
-> land before any edition work begins.
+> Status (2026-08-02): the click-audit gate is satisfied and **Phase 1 is
+> partly built** — the `NYX_EDITION` bake hook, gate `13pm`, and the daily
+> accent / wallpaper / rotation / greeter / lock files all exist and are green
+> on both ISO linters. **Still no bake, no palette flip, no default change to
+> the shared build**; `NYX_EDITION` defaults to `alien` and the block is an
+> untaken branch. The Win11-shaped eww shell (bar, launcher, flyout) has **not**
+> been started. Step-by-step status is in §7.
 
 ---
 
@@ -347,27 +351,70 @@ not touch them at all). **Edition-specific content lives in
 | `airootfs/etc/skel/.config/nyxus/wall-rotation.list` | stays alien-only rotation |
 | `usr/share/backgrounds/nyxus/*.png` + `manifest.tsv` | urban walls added here are **inert assets** for alien (present but unreferenced) — safe |
 | `etc/skel/.config/hypr/walls/` (+ skel copies) | same — additive files only |
-| Shell **code**: eww `eww.yuck`/SCSS structure, `hyprlock.conf`, `regreet.toml`, `nyxus-greeter`, `nyxus-apply-accent`, `nyxus-live-wallpaper` | structure is shared; only token *values*/staged variants differ |
+| Shell **code**: eww `eww.yuck`/SCSS structure, `hyprlock.conf`, `regreet.toml`, `nyxus-greeter`, `nyxus-apply-accent`, `nyxus-live-wallpaper` | structure is shared; only token *values*/staged variants differ. **Caveat found 2026-08-02 — see §6.1:** two of these hardcode alien *values*, so "structure only" was not true |
+| **Notification daemon** — `dunst` `exec-once` in `hyprland.conf`; `swaync` masked at `etc/systemd/user/swaync.service` | alien keeps **dunst** and its appearance is unchanged. The mask is what stops the two racing (audit §11.4). Both packages stay in `packages.x86_64` — Daily needs swaync |
 | `iso-builder/build-iso.sh` (baseline paths), `verify-profile.sh`, `scripts/` | the edition hook is **additive** and default-off |
 | `stations.json` / `stations-hacker.json` (alien hacker shell) | untouched; daily ships its own shell shards |
 
 ### EDITION-SPECIFIC — only staged when `NYX_EDITION=daily`
 | Surface | Daily edition file (new) |
 |---|---|
-| Accent preset | `artifacts/nyxus-config/editions/daily/accent.json` (active=`urban-neon`) |
-| Default wallpaper | `.../editions/daily/wallpaper.conf` + `wallpaper.json` (`nyxus-urban-flower-wall`) |
-| Rotation | `.../editions/daily/wall-rotation.list` (urban walls) |
-| Greeter theme | `.../editions/daily/regreet.css` (teal/amber) |
-| Lock accent | `.../editions/daily/hyprlock-accent.conf` |
-| Bar/flyout/launcher | `.../editions/daily/eww/*` (Win11-shaped shell + glass tokens) |
-| Shell layout | `.../editions/daily/stations*.json` / hypr conf.d overrides |
-| Live wall default | `.../editions/daily/livewall.conf` + flagship loop asset |
-| Bake hook | new `NYX_EDITION` block in `build-iso.sh` (default `alien` = no-op) |
+| Accent preset | `artifacts/nyxus-config/editions/daily/accent.json` (active=`urban-neon`) — **done** |
+| Default wallpaper | `.../editions/daily/wallpaper.conf` + `wallpaper.json` (`nyxus-urban-flower-wall`) — **done** |
+| Rotation | `.../editions/daily/wall-rotation.list` (urban walls) — **done** |
+| Greeter theme | `.../editions/daily/regreet.css` (teal/amber) — **done** |
+| Lock accent | `.../editions/daily/hyprlock-accent.conf` — **done** |
+| **Notification daemon** | **swaync.** The daily block deletes the alien mask and rewrites the staged skel's `exec-once = dunst` → `exec-once = swaync`. The approved flyout (calendar, quiet hours, quick-toggle pills — `set-notifications.png`) is a swaync control-centre feature set dunst has no equivalent for |
+| Lock + login background | not a file — the daily block **re-pins** `hyprlock.conf`'s `path =` and `nyxus-greeter`'s `_pick=` on the throwaway profile copy (§6.1) |
+| Bar/flyout/launcher | `.../editions/daily/eww/*` (Win11-shaped shell + glass tokens) — **not started** |
+| Shell layout | `.../editions/daily/stations*.json` / hypr conf.d overrides — **not started** |
+| Live wall default | `.../editions/daily/livewall.conf` + flagship loop asset — **not started** |
+| Bake hook | new `NYX_EDITION` block in `build-iso.sh` (default `alien` = no-op) — **done** |
 
 Shared **structural** files the edition *reads through* (unchanged, values
 supplied by the staged edition files): `nyxus-apply-accent` → `eww/accent.scss`,
 `hyprlock.conf`, `nyxus-greeter`, `nyxus-live-wallpaper`, GTK `adw-gtk3-dark` +
 qt5ct/qt6ct.
+
+### 6.1 Correction (2026-08-02): "shared structure, edition values" was not true
+
+Two of the files listed above as purely structural carry **alien values** in
+their bodies, and Phase 1 hit both:
+
+- `hyprlock.conf` names `/usr/share/backgrounds/nyxus/nyxus-urban-alien.png` in
+  its `background { path = }` block.
+- `nyxus-greeter` copies `$_wdir/nyxus-urban-alien.png` over the greeter cache
+  on **every** start, so it wins over anything staged at `/etc/greetd/`.
+
+Left alone, a Daily stick would wear urban-neon on the desktop and the alien
+mural on its lock and login screens. Both are asserted by `verify-profile` gate
+`13ua` on the committed trees, so neither can be edited in git without failing
+the linter — which is correct, because that pin *is* the alien build.
+
+**How it was resolved:** the daily staging block rewrites those two lines on the
+**throwaway profile copy** at bake time, one anchored `sed` each, asserting the
+anchor matched before and that nothing names the old hero after. Every committed
+byte stays alien; only the daily bake diverges. Prefer this shape over adding an
+edition variable to shared code — it keeps the "alien does not change by a byte"
+guarantee literal, and a re-wording upstream fails the bake loudly instead of
+silently shipping alien art.
+
+**Still unresolved — the greeter card is right-parked, the mockup is centred.**
+`regreet.css` positions the login card with absolute pixel margins, and the pair
+of margins is also what sets the card's **width** (`1920 − 1360 − 40 = 520px`).
+GTK4 CSS has no percentage margins and no `halign`, so "centred" cannot be
+expressed in the stylesheet at all. `nyxus-greeter` recomputes both margins for
+the detected panel — it must, or absolute pixels lock the operator out on a
+narrower screen — using a card centre hardcoded at `0.845 × W`, chosen because
+the alien art is centre-composed and the card had to clear the figure.
+`set-login.png` shows the card centred over the alley. Centring Daily therefore
+requires making the card centre an **input** to that arithmetic (e.g. a
+declaration read out of the stylesheet, defaulting to today's formula when
+absent, so alien is bit-identical). Not attempted this session: `nyxus-greeter`
+is the documented lockout-class file and the change deserves its own review.
+The daily `regreet.css` deliberately ships the *same* right-parked numbers the
+shared greeter computes, so the never-lock-out fallback and the generated sheet
+agree — do not "fix" it by editing those two numbers alone.
 
 ---
 
@@ -385,31 +432,66 @@ default `NYX_EDITION=alien` (no-op) and confirming it's byte-identical to today.
 0.3 This doc + HANDOFF pointer. **[headless]**
 
 **Phase 1 — stand up the `daily` edition (nothing shared flips):**
-1.1 **Create the edition hook.** Add the `NYX_EDITION=alien|daily` block to
-    `iso-builder/build-iso.sh` (default `alien` = no-op) per §3.3, and stamp the
-    ISO name/label with the edition. **[headless — `bash -n`]**
-1.2 **Guard the shared default.** Add a `verify-profile.sh` gate: with no
-    edition set, committed `accent.json` active must be `prism` and
-    `wallpaper.conf` must be `nyxus-urban-alien`. This makes an alien regression
-    a hard FAIL. **[headless]**
-1.3 **Author edition files** under `artifacts/nyxus-config/editions/daily/`:
-    `accent.json` (active=`urban-neon`, §5 teal/amber), `wallpaper.conf` +
-    `wallpaper.json` (`nyxus-urban-flower-wall`), `wall-rotation.list` (urban
-    walls). **[headless]**
-1.4 **Daily greeter/lock/eww variants** under the same dir: `regreet.css` +
-    `hyprlock-accent.conf` retuned to the glass card recipe (teal/amber), and
-    the Win11-shaped eww shell (`eww/*`) with glass/corner tokens. Keep the
-    per-panel margin rescale in `nyxus-greeter`. **[headless lint; VM for visual]**
-1.5 **Daily live wall** (optional): `livewall.conf` default + mpvpaper flagship
-    loop asset (§4); pair with an awww slow-dissolve still shuffle. **[headless]**
-1.6 **Verify both editions build clean.** `bash -n build-iso.sh`,
-    `verify-profile.sh`, `iso-build-verify.sh` all green with edition unset; if
-    the edition block touches executables, run `regen-file-permissions.py` only
-    if gate `13pc` trips. **[headless]**
-1.7 **Bake both, click-verify.** Bake `NYX_EDITION=alien` (confirm alien is
+1.1 ✅ **DONE 2026-08-02.** **Create the edition hook.** `NYX_EDITION` is read
+    in `iso-builder/build-iso.sh` right after `ISO_NAME=`, validated to
+    `alien|daily` (anything else exits non-zero), and renames the output to
+    `nyxus-daily-<date>-x86_64.iso`. The staging block is the **last** staging
+    step, before the `file_permissions` derivation. It is recorded in
+    `/etc/nyxus-build` as an `edition` line. **[headless — `bash -n`]**
+    *Two corrections to §3.3's sketch, both found by doing it:* the block goes
+    after **every** staging step, not "after L618" — `greetd/regreet.css` is
+    staged around L977 and Arsenal/Meli/jeTT later still, so an earlier
+    placement is overwritten by the alien copies; and the edition dir is
+    `${REPO_ROOT}/artifacts/nyxus-config/editions/daily`, not `${NS}/editions/`.
+    *Gotcha:* `/etc/nyxus-build` is printed at login by a **positional**
+    `sed -n '3,7p'` in the generated `profile.d/nyxus-build-stamp.sh`, so adding
+    the `edition` field required widening it to `3,8p` or the banner would have
+    silently dropped `iso label`. The `iso_label` itself is **not** stamped per
+    edition — it must stay identical across profiledef and all five
+    `archisolabel` refs or live media will not boot.
+1.2 ✅ **DONE 2026-08-02.** **Guard the shared default** — `verify-profile.sh`
+    gate **`13pm`**. Asserts: skel `accent.json` active is `prism`; skel
+    `wallpaper.conf` names `nyxus-urban-alien` in both the slug and
+    `WALLPAPER_PATH`; `NYX_EDITION` still defaults to `alien` and the block is
+    still guarded on `== daily`; every file the daily block installs exists,
+    is non-empty and (for `.json`) parses; `editions/daily/accent.json` is
+    actually `urban-neon`; and every wall the daily configs name is both on
+    disk **and** in `backgrounds/manifest.tsv`. The required-file list is read
+    out of `build-iso.sh`'s own loop rather than duplicated, so adding a file to
+    the staging block automatically makes it required. Proved in both
+    directions with eight deliberate breakages. **[headless]**
+1.3 ✅ **DONE 2026-08-02.** **Author edition files** under
+    `artifacts/nyxus-config/editions/daily/`: `accent.json` (active=`urban-neon`,
+    §5 teal/amber + `_palette_fixed`/`_glass` token blocks), `wallpaper.conf` +
+    `wallpaper.json` (`nyxus-urban-flower-wall`), `wall-rotation.list` (the four
+    approved urban walls). **[headless]**
+1.4 ◑ **PARTIAL 2026-08-02 — greeter + lock done, eww shell not started.**
+    `regreet.css` (teal/amber glass card; focus ring is **teal**, `#ff2d55`
+    appears in exactly one rule, `.error`) and `hyprlock-accent.conf` (the ten
+    variables `nyxus-apply-accent` §3 generates, from `#2ee6d6` / `#ff9d2e`)
+    are authored and staged. The per-panel margin rescale in `nyxus-greeter` is
+    untouched and the daily sheet keeps the line shape it rewrites — but see
+    §6.1: the card lands **right-parked**, not centred as `set-login.png` shows,
+    and that needs a `nyxus-greeter` change. The Win11-shaped eww shell
+    (`eww/*`) is **not started** and is the next large chunk.
+    **[headless lint; bare metal for visual — hyprlock renders nothing under
+    `virtio-vga-gl`, audit §11.5]**
+1.5 ☐ **Daily live wall** (optional): `livewall.conf` default + mpvpaper
+    flagship loop asset (§4); pair with an awww slow-dissolve still shuffle.
+    **[headless]**
+1.6 ✅ **DONE 2026-08-02 for the alien path.** `bash -n build-iso.sh` clean,
+    `verify-profile.sh` **0 FAIL**, `iso-build-verify.sh` **193/193**, gate
+    `13pc` did not trip (nothing executable was added). The three bake-time
+    rewrites were replayed against the real `hyprlock.conf`, `nyxus-greeter` and
+    `hyprland.conf`: one line matched each, zero after, comments untouched, and
+    `nyxus-greeter` still parses. The **daily** path cannot be linted end to end
+    here — the linters read the committed profile, and the daily divergence only
+    exists inside a bake. **[headless]**
+1.7 ☐ **Bake both, click-verify.** Bake `NYX_EDITION=alien` (confirm alien is
     unchanged) **and** `NYX_EDITION=daily` (greeter card + teal/amber glow,
     urban default wall, bar/flyout "saucer" glass, launcher, hyprlock). Only a
-    UEFI boot proves greetd/firstboot/squashfs/skel bootstrap. **[VM]**
+    UEFI boot proves greetd/firstboot/squashfs/skel bootstrap, the swaync
+    handover, and that `systemctl --user --failed` is finally empty. **[VM]**
 
 **Gate before any of Phase 1: SATISFIED (2026-08-01).** The click-audit is done
 and written up as `docs/ISO_FULL_AUDIT_2026-07-31.md` §11. Hub, Power, Quick
@@ -423,6 +505,18 @@ guest. Three of its findings change Phase 1 and should be read before starting:
   flyout in brief §2 has no daemon behind it today, and Settings already ships a
   notifications page configuring the daemon that isn't there. **Pick one daemon
   before 1.4**, because the choice decides what the flyout is even built on.
+  **SETTLED 2026-08-02 — one daemon per edition, and it is not the same one.**
+  Alien keeps **dunst** with its appearance unchanged, and `swaync.service` is
+  masked (`airootfs/etc/systemd/user/swaync.service -> /dev/null`) so the failed
+  unit goes away; masking rather than disabling because the unit is
+  `disabled; preset: enabled` and a preset can re-arm anything that is merely
+  disabled. Daily uses **swaync** — the daily block deletes that mask and
+  rewrites `exec-once = dunst` to `exec-once = swaync` in the staged skel. The
+  swaync *package* stays in `packages.x86_64`: masking is per-image state,
+  dropping the package would be per-repo and would take Daily's flyout with it.
+  Settings' notifications page therefore has a live backend on Daily and is
+  still a page over a masked daemon on alien — an alien-side gap, tracked in
+  audit §11.4, not a Daily blocker.
 - **Station decks leak orphan eww daemons** (§11.3): `eww open` self-daemonises
   during the login race, so surfaces exist that `eww close` cannot reach. Daily
   strips stations, but it inherits the same launch path — fix it at the launcher,

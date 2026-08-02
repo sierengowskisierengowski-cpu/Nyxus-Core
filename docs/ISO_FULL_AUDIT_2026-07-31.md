@@ -354,9 +354,31 @@ all. And Settings ships a notifications page (`nyxus_settings_notifications.py`)
 that configures swaync, which is another instance of the §1.4 class in the
 completeness study: a page that looks green over a backend that is not there.
 
-**Not yet fixed.** Pick one daemon. If it is swaync, drop the dunst `exec-once`
-and the dunst package; if it is dunst, drop swaync and rewrite the Settings
-page against dunst.
+**FIXED 2026-08-02 — one daemon per edition, and it is not the same one.**
+
+The alien build keeps dunst and its notification appearance is unchanged. What
+goes away is the loser: `swaync.service` is masked in the profile
+(`airootfs/etc/systemd/user/swaync.service -> /dev/null`, the same shape already
+used for `systemd-firstboot.service`), so it can never be started and the failed
+unit disappears. Masking rather than disabling is deliberate — the unit was
+`disabled` with `preset: enabled`, and anything merely disabled can be re-armed
+by a preset.
+
+The swaync **package** stays. The Daily Driver edition uses swaync, because the
+approved flyout — calendar, quiet hours, quick-toggle pills — is a
+control-centre feature set dunst has no equivalent for. A `NYX_EDITION=daily`
+bake removes the mask and rewrites the staged skel's `exec-once = dunst` to
+`exec-once = swaync`. Still exactly one daemon owning
+`org.freedesktop.Notifications`; only its identity changes per edition.
+
+Verified headlessly (the rewrite replayed against the real `hyprland.conf`: one
+line matched, zero after). **Only a bake proves the failed unit is actually
+gone** — re-check `systemctl --user --failed` on the next stick.
+
+**Still open on the alien side:** `nyxus_settings_notifications.py` configures
+swaync, which on alien is now a masked daemon. The page was already over a
+backend that never ran, so this changes nothing measurable, but it should be
+rewritten against dunst or edition-gated.
 
 ### 11.5 CA-15 — the lock screen cannot be judged here, but two real config defects sit under it
 
