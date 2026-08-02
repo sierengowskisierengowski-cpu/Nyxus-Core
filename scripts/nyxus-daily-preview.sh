@@ -476,6 +476,19 @@ else
 fi
 
 # ════════════════════════════════════════════════════════════════════════
+#  OWNERSHIP — must happen BEFORE the accent pass
+# ════════════════════════════════════════════════════════════════════════
+# `cp -a` from the repo preserves the repo's ownership, so everything staged
+# above currently belongs to whoever owns the checkout. The accent pass below
+# runs AS the preview user and rewrites ~25 files in place; against a
+# root/checkout-owned tree every one of those writes is EACCES. Hand the home
+# over first, then re-run it at the end for the few files written after.
+step "ownership"
+run chown -R "${PREVIEW_USER}:${PREVIEW_USER}" "${PREVIEW_HOME}"
+run chmod 0700 "${PREVIEW_HOME}"
+ok "${PREVIEW_HOME} handed to ${PREVIEW_USER} before the accent pass"
+
+# ════════════════════════════════════════════════════════════════════════
 #  ACCENT — merge the Daily preset in, then let the real engine re-skin
 # ════════════════════════════════════════════════════════════════════════
 step "accent"
@@ -582,7 +595,7 @@ fi
 # ════════════════════════════════════════════════════════════════════════
 #  OWNERSHIP
 # ════════════════════════════════════════════════════════════════════════
-step "ownership"
+step "ownership (final)"
 run chown -R "${PREVIEW_USER}:${PREVIEW_USER}" "${PREVIEW_HOME}"
 run chmod 0700 "${PREVIEW_HOME}"
 ok "${PREVIEW_HOME} is owned by ${PREVIEW_USER}, mode 0700"
