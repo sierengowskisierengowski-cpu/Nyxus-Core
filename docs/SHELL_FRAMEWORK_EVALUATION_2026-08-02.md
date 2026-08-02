@@ -1,6 +1,7 @@
 # NYXUS — SHELL FRAMEWORK EVALUATION FOR THE DAILY DRIVER EDITION
 
-**Date:** 2026-08-02 · **Type:** decision document — research only
+**Date:** 2026-08-02 · **Revised:** 2026-08-02 (Part II, §13–§16, after owner review)
+**Type:** decision document — research only
 **Status:** nothing implemented. No package list, `build-iso.sh`, `verify-profile.sh`,
 eww file, script or `HANDOFF.md` line was touched. This document is the entire
 deliverable.
@@ -19,6 +20,15 @@ deliverable.
 > costs **one line in `packages.x86_64`**. That is the recommendation. §10 states
 > it plainly; §9 is the honest accounting of why the option you did not ask about
 > beats the one you did.
+>
+> **→ PART II (§13–§16), added later the same day**, answers the owner's two
+> follow-up criteria — *"i want eye candy and rich features"* and *"i dont want
+> … [to change] what i can and can not do."* Short version: **for eye candy the
+> ranking is Quickshell ≫ AGS/GTK4 ≫ eww/GTK3**, so eye candy and packaging point
+> at the same framework and the recommendation is unchanged; and the switch
+> **raises** the capability ceiling rather than lowering it — five of the seven
+> entries in this project's own *"what is not possible"* list are eww/GTK3 limits,
+> not physics. §14 also corrects a misreading about the blurred corners.
 
 ---
 
@@ -724,4 +734,419 @@ Phase 1 is untouched. **That is the whole downside.**
   and `Greetd` support is noted in §9 as a fact, not proposed. hyprlock cannot
   even be assessed until it is run somewhere it renders (audit §11.5).
 - **No package was added, and no build file was touched.** Verify with
-  `git show --stat` on this commit: one new file under `docs/`.
+  `git show --stat`: this document is the only path in either of its commits.
+- **Part II's capability claims are documentation-level, not rendered.** Every
+  animation, shader, effect and particle capability in §13 is read out of
+  upstream reference docs, upstream release notes or Arch package file lists on
+  2026-08-02 — **none of it was drawn on a screen here.** "Quickshell has a
+  particle system" means the module ships in `qt6-declarative`; it does not mean
+  the owner's specific effect has been proven to look right. §11's trial is what
+  converts that.
+
+---
+
+# PART II — ANSWERING THE OWNER'S TWO CRITERIA
+
+**Added 2026-08-02, after the owner read Part I.** He is not rejecting the
+recommendation — his words were that the decision *"will depend what it all
+offers."* He named two criteria that Part I did not weight as primary:
+
+> **"i want eye candy and rich features"**
+>
+> **"i dont want to start changing all these things and ways on doing them that
+> will start changing on what i can and can not do."**
+
+The second is not a preference, it is a **capability-ceiling worry**: *will
+switching take options away from me later?* §16 answers it directly. §13 answers
+the first with measurements rather than adjectives, §15 covers "rich features",
+and §14 corrects a misreading about the blur corners.
+
+Everything below was re-verified on the web on **2026-08-02**. Part I's
+recommendation was **re-derived** with these two criteria weighted first, not
+defended — §13.6 states where it landed.
+
+---
+
+## 13. EYE CANDY — WHAT EACH FRAMEWORK CAN ACTUALLY DO
+
+### 13.1 The starting point: this project already knows its own ceiling
+
+NYXUS has a measured eye-candy capability study —
+[`EYE_CANDY_DESIGN_SPEC_2026-07-31.md`](./EYE_CANDY_DESIGN_SPEC_2026-07-31.md)
+— with source-line citations into Hyprland and eww. Its §5 is titled *"WHAT IS
+NOT POSSIBLE — PLAINLY"* **[DOC]**. That list is the honest baseline for what the
+owner can do **today**, and most of it is a property of **eww/GTK3**, not of
+Hyprland:
+
+| From the eye-candy spec | Why |
+|---|---|
+| §5.2 *"A real 3D look on controls — NO"* | *"GTK3 cannot rotate, scale, skew or light a widget."* The recommended workaround is **pre-rendered Blender sprite sheets** swapped frame by frame |
+| §5.3 *"Arbitrary CSS filters in eww — NO"* | *"GTK3 CSS has no `filter`, no `backdrop-filter`, no `mix-blend-mode`."* This is why the `-mono.png` asset variants exist — a greyscale mode had to be **pre-rendered because it could not be computed** |
+| §5.4 *"Per-widget blur — NO"* | blur is a whole-layer-surface compositor effect. Workaround: give the widget **its own window, namespace, exclusive zone and watcher** |
+| §5.5 *"A rotate/flip transition in eww — NO"* | `GtkStack` has six transitions, none rotate |
+| §5.6 *"Custom uniforms into a screen shader — NO"* | Hyprland feeds a fixed uniform set. *"There is no mechanism to pass an application value — mood, CPU, `CAVA_BASS` — into a shader."* |
+| §5.1 *"True 3D compositing — NO"* | compositor-level; **true for all three frameworks** |
+| §12.1 *"Animated screen shaders are not affordable"* | needs `debug:damage_tracking = 0` → full-screen redraw every frame forever. **Compositor-level; true for all three** |
+
+**Read that column again.** Five of the seven "no"s are **eww/GTK3 limits**, not
+laws of physics. The owner has already been paying a capability tax and did not
+know it was optional — the workarounds in that document (pre-render the
+greyscale, pre-render the toggle, spend a whole extra layer surface to blur one
+card) are engineering *around* GTK3.
+
+**And one entry is worse than a "no" — it is a ceiling he has already hit.**
+Eye-candy spec §3.3, on eww **[DOC]**:
+
+> *"An inline `:style` beats every stylesheet rule, at any specificity … **any
+> property you intend to animate from CSS must not also be written inline on the
+> same widget. Pick one owner per property, per widget.** This single rule
+> decides most of the architecture in §7."*
+
+In plain terms: in eww, a property driven by **live data** (`CAVA_BASS` glow) can
+**never also be animated** by hover or a keyframe. `.nyx-surface` is deliberately
+forbidden from declaring `box-shadow` for exactly this reason. That is a
+structural "you cannot do both" — precisely the class of thing the owner says he
+does not want to run into.
+
+### 13.2 Animation
+
+| | **eww / GTK3** | **AGS / GTK4** | **Quickshell / QML** |
+|---|---|---|---|
+| Declarative transitions | ✅ CSS `transition` **[WEB** GTK3 CSS Overview**]** | ✅ CSS `transition` **[WEB** GTK4 css-properties**]** | ✅ `Behavior`, `Transition`, `PropertyAnimation` **[WEB** Qt 6.11 docs**]** |
+| Keyframes | ✅ `@keyframes` — proven live here (`boombox-led-pulse`) **[DOC]** | ✅ `@keyframes` | ✅ `SequentialAnimation` / `ParallelAnimation` / `PauseAnimation` / `PropertyAction` / `ScriptAction` |
+| Easing | CSS timing functions | CSS timing functions | Full `Easing.type` set **plus** per-animation bezier |
+| **Spring / physical motion** | ❌ | ❌ | ✅ **`SpringAnimation`** with `mass`, `damping`, `epsilon`; plus `SmoothedAnimation` |
+| **`transform` (scale / rotate / translate)** | ❌ **none — GTK3 CSS has no `transform`** **[DOC** spec §3.2**]** | ✅ **`transform` + `transform-origin`** (CSS Transforms Level 1) — but render-only, layout is unaffected **[WEB]** | ✅ `scale`, `rotation`, `transform` are **first-class Item properties**, and layout follows |
+| **State machine** | ❌ hand-rolled from `defvar` + conditional `:style` | ❌ hand-rolled from CSS classes | ✅ **`states` + `transitions`**, declarative, with `from`/`to` and `reversible` |
+| **Interruptible mid-flight** | Partly — CSS transitions retarget; anything inline does not animate at all | Partly — same | ✅ By construction. `Behavior` retargets on every change |
+| **Animation off the UI thread** | ❌ | ❌ | ✅ **Animators** — `XAnimator`, `YAnimator`, `ScaleAnimator`, `RotationAnimator`, `OpacityAnimator`, **`UniformAnimator`** — run on the scene-graph **render thread** and *"continue to animate even when UI is otherwise blocked"* **[WEB]** |
+| **Animating a live data value** | ❌ **blocked by the inline-`:style` rule** (§13.1) | ⚠️ possible, needs care | ✅ `Behavior on <property>` animates **every** change to that property regardless of who wrote it |
+| GPU-accelerated rendering | ❌ **no** — open request, eww #1342 **[WEB]** | ✅ GSK (GL / Vulkan) | ✅ Qt Quick scene graph (GL / Vulkan) |
+
+The two rows that matter most are the last three. **"Animate a value that comes
+from live system data"** is the entire idea behind the CAVA-reactive glow the
+owner already loves, and it is the one eww structurally forbids.
+
+### 13.3 Shaders, effects and particles
+
+| | **eww / GTK3** | **AGS / GTK4** | **Quickshell / QML** |
+|---|---|---|---|
+| **Per-widget GPU shader** | ❌ nothing | ⚠️ `Gtk.GLArea` exists — raw GL from JavaScript, no framework support | ✅ **`ShaderEffect`** — arbitrary GLSL fragment + vertex shaders on any item, **with custom uniforms**, animatable via `UniformAnimator` |
+| Shader authoring cost | n/a | hand-written GL boilerplate | Qt 6 requires **precompiled `.qsb`** via the `qsb` tool (`qt6-shadertools`); no inline GLSL. Quickshell 0.3's release notes: *"the process of using a shader with QtQuick is rather painful, requiring `qsb` reruns and a Quickshell relaunch for every change. Full hot-reloading … planned"* **[WEB** outfoxxed.me, 0.3 release**]** |
+| Shaders in real use | — | rare | **Yes** — same release notes: *"Far more Quickshell configurations now use shaders"* **[WEB]** |
+| **Blur behind a widget, inside the panel** | ❌ §5.4 — costs a whole extra layer surface | ✅ **`backdrop-filter`**, new in **GTK 4.22.0 (2026-03-06)**; Arch ships `gtk4 1:4.22.4-1` built 2026-04-30 **[PKG]**. ⚠️ blurs only content **inside the same window** — it cannot blur the desktop behind a transparent window **[WEB]** | ✅ `MultiEffect` + `ShaderEffectSource` — render any item to a texture, blur it, leave its sibling sharp |
+| Bloom / glow / colourise / saturate / mask | ⚠️ faked with `box-shadow` only | ⚠️ `backdrop-filter` gives blur/sepia/invert/saturate behind an element | ✅ **`MultiEffect`** (`QtQuick.Effects`): blur, shadow, colorization, brightness, contrast, saturation, mask — *"multiple effects … into a single item and shader"*, one render pass. **Ships in Arch `qt6-declarative`** **[PKG]** |
+| **Particle system** | ❌ | ❌ | ✅ **`QtQuick.Particles`** — `ParticleSystem`, `Emitter`, `ImageParticle`, affectors (`Turbulence`, gravity, wander). **Ships in Arch `qt6-declarative`** **[PKG]** |
+| GPU vector shapes / neon strokes | ❌ pre-render a PNG | ⚠️ `GskPath` from code | ✅ `QtQuick.Shapes` — GPU paths, gradients, dashes. **Ships in Arch `qt6-declarative`** **[PKG]** |
+| Distortion / warp / chromatic aberration | ❌ | ❌ realistically | ✅ `ShaderEffect` — this is exactly what it is for |
+| Full-screen post-process | Hyprland `screen_shader` — **but §12.1 makes it unaffordable animated. Identical for all three** | same | same |
+
+**The honest caveat on the Quickshell column:** shaders require the `qsb`
+build step and do not hot-reload yet. So the *ceiling* is enormously higher, but
+the *iteration loop for shaders specifically* is closer to compile-and-restart
+than to live-edit. Ordinary QML — layout, colour, animation, effects,
+particles — **does** hot-reload.
+
+### 13.4 The six effects this project actually cares about
+
+| Effect | Today | eww ceiling | AGS/GTK4 | Quickshell/QML |
+|---|---|---|---|---|
+| **Lock-screen audio spectrum** (`nyxus-lock-cava`) | hyprlock `cmd[update:50]` shelling out per frame → **2,969 dropped updates in 40 s** (audit §11.5, LK-02) **[DOC]** | n/a — hyprlock is a separate program, so **no framework choice fixes this** | same | ✅ only if the lock itself moves into the shell (`WlSessionLock` + `Pam`) — then bars are items with `Behavior on height`, **no subprocess per frame**. *Not proposed here; noted as a ceiling* |
+| **CAVA-driven glow** (`CAVA_BASS` → inline `box-shadow`) | works — **nine** inline `:style` lines in `eww.yuck` interpolate it, 46 references in all **[REPO]** | ⚠️ **works but caps you** — §3.3 forbids CSS-animating any inline-driven property, which is why `.nyx-surface` may not declare `box-shadow` **[DOC]** | ✅ same trick, plus `transform` | ✅ `Behavior on glowRadius { SpringAnimation {} }` — the value can be data-driven **and** animated **and** hover-modulated at once. **Ceiling removed** |
+| **Hover-scramble text** | lives in `nyxus_chrome.py`, a per-label Python timer animator in the **GTK4 apps** — not an eww feature **[REPO]** | would need a subprocess or a `defvar` churn per label | ✅ direct port of the same idea | ✅ a `Timer` + string property; `Behavior` handles the fade |
+| **Frosted glass + corner-bleed** | compositor blur + widget alpha falloff **[DOC]** | ✅ radial-gradient alpha | ✅ radial-gradient alpha; 4.22 adds non-concentric radial gradients **[WEB]** | ✅ plus `OpacityMask` / `MultiEffect` masking. **All three work — see §14** |
+| **Motion implied by the mockups** — taskbar hover-lift + running-dot, launcher scale-in from the orb, results reflowing as you type, pill press, slider drag, calendar month slide, media scrub, notification card enter/dismiss, Clear All cascade | none built | hand-rolled per widget; list add/remove has no animation primitive | `<For>` diffs the list; animation still hand-rolled per item | ✅ `ListView` has **`add` / `remove` / `displaced` / `populate` transitions** as built-ins — the Clear All cascade and the search-results reflow are *declared*, not coded |
+| **Live wallpaper** (`mpvpaper`) | layer 0, below everything **[REPO]** | unaffected | unaffected | unaffected — and Quickshell could additionally render video itself via `qt6-multimedia`. **Not a differentiator** |
+
+### 13.5 The ranking, explicitly
+
+**For eye candy: Quickshell/QML ≫ AGS/GTK4 ≫ eww/GTK3.**
+
+Both gaps are large, and they are different in kind:
+
+1. **Quickshell — highest ceiling by a wide margin.** It is the only one of the
+   three with real per-widget GPU shaders, a particle system, spring physics,
+   render-thread animators, a declarative state machine, and list transitions.
+   Nothing on the owner's wish list is out of reach, and several things he was
+   told were impossible (per-widget blur, rotate/flip, computed greyscale,
+   shader uniforms driven by system state) become ordinary.
+2. **AGS/GTK4 — a genuine, large upgrade over eww, but a middle tier.** It gains
+   `transform`, GPU rendering, and — new since **GTK 4.22.0, 2026-03-06** —
+   `backdrop-filter`, which finally allows blur behind one widget inside a
+   panel. It still has no particles, no spring animation, no first-class shader
+   item, and no state machine.
+3. **eww/GTK3 — the weakest, and structurally so.** No `transform`, no `filter`,
+   no per-widget blur, no GPU acceleration, no rotate/flip, and the
+   inline-`:style` rule that makes data-driven and animated mutually exclusive.
+   Its toolkit binding is unmaintained, so **this list will never get shorter.**
+
+### 13.6 Does this change the recommendation?
+
+**No — and it makes the decision easier, which is worth saying plainly: eye
+candy and packaging point at the same framework.**
+
+That is a genuinely lucky outcome and it is the reason to state it rather than
+hedge. Part I picked Quickshell on packaging, failure loudness and hot reload,
+and explicitly flagged GTK4 coherence as *"the only criterion where AGS beats
+everything."* Re-deriving with eye candy weighted **first** does not reopen it:
+Quickshell wins that criterion too, and by more than it won the packaging one.
+There is no conflict to trade off and no cost the owner has to swallow to get
+both.
+
+**Where the re-derivation did change something:** Part I under-sold how much
+eww is *already* costing him. §13.1 shows five of the seven "impossible" entries
+in his own eye-candy spec are GTK3 limits, not physics. If the owner wants eye
+candy as a primary goal, **staying on eww for Daily is the option that most
+constrains him**, and that should have been in Part I's summary rather than
+buried in the maturity section.
+
+**The one thing that would flip this to AGS** is unchanged from §10.1: if the
+trial shows the corner-bleed glass cannot be matched in QML, or if QML proves
+unlearnable at this project's pace. Eye candy does not add a new reason to
+prefer AGS — it removes one.
+
+---
+
+## 14. THE CORNER ARTIFACT — IN PLAIN LANGUAGE
+
+The owner read "rectangles" as "triangles" and asked whether the result would
+look like a cool feature or like a bug. Short answer: **like a small bug if left
+alone, it is already solved in this build, and it is not a reason to pick one
+framework over another.**
+
+**What the limitation actually is.** A shell panel is a *layer surface*, and a
+layer surface is reported to the compositor as a **rectangle** — Hyprland's
+maintainer, on eww specifically: *"hyprland can't really know how to cut the blur
+on corners, since all layersurfaces report is a rectangle."* **[WEB]** So when
+you round the panel's corners in the stylesheet, the **blurred region** is still
+the full rectangle. Past each rounded corner you can get a faint square of
+blurred wallpaper where you expected sharp wallpaper.
+
+**How visible is it?** Most visible over bright, busy wallpaper; generally
+invisible over a dark base with a glow edge — which is exactly the urban-neon
+direction (brief §4). **Nothing is triangular.** It is a soft right-angle of
+slightly-smeared background hugging each corner.
+
+**It is already fixed in this build, twice over.** `ignore_alpha` tells the
+compositor to skip blurring pixels below an alpha threshold, so fully- or
+nearly-transparent corner pixels stop being blurred. NYXUS sets it on every
+surface **[REPO**,
+`airootfs/etc/skel/.config/hypr/conf.d/nyxus-hyprland-layerblur.conf`**]**:
+
+```
+layerrule = blur on,        match:namespace ^(nyxus.*)$
+layerrule = ignore_alpha 0.2, match:namespace ^(nyxus.*)$
+```
+
+and that file's own header records the history:
+
+> *"`ignorealpha` raises the threshold so fully-transparent pixels don't get
+> blurred (otherwise the blur leaks past window edges)"* … *"it is why the
+> frosted rectangular 'shadow box' behind the tall transparent bars was fought
+> twice and came back."*
+
+So this is a **known, named, already-beaten** artifact here, and the fix is one
+number. Upstream confirms the same remedy: Hyprland issue #9397 ("Layer
+rounding") was resolved by correcting `ignorealpha` syntax, and the current wiki
+documents `ignore_alpha` as *"makes blur ignore pixels with opacity of a or
+lower"* **[WEB**, wiki.hypr.land, updated 2026-07-31**]**. `xray` is the other
+lever — it makes the layer blur the **wallpaper only**, ignoring windows behind
+it, which removes the "smeared window edge" version of the same complaint.
+
+**His corner-bleed effect is unaffected.** Corner-bleed is **widget-painted
+alpha falloff** — a radial gradient in the panel's own background that fades the
+corners toward transparent. That is painted by the toolkit, not by the
+compositor's blur pass, so the rectangle limitation does not touch it. If
+anything the two cooperate: the alpha falloff is what pushes those corner pixels
+below the `ignore_alpha` threshold, so **turning the corner-bleed up makes the
+blur artifact smaller, not bigger.** *(Marked **[INFER]** — the mechanism is
+documented, but the specific interaction at the Daily glass values has not been
+run.)*
+
+**It is identical in eww, AGS and Quickshell**, because it is a property of the
+`wlr-layer-shell` protocol and Hyprland's renderer, not of any widget toolkit.
+**Do not use it to choose a framework.**
+
+---
+
+## 15. RICH FEATURES — WHAT YOU GET FREE VERSUS WHAT YOU BUILD
+
+"Rich features" is where the gap is widest and least arguable, because it is
+countable. **[PKG/WEB**, verified 2026-08-02**]**
+
+| Capability the mockups need | **eww** | **AGS / Astal** | **Quickshell** |
+|---|---|---|---|
+| **Notification daemon** (flyout cards, Clear All) | ❌ not a daemon at all. Today dunst owns the bus and `notif-history.sh` polls at 3 s; the plan delegates to **swaync** **[REPO/DOC]** | ✅ `AstalNotifd` | ✅ `Services.Notifications` — implements the freedesktop server |
+| **MPRIS media** (art, track, scrub, transport) | ❌ `player.sh` + `playerctl` at 1 s **[REPO]** | ✅ `AstalMpris` | ✅ `Services.Mpris` |
+| **PipeWire audio** (volume slider, per-app mix, peak meter) | ❌ `audio.sh`/`audio-sinks.sh` at 2–3 s **[REPO]** | ✅ `AstalWp` (wireplumber) | ✅ `Services.Pipewire`, incl. `PwNodePeakMonitor` |
+| **Network** (Wi-Fi pill, SSID list) | ❌ `network.sh` 5 s + `WIFILIST` 8 s + `WIFISAVED` 10 s **[REPO]** | ✅ `AstalNetwork` (libnm) | ✅ network service |
+| **Bluetooth** (pill, device list) | ❌ `bluetooth.sh` 5 s + `BTLIST` 5 s **[REPO]** | ✅ `AstalBluetooth` | ✅ `Quickshell.Bluetooth` |
+| **Battery / UPower** | ❌ `battery.sh` 10 s **[REPO]** | ✅ `AstalBattery` | ✅ `Services.UPower` |
+| **Power profiles** | ❌ `POWERPROF` 10 s **[REPO]** | ✅ `AstalPowerProfiles` | ✅ `UPower.PowerProfiles` |
+| **System tray** | ✅ `systray` widget since 0.6.0 **[WEB]** — the one thing eww ships | ✅ `AstalTray` | ✅ `Services.SystemTray` + `DBusMenu` |
+| **Hyprland workspace / window state** (taskbar) | ❌ `WORKSPACES` 1 s + `hyprctl` scripts **[REPO]** | ✅ `AstalHyprland` | ✅ `Quickshell.Hyprland` **and** compositor-agnostic `ToplevelManager` |
+| **App index + launcher search** | ❌ scan `.desktop` yourself; a subprocess per keystroke | ✅ `AstalApps` (fuzzy scoring) | ✅ `DesktopEntries` |
+| **Calendar** | ⚠️ GTK3 `calendar` widget exists, but NYXUS renders its own grid in `calendar-month.sh` at 300 s **[REPO]** | ✅ `Gtk.Calendar` or composed | ✅ `MonthGrid` or composed |
+| **Brightness** | ❌ `brightness.sh` 5 s **[REPO]** | ⚠️ via `AstalIO` exec or udev | ⚠️ `Io` / `Process`, or UPower where exposed |
+| **Clipboard history** | ❌ external (`cliphist`) | ⚠️ external | ⚠️ external |
+| **Idle / inhibit** | ❌ external (`hypridle`) | ✅ `AstalIO` + idle | ✅ `IdleInhibitor`, `IdleMonitor` **[WEB]** |
+| **PAM auth / session lock** | ❌ | ✅ `AstalAuth` | ✅ `Services.Pam` + `WlSessionLock` |
+| **greetd** | ❌ | ✅ `AstalGreet` | ✅ `Services.Greetd` |
+| **Screencopy** (live window previews on taskbar hover) | ❌ | ❌ | ✅ `ScreencopyView` — *"displays a video stream from other windows or a monitor"* **[WEB]** |
+
+**Which of the flyout's elements come free.** Of the six things in
+`set-notifications.png` — toggle pills (Wi-Fi, Bluetooth, Airplane, Night Light,
+Do Not Disturb, Dark Mode), brightness + volume sliders, month calendar, media
+card, notification stack, Clear All — **five of the six are backed by a built-in
+service in Quickshell and in AGS, and one (brightness) is a small shell-out in
+both.** In eww, **zero** are backed; all six are shell scripts on timers, and the
+notification stack is not achievable at all without a second daemon.
+
+**Why this is not a convenience argument.** Audit §11.4 records two notification
+daemons shipping and racing, `swaync.service` failing on every boot, and the
+Settings notifications page configuring a backend that never ran **[DOC]**. That
+defect exists *because* the shell could not be the notification daemon. Audit
+§11.3's orphan-daemon leak, and LK-02's 2,969 dropped label updates, are the same
+species: **a shell that cannot hold state in-process ends up as a constellation
+of processes that race.** Built-in services are not garnish here — they delete a
+measured class of defect.
+
+**The taskbar hover-preview row is worth a second look.** `ScreencopyView` means
+Windows-11-style live thumbnails when you hover a taskbar button are *available*,
+not a research project. That is squarely in "eye candy and rich features", and it
+exists in exactly one of the three.
+
+---
+
+## 16. "WHAT DOES THIS TAKE AWAY FROM ME?"
+
+The direct answer to the second criterion.
+
+### 16.1 It expands the ceiling; it does not lower it
+
+Everything eww can do, both alternatives can do. The reverse is not true. §13.1
+lists five capabilities the owner's own spec records as impossible that stop
+being impossible. There is **no** item on the "eww can, Quickshell cannot" side
+of the ledger for these three surfaces — not one was found while writing this.
+
+Concretely, things that become available and are not available today:
+
+- Per-widget blur without spending a whole extra layer surface (§5.4 retired).
+- Computing a greyscale/desaturated variant at runtime instead of shipping a
+  second `-mono.png` for every asset (§5.3 retired).
+- Rotate, scale and flip on real widgets, so a toggle can be *modelled* rather
+  than pre-rendered as a Blender sprite sheet (§5.2 retired).
+- Custom shader uniforms driven by system state — `CAVA_BASS` into a real
+  fragment shader — which Hyprland structurally refuses (§5.6 retired, at the
+  widget level).
+- Animating a property that is *also* data-driven (§3.3's hard rule retired).
+- Live window thumbnails on taskbar hover (§15).
+- Particles, spring physics, and list add/remove/displace transitions.
+
+### 16.2 What genuinely becomes harder — and how much
+
+**Two theming systems.** The shell would be QML; the apps (`nyxus_chrome.py`,
+Settings, Control, Notepad, Stickies, Store) stay GTK4 Python. This is the real
+cost and it deserves a straight measurement rather than reassurance.
+
+**The colour half is already solved, and better than expected.**
+`nyxus-apply-accent` is not an eww script — it is a **27-consumer** regeneration
+pipeline **[REPO]**, and the registered consumers already include:
+
+```
+"${HOME}/.config/qt5ct/colors/nyxus-prism.conf"
+"${HOME}/.config/qt6ct/colors/nyxus-prism.conf"
+```
+
+**A Qt consumer is already in the pipeline today.** The mechanism is a
+baseline-substitution pass whose own header states it handles *"`#rrggbb` /
+`rrggbb` (CSS, rasi, toml, hyprland `rgba(rrggbbaa)`, **qt `#aarrggbb`**)"* plus
+decimal triplets **[REPO]**. Adding `editions/daily/shell/Theme.qml` is **one
+line in the `CONSUMERS` array**, in a script that already feeds SCSS, GTK3 CSS,
+GTK4 CSS, hyprlang, rasi, dunstrc, TOML, kitty.conf, a btop theme, two Qt
+colour files and three Python files. This is a solved shape, not a new one.
+
+**The half that is not automated is visual language** — radii, shadow curves,
+motion timings, hover semantics — kept matching by hand between QML and GTK4
+CSS. That is ongoing discipline, and it is real. But note: **it is the same
+discipline already required today** between eww/GTK3 and the GTK4 apps, and the
+eye-candy spec already resolved it with a rule that transfers unchanged
+**[DOC** §3.4**]**:
+
+> *"the eye-candy language is specified for eww + Hyprland; GTK4 apps adopt only
+> the palette, radii and motion timings, and get no bespoke effects."*
+
+Substitute "Quickshell" for "eww" and the rule still works. **The shell is where
+the identity lives; the apps follow the tokens.** That is what NYXUS already
+does.
+
+**Three other honest losses:**
+
+- **Nobody in this project has written QML.** Real, and the trial in §11 exists
+  to price it. Mitigated by hot reload — the feedback loop is seconds, not a
+  bake.
+- **AGS would have reused TypeScript skills** already present in this pnpm
+  workspace, and Quickshell does not. That is a genuine point in AGS's favour
+  that §13 does not erase.
+- **eww knowledge stops compounding for Daily.** It stays required for alien,
+  which is frozen — so it becomes maintenance knowledge rather than growing
+  knowledge.
+
+### 16.3 Nothing already built is lost
+
+Both halves confirmed against the tree **[REPO]**:
+
+- **The alien shell stays eww and stays untouched.** Owner decision 2026-08-01,
+  and it is now *enforced*: gate `13pm` asserts the skel accent stays `prism`,
+  the wallpaper stays `nyxus-urban-alien`, and `NYX_EDITION` still defaults to
+  `alien` **[REPO]**. Daily work cannot silently flip it. All ~4,000 lines of
+  yuck, ~6,000 lines of SCSS and 88 feeder scripts keep running exactly as they
+  do today.
+- **Phase 1's Daily work is framework-neutral.** The entire committed edition
+  directory is six files — `accent.json`, `wallpaper.conf`, `wallpaper.json`,
+  `wall-rotation.list`, `regreet.css`, `hyprlock-accent.conf` **[REPO]** — plus
+  four wallpapers and the `NYX_EDITION` bake hook. **Not one of them is an eww
+  file.** They are colour, wallpaper and greeter/lock theming that any shell
+  framework consumes unchanged.
+- **The only eww-shaped thing to discard is a plan line**, not code: the §6
+  entry routing the bar/flyout/launcher to `editions/daily/eww/*`, and the
+  swaync assignment for the flyout. Both are marked *"not started"* **[DOC]**.
+
+### 16.4 Reversibility — what backing out actually costs
+
+| Step | Cost to undo |
+|---|---|
+| The taskbar trial (§11) | Delete one directory under `editions/daily/`. `git rm`. |
+| The `quickshell` package | It is **appended at bake by the edition block**, never committed into `packages.x86_64` — remove one line |
+| Alien | **Never changed.** Provable, not asserted: bake with the default `NYX_EDITION=alien` and diff; gate `13pm` fails if any shared default moved |
+| Phase 1 theme files | Untouched under every outcome |
+| Time | The §11 kill criteria stop the trial at ~2 days if it is going badly, **before any bake** |
+
+This is the cheapest reversible decision available, and it gets more expensive
+every week that Daily shell code is written in something.
+
+### 16.5 The paragraph to read to him
+
+> Switching does not take options away from you — it gives you back a pile you
+> were already told you could not have. Right now, five of the seven things your
+> own eye-candy document lists as "not possible" are limits of eww's ancient
+> toolkit, not limits of Linux or Hyprland: you cannot blur one card inside a
+> panel, you cannot compute a greyscale version of an image (that is why every
+> asset ships a second `-mono` copy), you cannot rotate or scale a widget (that
+> is why a real-looking toggle would have to be pre-rendered in Blender frame by
+> frame), you cannot push a live value like the bass level into a shader, and you
+> cannot animate a property that is already driven by live data — which is
+> exactly why the panels are forbidden from having an animated glow. All five of
+> those come back with Quickshell, and it adds real GPU shaders, a particle
+> system, spring physics, and live thumbnails of your open windows when you hover
+> the taskbar. What you give up is smaller than it sounds: the shell would be
+> written in QML while your apps stay GTK Python, so those are two styling
+> systems to keep looking identical — but your accent script already generates
+> theme files for twenty-seven different consumers, two of which are already Qt, so
+> the colours are one line of wiring; what is left is the same "keep the radii
+> and timings matching" discipline you already run between the bars and the apps
+> today. Nothing you have built is lost: the alien build stays on eww and is
+> locked by an automated check, and every Daily file made so far is colour and
+> wallpaper that any framework reads. And if it goes badly, backing out is
+> deleting one folder — the trial is one file, and it gets judged on your own
+> screen before anything is ever baked.
