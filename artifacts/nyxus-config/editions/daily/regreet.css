@@ -1,0 +1,174 @@
+/* ============================================================
+ * NYXUS Daily Driver - ReGreet stylesheet - "Neon Alley Sign-In"
+ * (c) 2026 Joseph A. Sierengowski - NYX-J5W-2026-SIERENGOWSKI-LOCKED
+ * rev 2026-08-02 - URBAN NEON tokens (docs/DAILY_DRIVER_BRINGUP_PLAN.md
+ * section 5, sampled from docs/assets/daily-driver/set-login.png):
+ *   accent primary  #2ee6d6 (teal)     secondary #ff9d2e (amber)
+ *   danger          #ff2d55 (red)      - errors ONLY, never focus
+ *   text #eef2fa / #a7b2bd / #6a7178   frosted ink rgba(9,16,20,.55)
+ *
+ * Staged over /etc/greetd/regreet.css ONLY when the bake runs with
+ * NYX_EDITION=daily. The shared/alien sheet at nyxus-scripts/greetd/
+ * regreet.css is never touched, so the alien login screen is unchanged.
+ *
+ * Audit note (docs/ISO_FULL_AUDIT_2026-07-31.md section 8, G-14): the alien
+ * sheet once filled focus with #ff2d55, the same red as .error, so a normal
+ * keyboard-focused field looked exactly like a rejected password. Here focus
+ * is TEAL and #ff2d55 appears in exactly one rule, .error. Keep it that way.
+ * ASCII-only.
+ * ============================================================ */
+
+window {
+    background-color: rgba(6, 9, 12, 0.30);
+    color: #eef2fa;
+    font-family: "Inter Display", "JetBrains Mono", sans-serif;
+}
+
+/* login card - frosted dark glass with a teal edge and an outer glow bloom,
+ * the same card recipe the flyout / launcher / lock all wear (plan section 5).
+ * Scope: ONLY regreet's login frame. A broader selector such as
+ * `box.horizontal > box` also matches regreet's clock and message boxes and
+ * paints them as extra frosted panels shoved sideways - that is the stray
+ * "weird box" the alien sheet had to fix.
+ *
+ * CARD PLACEMENT - READ BEFORE CHANGING EITHER NUMBER.
+ * These are ABSOLUTE pixels, and the pair of them is what sets the card WIDTH:
+ * the frame fills whatever horizontal space the margins leave (1920 - 1360 -
+ * 40 = 520px). GTK4 CSS has no percentage margins and no halign, so there is
+ * no way to say "centred" here.
+ *
+ * nyxus-greeter rescales both values for the detected panel before launching
+ * regreet and passes the result with -s, because absolute pixels on an unknown
+ * panel are a LOCKOUT: on a 1366px laptop the shipped numbers push the card
+ * off the right edge and the operator cannot type a password. Keep the
+ * `margin-left:`/`margin-right:` lines in this exact one-declaration-per-line
+ * shape - the generator rewrites them by line and matches
+ * `^\s*margin-left:\s*[0-9]+px;`.
+ *
+ * The numbers below are the 1920x1080 case and the never-lock-out fallback if
+ * that generation fails. They are deliberately the SAME right-parked geometry
+ * the shared greeter computes (card centre at 0.845*W), so the fallback sheet
+ * and the generated sheet agree. The approved mockup (set-login.png) shows the
+ * card CENTRED instead; centring cannot be expressed here, it needs the card
+ * centre to become an input to nyxus-greeter's arithmetic. Tracked in the
+ * bring-up plan section 7 as Daily shell work - do not "fix" it by editing
+ * these two numbers, that only desyncs the fallback. */
+frame, .frame {
+    background-color: rgba(9, 16, 20, 0.55);
+    border: 1px solid rgba(46, 230, 214, 0.45);
+    border-top: 2px solid #2ee6d6;
+    border-radius: 18px;
+    padding: 24px 28px;
+    margin-left: 1360px;
+    margin-right: 40px;
+    box-shadow: 0 0 22px rgba(46, 230, 214, 0.30),
+                0 10px 34px rgba(0, 0, 0, 0.5);
+}
+frame > border { border: none; }
+
+label {
+    color: #eef2fa;
+    text-shadow: 0 0 8px rgba(238, 242, 250, 0.20);
+}
+
+/* The mockup leads with a large, cool clock over a quiet date line, so the
+   clock carries the teal glow and the greeting stays muted rather than
+   competing with it. */
+#greeting_label, .greeting {
+    font-family: "Inter Display", sans-serif;
+    font-size: 15px;
+    color: #a7b2bd;
+    text-shadow: none;
+}
+
+#clock_label, .clock {
+    font-family: "Orbitron", "Inter Display", sans-serif;
+    font-weight: 800;
+    font-size: 46px;
+    color: #eef2fa;
+    text-shadow: 0 0 20px rgba(46, 230, 214, 0.60),
+                 0 0 44px rgba(46, 230, 214, 0.30);
+}
+
+/* password field - pill-shaped over the frost, teal caret and focus ring */
+entry {
+    background-color: rgba(6, 9, 12, 0.55);
+    border: 1px solid rgba(46, 230, 214, 0.28);
+    border-radius: 18px;
+    color: #eef2fa;
+    caret-color: #2ee6d6;
+    font-family: "Inter Display", sans-serif;
+    padding: 11px 16px;
+    min-height: 22px;
+}
+entry:focus, entry:focus-within {
+    border-color: #2ee6d6;
+    box-shadow: 0 0 12px rgba(46, 230, 214, 0.40);
+}
+
+/* primary button - teal at rest, amber on hover. Amber is the secondary
+   accent, NOT a warning here; the only red on this sheet is .error. */
+button {
+    background-color: rgba(46, 230, 214, 0.14);
+    background-image: none;
+    border: 1px solid #2ee6d6;
+    border-radius: 12px;
+    color: #eef2fa;
+    font-family: "Inter Display", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    padding: 8px 16px;
+}
+button:hover, button:focus {
+    background-color: rgba(255, 157, 46, 0.20);
+    border-color: #ff9d2e;
+    box-shadow: 0 0 14px rgba(255, 157, 46, 0.45);
+}
+button:active {
+    background-color: rgba(255, 157, 46, 0.34);
+}
+
+/* session / user dropdowns */
+combobox button, dropdown button, combobox entry, dropdown entry {
+    background-color: rgba(13, 20, 24, 0.92);
+    border: 1px solid rgba(46, 230, 214, 0.34);
+    color: #a7b2bd;
+}
+combobox button:hover, dropdown button:hover {
+    border-color: #2ee6d6;
+    box-shadow: 0 0 12px rgba(46, 230, 214, 0.40);
+}
+
+/* GTK4 paints a GtkDropDown's list inside `popover > contents`, with a
+   `listview` of `row`s - styling the bare `popover` node leaves all of that
+   default Adwaita grey, so the list that falls out of the frosted card does
+   not look like it belongs to it. */
+popover, popover.background, popover.menu,
+popover > contents, popover.menu > contents {
+    background-color: rgba(6, 9, 12, 0.97);
+    border: 1px solid rgba(46, 230, 214, 0.34);
+    border-radius: 12px;
+    color: #eef2fa;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.65);
+}
+popover > arrow {
+    background-color: rgba(6, 9, 12, 0.97);
+    border: 1px solid rgba(46, 230, 214, 0.34);
+}
+popover listview, popover listview > row, popover scrolledwindow {
+    background-color: transparent;
+    color: #a7b2bd;
+}
+popover modelbutton:hover, popover row:hover, popover listview > row:hover {
+    background-color: rgba(46, 230, 214, 0.18);
+    color: #eef2fa;
+}
+popover listview > row:selected {
+    background-color: rgba(46, 230, 214, 0.30);
+    color: #eef2fa;
+}
+
+.error, infobar.error, label.error {
+    color: #ff2d55;
+    text-shadow: 0 0 8px rgba(255, 45, 85, 0.5);
+}

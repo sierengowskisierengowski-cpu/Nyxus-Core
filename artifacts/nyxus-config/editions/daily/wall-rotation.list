@@ -1,0 +1,24 @@
+# ============================================================
+#  NYXUS Daily Driver — wallpaper rotation set (URBAN NEON ONLY)
+#  ~/.config/nyxus/wall-rotation.list
+#
+#  Staged over skel only when the bake runs with NYX_EDITION=daily. The
+#  shared/alien rotation list is a separate file and is never touched.
+#
+#  Scope rule, same discipline as the alien list: this rotation is the
+#  urban-neon art direction ONLY — dark cyberpunk city/alley at night,
+#  teal + amber signage. No alien murals, no graffiti-space pop-art, no
+#  hacker-mode art (that is reserved for actual hacker mode), no brand or
+#  kageryu plates. A wall that does not read as the approved look does not
+#  belong here, because rotation is the thing the owner stares at all day.
+#
+#  One slug per line; resolves in ~/.config/hypr/walls[/rotation] or
+#  /usr/share/backgrounds/nyxus. Comment a line to drop it.
+#  Every slug here must also exist in the backgrounds manifest.tsv.
+# ============================================================
+
+# -- approved urban-neon set (2026-08-01) --
+nyxus-urban-flower-wall
+nyxus-urban-flower-concrete
+nyxus-urban-astronaut-moonwalk
+nyxus-hero-cosmic

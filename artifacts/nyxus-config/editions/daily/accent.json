@@ -1,0 +1,36 @@
+{
+  "_comment": "URBAN NEON — the NYXUS Daily Driver palette. Staged over skel ONLY when the bake runs with NYX_EDITION=daily; the shared/alien accent.json stays 'prism' and is never touched. Hex values are sampled from the mockups approved 2026-08-01 (docs/assets/daily-driver/) and specified in docs/DAILY_DRIVER_BRINGUP_PLAN.md §5. Active must stay 'urban-neon'. follow_wallpaper is LOCKED OFF — the palette is the identity, it does not drift with the wall. Apply with: nyxus-apply-accent urban-neon",
+  "active": "urban-neon",
+  "presets": {
+    "urban-neon": {
+      "primary": "#2ee6d6",
+      "secondary": "#ff9d2e",
+      "warn": "#ff9d2e",
+      "ok": "#39ff14"
+    }
+  },
+  "follow_wallpaper": false,
+  "_palette_fixed": {
+    "teal_glow": "#8ffcff",
+    "teal_deep": "#0f8593",
+    "amber_glow": "#ffca55",
+    "amber_deep": "#bd7730",
+    "surface": "#0d1418",
+    "elevated": "#131b21",
+    "text": "#eef2fa",
+    "text_muted": "#a7b2bd",
+    "text_dim": "#6a7178",
+    "red": "#ff2d55",
+    "void": "#06090c"
+  },
+  "_glass": {
+    "_comment": "Frosted glass + corner-bleed material. Corner-bleed is an owner-required signature: panel corners fade to transparent so the neon city reads through the chrome. Delivered with compositor layer blur plus widget alpha, NOT per-widget CSS blur, which GTK/eww cannot do.",
+    "fill": "rgba(9, 16, 20, 0.55)",
+    "fill_strong": "rgba(9, 16, 20, 0.72)",
+    "border": "rgba(46, 230, 214, 0.45)",
+    "glow": "rgba(46, 230, 214, 0.30)",
+    "corner_radius": 18,
+    "corner_radius_sm": 12,
+    "glow_blur": 22
+  }
+}

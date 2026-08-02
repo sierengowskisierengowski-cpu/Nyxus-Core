@@ -33,6 +33,28 @@ fail() { printf "  ${PINK}✗${R}  %s\n" "$*" >&2; }
 ISO_DATE="${NYX_ISO_DATE:-$(date +%Y.%m.%d)}"
 ISO_NAME="nyxus-${ISO_DATE}-x86_64.iso"
 
+# ── ISO edition (alien is today's build, and the default) ────────────────
+# NYX_EDITION selects WHICH THEME is staged over the finished skel. That is
+# all it does — same profile, same packages, same shell code, same bake.
+#
+#   alien  (default)  strict no-op. The staging block near the end of this
+#                     script is skipped entirely, so a plain bake produces
+#                     the build it has always produced. The alien theme
+#                     cannot regress from Daily work, by construction.
+#   daily             stages artifacts/nyxus-config/editions/daily/ over the
+#                     assembled skel, after every other staging step.
+#
+# Read here rather than at the staging site because the edition has to reach
+# the ISO filename: two sticks that look identical and boot differently is a
+# mistake this project has already paid for more than once.
+NYX_EDITION="${NYX_EDITION:-alien}"
+case "${NYX_EDITION}" in
+  alien) ;;
+  daily) ISO_NAME="nyxus-daily-${ISO_DATE}-x86_64.iso" ;;
+  *)     printf "  ✗  NYX_EDITION must be 'alien' or 'daily' (got '%s')\n" \
+                "${NYX_EDITION}" >&2; exit 1 ;;
+esac
+
 TARBALL_URL="https://nyxus-core.replit.app/api/download/nyxus/nyxus-intel.tgz"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The COMMITTED profile in the repo. This is READ-ONLY during a bake — the
@@ -509,6 +531,7 @@ cat > "${PROFILE_DIR}/airootfs/etc/nyxus-build" <<BUILDSTAMP
 NYXUS live image build stamp
 ============================
 iso            : ${ISO_NAME}
+edition        : ${NYX_EDITION}
 built          : ${BUILD_TIME}
 source commit  : ${BUILD_COMMIT}${BUILD_DIRTY}  (branch: ${BUILD_BRANCH})
 kernel baked   : $([[ "${NYX_WITH_KAGE_RYU:-1}" == "1" ]] && echo "kage-ryu (default) + stock linux (rescue)" || echo "stock linux only")
@@ -523,9 +546,15 @@ cat > "${PROFILE_DIR}/airootfs/etc/profile.d/nyxus-build-stamp.sh" <<'STAMPSH'
 # ALIEN NEON build stamp — shown on every interactive terminal login.
 # Violet #7d3dff = \033[38;2;125;61;255m  magenta #ff2dad = \033[38;2;255;45;173m
 # cool-white #eef2fa = \033[38;2;238;242;250m
+#
+# The line range is the BODY of /etc/nyxus-build: line 1 is the title, line 2
+# the rule, and the last two lines are a blank plus the "rebake" warning. It is
+# addressed positionally, so adding a field to the heredoc above without
+# widening this range silently drops the last one off the banner. The range was
+# 3,7p until `edition` was added.
 if [ -n "${PS1:-}" ] && [ -r /etc/nyxus-build ]; then
   printf '\033[38;2;125;61;255m── NYXUS BUILD STAMP ─────────────────────────────────\033[0m\n'
-  printf '\033[38;2;238;242;250m'; sed -n '3,7p' /etc/nyxus-build; printf '\033[0m\n'
+  printf '\033[38;2;238;242;250m'; sed -n '3,8p' /etc/nyxus-build; printf '\033[0m\n'
 fi
 STAMPSH
 chmod 0644 "${PROFILE_DIR}/airootfs/etc/profile.d/nyxus-build-stamp.sh"
@@ -2138,6 +2167,134 @@ for doc in LICENSE.md README.md CHANGELOG.md CREDITS.md; do
   fi
 done
 ok "OS-level docs in /etc/nyxus/"
+
+# ── NYX_EDITION=daily · paint the urban-neon theme over the finished skel ─
+# THIS BLOCK IS DELIBERATELY LAST. Everything above assembles the alien
+# desktop; this overwrites the handful of files that carry the *look*, so it
+# has to run after the staging steps whose output it replaces. It still runs
+# BEFORE the file_permissions derivation below, so anything it stages is
+# covered by gate 13pc rather than shipping mode 644.
+#
+# With the default NYX_EDITION=alien this is a strict no-op — not a
+# "reapplies the same values" no-op, an untaken branch. That is the whole
+# guarantee the owner asked for: Daily work cannot regress the alien build,
+# because on an alien bake none of it executes.
+#
+# Everything Daily needs lives in artifacts/nyxus-config/editions/daily/ and
+# is copied here. The shared skel defaults (accent.json = prism, wallpaper =
+# nyxus-urban-alien) are never edited in git; verify-profile gate 13pm holds
+# that line.
+if [[ "${NYX_EDITION}" == "daily" ]]; then
+  step "NYX_EDITION=daily — staging the urban-neon theme over the assembled skel"
+  ED="${REPO_ROOT}/artifacts/nyxus-config/editions/daily"
+
+  # A half-themed image is worse than no image: it boots looking like a broken
+  # alien build and nobody can tell which half is missing. Check the whole set
+  # up front and name every absentee, rather than dying on the first install.
+  _ed_missing=()
+  for _edf in accent.json wallpaper.conf wallpaper.json wall-rotation.list \
+              regreet.css hyprlock-accent.conf; do
+    [[ -f "${ED}/${_edf}" ]] || _ed_missing+=("${_edf}")
+  done
+  if (( ${#_ed_missing[@]} > 0 )); then
+    fail "NYX_EDITION=daily, but the edition tree is incomplete."
+    fail "  missing from ${ED#${REPO_ROOT}/}: ${_ed_missing[*]}"
+    fail "  refusing to bake — a stick that is half urban-neon and half alien is"
+    fail "  unreadable as a bug report and unshippable as a product."
+    exit 1
+  fi
+
+  mkdir -p "${SKEL}/.config/nyxus" "${SKEL}/.config/hypr" \
+           "${PROFILE_DIR}/airootfs/etc/greetd"
+  install -m 0644 "${ED}/accent.json"          "${SKEL}/.config/nyxus/accent.json"
+  install -m 0644 "${ED}/wallpaper.conf"       "${SKEL}/.config/nyxus/wallpaper.conf"
+  install -m 0644 "${ED}/wallpaper.json"       "${SKEL}/.config/nyxus/wallpaper.json"
+  install -m 0644 "${ED}/wall-rotation.list"   "${SKEL}/.config/nyxus/wall-rotation.list"
+  install -m 0644 "${ED}/hyprlock-accent.conf" "${SKEL}/.config/hypr/hyprlock-accent.conf"
+  install -m 0644 "${ED}/regreet.css"          "${PROFILE_DIR}/airootfs/etc/greetd/regreet.css"
+  ok "edition files staged: accent / wallpaper.conf+json / rotation / hyprlock-accent / regreet.css"
+
+  # ── re-pin the two backgrounds that live in SHARED code ────────────────
+  # hyprlock.conf and nyxus-greeter both name the alien hero by absolute path.
+  # They are shared structure, so they are not edited in git; they are rewritten
+  # HERE, on the throwaway copy, one anchored line each. Without this the Daily
+  # desktop wears urban-neon while its lock and login screens still show the
+  # alien mural — the exact incoherence the edition exists to avoid.
+  #
+  # Each rewrite asserts the anchor matched before and that nothing named the
+  # old hero after. If someone re-words those lines upstream, this fails the
+  # bake instead of silently shipping the alien art on a Daily stick.
+  ED_WALL="$(sed -n 's/^WALLPAPER="\([A-Za-z0-9._-]*\)".*/\1/p' "${ED}/wallpaper.conf" | tail -1)"
+  if [[ -z "${ED_WALL}" ]]; then
+    fail "editions/daily/wallpaper.conf has no parseable WALLPAPER=\"<slug>\" line"
+    exit 1
+  fi
+  if [[ ! -f "${WALLS_SYS}/${ED_WALL}.png" ]]; then
+    fail "the daily default wallpaper ${ED_WALL}.png is not in the staged"
+    fail "  ${WALLS_SYS#${PROFILE_DIR}/} — the lock and login screens resolve it by"
+    fail "  absolute system path and would both fall back to flat ink"
+    exit 1
+  fi
+
+  _ed_repin() {   # $1 = staged file   $2 = sed address matching the pin line
+    local _f="$1" _expr="$2"
+    if [[ ! -f "${_f}" ]]; then
+      fail "daily re-pin: ${_f#${PROFILE_DIR}/} was never staged"
+      exit 1
+    fi
+    if ! grep -qE "${_expr}" "${_f}"; then
+      fail "daily re-pin: ${_f#${PROFILE_DIR}/} no longer carries the line that"
+      fail "  pins nyxus-urban-alien.png (looked for /${_expr}/). The wording"
+      fail "  changed upstream — update this block, do not skip it"
+      exit 1
+    fi
+    sed -i -E "\|${_expr}|s|nyxus-urban-alien\.png|${ED_WALL}.png|" "${_f}"
+    if grep -qE "${_expr}" "${_f}"; then
+      fail "daily re-pin: ${_f#${PROFILE_DIR}/} still pins nyxus-urban-alien.png"
+      exit 1
+    fi
+  }
+  _ed_repin "${SKEL}/.config/hypr/hyprlock.conf" \
+            '^[[:space:]]*path[[:space:]]*=[[:space:]]*/usr/share/backgrounds/nyxus/nyxus-urban-alien\.png[[:space:]]*$'
+  _ed_repin "${LBIN}/nyxus-greeter" \
+            '^[[:space:]]*_pick="\$_wdir/nyxus-urban-alien\.png"[[:space:]]*$'
+  ok "lock + login backgrounds re-pinned to ${ED_WALL}.png"
+
+  # ── notification daemon: Daily runs swaync, alien runs dunst ───────────
+  # Measured on the 2026-08-01 ISO (audit §11.4): hyprland.conf exec-once's
+  # dunst, dunst takes org.freedesktop.Notifications first, and swaync.service
+  # then fails to acquire the name five times and hits its start limit — a
+  # failed unit on every single boot. The alien build settles that by masking
+  # swaync (airootfs/etc/systemd/user/swaync.service -> /dev/null) and keeping
+  # dunst exactly as it looks today.
+  #
+  # Daily needs the other one: the approved flyout (calendar, quiet hours,
+  # quick-toggle pills — docs/assets/daily-driver/set-notifications.png) is a
+  # swaync control-centre feature set that dunst has no equivalent for. So on a
+  # daily bake the mask comes off and the autostart swaps over. Still exactly
+  # one daemon owning the bus name; only the identity changes.
+  _ed_mask="${PROFILE_DIR}/airootfs/etc/systemd/user/swaync.service"
+  if [[ -L "${_ed_mask}" || -e "${_ed_mask}" ]]; then
+    rm -f "${_ed_mask}"
+    ok "swaync unmasked (the alien build's mask is removed for this edition)"
+  fi
+  _ed_hypr="${SKEL}/.config/hypr/hyprland.conf"
+  if ! grep -qE '^exec-once = dunst[[:space:]]*$' "${_ed_hypr}"; then
+    fail "daily: skel hyprland.conf has no \`exec-once = dunst\` line to replace."
+    fail "  Two notification daemons ship. If neither is started the Daily flyout"
+    fail "  has no backend; if both are, one fails on every boot. Fix this block"
+    exit 1
+  fi
+  sed -i -E 's|^exec-once = dunst[[:space:]]*$|exec-once = swaync|' "${_ed_hypr}"
+  if grep -qE '^exec-once = dunst[[:space:]]*$' "${_ed_hypr}"; then
+    fail "daily: dunst is still autostarted — it would take the notification bus"
+    fail "  name before swaync and the flyout would never run"
+    exit 1
+  fi
+  ok "notification daemon → swaync (dunst autostart removed for this edition)"
+
+  ok "NYX_EDITION=daily — urban-neon staged; the alien defaults in git are untouched"
+fi
 
 # ── derive file_permissions from what was actually staged ────────────────
 # mkarchiso copies airootfs with --no-preserve=mode, so the ONLY thing that
