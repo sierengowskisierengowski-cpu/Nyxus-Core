@@ -1,0 +1,21 @@
+{
+  "name": "Nyxus-Core",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "api-server",
+      "command": "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/nyxus PORT=8080 corepack pnpm@11 --filter @workspace/api-server run dev",
+      "description": "TypeScript API server (@workspace/api-server) on http://localhost:8080. Health: GET /api/healthz. Needs Postgres (provisioned by start.sh). Not a watcher — restart to pick up source changes."
+    },
+    {
+      "name": "nyxus-web",
+      "command": "corepack pnpm@11 --filter @workspace/nyxus-web run dev",
+      "description": "Primary Vite web app (@workspace/nyxus-web) on http://localhost:18304. Other web surfaces: pnpm --filter @workspace/<app> run dev (nyxus-notepad, nyxus-stickies, nyxus-sysmon, nyxus-widgets, mockup-sandbox)."
+    }
+  ],
+  "ports": [
+    { "name": "api-server", "port": 8080 },
+    { "name": "nyxus-web", "port": 18304 }
+  ]
+}
